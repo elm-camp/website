@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import Money
 import Url exposing (Url)
 
 
@@ -12,8 +13,49 @@ type alias FrontendModel =
 
 
 type alias BackendModel =
-    { message : String
+    { orders : List Order
     }
+
+
+type alias Order =
+    { email : Email
+    , products : List Product
+    , sponsorship : Maybe Sponsorship
+    , opportunityGrantContribution : Amount
+    , originCity : CityCode
+    , primaryTravelMode : TravelMode
+    }
+
+
+type Product
+    = CampTicket Amount
+    | CouplesCampTicket Amount
+    | CampfireTicket Amount
+
+
+type Sponsorship
+    = SponsorBronze Amount
+    | SponsorSilver Amount
+    | SponsorGold Amount
+
+
+type Amount
+    = Amount Money.Currency Int
+
+
+type TravelMode
+    = Flight
+    | Bus
+    | Car
+    | Train
+
+
+type alias Email =
+    String
+
+
+type alias CityCode =
+    String
 
 
 type FrontendMsg
