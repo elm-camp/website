@@ -14,6 +14,7 @@ type alias FrontendModel =
 
 type alias BackendModel =
     { orders : List Order
+    , inventoryLimit : List ( Product, Int )
     }
 
 
@@ -24,7 +25,15 @@ type alias Order =
     , opportunityGrantContribution : Amount
     , originCity : CityCode
     , primaryTravelMode : TravelMode
+    , status : OrderStatus
     }
+
+
+type OrderStatus
+    = Pending
+    | Failed String
+    | Paid StripePaymentId
+    | Refunded StripePaymentId
 
 
 type Product
