@@ -12,9 +12,6 @@ stripePostbackUrl =
     "http://localhost:8000"
 
 
-stripeProductPriceSupporter =
-    ""
-
-
 stripePrivateApiKey =
+    -- Test environment, prod key set in prod
     ""

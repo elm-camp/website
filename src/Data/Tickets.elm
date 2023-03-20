@@ -5,6 +5,11 @@ tickets =
     [ campTicket, couplesCampTicket, campfireTicket ]
 
 
+
+-- @TODO need to use pricing IDs here, not product IDs
+-- but how do we figure out the right price given the current user? Is there a Stripe API for that?
+
+
 campTicket =
     { name = "Elm Camp Denmark 23 - Camp Ticket"
     , description = "Ticket for 1 Person including: on-site accommodation with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."

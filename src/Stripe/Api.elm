@@ -16,13 +16,13 @@ import Url exposing (percentEncode)
 
 
 createCheckoutSession priceId toMsg =
+    -- @TODO support multiple prices, see Data.Tickets
     let
         body =
             formBody
-                [ ( "payment_method_types[]", "card" )
-                , ( "line_items[][price]", Env.stripeProductPriceSupporter )
+                [ ( "line_items[][price]", priceId )
                 , ( "line_items[][quantity]", "1" )
-                , ( "mode", "subscription" )
+                , ( "mode", "payment" )
                 , ( "success_url", Env.stripePostbackUrl ++ "/stripe/success?session_id={CHECKOUT_SESSION_ID}" )
                 , ( "cancel_url", Env.stripePostbackUrl ++ "/stripe/cancel" )
                 ]
