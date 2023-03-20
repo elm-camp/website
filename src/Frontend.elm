@@ -1,19 +1,21 @@
 module Frontend exposing (app)
 
 import Browser exposing (UrlRequest(..))
+import Browser.Dom
+import Browser.Events
 import Browser.Navigation as Nav
 import Element exposing (Element)
+import Element.Background
+import Element.Border
 import Element.Font
+import Element.Input
 import Html exposing (Html)
 import Html.Attributes as Attr
 import Lamdera
 import MarkdownThemed
+import Task
 import Types exposing (..)
 import Url
-
-
-type alias Model =
-    FrontendModel
 
 
 app =
@@ -23,22 +25,52 @@ app =
         , onUrlChange = UrlChanged
         , update = update
         , updateFromBackend = updateFromBackend
-        , subscriptions = \m -> Sub.none
+        , subscriptions = \_ -> Browser.Events.onResize GotWindowSize
         , view = view
         }
 
 
-init : Url.Url -> Nav.Key -> ( Model, Cmd FrontendMsg )
-init url key =
-    ( { key = key
-      , message = "Welcome to Lamdera! You're looking at the auto-generated base implementation. Check out src/Frontend.elm to start coding!"
-      }
-    , Cmd.none
+init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
+init _ key =
+    ( Loading { key = key, windowSize = Nothing }
+    , Browser.Dom.getViewport
+        |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
     )
 
 
-update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg )
+update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 update msg model =
+    case model of
+        Loading loading ->
+            case msg of
+                GotWindowSize width height ->
+                    tryLoading { loading | windowSize = Just ( width, height ) }
+
+                _ ->
+                    ( model, Cmd.none )
+
+        Loaded loaded ->
+            updateLoaded msg loaded |> Tuple.mapFirst Loaded
+
+
+tryLoading : LoadingModel -> ( FrontendModel, Cmd FrontendMsg )
+tryLoading loadingModel =
+    Maybe.map
+        (\windowSize ->
+            ( Loaded
+                { key = loadingModel.key
+                , windowSize = windowSize
+                , showTooltip = False
+                }
+            , Cmd.none
+            )
+        )
+        loadingModel.windowSize
+        |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
+
+
+updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Cmd msg )
+updateLoaded msg model =
     case msg of
         UrlClicked urlRequest ->
             case urlRequest of
@@ -55,11 +87,17 @@ update msg model =
         UrlChanged url ->
             ( model, Cmd.none )
 
-        NoOpFrontendMsg ->
-            ( model, Cmd.none )
+        GotWindowSize width height ->
+            ( { model | windowSize = ( width, height ) }, Cmd.none )
+
+        PressedShowTooltip ->
+            ( { model | showTooltip = True }, Cmd.none )
+
+        PressedCloseTooltip ->
+            ( { model | showTooltip = False }, Cmd.none )
 
 
-updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg )
+updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
     case msg of
         NoOpToFrontend ->
@@ -107,47 +145,80 @@ colorWithAlpha alpha color =
     Element.rgba red green blue alpha
 
 
-header : Element msg
-header =
+header : LoadedModel -> Element msg
+header model =
     let
         glow =
             Element.Font.glow (colorWithAlpha 0.25 colors.defaultText) 4
+
+        ( windowWidth, _ ) =
+            model.windowSize
     in
-    Element.row
-        [ Element.width Element.fill, Element.spacing 40 ]
-        [ Element.image
-            [ Element.width (Element.px 523) ]
-            { src = "/logo.webp", description = "Elm camp logo" }
-        , Element.column
-            [ Element.spacing 24 ]
-            [ Element.el
-                [ Element.Font.size 80
-                , glow
-                ]
-                (Element.text "Elm Camp")
-            , Element.row
-                [ Element.centerX, Element.spacing 13 ]
-                [ Element.image
-                    [ Element.width (Element.px 49) ]
-                    { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
-                , Element.column
-                    [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                    [ Element.el [ glow ] (Element.text "Unconference")
-                    , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
+    if windowWidth < 1000 then
+        Element.column
+            [ Element.spacing 20, Element.centerX ]
+            [ Element.image
+                [ Element.width (Element.maximum 523 Element.fill) ]
+                { src = "/logo.webp", description = "Elm camp logo" }
+            , Element.column
+                [ Element.spacing 24, Element.centerX ]
+                [ Element.el
+                    [ Element.Font.size 80
+                    , glow
+                    , Element.paddingXY 0 8
+                    ]
+                    (Element.text "Elm Camp")
+                , Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
+                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                    , Element.column
+                        [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
+                        [ Element.el [ glow ] (Element.text "Unconference")
+                        , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
+                        ]
                     ]
                 ]
+            ]
+
+    else
+        Element.row
+            [ Element.spacing 40, Element.centerX ]
+            [ Element.image
+                [ Element.width (Element.px 523) ]
+                { src = "/logo.webp", description = "Elm camp logo" }
             , Element.column
-                [ glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
-                [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
-                , Element.text "🇩🇰 Dallund Castle, Denmark"
+                [ Element.spacing 24 ]
+                [ Element.el
+                    [ Element.Font.size 80
+                    , glow
+                    , Element.paddingXY 0 8
+                    ]
+                    (Element.text "Elm Camp")
+                , Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
+                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                    , Element.column
+                        [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
+                        [ Element.el [ glow ] (Element.text "Unconference")
+                        , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
+                        ]
+                    ]
+                , Element.column
+                    [ glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
+                    [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
+                    , Element.text "🇩🇰 Dallund Castle, Denmark"
+                    ]
                 ]
             ]
-        ]
 
 
-view : Model -> Browser.Document FrontendMsg
+view : FrontendModel -> Browser.Document FrontendMsg
 view model =
-    { title = ""
+    { title = "Elm Camp"
     , body =
         [ css
         , Element.layout
@@ -156,16 +227,80 @@ view model =
             , Element.Font.size 16
             , Element.Font.medium
             ]
-            (Element.column
-                [ Element.width (Element.maximum 1000 Element.fill), Element.centerX ]
-                [ header
-                , content1
-                , stripe
-                , content2
-                ]
+            (case model of
+                Loading _ ->
+                    Element.text "Loading..."
+
+                Loaded loaded ->
+                    loadedView loaded
             )
         ]
     }
+
+
+loadedView : LoadedModel -> Element FrontendMsg
+loadedView model =
+    let
+        ( windowWidth, _ ) =
+            model.windowSize
+    in
+    Element.column
+        [ Element.paddingXY
+            (if windowWidth < 800 then
+                24
+
+             else
+                60
+            )
+            24
+        , Element.width Element.fill
+        ]
+        [ Element.column
+            [ Element.spacing 80, Element.width Element.fill ]
+            [ header model
+            , Element.column
+                [ Element.width Element.fill, Element.spacing 40 ]
+                [ Element.el contentAttributes content1
+                , unconferenceBulletPoints model
+                , if windowWidth > 950 then
+                    [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
+                        |> List.map (dallundCastleImage (Element.px 288))
+                        |> Element.wrappedRow
+                            [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+
+                  else
+                    [ [ "image1.webp", "image2.webp" ]
+                    , [ "image3.webp", "image4.webp" ]
+                    , [ "image5.webp", "image6.webp" ]
+                    ]
+                        |> List.map
+                            (\paths ->
+                                Element.row
+                                    [ Element.spacing 10, Element.width Element.fill ]
+                                    (List.map (dallundCastleImage Element.fill) paths)
+                            )
+                        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+                , Element.column
+                    [ Element.width Element.fill ]
+                    [ Element.paragraph (contentAttributes ++ MarkdownThemed.heading1) [ Element.text "Tickets" ]
+                    , stripe
+                    ]
+                , Element.el contentAttributes content2
+                ]
+            ]
+        ]
+
+
+dallundCastleImage : Element.Length -> String -> Element msg
+dallundCastleImage width path =
+    Element.image
+        [ Element.width width ]
+        { src = "/" ++ path, description = "Photo of part of the Dallund Castle" }
+
+
+contentAttributes : List (Element.Attribute msg)
+contentAttributes =
+    [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
 
 
 stripe : Element msg
@@ -179,6 +314,7 @@ stripe =
         |> Element.el [ Element.width Element.fill ]
 
 
+content1 : Element msg
 content1 =
     """
 Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community.
@@ -193,41 +329,55 @@ Elm Camp is the first Elm Unconference. Our intention is to debut as a small, ca
 
 # The Unconference
 
-* Arrive 3pm Wed 28 June
-* Depart 4pm Fri 30 June
-* Dallund Castle, Denmark
-* Daily opener un-keynote
-* Collaborative session creation throughout
-* Countless hallway conversations and mealtime connections
-* Access to full castle grounds including lake swimming
-* 40 attendees ℹ️
 """
         |> MarkdownThemed.renderFull
 
 
+unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
+unconferenceBulletPoints model =
+    [ [ Element.text "Arrive 3pm Wed 28 June" ]
+    , [ Element.text "Depart 4pm Fri 30 June" ]
+    , [ Element.text "Dallund Castle, Denmark" ]
+    , [ Element.text "Daily opener un-keynote" ]
+    , [ Element.text "Collaborative session creation throughout" ]
+    , [ Element.text "Countless hallway conversations and mealtime connections" ]
+    , [ Element.text "Access to full castle grounds including lake swimming" ]
+    , [ Element.text "40 attendees "
+      , Element.Input.button
+            [ (if model.showTooltip then
+                tooltip
+
+               else
+                Element.none
+              )
+                |> Element.below
+            ]
+            { onPress = Just PressedShowTooltip, label = Element.text "ℹ" }
+      ]
+    ]
+        |> List.map (\point -> Element.row [] (Element.text " • " :: point))
+        |> Element.column [ Element.spacing 5 ]
+
+
+tooltip =
+    Element.paragraph
+        [ Element.paddingXY 12 8
+        , Element.Background.color (Element.rgb 1 1 1)
+        , Element.width (Element.px 300)
+        , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
+        ]
+        [ Element.text """This is our first Elm Unconference, so we're starting small and working backwards from a venue.
+
+We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event.
+
+If you know of a bigger venue that would be suitable for future years, please let the team know!
+"""
+        ]
+
+
+content2 : Element msg
 content2 =
     """
-# Tickets
-
-## Camp Ticket: €550
-
-* 2 nights on-site accommodation in private room with ensuite
-* One 2-day attendee ticket
-* Breakfast, lunch, tea & dinner included
-
-## Couple’s Camp Tickets: €950
-
-* 2 nights on-site accommodation in private room with ensuite
-* Two 2-day attendee tickets
-* Breakfast, lunch, tea & dinner included
-
-## Campfire Ticket: €300
-
-* 2 day attendee ticket
-* Lunch, tea & dinner included
-* Up to 16 available
-
-
 The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + external). Our plan is to prioritise ticket sales in the following order: Couple’s Camp tickets, Camp tickets, Campfire attendee tickets.
 
 # Schedule
@@ -289,14 +439,14 @@ You will be an appreciated supporter of Elm Camp Europe 2023.
 
 * Listed as additional supporter on webpage
 
-## Silver - €1000 EUR  (£880 / USD$1100)
+## Silver - €1000 EUR  (£880 / $1100 USD)
 You will be a major supporter of Elm Camp Europe 2023.
 
 * Thank you tweet
 * Logo on webpage
 * Small logo on shared slide, displayed during breaks
 
-## Gold - €2500 EUR  (£2200 / USD$2700)
+## Gold - €2500 EUR  (£2200 / $2700 USD)
 
 You will be a pivotal supporter of Elm Camp Europe 2023.
 
@@ -306,7 +456,7 @@ You will be a pivotal supporter of Elm Camp Europe 2023.
 * Medium logo on shared slide, displayed during breaks
 * 1 free camp ticket
 
-## Platinum - €5000 EUR  (£4500 / USD$5300)
+## Platinum - €5000 EUR  (£4500 / $5300 USD)
 You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success.
 
 * Thank you tweet
@@ -322,7 +472,5 @@ You will make it possible for a student and/or underprivileged community member 
 
 # Something else?
 
-Problem with something above? Get in touch with the team at [hello@elm.camp](hello@elm.camp).
-
-"""
+Problem with something above? Get in touch with the team at [hello@elm.camp](hello@elm.camp)."""
         |> MarkdownThemed.renderFull

@@ -1,4 +1,4 @@
-module MarkdownThemed exposing (lightTheme, renderFull)
+module MarkdownThemed exposing (heading1, lightTheme, renderFull)
 
 import Element exposing (Element)
 import Element.Background
@@ -173,16 +173,21 @@ renderer theme =
     }
 
 
+heading1 : List (Element.Attr () msg)
+heading1 =
+    [ Element.Font.size 48
+    , Element.Font.semiBold
+    , Element.Font.color lightTheme.defaultText
+    , Element.paddingXY 0 20
+    ]
+
+
 heading : Theme -> { level : HeadingLevel, rawText : String, children : List (Element msg) } -> Element msg
 heading theme { level, rawText, children } =
     Element.paragraph
         ((case Markdown.Block.headingLevelToInt level of
             1 ->
-                [ Element.Font.size 48
-                , Element.Font.semiBold
-                , Element.Font.color theme.defaultText
-                , Element.paddingXY 0 20
-                ]
+                heading1
 
             2 ->
                 [ Element.Font.color theme.elmText

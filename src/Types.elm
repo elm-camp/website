@@ -6,9 +6,19 @@ import Money
 import Url exposing (Url)
 
 
-type alias FrontendModel =
+type FrontendModel
+    = Loading LoadingModel
+    | Loaded LoadedModel
+
+
+type alias LoadingModel =
+    { key : Key, windowSize : Maybe ( Int, Int ) }
+
+
+type alias LoadedModel =
     { key : Key
-    , message : String
+    , windowSize : ( Int, Int )
+    , showTooltip : Bool
     }
 
 
@@ -74,7 +84,9 @@ type alias CityCode =
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
-    | NoOpFrontendMsg
+    | GotWindowSize Int Int
+    | PressedShowTooltip
+    | PressedCloseTooltip
 
 
 type ToBackend
