@@ -5,4 +5,16 @@ module Env exposing (..)
 
 
 dummyConfigItem =
-  ""
+    ""
+
+
+stripePostbackUrl =
+    "http://localhost:8000"
+
+
+stripeProductPriceSupporter =
+    ""
+
+
+stripePrivateApiKey =
+    ""

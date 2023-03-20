@@ -36,6 +36,10 @@ type OrderStatus
     | Refunded StripePaymentId
 
 
+type alias StripePaymentId =
+    String
+
+
 type Product
     = CampTicket Amount
     | CouplesCampTicket Amount

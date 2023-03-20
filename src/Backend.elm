@@ -20,7 +20,9 @@ app =
 
 init : ( Model, Cmd BackendMsg )
 init =
-    ( { orders = [] }
+    ( { orders = []
+      , inventoryLimit = []
+      }
     , Cmd.none
     )
 
