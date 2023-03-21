@@ -1,9 +1,12 @@
 module Types exposing (..)
 
+import AssocList
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
-import Money
-import Stripe.Api exposing (Price)
+import Http
+import Lamdera exposing (ClientId, SessionId)
+import Stripe exposing (Price, PriceData, PriceId, ProductId)
+import Time
 import Url exposing (Url)
 
 
@@ -13,18 +16,21 @@ type FrontendModel
 
 
 type alias LoadingModel =
-    { key : Key, windowSize : Maybe ( Int, Int ) }
+    { key : Key, windowSize : Maybe ( Int, Int ), prices : AssocList.Dict ProductId { priceId : PriceId, price : Price } }
 
 
 type alias LoadedModel =
     { key : Key
     , windowSize : ( Int, Int )
     , showTooltip : Bool
+    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
     }
 
 
 type alias BackendModel =
     { orders : List Order
+    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    , time : Time.Posix
     }
 
 
@@ -83,6 +89,7 @@ type FrontendMsg
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
+    | PressedBuy PriceId
 
 
 type ToBackend
@@ -90,8 +97,10 @@ type ToBackend
 
 
 type BackendMsg
-    = NoOpBackendMsg
+    = GotTime Time.Posix
+    | GotPrices (Result Http.Error (List PriceData))
+    | OnConnected SessionId ClientId
 
 
 type ToFrontend
-    = NoOpToFrontend
+    = PricesToFrontend (AssocList.Dict ProductId { priceId : PriceId, price : Price })

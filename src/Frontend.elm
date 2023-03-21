@@ -1,5 +1,6 @@
 module Frontend exposing (app)
 
+import AssocList
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
@@ -15,6 +16,7 @@ import Json.Decode
 import Lamdera
 import MarkdownThemed
 import Task
+import Tickets
 import Types exposing (..)
 import Url
 
@@ -40,7 +42,7 @@ subscriptions model =
 
 init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
 init _ key =
-    ( Loading { key = key, windowSize = Nothing }
+    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty }
     , Browser.Dom.getViewport
         |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
     )
@@ -69,6 +71,7 @@ tryLoading loadingModel =
                 { key = loadingModel.key
                 , windowSize = windowSize
                 , showTooltip = False
+                , prices = loadingModel.prices
                 }
             , Cmd.none
             )
@@ -104,12 +107,22 @@ updateLoaded msg model =
         MouseDown ->
             ( { model | showTooltip = False }, Cmd.none )
 
+        PressedBuy priceId ->
+            ( model, Cmd.none )
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
-    case msg of
-        NoOpToFrontend ->
-            ( model, Cmd.none )
+    case model of
+        Loading loading ->
+            case msg of
+                PricesToFrontend prices ->
+                    ( Loading { loading | prices = prices }, Cmd.none )
+
+        Loaded loaded ->
+            case msg of
+                PricesToFrontend prices ->
+                    ( Loaded { loaded | prices = prices }, Cmd.none )
 
 
 fontFace : Int -> String -> String
@@ -292,7 +305,7 @@ loadedView model =
                 , Element.column
                     [ Element.width Element.fill ]
                     [ Element.paragraph (contentAttributes ++ MarkdownThemed.heading1) [ Element.text "Tickets" ]
-                    , stripe
+                    , stripe model
                     ]
                 , Element.el contentAttributes content2
                 ]
@@ -312,15 +325,47 @@ contentAttributes =
     [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
 
 
-stripe : Element msg
-stripe =
-    Html.node "stripe-pricing-table"
-        [ Attr.attribute "pricing-table-id" "prctbl_1MlWUcHHD80VvsjKINsykCtd"
-        , Attr.attribute "publishable-key" "pk_live_dIdCQ17pxxCWIeRJ5ZuJ4Ynm00FgRhZ4jR"
-        ]
-        []
-        |> Element.html
-        |> Element.el [ Element.width Element.fill ]
+stripe : LoadedModel -> Element FrontendMsg
+stripe model =
+    let
+        ( windowWidth, _ ) =
+            model.windowSize
+    in
+    if windowWidth < 950 then
+        List.map
+            (\ticket ->
+                case AssocList.get ticket.productId model.prices of
+                    Just price ->
+                        Tickets.viewMobile (PressedBuy price.priceId) price.price ticket
+
+                    Nothing ->
+                        Element.none
+            )
+            Tickets.tickets
+            |> Element.column [ Element.spacing 16 ]
+
+    else
+        List.map
+            (\ticket ->
+                case AssocList.get ticket.productId model.prices of
+                    Just price ->
+                        Tickets.viewDesktop (PressedBuy price.priceId) price.price ticket
+
+                    Nothing ->
+                        Element.none
+            )
+            Tickets.tickets
+            |> Element.row (Element.spacing 16 :: contentAttributes)
+
+
+
+--Html.node "stripe-pricing-table"
+--    [ Attr.attribute "pricing-table-id" "prctbl_1MlWUcHHD80VvsjKINsykCtd"
+--    , Attr.attribute "publishable-key" "pk_live_dIdCQ17pxxCWIeRJ5ZuJ4Ynm00FgRhZ4jR"
+--    ]
+--    []
+--    |> Element.html
+--    |> Element.el [ Element.width Element.fill ]
 
 
 content1 : Element msg

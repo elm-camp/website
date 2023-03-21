@@ -1,4 +1,4 @@
-module Stripe.Api exposing (Price(..), PriceId(..), ProductId(..), createCheckoutSession, getPrices)
+module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), createCheckoutSession, getPrices, loadCheckout)
 
 import Env
 import Http
@@ -8,6 +8,7 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
+import Time
 import Url exposing (percentEncode)
 
 
@@ -27,7 +28,11 @@ type PriceId
     = PriceId String
 
 
-getPrices : (Result Http.Error (List { priceId : PriceId, price : Price, productId : ProductId }) -> msg) -> Cmd msg
+type alias PriceData =
+    { priceId : PriceId, price : Price, productId : ProductId, isActive : Bool, createdAt : Time.Posix }
+
+
+getPrices : (Result Http.Error (List PriceData) -> msg) -> Cmd msg
 getPrices toMsg =
     Http.request
         { method = "GET"
@@ -44,16 +49,23 @@ decodePrices =
     D.field "data" (D.list decodePrice)
 
 
-decodePrice : D.Decoder { priceId : PriceId, price : Price, productId : ProductId }
+decodePrice : D.Decoder PriceData
 decodePrice =
     D.succeed
-        (\priceId currency amount productId ->
-            { priceId = priceId, price = Price currency amount, productId = productId }
+        (\priceId currency amount productId isActive createdAt ->
+            { priceId = priceId
+            , price = Price currency amount
+            , productId = productId
+            , isActive = isActive
+            , createdAt = createdAt
+            }
         )
         |> required "id" (D.map PriceId D.string)
         |> required "currency" decodeCurrency
         |> required "unit_amount" D.int
         |> required "product" (D.map ProductId D.string)
+        |> required "active" D.bool
+        |> required "created" (D.map Time.millisToPosix D.int)
 
 
 decodeCurrency =
