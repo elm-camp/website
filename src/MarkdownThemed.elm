@@ -1,4 +1,4 @@
-module MarkdownThemed exposing (heading1, lightTheme, renderFull)
+module MarkdownThemed exposing (bulletPoint, heading1, lightTheme, renderFull)
 
 import Element exposing (Element)
 import Element.Background
@@ -62,6 +62,19 @@ render chosenRenderer markdownBody =
                         , Element.spacing 20
                         ]
            )
+
+
+bulletPoint : List (Element msg) -> Element msg
+bulletPoint children =
+    Element.wrappedRow
+        [ Element.spacing 5
+        , Element.paddingEach { top = 0, right = 0, bottom = 0, left = 20 }
+        , Element.width Element.fill
+        ]
+        [ Element.paragraph
+            [ Element.alignTop ]
+            (Element.text " • " :: children)
+        ]
 
 
 renderer : Theme -> Markdown.Renderer.Renderer (Element msg)

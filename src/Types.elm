@@ -86,7 +86,7 @@ type FrontendMsg
     | UrlChanged Url
     | GotWindowSize Int Int
     | PressedShowTooltip
-    | PressedCloseTooltip
+    | MouseDown
 
 
 type ToBackend

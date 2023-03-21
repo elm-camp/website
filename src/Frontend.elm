@@ -11,6 +11,7 @@ import Element.Font
 import Element.Input
 import Html exposing (Html)
 import Html.Attributes as Attr
+import Json.Decode
 import Lamdera
 import MarkdownThemed
 import Task
@@ -25,9 +26,16 @@ app =
         , onUrlChange = UrlChanged
         , update = update
         , updateFromBackend = updateFromBackend
-        , subscriptions = \_ -> Browser.Events.onResize GotWindowSize
+        , subscriptions = subscriptions
         , view = view
         }
+
+
+subscriptions model =
+    Sub.batch
+        [ Browser.Events.onResize GotWindowSize
+        , Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
+        ]
 
 
 init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
@@ -93,7 +101,7 @@ updateLoaded msg model =
         PressedShowTooltip ->
             ( { model | showTooltip = True }, Cmd.none )
 
-        PressedCloseTooltip ->
+        MouseDown ->
             ( { model | showTooltip = False }, Cmd.none )
 
 
@@ -260,8 +268,9 @@ loadedView model =
             [ header model
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
-                [ Element.el contentAttributes content1
-                , unconferenceBulletPoints model
+                [ Element.column
+                    contentAttributes
+                    [ content1, unconferenceBulletPoints model ]
                 , if windowWidth > 950 then
                     [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
                         |> List.map (dallundCastleImage (Element.px 288))
@@ -335,28 +344,29 @@ Elm Camp is the first Elm Unconference. Our intention is to debut as a small, ca
 
 unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
 unconferenceBulletPoints model =
-    [ [ Element.text "Arrive 3pm Wed 28 June" ]
-    , [ Element.text "Depart 4pm Fri 30 June" ]
-    , [ Element.text "Dallund Castle, Denmark" ]
-    , [ Element.text "Daily opener un-keynote" ]
-    , [ Element.text "Collaborative session creation throughout" ]
-    , [ Element.text "Countless hallway conversations and mealtime connections" ]
-    , [ Element.text "Access to full castle grounds including lake swimming" ]
-    , [ Element.text "40 attendees "
-      , Element.Input.button
-            [ (if model.showTooltip then
-                tooltip
+    [ Element.text "Arrive 3pm Wed 28 June"
+    , Element.text "Depart 4pm Fri 30 June"
+    , Element.text "Dallund Castle, Denmark"
+    , Element.text "Daily opener un-keynote"
+    , Element.text "Collaborative session creation throughout"
+    , Element.text "Countless hallway conversations and mealtime connections"
+    , Element.text "Access to full castle grounds including lake swimming"
+    , Element.el
+        [ (if model.showTooltip then
+            tooltip
 
-               else
-                Element.none
-              )
-                |> Element.below
-            ]
-            { onPress = Just PressedShowTooltip, label = Element.text "ℹ" }
-      ]
+           else
+            Element.none
+          )
+            |> Element.below
+        ]
+        (Element.Input.button
+            []
+            { onPress = Just PressedShowTooltip, label = Element.text "40 attendees ℹ️" }
+        )
     ]
-        |> List.map (\point -> Element.row [] (Element.text " • " :: point))
-        |> Element.column [ Element.spacing 5 ]
+        |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
+        |> Element.column [ Element.spacing 15 ]
 
 
 tooltip =
@@ -366,12 +376,7 @@ tooltip =
         , Element.width (Element.px 300)
         , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
         ]
-        [ Element.text """This is our first Elm Unconference, so we're starting small and working backwards from a venue.
-
-We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event.
-
-If you know of a bigger venue that would be suitable for future years, please let the team know!
-"""
+        [ Element.text "This is our first Elm Unconference, so we're starting small and working backwards from a venue. We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event. If you know of a bigger venue that would be suitable for future years, please let the team know!"
         ]
 
 
@@ -472,5 +477,5 @@ You will make it possible for a student and/or underprivileged community member 
 
 # Something else?
 
-Problem with something above? Get in touch with the team at [hello@elm.camp](hello@elm.camp)."""
+Problem with something above? Get in touch with the team at [hello@elm.camp](mailto:hello@elm.camp)."""
         |> MarkdownThemed.renderFull
