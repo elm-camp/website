@@ -59,7 +59,6 @@ render chosenRenderer markdownBody =
                        )
                     |> Element.column
                         [ Element.width Element.fill
-                        , Element.spacing 20
                         ]
            )
 
@@ -80,7 +79,7 @@ bulletPoint children =
 renderer : Theme -> Markdown.Renderer.Renderer (Element msg)
 renderer theme =
     { heading = \data -> Element.row [] [ heading theme data ]
-    , paragraph = \children -> Element.paragraph [ Element.paddingXY 0 10 ] children
+    , paragraph = Element.paragraph [ Element.paddingEach { left = 0, right = 0, top = 0, bottom = 20 } ]
     , blockQuote =
         \children ->
             Element.column
@@ -128,7 +127,11 @@ renderer theme =
                 }
     , unorderedList =
         \items ->
-            Element.column [ Element.spacing 15, Element.width Element.fill ]
+            Element.column
+                [ Element.spacing 15
+                , Element.width Element.fill
+                , Element.paddingEach { top = 0, right = 0, bottom = 40, left = 0 }
+                ]
                 (items
                     |> List.map
                         (\listItem ->
@@ -191,7 +194,7 @@ heading1 =
     [ Element.Font.size 48
     , Element.Font.semiBold
     , Element.Font.color lightTheme.defaultText
-    , Element.paddingXY 0 20
+    , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }
     ]
 
 
@@ -206,14 +209,14 @@ heading theme { level, rawText, children } =
                 [ Element.Font.color theme.elmText
                 , Element.Font.size 24
                 , Element.Font.extraBold
-                , Element.paddingEach { top = 50, right = 0, bottom = 20, left = 0 }
+                , Element.paddingEach { top = 0, right = 0, bottom = 20, left = 0 }
                 ]
 
             3 ->
                 [ Element.Font.color theme.defaultText
                 , Element.Font.size 18
                 , Element.Font.medium
-                , Element.paddingEach { top = 30, right = 0, bottom = 10, left = 0 }
+                , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
                 ]
 
             4 ->
