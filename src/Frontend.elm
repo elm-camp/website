@@ -72,6 +72,14 @@ tryLoading loadingModel =
                 , windowSize = windowSize
                 , showTooltip = False
                 , prices = loadingModel.prices
+                , selectedTicket = Nothing
+                , form =
+                    { attendee1Name = ""
+                    , attendee2Name = ""
+                    , billingEmail = ""
+                    , originCity = ""
+                    , primaryModeOfTravel = Nothing
+                    }
                 }
             , Cmd.none
             )
@@ -107,8 +115,8 @@ updateLoaded msg model =
         MouseDown ->
             ( { model | showTooltip = False }, Cmd.none )
 
-        PressedBuy priceId ->
-            ( model, Cmd.none )
+        PressedBuy productId priceId ->
+            ( { model | selectedTicket = Just ( productId, priceId ) }, Cmd.none )
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -265,52 +273,57 @@ loadedView model =
         ( windowWidth, _ ) =
             model.windowSize
     in
-    Element.column
-        [ Element.paddingXY
-            (if windowWidth < 800 then
-                24
+    case model.selectedTicket of
+        Just ( productId, priceId ) ->
+            Element.none
 
-             else
-                60
-            )
-            24
-        , Element.width Element.fill
-        ]
-        [ Element.column
-            [ Element.spacing 80, Element.width Element.fill ]
-            [ header model
-            , Element.column
-                [ Element.width Element.fill, Element.spacing 40 ]
-                [ Element.column
-                    contentAttributes
-                    [ content1, unconferenceBulletPoints model ]
-                , if windowWidth > 950 then
-                    [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-                        |> List.map (dallundCastleImage (Element.px 288))
-                        |> Element.wrappedRow
-                            [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+        Nothing ->
+            Element.column
+                [ Element.paddingXY
+                    (if windowWidth < 800 then
+                        24
 
-                  else
-                    [ [ "image1.webp", "image2.webp" ]
-                    , [ "image3.webp", "image4.webp" ]
-                    , [ "image5.webp", "image6.webp" ]
-                    ]
-                        |> List.map
-                            (\paths ->
-                                Element.row
-                                    [ Element.spacing 10, Element.width Element.fill ]
-                                    (List.map (dallundCastleImage Element.fill) paths)
-                            )
-                        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
-                , Element.column
-                    [ Element.width Element.fill ]
-                    [ Element.paragraph (contentAttributes ++ MarkdownThemed.heading1) [ Element.text "Tickets" ]
-                    , stripe model
-                    ]
-                , Element.el contentAttributes content2
+                     else
+                        60
+                    )
+                    24
+                , Element.width Element.fill
                 ]
-            ]
-        ]
+                [ Element.column
+                    [ Element.spacing 80, Element.width Element.fill ]
+                    [ header model
+                    , Element.column
+                        [ Element.width Element.fill, Element.spacing 40 ]
+                        [ Element.column
+                            contentAttributes
+                            [ content1, unconferenceBulletPoints model ]
+                        , if windowWidth > 950 then
+                            [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
+                                |> List.map (dallundCastleImage (Element.px 288))
+                                |> Element.wrappedRow
+                                    [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+
+                          else
+                            [ [ "image1.webp", "image2.webp" ]
+                            , [ "image3.webp", "image4.webp" ]
+                            , [ "image5.webp", "image6.webp" ]
+                            ]
+                                |> List.map
+                                    (\paths ->
+                                        Element.row
+                                            [ Element.spacing 10, Element.width Element.fill ]
+                                            (List.map (dallundCastleImage Element.fill) paths)
+                                    )
+                                |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+                        , Element.column
+                            [ Element.width Element.fill ]
+                            [ Element.paragraph (contentAttributes ++ MarkdownThemed.heading1) [ Element.text "Tickets" ]
+                            , stripe model
+                            ]
+                        , Element.el contentAttributes content2
+                        ]
+                    ]
+                ]
 
 
 dallundCastleImage : Element.Length -> String -> Element msg
@@ -336,7 +349,7 @@ stripe model =
             (\ticket ->
                 case AssocList.get ticket.productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (PressedBuy price.priceId) price.price ticket
+                        Tickets.viewMobile (PressedBuy ticket.productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
@@ -349,7 +362,7 @@ stripe model =
             (\ticket ->
                 case AssocList.get ticket.productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop (PressedBuy price.priceId) price.price ticket
+                        Tickets.viewDesktop (PressedBuy ticket.productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none

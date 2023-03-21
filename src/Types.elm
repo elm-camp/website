@@ -3,6 +3,7 @@ module Types exposing (..)
 import AssocList
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
+import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
 import Stripe exposing (Price, PriceData, PriceId, ProductId)
@@ -24,7 +25,34 @@ type alias LoadedModel =
     , windowSize : ( Int, Int )
     , showTooltip : Bool
     , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    , selectedTicket : Maybe ( ProductId, PriceId )
+    , form : PurchaseForm
     }
+
+
+type alias PurchaseForm =
+    { attendee1Name : String
+    , attendee2Name : String
+    , billingEmail : String
+    , originCity : String
+    , primaryModeOfTravel : Maybe TravelMode
+    }
+
+
+type PurchaseFormValidated
+    = SinglePurchase
+        { attendeeName : String
+        , billingEmail : EmailAddress
+        , originCity : String
+        , primaryModeOfTravel : TravelMode
+        }
+    | CouplePurchase
+        { attendee1Name : String
+        , attendee2Name : String
+        , billingEmail : EmailAddress
+        , originCity : String
+        , primaryModeOfTravel : TravelMode
+        }
 
 
 type alias BackendModel =
@@ -35,7 +63,7 @@ type alias BackendModel =
 
 
 type alias Order =
-    { email : Email
+    { email : EmailAddress
     , products : List Product
     , sponsorship : Maybe Sponsorship
     , opportunityGrantContribution : Price
@@ -73,10 +101,8 @@ type TravelMode
     | Bus
     | Car
     | Train
-
-
-type alias Email =
-    String
+    | Boat
+    | OtherTravelMode
 
 
 type alias CityCode =
@@ -89,7 +115,7 @@ type FrontendMsg
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
-    | PressedBuy PriceId
+    | PressedBuy ProductId PriceId
 
 
 type ToBackend
