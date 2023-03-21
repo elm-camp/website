@@ -3,6 +3,7 @@ module Types exposing (..)
 import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Money
+import Stripe.Api exposing (Price)
 import Url exposing (Url)
 
 
@@ -24,7 +25,6 @@ type alias LoadedModel =
 
 type alias BackendModel =
     { orders : List Order
-    , inventoryLimit : List ( Product, Int )
     }
 
 
@@ -32,7 +32,7 @@ type alias Order =
     { email : Email
     , products : List Product
     , sponsorship : Maybe Sponsorship
-    , opportunityGrantContribution : Amount
+    , opportunityGrantContribution : Price
     , originCity : CityCode
     , primaryTravelMode : TravelMode
     , status : OrderStatus
@@ -51,19 +51,15 @@ type alias StripePaymentId =
 
 
 type Product
-    = CampTicket Amount
-    | CouplesCampTicket Amount
-    | CampfireTicket Amount
+    = CampTicket Price
+    | CouplesCampTicket Price
+    | CampfireTicket Price
 
 
 type Sponsorship
-    = SponsorBronze Amount
-    | SponsorSilver Amount
-    | SponsorGold Amount
-
-
-type Amount
-    = Amount Money.Currency Int
+    = SponsorBronze Price
+    | SponsorSilver Price
+    | SponsorGold Price
 
 
 type TravelMode

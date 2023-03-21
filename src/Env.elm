@@ -1,12 +1,5 @@
 module Env exposing (..)
 
--- The Env.elm file is for per-environment configuration.
--- See https://dashboard.lamdera.app/docs/environment for more info.
-
-
-dummyConfigItem =
-    ""
-
 
 stripePostbackUrl =
     "http://localhost:8000"
@@ -14,4 +7,4 @@ stripePostbackUrl =
 
 stripePrivateApiKey =
     -- Test environment, prod key set in prod
-    ""
+    "sk_test_BmyEiWFhwdb5PH3hGD5xZXft00r6mCGnKI"

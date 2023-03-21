@@ -1,4 +1,4 @@
-module Stripe.Api exposing (..)
+module Stripe.Api exposing (Price(..), PriceId(..), ProductId(..), createCheckoutSession, getPrices)
 
 import Env
 import Http
@@ -6,8 +6,8 @@ import HttpHelpers exposing (..)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
+import Money
 import Ports exposing (stripe_to_js)
-import RemoteData
 import Url exposing (percentEncode)
 
 
@@ -15,7 +15,62 @@ import Url exposing (percentEncode)
 -- HTTP Backend API
 
 
-createCheckoutSession priceId toMsg =
+type Price
+    = Price Money.Currency Int
+
+
+type ProductId
+    = ProductId String
+
+
+type PriceId
+    = PriceId String
+
+
+getPrices : (Result Http.Error (List { priceId : PriceId, price : Price, productId : ProductId }) -> msg) -> Cmd msg
+getPrices toMsg =
+    Http.request
+        { method = "GET"
+        , headers = headers
+        , url = "https://api.stripe.com/v1/prices"
+        , body = Http.emptyBody
+        , expect = expectJson_ toMsg decodePrices
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+decodePrices =
+    D.field "data" (D.list decodePrice)
+
+
+decodePrice : D.Decoder { priceId : PriceId, price : Price, productId : ProductId }
+decodePrice =
+    D.succeed
+        (\priceId currency amount productId ->
+            { priceId = priceId, price = Price currency amount, productId = productId }
+        )
+        |> required "id" (D.map PriceId D.string)
+        |> required "currency" decodeCurrency
+        |> required "unit_amount" D.int
+        |> required "product" (D.map ProductId D.string)
+
+
+decodeCurrency =
+    D.andThen
+        (\text ->
+            case Money.fromString text of
+                Just currency ->
+                    D.succeed currency
+
+                Nothing ->
+                    D.fail "Not recognized currency"
+        )
+        D.string
+
+
+createCheckoutSession : PriceId -> (Result Http.Error Session -> msg) -> Cmd msg
+createCheckoutSession (PriceId priceId) toMsg =
     -- @TODO support multiple prices, see Data.Tickets
     let
         body =
@@ -29,12 +84,10 @@ createCheckoutSession priceId toMsg =
     in
     Http.request
         { method = "POST"
-        , headers =
-            [ Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey)
-            ]
+        , headers = headers
         , url = "https://api.stripe.com/v1/checkout/sessions"
         , body = body
-        , expect = expectJson_ (RemoteData.fromResult >> toMsg) decodeSession
+        , expect = expectJson_ toMsg decodeSession
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -54,15 +107,22 @@ type alias Session =
     { id : String }
 
 
+decodeSession : D.Decoder Session
 decodeSession =
     D.succeed Session
         |> required "id" D.string
+
+
+headers : List Http.Header
+headers =
+    [ Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey) ]
 
 
 
 -- Ports API
 
 
+loadCheckout : String -> String -> Cmd msg
 loadCheckout publicApiKey sid =
     toJsMessage "loadCheckout"
         [ ( "id", E.string sid )
