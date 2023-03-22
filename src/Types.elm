@@ -80,8 +80,8 @@ type OrderStatus
     | Refunded StripePaymentId
 
 
-type alias StripePaymentId =
-    String
+type StripePaymentId
+    = StripePaymentId String
 
 
 type Product
@@ -116,6 +116,7 @@ type FrontendMsg
     | PressedShowTooltip
     | MouseDown
     | PressedBuy ProductId PriceId
+    | FormChanged PurchaseForm
 
 
 type ToBackend

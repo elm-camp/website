@@ -1,4 +1,4 @@
-module Tickets exposing (Ticket, tickets, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, couplesCampTicket, tickets, viewDesktop, viewMobile)
 
 import Element exposing (Element)
 import Element.Background

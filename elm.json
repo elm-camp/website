@@ -17,6 +17,7 @@
             "elm/json": "1.1.3",
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
+            "elm-community/list-extra": "8.7.0",
             "krisajenkins/remotedata": "6.0.1",
             "lamdera/codecs": "1.0.0",
             "lamdera/core": "1.0.0",

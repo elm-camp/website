@@ -14,7 +14,9 @@ import Html exposing (Html)
 import Html.Attributes as Attr
 import Json.Decode
 import Lamdera
+import List.Extra as List
 import MarkdownThemed
+import Stripe exposing (ProductId)
 import Task
 import Tickets
 import Types exposing (..)
@@ -117,6 +119,9 @@ updateLoaded msg model =
 
         PressedBuy productId priceId ->
             ( { model | selectedTicket = Just ( productId, priceId ) }, Cmd.none )
+
+        FormChanged form ->
+            ( { model | form = form }, Cmd.none )
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -272,21 +277,37 @@ loadedView model =
     let
         ( windowWidth, _ ) =
             model.windowSize
+
+        padding =
+            Element.paddingXY
+                (if windowWidth < 800 then
+                    24
+
+                 else
+                    60
+                )
+                24
     in
     case model.selectedTicket of
         Just ( productId, priceId ) ->
-            Element.none
+            case List.find (\ticket -> ticket.productId == productId) Tickets.tickets of
+                Just ticket ->
+                    Element.column
+                        (padding :: contentAttributes)
+                        [ Element.row
+                            [ Element.spacing 16, Element.width Element.fill ]
+                            [ Element.paragraph [] [ Element.text ticket.name ]
+                            , Element.image [ Element.width (Element.px 50) ] { src = ticket.image, description = "Illustration of camp" }
+                            ]
+                        , formView productId model.form
+                        ]
+
+                Nothing ->
+                    Element.text "Ticket not found"
 
         Nothing ->
             Element.column
-                [ Element.paddingXY
-                    (if windowWidth < 800 then
-                        24
-
-                     else
-                        60
-                    )
-                    24
+                [ padding
                 , Element.width Element.fill
                 ]
                 [ Element.column
@@ -324,6 +345,31 @@ loadedView model =
                         ]
                     ]
                 ]
+
+
+formView : ProductId -> PurchaseForm -> Element FrontendMsg
+formView productId form =
+    Element.column
+        [ Element.width Element.fill, Element.spacing 16 ]
+        [ Element.Input.text
+            []
+            { text = form.attendee1Name
+            , onChange = \a -> FormChanged { form | attendee1Name = a }
+            , placeholder = Nothing
+            , label = Element.Input.labelAbove [] (Element.text "Your name")
+            }
+        , if productId == Tickets.couplesCampTicket.productId then
+            Element.Input.text
+                []
+                { text = form.attendee1Name
+                , onChange = \a -> FormChanged { form | attendee1Name = a }
+                , placeholder = Nothing
+                , label = Element.Input.labelAbove [] (Element.text "Name of the person you're sharing a room with")
+                }
+
+          else
+            Element.none
+        ]
 
 
 dallundCastleImage : Element.Length -> String -> Element msg
