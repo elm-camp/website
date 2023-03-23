@@ -11,6 +11,7 @@ import Element.Border
 import Element.Font
 import Element.Input
 import EmailAddress exposing (EmailAddress)
+import Env
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
@@ -128,7 +129,15 @@ updateLoaded msg model =
             ( { model | selectedTicket = Just ( productId, priceId ) }, Cmd.none )
 
         FormChanged form ->
-            ( { model | form = form }, Cmd.none )
+            case model.form.submitStatus of
+                NotSubmitted _ ->
+                    ( { model | form = form }, Cmd.none )
+
+                Submitting ->
+                    ( model, Cmd.none )
+
+                SubmitBackendError ->
+                    ( model, Cmd.none )
 
         PressedSubmitForm productId priceId ->
             let
@@ -137,7 +146,7 @@ updateLoaded msg model =
             in
             case ( form.submitStatus, validateForm productId form ) of
                 ( NotSubmitted _, Just validated ) ->
-                    ( model, Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust validated)) )
+                    ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
 
                 ( NotSubmitted _, Nothing ) ->
                     ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }, Cmd.none )
@@ -222,14 +231,27 @@ updateFromBackend msg model =
                     ( model, Cmd.none )
 
         Loaded loaded ->
-            case msg of
-                PricesToFrontend prices ->
-                    ( Loaded { loaded | prices = prices }, Cmd.none )
+            updateFromBackendLoaded msg loaded |> Tuple.mapFirst Loaded
 
-                SubmitFormResponse ->
+
+updateFromBackendLoaded msg model =
+    case msg of
+        PricesToFrontend prices ->
+            ( { model | prices = prices }, Cmd.none )
+
+        SubmitFormResponse result ->
+            case result of
+                Ok stripeSessionId ->
                     ( model
-                    , Browser.Navigation.load ""
+                    , Stripe.loadCheckout Env.stripePublicApiKey stripeSessionId
                     )
+
+                Err () ->
+                    let
+                        form =
+                            model.form
+                    in
+                    ( { model | form = { form | submitStatus = SubmitBackendError } }, Cmd.none )
 
 
 fontFace : Int -> String -> String
@@ -444,6 +466,27 @@ loadedView model =
 formView : ( Int, Int ) -> ProductId -> PriceId -> PurchaseForm -> Element FrontendMsg
 formView ( windowWidth, _ ) productId priceId form =
     let
+        errorText error =
+            Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
+
+        textInput onChange title validator text =
+            Element.column
+                [ Element.spacing 4, Element.width Element.fill ]
+                [ Element.Input.text
+                    []
+                    { text = text
+                    , onChange = onChange
+                    , placeholder = Nothing
+                    , label = Element.Input.labelAbove [] (Element.text title)
+                    }
+                , case ( form.submitStatus, validator text ) of
+                    ( NotSubmitted PressedSubmit, Err error ) ->
+                        errorText error
+
+                    _ ->
+                        Element.none
+                ]
+
         submitButton =
             Element.Input.button
                 Tickets.submitButtonAttributes
@@ -466,32 +509,22 @@ formView ( windowWidth, _ ) productId priceId form =
                 }
     in
     Element.column
-        [ Element.width Element.fill, Element.spacing 16 ]
-        [ Element.Input.text
-            []
-            { text = form.attendee1Name
-            , onChange = \a -> FormChanged { form | attendee1Name = a }
-            , placeholder = Nothing
-            , label = Element.Input.labelAbove [] (Element.text "Your name")
-            }
+        [ Element.width Element.fill, Element.spacing 24 ]
+        [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" validateName form.attendee1Name
         , if productId == Tickets.couplesCampTicket.productId then
-            Element.Input.text
-                []
-                { text = form.attendee2Name
-                , onChange = \a -> FormChanged { form | attendee2Name = a }
-                , placeholder = Nothing
-                , label = Element.Input.labelAbove [] (Element.text "Name of the person you're sharing a room with")
-                }
+            textInput
+                (\a -> FormChanged { form | attendee2Name = a })
+                "Name of the person you're sharing a room with"
+                validateName
+                form.attendee2Name
 
           else
             Element.none
-        , Element.Input.text
-            []
-            { text = form.billingEmail
-            , onChange = \a -> FormChanged { form | billingEmail = a }
-            , placeholder = Nothing
-            , label = Element.Input.labelAbove [] (Element.text "Billing email address")
-            }
+        , textInput
+            (\a -> FormChanged { form | billingEmail = a })
+            "Billing email address"
+            validateEmailAddress
+            form.billingEmail
         , Element.column
             [ Element.spacing 8 ]
             [ Element.paragraph [] [ Element.text "What will be your primary method of travelling to the event?" ]
@@ -509,6 +542,12 @@ formView ( windowWidth, _ ) productId priceId form =
                                 )
                     )
                 |> Element.column []
+            , case ( form.submitStatus, form.primaryModeOfTravel ) of
+                ( NotSubmitted PressedSubmit, Nothing ) ->
+                    errorText "Please select one of the above"
+
+                _ ->
+                    Element.none
             ]
         , if windowWidth > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]

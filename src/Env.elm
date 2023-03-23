@@ -10,6 +10,10 @@ stripePrivateApiKey =
     "sk_test_BmyEiWFhwdb5PH3hGD5xZXft00r6mCGnKI"
 
 
+stripePublicApiKey =
+    ""
+
+
 campfireTicketProductId =
     "prod_NZEShNjlWMPhTA"
 

@@ -1,4 +1,4 @@
-module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), createCheckoutSession, getPrices, loadCheckout)
+module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), createCheckoutSession, getPrices, loadCheckout)
 
 import Env
 import Http
@@ -81,7 +81,7 @@ decodeCurrency =
         D.string
 
 
-createCheckoutSession : PriceId -> (Result Http.Error Session -> msg) -> Cmd msg
+createCheckoutSession : PriceId -> (Result Http.Error StripeSessionId -> msg) -> Cmd msg
 createCheckoutSession (PriceId priceId) toMsg =
     -- @TODO support multiple prices, see Data.Tickets
     let
@@ -115,13 +115,13 @@ type alias CreateSessionRequest =
     }
 
 
-type alias Session =
-    { id : String }
+type StripeSessionId
+    = StripeSessionId String
 
 
-decodeSession : D.Decoder Session
+decodeSession : D.Decoder StripeSessionId
 decodeSession =
-    D.succeed Session
+    D.succeed StripeSessionId
         |> required "id" D.string
 
 
@@ -134,8 +134,8 @@ headers =
 -- Ports API
 
 
-loadCheckout : String -> String -> Cmd msg
-loadCheckout publicApiKey sid =
+loadCheckout : String -> StripeSessionId -> Cmd msg
+loadCheckout publicApiKey (StripeSessionId sid) =
     toJsMessage "loadCheckout"
         [ ( "id", E.string sid )
         , ( "publicApiKey", E.string publicApiKey )

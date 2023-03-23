@@ -7,7 +7,7 @@ import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
 import Name exposing (Name)
-import Stripe exposing (Price, PriceData, PriceId, ProductId)
+import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Time
 import TravelMode exposing (TravelMode)
 import Untrusted exposing (Untrusted)
@@ -46,6 +46,7 @@ type alias PurchaseForm =
 type SubmitStatus
     = NotSubmitted PressedSubmit
     | Submitting
+    | SubmitBackendError
 
 
 type PressedSubmit
@@ -127,15 +128,16 @@ type FrontendMsg
 
 
 type ToBackend
-    = SubmitFormRequest (Untrusted PurchaseFormValidated)
+    = SubmitFormRequest PriceId (Untrusted PurchaseFormValidated)
 
 
 type BackendMsg
     = GotTime Time.Posix
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
+    | CreatedCheckoutSession ClientId (Result Http.Error StripeSessionId)
 
 
 type ToFrontend
     = PricesToFrontend (AssocList.Dict ProductId { priceId : PriceId, price : Price })
-    | SubmitFormResponse
+    | SubmitFormResponse (Result () StripeSessionId)

@@ -20,10 +20,6 @@ app =
 
 init : ( BackendModel, Cmd BackendMsg )
 init =
-    let
-        _ =
-            Stripe.loadCheckout
-    in
     ( { orders = []
       , prices = AssocList.empty
       , time = Time.millisToPosix 0
@@ -73,9 +69,19 @@ update msg model =
         OnConnected _ clientId ->
             ( model, Lamdera.sendToFrontend clientId (PricesToFrontend model.prices) )
 
+        CreatedCheckoutSession clientId result ->
+            case result of
+                Ok stripeSessionId ->
+                    ( model, SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId )
+
+                Err error ->
+                    ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
+
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-updateFromFrontend sessionId clientId msg model =
+updateFromFrontend _ clientId msg model =
     case msg of
-        SubmitFormRequest _ ->
-            ( model, Lamdera.sendToFrontend clientId SubmitFormResponse )
+        SubmitFormRequest priceId _ ->
+            ( model
+            , Stripe.createCheckoutSession priceId (CreatedCheckoutSession clientId)
+            )
