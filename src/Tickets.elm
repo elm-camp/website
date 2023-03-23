@@ -1,4 +1,4 @@
-module Tickets exposing (Ticket, couplesCampTicket, tickets, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, couplesCampTicket, submitButtonAttributes, tickets, viewDesktop, viewMobile)
 
 import Element exposing (Element)
 import Element.Background
@@ -82,7 +82,7 @@ viewDesktop onPress (Price currency amount) ticket =
             , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
             ]
             { onPress = Just onPress
-            , label = Element.el [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ] (Element.text "Purchase")
+            , label = Element.el [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ] (Element.text "Select")
             }
         ]
 
@@ -114,14 +114,21 @@ viewMobile onPress (Price currency amount) ticket =
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
         , Element.Input.button
-            [ Element.width Element.fill
-            , Element.Background.color (Element.rgb255 92 176 126)
-            , Element.padding 16
-            , Element.Border.rounded 8
-            , Element.alignBottom
-            , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-            ]
+            submitButtonAttributes
             { onPress = Just onPress
-            , label = Element.el [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ] (Element.text "Purchase")
+            , label = Element.el [ Element.centerX ] (Element.text "Select")
             }
         ]
+
+
+submitButtonAttributes : List (Element.Attribute msg)
+submitButtonAttributes =
+    [ Element.width Element.fill
+    , Element.Background.color (Element.rgb255 92 176 126)
+    , Element.padding 16
+    , Element.Border.rounded 8
+    , Element.alignBottom
+    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Element.Font.semiBold
+    , Element.Font.color (Element.rgb 1 1 1)
+    ]

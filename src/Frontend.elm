@@ -4,22 +4,28 @@ import AssocList
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
-import Browser.Navigation as Nav
+import Browser.Navigation
 import Element exposing (Element)
 import Element.Background
 import Element.Border
 import Element.Font
 import Element.Input
+import EmailAddress exposing (EmailAddress)
 import Html exposing (Html)
-import Html.Attributes as Attr
+import Html.Attributes
+import Html.Events
 import Json.Decode
 import Lamdera
 import List.Extra as List
 import MarkdownThemed
-import Stripe exposing (ProductId)
+import Name exposing (Name)
+import Stripe exposing (PriceId, ProductId)
 import Task
 import Tickets
+import Toop exposing (T3(..), T4(..))
+import TravelMode
 import Types exposing (..)
+import Untrusted
 import Url
 
 
@@ -42,7 +48,7 @@ subscriptions model =
         ]
 
 
-init : Url.Url -> Nav.Key -> ( FrontendModel, Cmd FrontendMsg )
+init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
 init _ key =
     ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty }
     , Browser.Dom.getViewport
@@ -76,7 +82,8 @@ tryLoading loadingModel =
                 , prices = loadingModel.prices
                 , selectedTicket = Nothing
                 , form =
-                    { attendee1Name = ""
+                    { submitStatus = NotSubmitted NotPressedSubmit
+                    , attendee1Name = ""
                     , attendee2Name = ""
                     , billingEmail = ""
                     , originCity = ""
@@ -97,12 +104,12 @@ updateLoaded msg model =
             case urlRequest of
                 Internal url ->
                     ( model
-                    , Nav.pushUrl model.key (Url.toString url)
+                    , Browser.Navigation.pushUrl model.key (Url.toString url)
                     )
 
                 External url ->
                     ( model
-                    , Nav.load url
+                    , Browser.Navigation.load url
                     )
 
         UrlChanged url ->
@@ -123,6 +130,85 @@ updateLoaded msg model =
         FormChanged form ->
             ( { model | form = form }, Cmd.none )
 
+        PressedSubmitForm productId priceId ->
+            let
+                form =
+                    model.form
+            in
+            case ( form.submitStatus, validateForm productId form ) of
+                ( NotSubmitted _, Just validated ) ->
+                    ( model, Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust validated)) )
+
+                ( NotSubmitted _, Nothing ) ->
+                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        PressedCancelForm ->
+            ( { model | selectedTicket = Nothing }, Cmd.none )
+
+
+validateForm : ProductId -> PurchaseForm -> Maybe PurchaseFormValidated
+validateForm productId form =
+    let
+        name1 =
+            validateName form.attendee1Name
+
+        name2 =
+            validateName form.attendee2Name
+
+        emailAddress =
+            validateEmailAddress form.billingEmail
+    in
+    if productId == Tickets.couplesCampTicket.productId then
+        case T4 name1 name2 emailAddress form.primaryModeOfTravel of
+            T4 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
+                CouplePurchase
+                    { attendee1Name = name1Ok
+                    , attendee2Name = name2Ok
+                    , billingEmail = emailAddressOk
+                    , originCity = ""
+                    , primaryModeOfTravel = primaryModeOfTravel
+                    }
+                    |> Just
+
+            _ ->
+                Nothing
+
+    else
+        case T3 name1 emailAddress form.primaryModeOfTravel of
+            T3 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
+                SinglePurchase
+                    { attendeeName = name1Ok
+                    , billingEmail = emailAddressOk
+                    , originCity = ""
+                    , primaryModeOfTravel = primaryModeOfTravel
+                    }
+                    |> Just
+
+            _ ->
+                Nothing
+
+
+validateName : String -> Result String Name
+validateName name =
+    Name.fromString name |> Result.mapError Name.errorToString
+
+
+validateEmailAddress : String -> Result String EmailAddress
+validateEmailAddress text =
+    if String.trim text == "" then
+        Err "Please enter an email address"
+
+    else
+        case EmailAddress.fromString text of
+            Just emailAddress ->
+                Ok emailAddress
+
+            Nothing ->
+                Err "Invalid email address"
+
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
 updateFromBackend msg model =
@@ -132,10 +218,18 @@ updateFromBackend msg model =
                 PricesToFrontend prices ->
                     ( Loading { loading | prices = prices }, Cmd.none )
 
+                _ ->
+                    ( model, Cmd.none )
+
         Loaded loaded ->
             case msg of
                 PricesToFrontend prices ->
                     ( Loaded { loaded | prices = prices }, Cmd.none )
+
+                SubmitFormResponse ->
+                    ( model
+                    , Browser.Navigation.load ""
+                    )
 
 
 fontFace : Int -> String -> String
@@ -299,7 +393,7 @@ loadedView model =
                             [ Element.paragraph [] [ Element.text ticket.name ]
                             , Element.image [ Element.width (Element.px 50) ] { src = ticket.image, description = "Illustration of camp" }
                             ]
-                        , formView productId model.form
+                        , formView model.windowSize productId priceId model.form
                         ]
 
                 Nothing ->
@@ -347,8 +441,30 @@ loadedView model =
                 ]
 
 
-formView : ProductId -> PurchaseForm -> Element FrontendMsg
-formView productId form =
+formView : ( Int, Int ) -> ProductId -> PriceId -> PurchaseForm -> Element FrontendMsg
+formView ( windowWidth, _ ) productId priceId form =
+    let
+        submitButton =
+            Element.Input.button
+                Tickets.submitButtonAttributes
+                { onPress = Just (PressedSubmitForm productId priceId)
+                , label = Element.el [ Element.centerX ] (Element.text "Purchase ticket")
+                }
+
+        cancelButton =
+            Element.Input.button
+                [ Element.width Element.fill
+                , Element.Background.color (Element.rgb255 255 255 255)
+                , Element.padding 16
+                , Element.Border.rounded 8
+                , Element.alignBottom
+                , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+                , Element.Font.semiBold
+                ]
+                { onPress = Just PressedCancelForm
+                , label = Element.el [ Element.centerX ] (Element.text "Cancel")
+                }
+    in
     Element.column
         [ Element.width Element.fill, Element.spacing 16 ]
         [ Element.Input.text
@@ -361,15 +477,67 @@ formView productId form =
         , if productId == Tickets.couplesCampTicket.productId then
             Element.Input.text
                 []
-                { text = form.attendee1Name
-                , onChange = \a -> FormChanged { form | attendee1Name = a }
+                { text = form.attendee2Name
+                , onChange = \a -> FormChanged { form | attendee2Name = a }
                 , placeholder = Nothing
                 , label = Element.Input.labelAbove [] (Element.text "Name of the person you're sharing a room with")
                 }
 
           else
             Element.none
+        , Element.Input.text
+            []
+            { text = form.billingEmail
+            , onChange = \a -> FormChanged { form | billingEmail = a }
+            , placeholder = Nothing
+            , label = Element.Input.labelAbove [] (Element.text "Billing email address")
+            }
+        , Element.column
+            [ Element.spacing 8 ]
+            [ Element.paragraph [] [ Element.text "What will be your primary method of travelling to the event?" ]
+            , TravelMode.all
+                |> List.map
+                    (\choice ->
+                        radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
+                            |> Element.map
+                                (\() ->
+                                    if Just choice == form.primaryModeOfTravel then
+                                        FormChanged { form | primaryModeOfTravel = Nothing }
+
+                                    else
+                                        FormChanged { form | primaryModeOfTravel = Just choice }
+                                )
+                    )
+                |> Element.column []
+            ]
+        , if windowWidth > 600 then
+            Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
+
+          else
+            Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
         ]
+
+
+radioButton : String -> String -> Bool -> Element ()
+radioButton groupName text isChecked =
+    Html.label
+        [ Html.Attributes.style "padding" "6px"
+        , Html.Attributes.style "white-space" "normal"
+        , Html.Attributes.style "line-height" "24px"
+        ]
+        [ Html.input
+            [ Html.Attributes.type_ "radio"
+            , Html.Attributes.checked isChecked
+            , Html.Attributes.name groupName
+            , Html.Events.onClick ()
+            , Html.Attributes.style "transform" "translateY(-2px)"
+            , Html.Attributes.style "margin" "0 8px 0 0"
+            ]
+            []
+        , Html.text text
+        ]
+        |> Element.html
+        |> Element.el []
 
 
 dallundCastleImage : Element.Length -> String -> Element msg

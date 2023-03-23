@@ -6,8 +6,11 @@ import Browser.Navigation exposing (Key)
 import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
+import Name exposing (Name)
 import Stripe exposing (Price, PriceData, PriceId, ProductId)
 import Time
+import TravelMode exposing (TravelMode)
+import Untrusted exposing (Untrusted)
 import Url exposing (Url)
 
 
@@ -31,7 +34,8 @@ type alias LoadedModel =
 
 
 type alias PurchaseForm =
-    { attendee1Name : String
+    { submitStatus : SubmitStatus
+    , attendee1Name : String
     , attendee2Name : String
     , billingEmail : String
     , originCity : String
@@ -39,16 +43,26 @@ type alias PurchaseForm =
     }
 
 
+type SubmitStatus
+    = NotSubmitted PressedSubmit
+    | Submitting
+
+
+type PressedSubmit
+    = PressedSubmit
+    | NotPressedSubmit
+
+
 type PurchaseFormValidated
     = SinglePurchase
-        { attendeeName : String
+        { attendeeName : Name
         , billingEmail : EmailAddress
         , originCity : String
         , primaryModeOfTravel : TravelMode
         }
     | CouplePurchase
-        { attendee1Name : String
-        , attendee2Name : String
+        { attendee1Name : Name
+        , attendee2Name : Name
         , billingEmail : EmailAddress
         , originCity : String
         , primaryModeOfTravel : TravelMode
@@ -96,15 +110,6 @@ type Sponsorship
     | SponsorGold Price
 
 
-type TravelMode
-    = Flight
-    | Bus
-    | Car
-    | Train
-    | Boat
-    | OtherTravelMode
-
-
 type alias CityCode =
     String
 
@@ -117,10 +122,12 @@ type FrontendMsg
     | MouseDown
     | PressedBuy ProductId PriceId
     | FormChanged PurchaseForm
+    | PressedSubmitForm ProductId PriceId
+    | PressedCancelForm
 
 
 type ToBackend
-    = NoOpToBackend
+    = SubmitFormRequest (Untrusted PurchaseFormValidated)
 
 
 type BackendMsg
@@ -131,3 +138,4 @@ type BackendMsg
 
 type ToFrontend
     = PricesToFrontend (AssocList.Dict ProductId { priceId : PriceId, price : Price })
+    | SubmitFormResponse

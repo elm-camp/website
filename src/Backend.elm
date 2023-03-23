@@ -77,5 +77,5 @@ update msg model =
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
-        NoOpToBackend ->
-            ( model, Cmd.none )
+        SubmitFormRequest _ ->
+            ( model, Lamdera.sendToFrontend clientId SubmitFormResponse )

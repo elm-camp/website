@@ -20,3 +20,11 @@ couplesCampTicketProductId =
 
 campTicketProductId =
     "prod_NZEQV1gtsmmSbR"
+
+
+isProduction_ =
+    "false"
+
+
+isProduction =
+    String.toLower isProduction_ == "true"
