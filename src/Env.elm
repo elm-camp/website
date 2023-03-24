@@ -11,7 +11,7 @@ stripePrivateApiKey =
 
 
 stripePublicApiKey =
-    ""
+    "pk_test_S7leIg6SGfj2NMkUaP6ipIOv00gGgSlmgj"
 
 
 campfireTicketProductId =

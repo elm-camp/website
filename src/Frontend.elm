@@ -19,12 +19,11 @@ import Json.Decode
 import Lamdera
 import List.Extra as List
 import MarkdownThemed
-import Name exposing (Name)
+import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
 import Route exposing (Route(..))
 import Stripe exposing (PriceId, ProductId)
 import Task
 import Tickets
-import Toop exposing (T3(..), T4(..))
 import TravelMode
 import Types exposing (..)
 import Untrusted
@@ -146,7 +145,7 @@ updateLoaded msg model =
                 form =
                     model.form
             in
-            case ( form.submitStatus, validateForm productId form ) of
+            case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
                 ( NotSubmitted _, Just validated ) ->
                     ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
 
@@ -158,67 +157,6 @@ updateLoaded msg model =
 
         PressedCancelForm ->
             ( { model | selectedTicket = Nothing }, Cmd.none )
-
-
-validateForm : ProductId -> PurchaseForm -> Maybe PurchaseFormValidated
-validateForm productId form =
-    let
-        name1 =
-            validateName form.attendee1Name
-
-        name2 =
-            validateName form.attendee2Name
-
-        emailAddress =
-            validateEmailAddress form.billingEmail
-    in
-    if productId == Tickets.couplesCampTicket.productId then
-        case T4 name1 name2 emailAddress form.primaryModeOfTravel of
-            T4 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
-                CouplePurchase
-                    { attendee1Name = name1Ok
-                    , attendee2Name = name2Ok
-                    , billingEmail = emailAddressOk
-                    , originCity = ""
-                    , primaryModeOfTravel = primaryModeOfTravel
-                    }
-                    |> Just
-
-            _ ->
-                Nothing
-
-    else
-        case T3 name1 emailAddress form.primaryModeOfTravel of
-            T3 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
-                SinglePurchase
-                    { attendeeName = name1Ok
-                    , billingEmail = emailAddressOk
-                    , originCity = ""
-                    , primaryModeOfTravel = primaryModeOfTravel
-                    }
-                    |> Just
-
-            _ ->
-                Nothing
-
-
-validateName : String -> Result String Name
-validateName name =
-    Name.fromString name |> Result.mapError Name.errorToString
-
-
-validateEmailAddress : String -> Result String EmailAddress
-validateEmailAddress text =
-    if String.trim text == "" then
-        Err "Please enter an email address"
-
-    else
-        case EmailAddress.fromString text of
-            Just emailAddress ->
-                Ok emailAddress
-
-            Nothing ->
-                Err "Invalid email address"
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -408,6 +346,38 @@ loadedView model =
                 [ MarkdownThemed.renderFull "code of conduct text here please!"
                 ]
 
+        PaymentSuccessRoute maybeEmailAddress ->
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24 ]
+                [ Element.paragraph
+                    []
+                    [ "Your ticket purchase was successful! "
+                        ++ "An email has been sent to "
+                        ++ (case maybeEmailAddress of
+                                Just emailAddress ->
+                                    EmailAddress.toString emailAddress
+
+                                Nothing ->
+                                    "your email address"
+                           )
+                        ++ " with additional information."
+                        |> Element.text
+                    ]
+                ]
+
+        PaymentCancelRoute ->
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24 ]
+                [ Element.paragraph
+                    []
+                    [ Element.text "You cancelled your ticket purchase" ]
+                , Element.link
+                    []
+                    { url = Route.encode HomepageRoute
+                    , label = Element.text "Go back to the homepage?"
+                    }
+                ]
+
 
 homepageView model =
     let
@@ -505,9 +475,11 @@ homepageView model =
 formView : ( Int, Int ) -> ProductId -> PriceId -> PurchaseForm -> Element FrontendMsg
 formView ( windowWidth, _ ) productId priceId form =
     let
+        errorText : String -> Element msg
         errorText error =
             Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
 
+        textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
         textInput onChange title validator text =
             Element.column
                 [ Element.spacing 4, Element.width Element.fill ]
@@ -549,12 +521,12 @@ formView ( windowWidth, _ ) productId priceId form =
     in
     Element.column
         [ Element.width Element.fill, Element.spacing 24 ]
-        [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" validateName form.attendee1Name
+        [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
         , if productId == Tickets.couplesCampTicket.productId then
             textInput
                 (\a -> FormChanged { form | attendee2Name = a })
                 "Name of the person you're sharing a room with"
-                validateName
+                PurchaseForm.validateName
                 form.attendee2Name
 
           else
@@ -562,7 +534,7 @@ formView ( windowWidth, _ ) productId priceId form =
         , textInput
             (\a -> FormChanged { form | billingEmail = a })
             "Billing email address"
-            validateEmailAddress
+            PurchaseForm.validateEmailAddress
             form.billingEmail
         , Element.column
             [ Element.spacing 8 ]

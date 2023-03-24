@@ -1,5 +1,6 @@
-module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), createCheckoutSession, getPrices, loadCheckout)
+module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), cancelPath, createCheckoutSession, emailAddressParameter, getPrices, loadCheckout, successPath)
 
+import EmailAddress exposing (EmailAddress)
 import Env
 import Http
 import HttpHelpers exposing (..)
@@ -8,8 +9,10 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
+import Task exposing (Task)
 import Time
 import Url exposing (percentEncode)
+import Url.Builder
 
 
 
@@ -81,8 +84,8 @@ decodeCurrency =
         D.string
 
 
-createCheckoutSession : PriceId -> (Result Http.Error StripeSessionId -> msg) -> Cmd msg
-createCheckoutSession (PriceId priceId) toMsg =
+createCheckoutSession : PriceId -> EmailAddress -> Task Http.Error StripeSessionId
+createCheckoutSession (PriceId priceId) emailAddress =
     -- @TODO support multiple prices, see Data.Tickets
     let
         body =
@@ -90,19 +93,38 @@ createCheckoutSession (PriceId priceId) toMsg =
                 [ ( "line_items[][price]", priceId )
                 , ( "line_items[][quantity]", "1" )
                 , ( "mode", "payment" )
-                , ( "success_url", Env.stripePostbackUrl ++ "/stripe/success?session_id={CHECKOUT_SESSION_ID}" )
-                , ( "cancel_url", Env.stripePostbackUrl ++ "/stripe/cancel" )
+                , ( "success_url"
+                  , Url.Builder.crossOrigin
+                        Env.stripePostbackUrl
+                        [ successPath ]
+                        [ Url.Builder.string emailAddressParameter (EmailAddress.toString emailAddress) ]
+                  )
+                , ( "cancel_url", Url.Builder.crossOrigin Env.stripePostbackUrl [ cancelPath ] [] )
                 ]
     in
-    Http.request
+    Http.task
         { method = "POST"
         , headers = headers
         , url = "https://api.stripe.com/v1/checkout/sessions"
         , body = body
-        , expect = expectJson_ toMsg decodeSession
+        , resolver = jsonResolver decodeSession
         , timeout = Nothing
-        , tracker = Nothing
         }
+
+
+emailAddressParameter : String
+emailAddressParameter =
+    "email-address"
+
+
+successPath : String
+successPath =
+    "stripeSuccess"
+
+
+cancelPath : String
+cancelPath =
+    "stripeCancel"
 
 
 type alias CreateSessionRequest =

@@ -1,14 +1,19 @@
 module Route exposing (Route(..), decode, encode)
 
+import EmailAddress exposing (EmailAddress)
+import Stripe
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
+import Url.Parser.Query
 
 
 type Route
     = HomepageRoute
     | AccessibilityRoute
     | CodeOfConductRoute
+    | PaymentSuccessRoute (Maybe EmailAddress)
+    | PaymentCancelRoute
 
 
 decode : Url -> Route
@@ -17,8 +22,17 @@ decode url =
         [ Url.Parser.top |> Url.Parser.map HomepageRoute
         , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
+        , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
+        , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
+
+
+parseEmail : Url.Parser.Query.Parser (Maybe EmailAddress)
+parseEmail =
+    Url.Parser.Query.map
+        (Maybe.andThen EmailAddress.fromString)
+        (Url.Parser.Query.string Stripe.emailAddressParameter)
 
 
 encode : Route -> String
@@ -33,5 +47,31 @@ encode route =
 
             CodeOfConductRoute ->
                 [ "code-of-conduct" ]
+
+            PaymentSuccessRoute _ ->
+                [ Stripe.successPath ]
+
+            PaymentCancelRoute ->
+                [ Stripe.cancelPath ]
         )
-        []
+        (case route of
+            HomepageRoute ->
+                []
+
+            AccessibilityRoute ->
+                []
+
+            CodeOfConductRoute ->
+                []
+
+            PaymentSuccessRoute maybeEmailAddress ->
+                case maybeEmailAddress of
+                    Just emailAddress ->
+                        [ Url.Builder.string Stripe.emailAddressParameter (EmailAddress.toString emailAddress) ]
+
+                    Nothing ->
+                        []
+
+            PaymentCancelRoute ->
+                []
+        )

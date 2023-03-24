@@ -6,7 +6,7 @@ import Browser.Navigation exposing (Key)
 import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
-import Name exposing (Name)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Time
@@ -39,47 +39,19 @@ type alias LoadedModel =
     }
 
 
-type alias PurchaseForm =
-    { submitStatus : SubmitStatus
-    , attendee1Name : String
-    , attendee2Name : String
-    , billingEmail : String
-    , originCity : String
-    , primaryModeOfTravel : Maybe TravelMode
+type alias BackendModel =
+    { orders : List Order
+    , pendingOrder : List PendingOrder
+    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    , time : Time.Posix
     }
 
 
-type SubmitStatus
-    = NotSubmitted PressedSubmit
-    | Submitting
-    | SubmitBackendError
-
-
-type PressedSubmit
-    = PressedSubmit
-    | NotPressedSubmit
-
-
-type PurchaseFormValidated
-    = SinglePurchase
-        { attendeeName : Name
-        , billingEmail : EmailAddress
-        , originCity : String
-        , primaryModeOfTravel : TravelMode
-        }
-    | CouplePurchase
-        { attendee1Name : Name
-        , attendee2Name : Name
-        , billingEmail : EmailAddress
-        , originCity : String
-        , primaryModeOfTravel : TravelMode
-        }
-
-
-type alias BackendModel =
-    { orders : List Order
-    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
-    , time : Time.Posix
+type alias PendingOrder =
+    { priceId : PriceId
+    , stripeSessionId : StripeSessionId
+    , submitTime : Time.Posix
+    , form : PurchaseFormValidated
     }
 
 
@@ -141,7 +113,7 @@ type BackendMsg
     = GotTime Time.Posix
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
-    | CreatedCheckoutSession ClientId (Result Http.Error StripeSessionId)
+    | CreatedCheckoutSession ClientId PriceId PurchaseFormValidated (Result Http.Error ( StripeSessionId, Time.Posix ))
 
 
 type ToFrontend

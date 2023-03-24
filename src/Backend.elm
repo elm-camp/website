@@ -3,10 +3,12 @@ module Backend exposing (..)
 import AssocList
 import Html
 import Lamdera exposing (ClientId, SessionId)
+import PurchaseForm
 import Stripe
 import Task
 import Time
 import Types exposing (..)
+import Untrusted
 
 
 app =
@@ -21,6 +23,7 @@ app =
 init : ( BackendModel, Cmd BackendMsg )
 init =
     ( { orders = []
+      , pendingOrder = []
       , prices = AssocList.empty
       , time = Time.millisToPosix 0
       }
@@ -69,10 +72,20 @@ update msg model =
         OnConnected _ clientId ->
             ( model, Lamdera.sendToFrontend clientId (PricesToFrontend model.prices) )
 
-        CreatedCheckoutSession clientId result ->
+        CreatedCheckoutSession clientId priceId purchaseForm result ->
             case result of
-                Ok stripeSessionId ->
-                    ( model, SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId )
+                Ok ( stripeSessionId, submitTime ) ->
+                    ( { model
+                        | pendingOrder =
+                            { priceId = priceId
+                            , stripeSessionId = stripeSessionId
+                            , submitTime = submitTime
+                            , form = purchaseForm
+                            }
+                                :: model.pendingOrder
+                      }
+                    , SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId
+                    )
 
                 Err error ->
                     ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
@@ -81,7 +94,16 @@ update msg model =
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend _ clientId msg model =
     case msg of
-        SubmitFormRequest priceId _ ->
-            ( model
-            , Stripe.createCheckoutSession priceId (CreatedCheckoutSession clientId)
-            )
+        SubmitFormRequest priceId a ->
+            case Untrusted.purchaseForm a of
+                Just purchaseForm ->
+                    ( model
+                    , Task.map2
+                        Tuple.pair
+                        (Stripe.createCheckoutSession priceId (PurchaseForm.billingEmail purchaseForm))
+                        Time.now
+                        |> Task.attempt (CreatedCheckoutSession clientId priceId purchaseForm)
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
