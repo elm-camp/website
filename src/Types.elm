@@ -7,6 +7,7 @@ import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
 import Name exposing (Name)
+import Route exposing (Route)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Time
 import TravelMode exposing (TravelMode)
@@ -20,7 +21,11 @@ type FrontendModel
 
 
 type alias LoadingModel =
-    { key : Key, windowSize : Maybe ( Int, Int ), prices : AssocList.Dict ProductId { priceId : PriceId, price : Price } }
+    { key : Key
+    , windowSize : Maybe ( Int, Int )
+    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    , route : Route
+    }
 
 
 type alias LoadedModel =
@@ -30,6 +35,7 @@ type alias LoadedModel =
     , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
     , selectedTicket : Maybe ( ProductId, PriceId )
     , form : PurchaseForm
+    , route : Route
     }
 
 

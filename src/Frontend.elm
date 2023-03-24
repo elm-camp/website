@@ -20,6 +20,7 @@ import Lamdera
 import List.Extra as List
 import MarkdownThemed
 import Name exposing (Name)
+import Route exposing (Route(..))
 import Stripe exposing (PriceId, ProductId)
 import Task
 import Tickets
@@ -50,8 +51,8 @@ subscriptions model =
 
 
 init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
-init _ key =
-    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty }
+init url key =
+    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, route = Route.decode url }
     , Browser.Dom.getViewport
         |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
     )
@@ -90,6 +91,7 @@ tryLoading loadingModel =
                     , originCity = ""
                     , primaryModeOfTravel = Nothing
                     }
+                , route = loadingModel.route
                 }
             , Cmd.none
             )
@@ -114,7 +116,7 @@ updateLoaded msg model =
                     )
 
         UrlChanged url ->
-            ( model, Cmd.none )
+            ( { model | route = Route.decode url }, Cmd.none )
 
         GotWindowSize width height ->
             ( { model | windowSize = ( width, height ) }, Cmd.none )
@@ -390,6 +392,24 @@ view model =
 
 loadedView : LoadedModel -> Element FrontendMsg
 loadedView model =
+    case model.route of
+        HomepageRoute ->
+            homepageView model
+
+        AccessibilityRoute ->
+            Element.column
+                contentAttributes
+                [ Element.paragraph [] [ Element.text "accessibility text here please!" ]
+                ]
+
+        CodeOfConductRoute ->
+            Element.column
+                contentAttributes
+                [ Element.paragraph [] [ Element.text "code of conduct text here please!" ]
+                ]
+
+
+homepageView model =
     let
         ( windowWidth, _ ) =
             model.windowSize
@@ -402,7 +422,7 @@ loadedView model =
                  else
                     60
                 )
-                24
+                0
     in
     case model.selectedTicket of
         Just ( productId, priceId ) ->
@@ -423,11 +443,9 @@ loadedView model =
 
         Nothing ->
             Element.column
-                [ padding
-                , Element.width Element.fill
-                ]
+                [ Element.width Element.fill ]
                 [ Element.column
-                    [ Element.spacing 80, Element.width Element.fill ]
+                    [ Element.spacing 80, Element.width Element.fill, padding ]
                     [ header model
                     , Element.column
                         [ Element.width Element.fill, Element.spacing 40 ]
@@ -460,6 +478,27 @@ loadedView model =
                         , Element.el contentAttributes content2
                         ]
                     ]
+                , Element.el
+                    [ Element.Background.color (Element.rgb255 12 109 82)
+                    , Element.paddingXY 24 16
+                    , Element.width Element.fill
+                    ]
+                    (Element.wrappedRow
+                        ([ Element.spacing 32
+                         , Element.Background.color (Element.rgb255 12 109 82)
+                         , Element.width Element.fill
+                         , Element.Font.color (Element.rgb 1 1 1)
+                         ]
+                            ++ contentAttributes
+                        )
+                        [ Element.link
+                            []
+                            { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
+                        , Element.link
+                            []
+                            { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility" }
+                        ]
+                    )
                 ]
 
 
