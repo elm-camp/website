@@ -399,13 +399,13 @@ loadedView model =
         AccessibilityRoute ->
             Element.column
                 contentAttributes
-                [ Element.paragraph [] [ Element.text "accessibility text here please!" ]
+                [ MarkdownThemed.renderFull "accessibility text here please!"
                 ]
 
         CodeOfConductRoute ->
             Element.column
                 contentAttributes
-                [ Element.paragraph [] [ Element.text "code of conduct text here please!" ]
+                [ MarkdownThemed.renderFull "code of conduct text here please!"
                 ]
 
 
