@@ -40,8 +40,8 @@ type alias LoadedModel =
 
 
 type alias BackendModel =
-    { orders : List Order
-    , pendingOrder : List PendingOrder
+    { orders : AssocList.Dict StripeSessionId Order
+    , pendingOrder : AssocList.Dict StripeSessionId PendingOrder
     , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
     , time : Time.Posix
     }
@@ -49,20 +49,20 @@ type alias BackendModel =
 
 type alias PendingOrder =
     { priceId : PriceId
-    , stripeSessionId : StripeSessionId
     , submitTime : Time.Posix
     , form : PurchaseFormValidated
     }
 
 
 type alias Order =
-    { email : EmailAddress
-    , products : List Product
-    , sponsorship : Maybe Sponsorship
-    , opportunityGrantContribution : Price
-    , originCity : CityCode
-    , primaryTravelMode : TravelMode
-    , status : OrderStatus
+    { priceId : PriceId
+    , submitTime : Time.Posix
+    , form : PurchaseFormValidated
+
+    --, products : List Product
+    --, sponsorship : Maybe Sponsorship
+    --, opportunityGrantContribution : Price
+    --, status : OrderStatus
     }
 
 
@@ -119,3 +119,7 @@ type BackendMsg
 type ToFrontend
     = PricesToFrontend (AssocList.Dict ProductId { priceId : PriceId, price : Price })
     | SubmitFormResponse (Result () StripeSessionId)
+
+
+totalSlotsAvailable =
+    40

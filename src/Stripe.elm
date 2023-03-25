@@ -1,4 +1,4 @@
-module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), cancelPath, createCheckoutSession, emailAddressParameter, getPrices, loadCheckout, successPath)
+module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), Webhook(..), cancelPath, createCheckoutSession, decodeWebhook, emailAddressParameter, expireSession, getPrices, loadCheckout, successPath)
 
 import EmailAddress exposing (EmailAddress)
 import Env
@@ -29,6 +29,25 @@ type ProductId
 
 type PriceId
     = PriceId String
+
+
+type Webhook
+    = StripeSessionCompleted StripeSessionId
+
+
+decodeWebhook : D.Decoder Webhook
+decodeWebhook =
+    D.field "type" D.string
+        |> D.andThen
+            (\eventType ->
+                case eventType of
+                    "checkout.session.completed" ->
+                        D.succeed StripeSessionCompleted
+                            |> required "object" (D.field "id" (D.map StripeSessionId D.string))
+
+                    _ ->
+                        D.fail ("Unhandled stripe webhook event: " ++ eventType)
+            )
 
 
 type alias PriceData =
@@ -125,6 +144,22 @@ successPath =
 cancelPath : String
 cancelPath =
     "stripeCancel"
+
+
+expireSession : StripeSessionId -> Task Http.Error ()
+expireSession (StripeSessionId stripeSessionId) =
+    Http.task
+        { method = "POST"
+        , headers = headers
+        , url =
+            Url.Builder.crossOrigin
+                "https://api.stripe.com"
+                [ "v1", "checkout", "sessions", stripeSessionId, "expire" ]
+                []
+        , body = Http.emptyBody
+        , resolver = jsonResolver (D.succeed ())
+        , timeout = Nothing
+        }
 
 
 type alias CreateSessionRequest =
