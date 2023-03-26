@@ -1,9 +1,20 @@
-module PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..), billingEmail, validateEmailAddress, validateForm, validateName)
+module PurchaseForm exposing
+    ( PressedSubmit(..)
+    , PurchaseForm
+    , PurchaseFormValidated(..)
+    , SubmitStatus(..)
+    , attendeeName
+    , billingEmail
+    , validateEmailAddress
+    , validateForm
+    , validateName
+    )
 
 import EmailAddress exposing (EmailAddress)
+import Env
 import Name exposing (Name)
-import Stripe exposing (ProductId)
-import Tickets
+import Stripe exposing (ProductId(..))
+import Tickets exposing (Ticket)
 import Toop exposing (T3(..), T4(..))
 import TravelMode exposing (TravelMode)
 
@@ -55,6 +66,16 @@ billingEmail paymentForm =
             a.billingEmail
 
 
+attendeeName : PurchaseFormValidated -> Name
+attendeeName paymentForm =
+    case paymentForm of
+        SinglePurchase a ->
+            a.attendeeName
+
+        CouplePurchase a ->
+            a.attendee1Name
+
+
 validateName : String -> Result String Name
 validateName name =
     Name.fromString name |> Result.mapError Name.errorToString
@@ -86,7 +107,7 @@ validateForm productId form =
         emailAddress =
             validateEmailAddress form.billingEmail
     in
-    if productId == Tickets.couplesCampTicket.productId then
+    if productId == ProductId Env.couplesCampTicketProductId then
         case T4 name1 name2 emailAddress form.primaryModeOfTravel of
             T4 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
                 CouplePurchase

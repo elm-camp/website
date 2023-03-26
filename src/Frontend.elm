@@ -21,7 +21,7 @@ import List.Extra as List
 import MarkdownThemed
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
 import Route exposing (Route(..))
-import Stripe exposing (PriceId, ProductId)
+import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Tickets
 import TravelMode
@@ -42,7 +42,8 @@ app =
         }
 
 
-subscriptions model =
+subscriptions : FrontendModel -> Sub FrontendMsg
+subscriptions _ =
     Sub.batch
         [ Browser.Events.onResize GotWindowSize
         , Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
@@ -51,9 +52,21 @@ subscriptions model =
 
 init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url key =
-    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, route = Route.decode url }
-    , Browser.Dom.getViewport
-        |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+    let
+        route =
+            Route.decode url
+    in
+    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, route = route }
+    , Cmd.batch
+        [ Browser.Dom.getViewport
+            |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , case route of
+            PaymentCancelRoute (Just stripeSessionId) ->
+                Lamdera.sendToBackend (CancelPurchaseRequest stripeSessionId)
+
+            _ ->
+                Cmd.none
+        ]
     )
 
 
@@ -366,16 +379,16 @@ loadedView model =
                     ]
                 ]
 
-        PaymentCancelRoute ->
+        PaymentCancelRoute _ ->
             Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24 ]
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
                 [ Element.paragraph
-                    []
+                    [ Element.Font.size 20 ]
                     [ Element.text "You cancelled your ticket purchase" ]
                 , Element.link
-                    []
+                    normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = Element.text "Go back to the homepage?"
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
 
@@ -386,18 +399,18 @@ homepageView model =
             model.windowSize
 
         padding =
-            Element.paddingXY
-                (if windowWidth < 800 then
-                    24
+            Element.paddingXY sidePadding 0
 
-                 else
-                    60
-                )
-                0
+        sidePadding =
+            if windowWidth < 800 then
+                24
+
+            else
+                60
     in
     case model.selectedTicket of
         Just ( productId, priceId ) ->
-            case List.find (\ticket -> ticket.productId == productId) Tickets.tickets of
+            case AssocList.get productId Tickets.dict of
                 Just ticket ->
                     Element.column
                         (padding :: contentAttributes)
@@ -416,7 +429,10 @@ homepageView model =
             Element.column
                 [ Element.width Element.fill ]
                 [ Element.column
-                    [ Element.spacing 80, Element.width Element.fill, padding ]
+                    [ Element.spacing 80
+                    , Element.width Element.fill
+                    , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+                    ]
                     [ header model
                     , Element.column
                         [ Element.width Element.fill, Element.spacing 40 ]
@@ -449,28 +465,44 @@ homepageView model =
                         , Element.el contentAttributes content2
                         ]
                     ]
-                , Element.el
-                    [ Element.Background.color (Element.rgb255 12 109 82)
-                    , Element.paddingXY 24 16
-                    , Element.width Element.fill
-                    ]
-                    (Element.wrappedRow
-                        ([ Element.spacing 32
-                         , Element.Background.color (Element.rgb255 12 109 82)
-                         , Element.width Element.fill
-                         , Element.Font.color (Element.rgb 1 1 1)
-                         ]
-                            ++ contentAttributes
-                        )
-                        [ Element.link
-                            []
-                            { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
-                        , Element.link
-                            []
-                            { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility" }
-                        ]
-                    )
+                , footer
                 ]
+
+
+footer : Element msg
+footer =
+    Element.el
+        [ Element.Background.color (Element.rgb255 12 109 82)
+        , Element.paddingXY 24 16
+        , Element.width Element.fill
+        ]
+        (Element.wrappedRow
+            ([ Element.spacing 32
+             , Element.Background.color (Element.rgb255 12 109 82)
+             , Element.width Element.fill
+             , Element.Font.color (Element.rgb 1 1 1)
+             ]
+                ++ contentAttributes
+            )
+            [ Element.link
+                []
+                { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
+            , Element.link
+                []
+                { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility" }
+            ]
+        )
+
+
+normalButtonAttributes =
+    [ Element.width Element.fill
+    , Element.Background.color (Element.rgb255 255 255 255)
+    , Element.padding 16
+    , Element.Border.rounded 8
+    , Element.alignBottom
+    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Element.Font.semiBold
+    ]
 
 
 formView : ( Int, Int ) -> ProductId -> PriceId -> PurchaseForm -> Element FrontendMsg
@@ -508,14 +540,7 @@ formView ( windowWidth, _ ) productId priceId form =
 
         cancelButton =
             Element.Input.button
-                [ Element.width Element.fill
-                , Element.Background.color (Element.rgb255 255 255 255)
-                , Element.padding 16
-                , Element.Border.rounded 8
-                , Element.alignBottom
-                , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-                , Element.Font.semiBold
-                ]
+                normalButtonAttributes
                 { onPress = Just PressedCancelForm
                 , label = Element.el [ Element.centerX ] (Element.text "Cancel")
                 }
@@ -523,7 +548,7 @@ formView ( windowWidth, _ ) productId priceId form =
     Element.column
         [ Element.width Element.fill, Element.spacing 24 ]
         [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-        , if productId == Tickets.couplesCampTicket.productId then
+        , if productId == ProductId Env.couplesCampTicketProductId then
             textInput
                 (\a -> FormChanged { form | attendee2Name = a })
                 "Name of the person you're sharing a room with"
@@ -611,28 +636,28 @@ stripe model =
     in
     if windowWidth < 950 then
         List.map
-            (\ticket ->
-                case AssocList.get ticket.productId model.prices of
+            (\( productId, ticket ) ->
+                case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (PressedBuy ticket.productId price.priceId) price.price ticket
+                        Tickets.viewMobile (PressedBuy productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
             )
-            Tickets.tickets
+            (AssocList.toList Tickets.dict)
             |> Element.column [ Element.spacing 16 ]
 
     else
         List.map
-            (\ticket ->
-                case AssocList.get ticket.productId model.prices of
+            (\( productId, ticket ) ->
+                case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop (PressedBuy ticket.productId price.priceId) price.price ticket
+                        Tickets.viewDesktop (PressedBuy productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
             )
-            Tickets.tickets
+            (AssocList.toList Tickets.dict)
             |> Element.row (Element.spacing 16 :: contentAttributes)
 
 

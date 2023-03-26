@@ -1,11 +1,14 @@
 module Backend exposing (..)
 
 import AssocList
+import Duration
+import Env
 import Html
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import PurchaseForm exposing (PurchaseFormValidated(..))
-import Stripe exposing (PriceId, ProductId)
+import Quantity
+import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
 import Task
 import Tickets
 import Time
@@ -36,6 +39,7 @@ init =
     )
 
 
+subscriptions : BackendModel -> Sub BackendMsg
 subscriptions _ =
     Sub.batch
         [ Time.every (1000 * 60 * 15) GotTime
@@ -47,7 +51,28 @@ update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg model =
     case msg of
         GotTime time ->
-            ( { model | time = time }, Stripe.getPrices GotPrices )
+            let
+                expiredOrders : List StripeSessionId
+                expiredOrders =
+                    AssocList.filter
+                        (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan Duration.hour)
+                        model.pendingOrder
+                        |> AssocList.keys
+            in
+            ( { model
+                | time = time
+              }
+            , Cmd.batch
+                [ Stripe.getPrices GotPrices
+                , List.map
+                    (\stripeSessionId ->
+                        Stripe.expireSession stripeSessionId
+                            |> Task.attempt (ExpiredStripeSession stripeSessionId)
+                    )
+                    expiredOrders
+                    |> Cmd.batch
+                ]
+            )
 
         GotPrices result ->
             case result of
@@ -93,6 +118,22 @@ update msg model =
                 Err error ->
                     ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
 
+        ExpiredStripeSession stripeSessionId result ->
+            case result of
+                Ok () ->
+                    ( { model | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder }, Cmd.none )
+
+                Err error ->
+                    ( model, Cmd.none )
+
+        EmailSent result ->
+            case result of
+                Ok response ->
+                    ( model, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend _ clientId msg model =
@@ -104,7 +145,7 @@ updateFromFrontend _ clientId msg model =
                         ( Just productId, True ) ->
                             let
                                 validProductAndForm =
-                                    case ( productId == Tickets.couplesCampTicket.productId, purchaseForm ) of
+                                    case ( productId == ProductId Env.couplesCampTicketProductId, purchaseForm ) of
                                         ( True, CouplePurchase _ ) ->
                                             True
 
@@ -132,6 +173,11 @@ updateFromFrontend _ clientId msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        CancelPurchaseRequest stripeSessionId ->
+            ( model
+            , Stripe.expireSession stripeSessionId |> Task.attempt (ExpiredStripeSession stripeSessionId)
+            )
+
 
 priceIdToProductId : BackendModel -> PriceId -> Maybe ProductId
 priceIdToProductId model priceId =
@@ -158,7 +204,7 @@ slotsRemaining model =
     totalSlotsAvailable - (pendingOrders + orders)
 
 
-ticketToSlots : PendingOrder -> Int
+ticketToSlots : { a | form : PurchaseFormValidated } -> number
 ticketToSlots pendingOrder =
     case pendingOrder.form of
         SinglePurchase _ ->

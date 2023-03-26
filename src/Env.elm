@@ -1,5 +1,7 @@
 module Env exposing (..)
 
+import Postmark
+
 
 stripePostbackUrl =
     "http://localhost:8000"
@@ -32,3 +34,11 @@ isProduction_ =
 
 isProduction =
     String.toLower isProduction_ == "true"
+
+
+postmarkApiKey_ =
+    ""
+
+
+postmarkApiKey =
+    Postmark.apiKey postmarkApiKey_

@@ -6,6 +6,7 @@ import Browser.Navigation exposing (Key)
 import EmailAddress exposing (EmailAddress)
 import Http
 import Lamdera exposing (ClientId, SessionId)
+import Postmark exposing (PostmarkSendResponse)
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
@@ -58,12 +59,19 @@ type alias Order =
     { priceId : PriceId
     , submitTime : Time.Posix
     , form : PurchaseFormValidated
+    , emailResult : EmailResult
 
     --, products : List Product
     --, sponsorship : Maybe Sponsorship
     --, opportunityGrantContribution : Price
     --, status : OrderStatus
     }
+
+
+type EmailResult
+    = SendingEmail
+    | EmailSuccess PostmarkSendResponse
+    | EmailFailed Http.Error
 
 
 type OrderStatus
@@ -107,6 +115,7 @@ type FrontendMsg
 
 type ToBackend
     = SubmitFormRequest PriceId (Untrusted PurchaseFormValidated)
+    | CancelPurchaseRequest StripeSessionId
 
 
 type BackendMsg
@@ -114,6 +123,8 @@ type BackendMsg
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
     | CreatedCheckoutSession ClientId PriceId PurchaseFormValidated (Result Http.Error ( StripeSessionId, Time.Posix ))
+    | ExpiredStripeSession StripeSessionId (Result Http.Error ())
+    | EmailSent (Result Http.Error PostmarkSendResponse)
 
 
 type ToFrontend

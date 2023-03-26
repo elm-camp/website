@@ -1,5 +1,6 @@
-module Tickets exposing (Ticket, couplesCampTicket, submitButtonAttributes, tickets, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, couplesCampTicket, dict, submitButtonAttributes, viewDesktop, viewMobile)
 
+import AssocList
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -10,11 +11,6 @@ import Money
 import Stripe exposing (Price(..), ProductId(..))
 
 
-tickets : List Ticket
-tickets =
-    [ campTicket, couplesCampTicket, campfireTicket ]
-
-
 
 -- @TODO need to use pricing IDs here, not product IDs
 -- but how do we figure out the right price given the current user? Is there a Stripe API for that?
@@ -23,8 +19,8 @@ tickets =
 type alias Ticket =
     { name : String
     , description : String
-    , productId : ProductId
     , image : String
+    , slots : Int
     }
 
 
@@ -32,8 +28,8 @@ campTicket : Ticket
 campTicket =
     { name = "Camp Ticket"
     , description = "Ticket for 1 Person including: on-site accommodation with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
-    , productId = ProductId Env.campTicketProductId
     , image = "/product2.webp"
+    , slots = 1
     }
 
 
@@ -41,8 +37,8 @@ couplesCampTicket : Ticket
 couplesCampTicket =
     { name = "Couples Camp Ticket"
     , description = "Tickets for 2 people including: on-site accommodation for two people with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
-    , productId = ProductId Env.couplesCampTicketProductId
     , image = "/product3.webp"
+    , slots = 2
     }
 
 
@@ -50,9 +46,18 @@ campfireTicket : Ticket
 campfireTicket =
     { name = "Campfire Ticket"
     , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included."
-    , productId = ProductId Env.campfireTicketProductId
     , image = "/product1.webp"
+    , slots = 1
     }
+
+
+dict : AssocList.Dict ProductId Ticket
+dict =
+    AssocList.fromList
+        [ ( ProductId Env.campfireTicketProductId, campfireTicket )
+        , ( ProductId Env.couplesCampTicketProductId, couplesCampTicket )
+        , ( ProductId Env.campTicketProductId, campTicket )
+        ]
 
 
 viewDesktop : msg -> Price -> Ticket -> Element msg

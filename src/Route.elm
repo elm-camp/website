@@ -1,7 +1,7 @@
 module Route exposing (Route(..), decode, encode)
 
 import EmailAddress exposing (EmailAddress)
-import Stripe
+import Stripe exposing (StripeSessionId(..))
 import Url exposing (Url)
 import Url.Builder
 import Url.Parser exposing ((</>), (<?>))
@@ -13,7 +13,7 @@ type Route
     | AccessibilityRoute
     | CodeOfConductRoute
     | PaymentSuccessRoute (Maybe EmailAddress)
-    | PaymentCancelRoute
+    | PaymentCancelRoute (Maybe StripeSessionId)
 
 
 decode : Url -> Route
@@ -23,7 +23,7 @@ decode url =
         , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
-        , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
+        , Url.Parser.s Stripe.cancelPath <?> parseStripeSessionId |> Url.Parser.map PaymentCancelRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -33,6 +33,11 @@ parseEmail =
     Url.Parser.Query.map
         (Maybe.andThen EmailAddress.fromString)
         (Url.Parser.Query.string Stripe.emailAddressParameter)
+
+
+parseStripeSessionId : Url.Parser.Query.Parser (Maybe StripeSessionId)
+parseStripeSessionId =
+    Url.Parser.Query.map (Maybe.map StripeSessionId) (Url.Parser.Query.string Stripe.stripeSessionIdParameter)
 
 
 encode : Route -> String
@@ -51,7 +56,7 @@ encode route =
             PaymentSuccessRoute _ ->
                 [ Stripe.successPath ]
 
-            PaymentCancelRoute ->
+            PaymentCancelRoute _ ->
                 [ Stripe.cancelPath ]
         )
         (case route of
@@ -72,6 +77,11 @@ encode route =
                     Nothing ->
                         []
 
-            PaymentCancelRoute ->
-                []
+            PaymentCancelRoute maybeStripeSessionId ->
+                case maybeStripeSessionId of
+                    Just (StripeSessionId stripeSessionId) ->
+                        [ Url.Builder.string Stripe.stripeSessionIdParameter stripeSessionId ]
+
+                    Nothing ->
+                        []
         )

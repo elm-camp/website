@@ -1,4 +1,20 @@
-module Stripe exposing (Price(..), PriceData, PriceId(..), ProductId(..), StripeSessionId(..), Webhook(..), cancelPath, createCheckoutSession, decodeWebhook, emailAddressParameter, expireSession, getPrices, loadCheckout, successPath)
+module Stripe exposing
+    ( Price(..)
+    , PriceData
+    , PriceId(..)
+    , ProductId(..)
+    , StripeSessionId(..)
+    , Webhook(..)
+    , cancelPath
+    , createCheckoutSession
+    , decodeWebhook
+    , emailAddressParameter
+    , expireSession
+    , getPrices
+    , loadCheckout
+    , stripeSessionIdParameter
+    , successPath
+    )
 
 import EmailAddress exposing (EmailAddress)
 import Env
@@ -118,7 +134,13 @@ createCheckoutSession (PriceId priceId) emailAddress =
                         [ successPath ]
                         [ Url.Builder.string emailAddressParameter (EmailAddress.toString emailAddress) ]
                   )
-                , ( "cancel_url", Url.Builder.crossOrigin Env.stripePostbackUrl [ cancelPath ] [] )
+                , ( "cancel_url"
+                  , Url.Builder.crossOrigin
+                        Env.stripePostbackUrl
+                        [ cancelPath ]
+                        [ Url.Builder.string stripeSessionIdParameter "{CHECKOUT_SESSION_ID}" ]
+                  )
+                , ( "customer_email", EmailAddress.toString emailAddress )
                 ]
     in
     Http.task
@@ -134,6 +156,11 @@ createCheckoutSession (PriceId priceId) emailAddress =
 emailAddressParameter : String
 emailAddressParameter =
     "email-address"
+
+
+stripeSessionIdParameter : String
+stripeSessionIdParameter =
+    "stripe-session"
 
 
 successPath : String
