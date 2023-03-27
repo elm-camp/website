@@ -39,7 +39,8 @@ purchaseForm (Untrusted a) =
                 T2 (Just attendeeName) (Just billingEmail) ->
                     { attendeeName = attendeeName
                     , billingEmail = billingEmail
-                    , originCity = ""
+                    , country = b.country
+                    , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     }
                         |> SinglePurchase
@@ -54,7 +55,8 @@ purchaseForm (Untrusted a) =
                     { attendee1Name = attendee1Name
                     , attendee2Name = attendee2Name
                     , billingEmail = billingEmail
-                    , originCity = ""
+                    , country = b.country
+                    , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     }
                         |> CouplePurchase

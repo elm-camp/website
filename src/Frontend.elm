@@ -22,6 +22,7 @@ import List.Extra as List
 import MarkdownThemed
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
 import Route exposing (Route(..))
+import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Tickets
@@ -101,10 +102,12 @@ tryLoading loadingModel =
                     , attendee1Name = ""
                     , attendee2Name = ""
                     , billingEmail = ""
+                    , country = ""
                     , originCity = ""
                     , primaryModeOfTravel = Nothing
                     }
                 , route = loadingModel.route
+                , showCarbonOffsetTooltip = False
                 }
             , Cmd.none
             )
@@ -138,7 +141,7 @@ updateLoaded msg model =
             ( { model | showTooltip = True }, Cmd.none )
 
         MouseDown ->
-            ( { model | showTooltip = False }, Cmd.none )
+            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
 
         PressedBuy productId priceId ->
             ( { model | selectedTicket = Just ( productId, priceId ) }, Cmd.none )
@@ -171,6 +174,9 @@ updateLoaded msg model =
 
         PressedCancelForm ->
             ( { model | selectedTicket = Nothing }, Cmd.none )
+
+        PressedShowCarbonOffsetTooltip ->
+            ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -337,6 +343,7 @@ view model =
             , Element.Font.color colors.defaultText
             , Element.Font.size 16
             , Element.Font.medium
+            , Element.Background.color backgroundColor
             ]
             (case model of
                 Loading _ ->
@@ -405,6 +412,7 @@ loadedView model =
                 ]
 
 
+homepageView : LoadedModel -> Element FrontendMsg
 homepageView model =
     let
         ( windowWidth, _ ) =
@@ -429,15 +437,23 @@ homepageView model =
                         [ Element.row
                             [ Element.spacing 16, Element.width Element.fill ]
                             [ Element.image
-                                [ Element.width (Element.px 50)
-                                ]
+                                [ Element.width (Element.px 50) ]
                                 { src = ticket.image, description = "Illustration of camp" }
                             , Element.paragraph
-                                [ Element.Font.size 24, Element.Font.semiBold ]
-                                [ Element.text ticket.name ]
+                                [ Element.Font.size 24 ]
+                                [ Element.el [ Element.Font.semiBold ] (Element.text ticket.name)
+                                , case AssocList.get productId model.prices of
+                                    Just { price } ->
+                                        " - "
+                                            ++ Tickets.priceText price
+                                            |> Element.text
+
+                                    Nothing ->
+                                        Element.none
+                                ]
                             ]
                         , Element.paragraph [] [ Element.text ticket.description ]
-                        , formView model.windowSize productId priceId model.form
+                        , formView model.windowSize productId priceId model.showCarbonOffsetTooltip model.form
                         ]
 
                 Nothing ->
@@ -529,13 +545,14 @@ normalButtonAttributes =
     ]
 
 
-formView : ( Int, Int ) -> Id ProductId -> Id PriceId -> PurchaseForm -> Element FrontendMsg
-formView ( windowWidth, _ ) productId priceId form =
-    let
-        errorText : String -> Element msg
-        errorText error =
-            Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
+errorText : String -> Element msg
+errorText error =
+    Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
 
+
+formView : ( Int, Int ) -> Id ProductId -> Id PriceId -> Bool -> PurchaseForm -> Element FrontendMsg
+formView ( windowWidth, _ ) productId priceId showCarbonOffsetTooltip form =
+    let
         textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
         textInput onChange title validator text =
             Element.column
@@ -571,21 +588,96 @@ formView ( windowWidth, _ ) productId priceId form =
     in
     Element.column
         [ Element.width Element.fill, Element.spacing 24 ]
-        [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-        , if productId == Id.fromString Env.couplesCampTicketProductId then
-            textInput
-                (\a -> FormChanged { form | attendee2Name = a })
-                "Person you're sharing a room with"
-                PurchaseForm.validateName
-                form.attendee2Name
+        [ Element.column
+            [ Element.width Element.fill
+            , Element.spacing 24
+            , Element.padding 16
+            ]
+            [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
+            , if productId == Id.fromString Env.couplesCampTicketProductId then
+                textInput
+                    (\a -> FormChanged { form | attendee2Name = a })
+                    "Person you're sharing a room with"
+                    PurchaseForm.validateName
+                    form.attendee2Name
+
+              else
+                Element.none
+            , textInput
+                (\a -> FormChanged { form | billingEmail = a })
+                "Billing email address"
+                PurchaseForm.validateEmailAddress
+                form.billingEmail
+            ]
+        , carbonOffsetForm textInput showCarbonOffsetTooltip form
+        , if windowWidth > 600 then
+            Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
           else
-            Element.none
+            Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
+        ]
+
+
+backgroundColor : Element.Color
+backgroundColor =
+    Element.rgb255 255 244 225
+
+
+carbonOffsetForm textInput showCarbonOffsetTooltip form =
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacing 24
+        , Element.paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
+        , Element.Border.width 2
+        , Element.Border.color (Element.rgb 0.5 0.5 0.5)
+        , Element.Border.rounded 12
+        , Element.el
+            [ (if showCarbonOffsetTooltip then
+                tooltip "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)"
+
+               else
+                Element.none
+              )
+                |> Element.below
+            , Element.moveUp 20
+            , Element.moveRight 8
+            , Element.Background.color backgroundColor
+            ]
+            (Element.Input.button
+                [ Element.padding 8 ]
+                { onPress = Just PressedShowCarbonOffsetTooltip
+                , label =
+                    Element.row
+                        []
+                        [ Element.el [ Element.Font.size 20 ] (Element.text "Carbon offsetting "), Element.el [ Element.Font.size 12, Element.moveUp 3 ] (Element.text "ℹ️") ]
+                }
+            )
+            |> Element.inFront
+        ]
+        [ textInput
+            (\a -> FormChanged { form | country = a })
+            "Country you live in"
+            (\text ->
+                case String.Nonempty.fromString text of
+                    Just nonempty ->
+                        Ok nonempty
+
+                    Nothing ->
+                        Err "Please type in the name of the country you live in"
+            )
+            form.country
         , textInput
-            (\a -> FormChanged { form | billingEmail = a })
-            "Billing email address"
-            PurchaseForm.validateEmailAddress
-            form.billingEmail
+            (\a -> FormChanged { form | originCity = a })
+            "City you live in (or nearest city to you)"
+            (\text ->
+                case String.Nonempty.fromString text of
+                    Just nonempty ->
+                        Ok nonempty
+
+                    Nothing ->
+                        Err "Please type in the name of city nearest to you"
+            )
+            form.originCity
         , Element.column
             [ Element.spacing 8 ]
             [ Element.paragraph
@@ -612,11 +704,6 @@ formView ( windowWidth, _ ) productId priceId form =
                 _ ->
                     Element.none
             ]
-        , if windowWidth > 600 then
-            Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
-
-          else
-            Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
         ]
 
 
@@ -727,7 +814,7 @@ unconferenceBulletPoints model =
     , Element.text "Access to full castle grounds including lake swimming"
     , Element.el
         [ (if model.showTooltip then
-            tooltip
+            tooltip "This is our first Elm Unconference, so we're starting small and working backwards from a venue. We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event. If you know of a bigger venue that would be suitable for future years, please let the team know!"
 
            else
             Element.none
@@ -743,15 +830,15 @@ unconferenceBulletPoints model =
         |> Element.column [ Element.spacing 15 ]
 
 
-tooltip =
+tooltip : String -> Element msg
+tooltip text =
     Element.paragraph
         [ Element.paddingXY 12 8
         , Element.Background.color (Element.rgb 1 1 1)
         , Element.width (Element.px 300)
         , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
         ]
-        [ Element.text "This is our first Elm Unconference, so we're starting small and working backwards from a venue. We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event. If you know of a bigger venue that would be suitable for future years, please let the team know!"
-        ]
+        [ Element.text text ]
 
 
 content2 : Element msg

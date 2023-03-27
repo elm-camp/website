@@ -1,4 +1,4 @@
-module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, submitButtonAttributes, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, priceText, submitButtonAttributes, viewDesktop, viewMobile)
 
 import AssocList
 import Element exposing (Element)
@@ -62,7 +62,7 @@ dict =
 
 
 viewDesktop : msg -> Price -> Ticket -> Element msg
-viewDesktop onPress { currency, amount } ticket =
+viewDesktop onPress price ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -78,7 +78,7 @@ viewDesktop onPress { currency, amount } ticket =
         , Element.paragraph [] [ Element.text ticket.description ]
         , Element.el
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
-            (Element.text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
+            (Element.text (priceText price))
         , Element.Input.button
             [ Element.width Element.fill
             , Element.Background.color (Element.rgb255 92 176 126)
@@ -91,6 +91,11 @@ viewDesktop onPress { currency, amount } ticket =
             , label = Element.el [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ] (Element.text "Select")
             }
         ]
+
+
+priceText : Price -> String
+priceText { currency, amount } =
+    Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
 
 
 viewMobile : msg -> Price -> Ticket -> Element msg

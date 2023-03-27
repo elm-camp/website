@@ -41,6 +41,7 @@ type alias LoadedModel =
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
+    , showCarbonOffsetTooltip : Bool
     }
 
 
@@ -253,6 +254,7 @@ type FrontendMsg
     | FormChanged PurchaseForm
     | PressedSubmitForm (Id ProductId) (Id PriceId)
     | PressedCancelForm
+    | PressedShowCarbonOffsetTooltip
 
 
 type ToBackend

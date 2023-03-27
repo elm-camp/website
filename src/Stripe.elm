@@ -136,10 +136,7 @@ createCheckoutSession priceId emailAddress =
                         [ Url.Builder.string emailAddressParameter (EmailAddress.toString emailAddress) ]
                   )
                 , ( "cancel_url"
-                  , Url.Builder.crossOrigin
-                        Env.domain
-                        [ cancelPath ]
-                        [ Url.Builder.string stripeSessionIdParameter "{CHECKOUT_SESSION_ID}" ]
+                  , Url.Builder.crossOrigin Env.domain [ cancelPath ] []
                   )
                 , ( "customer_email", EmailAddress.toString emailAddress )
                 ]

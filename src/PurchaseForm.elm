@@ -18,8 +18,9 @@ import EmailAddress exposing (EmailAddress)
 import Env
 import Id exposing (Id)
 import Name exposing (Name)
+import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
-import Toop exposing (T3(..), T4(..))
+import Toop exposing (T3(..), T4(..), T5(..), T6(..))
 import TravelMode exposing (TravelMode)
 
 
@@ -28,6 +29,7 @@ type alias PurchaseForm =
     , attendee1Name : String
     , attendee2Name : String
     , billingEmail : String
+    , country : String
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
     }
@@ -41,7 +43,8 @@ type PurchaseFormValidated
 type alias SinglePurchaseData =
     { attendeeName : Name
     , billingEmail : EmailAddress
-    , originCity : String
+    , country : NonemptyString
+    , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
     }
 
@@ -50,7 +53,8 @@ type alias CouplePurchaseData =
     { attendee1Name : Name
     , attendee2Name : Name
     , billingEmail : EmailAddress
-    , originCity : String
+    , country : NonemptyString
+    , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
     }
 
@@ -116,15 +120,22 @@ validateForm productId form =
 
         emailAddress =
             validateEmailAddress form.billingEmail
+
+        country =
+            String.Nonempty.fromString form.country
+
+        originCity =
+            String.Nonempty.fromString form.originCity
     in
     if productId == Id.fromString Env.couplesCampTicketProductId then
-        case T4 name1 name2 emailAddress form.primaryModeOfTravel of
-            T4 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
+        case T6 name1 name2 emailAddress form.primaryModeOfTravel country originCity of
+            T6 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
                 CouplePurchase
                     { attendee1Name = name1Ok
                     , attendee2Name = name2Ok
                     , billingEmail = emailAddressOk
-                    , originCity = ""
+                    , country = countryOk
+                    , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
                     }
                     |> Just
@@ -133,12 +144,13 @@ validateForm productId form =
                 Nothing
 
     else
-        case T3 name1 emailAddress form.primaryModeOfTravel of
-            T3 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
+        case T5 name1 emailAddress form.primaryModeOfTravel country originCity of
+            T5 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
                 SinglePurchase
                     { attendeeName = name1Ok
                     , billingEmail = emailAddressOk
-                    , originCity = ""
+                    , country = countryOk
+                    , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
                     }
                     |> Just
@@ -168,7 +180,8 @@ singlePurchaseDataCodec =
     Codec.object SinglePurchaseData
         |> Codec.field "attendeeName" .attendeeName Name.codec
         |> Codec.field "billingEmail" .billingEmail emailAddressCodec
-        |> Codec.field "originCity" .originCity Codec.string
+        |> Codec.field "country" .country nonemptyStringCodec
+        |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
         |> Codec.buildObject
 
@@ -179,9 +192,24 @@ couplePurchaseDataCodec =
         |> Codec.field "attendee1Name" .attendee1Name Name.codec
         |> Codec.field "attendee2Name" .attendee2Name Name.codec
         |> Codec.field "billingEmail" .billingEmail emailAddressCodec
-        |> Codec.field "originCity" .originCity Codec.string
+        |> Codec.field "country" .country nonemptyStringCodec
+        |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
         |> Codec.buildObject
+
+
+nonemptyStringCodec =
+    Codec.andThen
+        (\text ->
+            case String.Nonempty.fromString text of
+                Just nonempty ->
+                    Codec.succeed nonempty
+
+                Nothing ->
+                    Codec.fail ("Invalid nonempty string: " ++ text)
+        )
+        String.Nonempty.toString
+        Codec.string
 
 
 emailAddressCodec : Codec EmailAddress

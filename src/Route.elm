@@ -14,7 +14,7 @@ type Route
     | AccessibilityRoute
     | CodeOfConductRoute
     | PaymentSuccessRoute (Maybe EmailAddress)
-    | PaymentCancelRoute (Maybe (Id StripeSessionId))
+    | PaymentCancelRoute
 
 
 decode : Url -> Route
@@ -24,7 +24,7 @@ decode url =
         , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
-        , Url.Parser.s Stripe.cancelPath <?> parseStripeSessionId |> Url.Parser.map PaymentCancelRoute
+        , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -57,7 +57,7 @@ encode route =
             PaymentSuccessRoute _ ->
                 [ Stripe.successPath ]
 
-            PaymentCancelRoute _ ->
+            PaymentCancelRoute ->
                 [ Stripe.cancelPath ]
         )
         (case route of
@@ -78,11 +78,6 @@ encode route =
                     Nothing ->
                         []
 
-            PaymentCancelRoute maybeStripeSessionId ->
-                case maybeStripeSessionId of
-                    Just stripeSessionId ->
-                        [ Url.Builder.string Stripe.stripeSessionIdParameter (Id.toString stripeSessionId) ]
-
-                    Nothing ->
-                        []
+            PaymentCancelRoute ->
+                []
         )
