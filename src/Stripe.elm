@@ -60,7 +60,7 @@ decodeWebhook =
                 case eventType of
                     "checkout.session.completed" ->
                         D.succeed StripeSessionCompleted
-                            |> required "object" (D.field "id" Id.decoder)
+                            |> required "data" (D.field "object" (D.field "id" Id.decoder))
 
                     _ ->
                         D.fail ("Unhandled stripe webhook event: " ++ eventType)

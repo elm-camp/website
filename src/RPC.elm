@@ -135,7 +135,7 @@ confirmationEmail ticket =
             ++ "You can review the schedule at "
             ++ Env.domain
             ++ "/#schedule"
-            ++ " and if you have any questions you can email us at "
+            ++ ". If you have any questions, email us at "
             ++ EmailAddress.toString Backend.elmCampEmailAddress
             ++ " (or just reply to this email)"
     , htmlBody =
@@ -151,7 +151,7 @@ confirmationEmail ticket =
                 [ Html.a
                     [ Attributes.href (Env.domain ++ "/#schedule") ]
                     [ Html.text "You can review the schedule here" ]
-                , Html.text " and if you have any questions you can email us at "
+                , Html.text ". If you have any questions, email us at "
                 , Html.a
                     [ Attributes.href ("mailto:" ++ EmailAddress.toString Backend.elmCampEmailAddress) ]
                     [ Html.text (EmailAddress.toString Backend.elmCampEmailAddress) ]

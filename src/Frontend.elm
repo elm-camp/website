@@ -363,21 +363,26 @@ loadedView model =
 
         PaymentSuccessRoute maybeEmailAddress ->
             Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24 ]
-                [ Element.paragraph
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
+                [ Element.paragraph [] [ Element.text "Your ticket purchase was successful!" ]
+                , Element.paragraph
                     []
-                    [ "Your ticket purchase was successful! "
-                        ++ "An email has been sent to "
-                        ++ (case maybeEmailAddress of
-                                Just emailAddress ->
-                                    EmailAddress.toString emailAddress
+                    [ Element.text "An email has been sent to "
+                    , case maybeEmailAddress of
+                        Just emailAddress ->
+                            EmailAddress.toString emailAddress
+                                |> Element.text
+                                |> Element.el [ Element.Font.semiBold ]
 
-                                Nothing ->
-                                    "your email address"
-                           )
-                        ++ " with additional information."
-                        |> Element.text
+                        Nothing ->
+                            Element.text "your email address"
+                    , Element.text " with additional information."
                     ]
+                , Element.link
+                    normalButtonAttributes
+                    { url = Route.encode HomepageRoute
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
+                    }
                 ]
 
         PaymentCancelRoute _ ->
