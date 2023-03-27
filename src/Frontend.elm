@@ -15,6 +15,7 @@ import Env
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Id exposing (Id)
 import Json.Decode
 import Lamdera
 import List.Extra as List
@@ -505,7 +506,7 @@ normalButtonAttributes =
     ]
 
 
-formView : ( Int, Int ) -> ProductId -> PriceId -> PurchaseForm -> Element FrontendMsg
+formView : ( Int, Int ) -> Id ProductId -> Id PriceId -> PurchaseForm -> Element FrontendMsg
 formView ( windowWidth, _ ) productId priceId form =
     let
         errorText : String -> Element msg
@@ -548,7 +549,7 @@ formView ( windowWidth, _ ) productId priceId form =
     Element.column
         [ Element.width Element.fill, Element.spacing 24 ]
         [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-        , if productId == ProductId Env.couplesCampTicketProductId then
+        , if productId == Id.fromString Env.couplesCampTicketProductId then
             textInput
                 (\a -> FormChanged { form | attendee2Name = a })
                 "Name of the person you're sharing a room with"

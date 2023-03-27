@@ -5,6 +5,7 @@ import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import EmailAddress exposing (EmailAddress)
 import Http
+import Id exposing (Id)
 import Lamdera exposing (ClientId, SessionId)
 import Postmark exposing (PostmarkSendResponse)
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
@@ -24,7 +25,7 @@ type FrontendModel
 type alias LoadingModel =
     { key : Key
     , windowSize : Maybe ( Int, Int )
-    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , route : Route
     }
 
@@ -33,30 +34,30 @@ type alias LoadedModel =
     { key : Key
     , windowSize : ( Int, Int )
     , showTooltip : Bool
-    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
-    , selectedTicket : Maybe ( ProductId, PriceId )
+    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
     }
 
 
 type alias BackendModel =
-    { orders : AssocList.Dict StripeSessionId Order
-    , pendingOrder : AssocList.Dict StripeSessionId PendingOrder
-    , prices : AssocList.Dict ProductId { priceId : PriceId, price : Price }
+    { orders : AssocList.Dict (Id StripeSessionId) Order
+    , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
+    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , time : Time.Posix
     }
 
 
 type alias PendingOrder =
-    { priceId : PriceId
+    { priceId : Id PriceId
     , submitTime : Time.Posix
     , form : PurchaseFormValidated
     }
 
 
 type alias Order =
-    { priceId : PriceId
+    { priceId : Id PriceId
     , submitTime : Time.Posix
     , form : PurchaseFormValidated
     , emailResult : EmailResult
@@ -107,29 +108,30 @@ type FrontendMsg
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
-    | PressedBuy ProductId PriceId
+    | PressedBuy (Id ProductId) (Id PriceId)
     | FormChanged PurchaseForm
-    | PressedSubmitForm ProductId PriceId
+    | PressedSubmitForm (Id ProductId) (Id PriceId)
     | PressedCancelForm
 
 
 type ToBackend
-    = SubmitFormRequest PriceId (Untrusted PurchaseFormValidated)
-    | CancelPurchaseRequest StripeSessionId
+    = SubmitFormRequest (Id PriceId) (Untrusted PurchaseFormValidated)
+    | CancelPurchaseRequest (Id StripeSessionId)
 
 
 type BackendMsg
     = GotTime Time.Posix
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
-    | CreatedCheckoutSession ClientId PriceId PurchaseFormValidated (Result Http.Error ( StripeSessionId, Time.Posix ))
-    | ExpiredStripeSession StripeSessionId (Result Http.Error ())
+    | CreatedCheckoutSession ClientId (Id PriceId) PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
+    | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
     | EmailSent (Result Http.Error PostmarkSendResponse)
+    | ErrorEmailSent (Result Http.Error PostmarkSendResponse)
 
 
 type ToFrontend
-    = PricesToFrontend (AssocList.Dict ProductId { priceId : PriceId, price : Price })
-    | SubmitFormResponse (Result () StripeSessionId)
+    = PricesToFrontend (AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price })
+    | SubmitFormResponse (Result () (Id StripeSessionId))
 
 
 totalSlotsAvailable =

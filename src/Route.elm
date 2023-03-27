@@ -1,6 +1,7 @@
 module Route exposing (Route(..), decode, encode)
 
 import EmailAddress exposing (EmailAddress)
+import Id exposing (Id)
 import Stripe exposing (StripeSessionId(..))
 import Url exposing (Url)
 import Url.Builder
@@ -13,7 +14,7 @@ type Route
     | AccessibilityRoute
     | CodeOfConductRoute
     | PaymentSuccessRoute (Maybe EmailAddress)
-    | PaymentCancelRoute (Maybe StripeSessionId)
+    | PaymentCancelRoute (Maybe (Id StripeSessionId))
 
 
 decode : Url -> Route
@@ -35,9 +36,9 @@ parseEmail =
         (Url.Parser.Query.string Stripe.emailAddressParameter)
 
 
-parseStripeSessionId : Url.Parser.Query.Parser (Maybe StripeSessionId)
+parseStripeSessionId : Url.Parser.Query.Parser (Maybe (Id StripeSessionId))
 parseStripeSessionId =
-    Url.Parser.Query.map (Maybe.map StripeSessionId) (Url.Parser.Query.string Stripe.stripeSessionIdParameter)
+    Url.Parser.Query.map (Maybe.map Id.fromString) (Url.Parser.Query.string Stripe.stripeSessionIdParameter)
 
 
 encode : Route -> String
@@ -79,8 +80,8 @@ encode route =
 
             PaymentCancelRoute maybeStripeSessionId ->
                 case maybeStripeSessionId of
-                    Just (StripeSessionId stripeSessionId) ->
-                        [ Url.Builder.string Stripe.stripeSessionIdParameter stripeSessionId ]
+                    Just stripeSessionId ->
+                        [ Url.Builder.string Stripe.stripeSessionIdParameter (Id.toString stripeSessionId) ]
 
                     Nothing ->
                         []

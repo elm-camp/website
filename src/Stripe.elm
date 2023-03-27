@@ -20,6 +20,7 @@ import EmailAddress exposing (EmailAddress)
 import Env
 import Http
 import HttpHelpers exposing (..)
+import Id exposing (Id)
 import Json.Decode as D
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
@@ -40,15 +41,15 @@ type Price
 
 
 type ProductId
-    = ProductId String
+    = ProductId Never
 
 
 type PriceId
-    = PriceId String
+    = PriceId Never
 
 
 type Webhook
-    = StripeSessionCompleted StripeSessionId
+    = StripeSessionCompleted (Id StripeSessionId)
 
 
 decodeWebhook : D.Decoder Webhook
@@ -59,7 +60,7 @@ decodeWebhook =
                 case eventType of
                     "checkout.session.completed" ->
                         D.succeed StripeSessionCompleted
-                            |> required "object" (D.field "id" (D.map StripeSessionId D.string))
+                            |> required "object" (D.field "id" Id.decoder)
 
                     _ ->
                         D.fail ("Unhandled stripe webhook event: " ++ eventType)
@@ -67,7 +68,7 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { priceId : PriceId, price : Price, productId : ProductId, isActive : Bool, createdAt : Time.Posix }
+    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
 
 
 getPrices : (Result Http.Error (List PriceData) -> msg) -> Cmd msg
@@ -98,10 +99,10 @@ decodePrice =
             , createdAt = createdAt
             }
         )
-        |> required "id" (D.map PriceId D.string)
+        |> required "id" Id.decoder
         |> required "currency" decodeCurrency
         |> required "unit_amount" D.int
-        |> required "product" (D.map ProductId D.string)
+        |> required "product" Id.decoder
         |> required "active" D.bool
         |> required "created" (D.map Time.millisToPosix D.int)
 
@@ -119,13 +120,13 @@ decodeCurrency =
         D.string
 
 
-createCheckoutSession : PriceId -> EmailAddress -> Task Http.Error StripeSessionId
-createCheckoutSession (PriceId priceId) emailAddress =
+createCheckoutSession : Id PriceId -> EmailAddress -> Task Http.Error (Id StripeSessionId)
+createCheckoutSession priceId emailAddress =
     -- @TODO support multiple prices, see Data.Tickets
     let
         body =
             formBody
-                [ ( "line_items[][price]", priceId )
+                [ ( "line_items[][price]", Id.toString priceId )
                 , ( "line_items[][quantity]", "1" )
                 , ( "mode", "payment" )
                 , ( "success_url"
@@ -173,15 +174,15 @@ cancelPath =
     "stripeCancel"
 
 
-expireSession : StripeSessionId -> Task Http.Error ()
-expireSession (StripeSessionId stripeSessionId) =
+expireSession : Id StripeSessionId -> Task Http.Error ()
+expireSession stripeSessionId =
     Http.task
         { method = "POST"
         , headers = headers
         , url =
             Url.Builder.crossOrigin
                 "https://api.stripe.com"
-                [ "v1", "checkout", "sessions", stripeSessionId, "expire" ]
+                [ "v1", "checkout", "sessions", Id.toString stripeSessionId, "expire" ]
                 []
         , body = Http.emptyBody
         , resolver = jsonResolver (D.succeed ())
@@ -200,13 +201,12 @@ type alias CreateSessionRequest =
 
 
 type StripeSessionId
-    = StripeSessionId String
+    = StripeSessionId Never
 
 
-decodeSession : D.Decoder StripeSessionId
+decodeSession : D.Decoder (Id StripeSessionId)
 decodeSession =
-    D.succeed StripeSessionId
-        |> required "id" D.string
+    D.field "id" Id.decoder
 
 
 headers : List Http.Header
@@ -218,10 +218,10 @@ headers =
 -- Ports API
 
 
-loadCheckout : String -> StripeSessionId -> Cmd msg
-loadCheckout publicApiKey (StripeSessionId sid) =
+loadCheckout : String -> Id StripeSessionId -> Cmd msg
+loadCheckout publicApiKey sid =
     toJsMessage "loadCheckout"
-        [ ( "id", E.string sid )
+        [ ( "id", Id.encode sid )
         , ( "publicApiKey", E.string publicApiKey )
         ]
 

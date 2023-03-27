@@ -7,6 +7,7 @@ import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
 import Env
 import Http
+import Id
 import Json.Decode
 import Lamdera exposing (SessionId)
 import Lamdera.Wire3 as Wire3
@@ -78,7 +79,7 @@ purchaseCompletedEndpoint _ model request =
                                     , Postmark.sendEmail
                                         EmailSent
                                         Env.postmarkApiKey
-                                        { from = { name = "elm-camp", email = elmCampEmailAddress }
+                                        { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
                                         , to =
                                             Nonempty
                                                 { name = PurchaseForm.attendeeName order.form |> Name.toString
@@ -92,13 +93,30 @@ purchaseCompletedEndpoint _ model request =
                                     )
 
                                 Nothing ->
-                                    ( response, model, Cmd.none )
+                                    let
+                                        error =
+                                            "Ticket not found: priceId"
+                                                ++ Id.toString order.priceId
+                                                ++ ", stripeSessionId: "
+                                                ++ Id.toString stripeSessionId
+                                    in
+                                    ( Err (Http.BadBody error), model, Backend.errorEmail error )
 
                         Nothing ->
-                            ( response, model, Cmd.none )
+                            let
+                                error =
+                                    "Stripe session not found: stripeSessionId: "
+                                        ++ Id.toString stripeSessionId
+                            in
+                            ( Err (Http.BadBody error), model, Backend.errorEmail error )
 
-        Err _ ->
-            ( response, model, Cmd.none )
+        Err error ->
+            let
+                errorText =
+                    "Failed to decode webhook: "
+                        ++ Json.Decode.errorToString error
+            in
+            ( Err (Http.BadBody errorText), model, Backend.errorEmail errorText )
 
 
 confirmationEmail : Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
@@ -118,7 +136,7 @@ confirmationEmail ticket =
             ++ Env.domain
             ++ "/#schedule"
             ++ " and if you have any questions you can email us at "
-            ++ EmailAddress.toString elmCampEmailAddress
+            ++ EmailAddress.toString Backend.elmCampEmailAddress
             ++ " (or just reply to this email)"
     , htmlBody =
         Html.div
@@ -135,17 +153,12 @@ confirmationEmail ticket =
                     [ Html.text "You can review the schedule here" ]
                 , Html.text " and if you have any questions you can email us at "
                 , Html.a
-                    [ Attributes.href ("mailto:" ++ EmailAddress.toString elmCampEmailAddress) ]
-                    [ Html.text (EmailAddress.toString elmCampEmailAddress) ]
+                    [ Attributes.href ("mailto:" ++ EmailAddress.toString Backend.elmCampEmailAddress) ]
+                    [ Html.text (EmailAddress.toString Backend.elmCampEmailAddress) ]
                 , Html.text " (or just reply to this email)"
                 ]
             ]
     }
-
-
-elmCampEmailAddress : EmailAddress
-elmCampEmailAddress =
-    Unsafe.emailAddress "hello@elm.camp"
 
 
 

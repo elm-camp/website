@@ -12,9 +12,9 @@ module PurchaseForm exposing
 
 import EmailAddress exposing (EmailAddress)
 import Env
+import Id exposing (Id)
 import Name exposing (Name)
 import Stripe exposing (ProductId(..))
-import Tickets exposing (Ticket)
 import Toop exposing (T3(..), T4(..))
 import TravelMode exposing (TravelMode)
 
@@ -95,7 +95,7 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateForm : ProductId -> PurchaseForm -> Maybe PurchaseFormValidated
+validateForm : Id ProductId -> PurchaseForm -> Maybe PurchaseFormValidated
 validateForm productId form =
     let
         name1 =
@@ -107,7 +107,7 @@ validateForm productId form =
         emailAddress =
             validateEmailAddress form.billingEmail
     in
-    if productId == ProductId Env.couplesCampTicketProductId then
+    if productId == Id.fromString Env.couplesCampTicketProductId then
         case T4 name1 name2 emailAddress form.primaryModeOfTravel of
             T4 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) ->
                 CouplePurchase

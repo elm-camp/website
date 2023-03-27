@@ -2,17 +2,24 @@ module Backend exposing (..)
 
 import AssocList
 import Duration
+import EmailAddress exposing (EmailAddress)
 import Env
 import Html
+import HttpHelpers
+import Id exposing (Id)
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
+import List.Nonempty
+import Postmark exposing (PostmarkEmailBody(..))
 import PurchaseForm exposing (PurchaseFormValidated(..))
 import Quantity
+import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
 import Task
 import Tickets
 import Time
 import Types exposing (..)
+import Unsafe
 import Untrusted
 
 
@@ -52,7 +59,7 @@ update msg model =
     case msg of
         GotTime time ->
             let
-                expiredOrders : List StripeSessionId
+                expiredOrders : List (Id StripeSessionId)
                 expiredOrders =
                     AssocList.filter
                         (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan Duration.hour)
@@ -93,8 +100,8 @@ update msg model =
                     , Cmd.none
                     )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err error ->
+                    ( model, errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error) )
 
         OnConnected _ clientId ->
             ( model, Lamdera.sendToFrontend clientId (PricesToFrontend model.prices) )
@@ -116,7 +123,12 @@ update msg model =
                     )
 
                 Err error ->
-                    ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
+                    ( model
+                    , Cmd.batch
+                        [ SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId
+                        , errorEmail ("CreatedCheckoutSession failed: " ++ HttpHelpers.httpErrorToString error)
+                        ]
+                    )
 
         ExpiredStripeSession stripeSessionId result ->
             case result of
@@ -124,15 +136,18 @@ update msg model =
                     ( { model | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder }, Cmd.none )
 
                 Err error ->
-                    ( model, Cmd.none )
+                    ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error) )
 
         EmailSent result ->
             case result of
-                Ok response ->
+                Ok _ ->
                     ( model, Cmd.none )
 
-                Err _ ->
-                    ( model, Cmd.none )
+                Err error ->
+                    ( model, errorEmail ("Send email failed: " ++ HttpHelpers.httpErrorToString error) )
+
+        ErrorEmailSent _ ->
+            ( model, Cmd.none )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
@@ -145,7 +160,7 @@ updateFromFrontend _ clientId msg model =
                         ( Just productId, True ) ->
                             let
                                 validProductAndForm =
-                                    case ( productId == ProductId Env.couplesCampTicketProductId, purchaseForm ) of
+                                    case ( productId == Id.fromString Env.couplesCampTicketProductId, purchaseForm ) of
                                         ( True, CouplePurchase _ ) ->
                                             True
 
@@ -179,7 +194,7 @@ updateFromFrontend _ clientId msg model =
             )
 
 
-priceIdToProductId : BackendModel -> PriceId -> Maybe ProductId
+priceIdToProductId : BackendModel -> Id PriceId -> Maybe (Id ProductId)
 priceIdToProductId model priceId =
     AssocList.toList model.prices
         |> List.findMap
@@ -212,3 +227,26 @@ ticketToSlots pendingOrder =
 
         CouplePurchase _ ->
             2
+
+
+errorEmail : String -> Cmd BackendMsg
+errorEmail errorMessage =
+    case List.Nonempty.fromList Env.developerEmails of
+        Just to ->
+            Postmark.sendEmail
+                ErrorEmailSent
+                Env.postmarkApiKey
+                { from = { name = "elm-camp", email = elmCampEmailAddress }
+                , to = List.Nonempty.map (\email -> { name = "", email = email }) to
+                , subject = NonemptyString 'E' "rror occurred"
+                , body = BodyText errorMessage
+                , messageStream = "outbound"
+                }
+
+        Nothing ->
+            Cmd.none
+
+
+elmCampEmailAddress : EmailAddress
+elmCampEmailAddress =
+    Unsafe.emailAddress "hello@elm.camp"

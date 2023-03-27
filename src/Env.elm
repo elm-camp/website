@@ -1,5 +1,6 @@
 module Env exposing (..)
 
+import EmailAddress exposing (EmailAddress)
 import Postmark
 
 
@@ -42,3 +43,12 @@ postmarkApiKey_ =
 
 postmarkApiKey =
     Postmark.apiKey postmarkApiKey_
+
+
+developerEmails_ =
+    ""
+
+
+developerEmails : List EmailAddress
+developerEmails =
+    List.filterMap (\email -> String.trim email |> EmailAddress.fromString) (String.split "," developerEmails_)

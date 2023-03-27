@@ -7,6 +7,7 @@ import Element.Border
 import Element.Font
 import Element.Input
 import Env
+import Id exposing (Id)
 import Money
 import Stripe exposing (Price(..), ProductId(..))
 
@@ -51,12 +52,12 @@ campfireTicket =
     }
 
 
-dict : AssocList.Dict ProductId Ticket
+dict : AssocList.Dict (Id ProductId) Ticket
 dict =
     AssocList.fromList
-        [ ( ProductId Env.campfireTicketProductId, campfireTicket )
-        , ( ProductId Env.couplesCampTicketProductId, couplesCampTicket )
-        , ( ProductId Env.campTicketProductId, campTicket )
+        [ ( Id.fromString Env.campfireTicketProductId, campfireTicket )
+        , ( Id.fromString Env.couplesCampTicketProductId, couplesCampTicket )
+        , ( Id.fromString Env.campTicketProductId, campTicket )
         ]
 
 
