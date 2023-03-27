@@ -1,4 +1,6 @@
-module Name exposing (Error(..), Name(..), anonymous, errorToString, fromString, maxLength, toString)
+module Name exposing (Error(..), Name(..), anonymous, codec, errorToString, fromString, maxLength, toString)
+
+import Codec exposing (Codec)
 
 
 type Name
@@ -54,3 +56,18 @@ toString (Name groupName) =
 anonymous : Name
 anonymous =
     Name "Anonymous"
+
+
+codec : Codec Name
+codec =
+    Codec.andThen
+        (\text ->
+            case fromString text of
+                Ok name ->
+                    Codec.succeed name
+
+                Err _ ->
+                    Codec.fail ("Invalid name: " ++ text)
+        )
+        toString
+        Codec.string

@@ -191,7 +191,7 @@ renderer theme =
 
 heading1 : List (Element.Attr () msg)
 heading1 =
-    [ Element.Font.size 48
+    [ Element.Font.size 36
     , Element.Font.semiBold
     , Element.Font.color lightTheme.defaultText
     , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }

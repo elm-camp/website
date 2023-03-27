@@ -9,7 +9,7 @@ import Element.Input
 import Env
 import Id exposing (Id)
 import Money
-import Stripe exposing (Price(..), ProductId(..))
+import Stripe exposing (Price, ProductId(..))
 
 
 
@@ -62,7 +62,7 @@ dict =
 
 
 viewDesktop : msg -> Price -> Ticket -> Element msg
-viewDesktop onPress (Price currency amount) ticket =
+viewDesktop onPress { currency, amount } ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -94,7 +94,7 @@ viewDesktop onPress (Price currency amount) ticket =
 
 
 viewMobile : msg -> Price -> Ticket -> Element msg
-viewMobile onPress (Price currency amount) ticket =
+viewMobile onPress { currency, amount } ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop

@@ -2,6 +2,7 @@ module RPC exposing (..)
 
 import AssocList
 import Backend
+import Codec
 import Email.Html as Html
 import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
@@ -22,6 +23,24 @@ import Task exposing (Task)
 import Tickets exposing (Ticket)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..))
 import Unsafe
+
+
+backendModelEndpoint :
+    SessionId
+    -> BackendModel
+    -> Json.Decode.Value
+    -> ( Result Http.Error Json.Decode.Value, BackendModel, Cmd BackendMsg )
+backendModelEndpoint _ model request =
+    case Json.Decode.decodeValue Json.Decode.string request of
+        Ok ok ->
+            if ok == Env.adminPassword then
+                ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
+
+            else
+                ( Http.BadBody "Invalid admin password" |> Err, model, Cmd.none )
+
+        Err _ ->
+            ( Http.BadBody "Expected request body to look like this: \"SECRET_KEY\"" |> Err, model, Cmd.none )
 
 
 purchaseCompletedEndpoint :
@@ -77,7 +96,7 @@ purchaseCompletedEndpoint _ model request =
                                                 model.orders
                                       }
                                     , Postmark.sendEmail
-                                        EmailSent
+                                        (ConfirmationEmailSent stripeSessionId)
                                         Env.postmarkApiKey
                                         { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
                                         , to =
@@ -178,6 +197,9 @@ lamdera_handleEndpoints args model =
     case args.endpoint of
         "stripe" ->
             LamderaRPC.handleEndpointString purchaseCompletedEndpoint args model
+
+        "backend-model" ->
+            LamderaRPC.handleEndpointJson backendModelEndpoint args model
 
         _ ->
             ( LamderaRPC.ResultFailure <| Http.BadBody <| "Unknown endpoint " ++ args.endpoint, model, Cmd.none )

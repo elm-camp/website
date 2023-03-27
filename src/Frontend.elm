@@ -268,7 +268,13 @@ header model =
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ Element.el
-                    [ Element.Font.size 80
+                    [ Element.Font.size
+                        (if windowWidth < 800 then
+                            64
+
+                         else
+                            80
+                        )
                     , glow
                     , Element.paddingXY 0 8
                     ]
@@ -364,9 +370,9 @@ loadedView model =
         PaymentSuccessRoute maybeEmailAddress ->
             Element.column
                 [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
-                [ Element.paragraph [] [ Element.text "Your ticket purchase was successful!" ]
+                [ Element.paragraph [ Element.Font.size 20, Element.Font.center ] [ Element.text "Your ticket purchase was successful!" ]
                 , Element.paragraph
-                    []
+                    [ Element.width (Element.px 420) ]
                     [ Element.text "An email has been sent to "
                     , case maybeEmailAddress of
                         Just emailAddress ->
@@ -405,7 +411,7 @@ homepageView model =
             model.windowSize
 
         padding =
-            Element.paddingXY sidePadding 0
+            Element.paddingXY sidePadding 24
 
         sidePadding =
             if windowWidth < 800 then
@@ -419,12 +425,18 @@ homepageView model =
             case AssocList.get productId Tickets.dict of
                 Just ticket ->
                     Element.column
-                        (padding :: contentAttributes)
+                        (Element.spacing 24 :: padding :: contentAttributes)
                         [ Element.row
                             [ Element.spacing 16, Element.width Element.fill ]
-                            [ Element.paragraph [] [ Element.text ticket.name ]
-                            , Element.image [ Element.width (Element.px 50) ] { src = ticket.image, description = "Illustration of camp" }
+                            [ Element.image
+                                [ Element.width (Element.px 50)
+                                ]
+                                { src = ticket.image, description = "Illustration of camp" }
+                            , Element.paragraph
+                                [ Element.Font.size 24, Element.Font.semiBold ]
+                                [ Element.text ticket.name ]
                             ]
+                        , Element.paragraph [] [ Element.text ticket.description ]
                         , formView model.windowSize productId priceId model.form
                         ]
 
@@ -469,6 +481,12 @@ homepageView model =
                             , stripe model
                             ]
                         , Element.el contentAttributes content2
+                        , Element.column
+                            contentAttributes
+                            [ MarkdownThemed.renderFull "# Our sponsors"
+                            , sponsors model.windowSize
+                            ]
+                        , Element.el contentAttributes content3
                         ]
                     ]
                 , footer
@@ -527,7 +545,7 @@ formView ( windowWidth, _ ) productId priceId form =
                     { text = text
                     , onChange = onChange
                     , placeholder = Nothing
-                    , label = Element.Input.labelAbove [] (Element.text title)
+                    , label = Element.Input.labelAbove [ Element.Font.semiBold ] (Element.text title)
                     }
                 , case ( form.submitStatus, validator text ) of
                     ( NotSubmitted PressedSubmit, Err error ) ->
@@ -557,7 +575,7 @@ formView ( windowWidth, _ ) productId priceId form =
         , if productId == Id.fromString Env.couplesCampTicketProductId then
             textInput
                 (\a -> FormChanged { form | attendee2Name = a })
-                "Name of the person you're sharing a room with"
+                "Person you're sharing a room with"
                 PurchaseForm.validateName
                 form.attendee2Name
 
@@ -570,7 +588,9 @@ formView ( windowWidth, _ ) productId priceId form =
             form.billingEmail
         , Element.column
             [ Element.spacing 8 ]
-            [ Element.paragraph [] [ Element.text "What will be your primary method of travelling to the event?" ]
+            [ Element.paragraph
+                [ Element.Font.semiBold ]
+                [ Element.text "What will be your primary method of travelling to the event?" ]
             , TravelMode.all
                 |> List.map
                     (\choice ->
@@ -787,9 +807,12 @@ Elm Camp is a community-driven non-profit initiative, organised by enthusiastic 
 
 🇬🇧 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
 
-🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
+🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps."""
+        |> MarkdownThemed.renderFull
 
 
+content3 =
+    """
 # Sponsorship options
 
 Sponsors will position themselves as leading supporters of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering so that people can attend regardless of their financial circumstance.
@@ -835,3 +858,34 @@ You will make it possible for a student and/or underprivileged community member 
 
 Problem with something above? Get in touch with the team at [hello@elm.camp](mailto:hello@elm.camp)."""
         |> MarkdownThemed.renderFull
+
+
+sponsors : ( Int, Int ) -> Element msg
+sponsors ( windowWidth, _ ) =
+    [ { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
+    , { image = "cookiewolf-logo.png", url = "", width = 220 }
+    , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
+    , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
+    , { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
+    ]
+        |> List.map
+            (\{ image, url, width } ->
+                Element.newTabLink
+                    []
+                    { url = url
+                    , label =
+                        Element.image
+                            [ Element.width
+                                (Element.px
+                                    (if windowWidth < 800 then
+                                        toFloat width * 0.7 |> round
+
+                                     else
+                                        width
+                                    )
+                                )
+                            ]
+                            { src = "/sponsors/" ++ image, description = url }
+                    }
+            )
+        |> Element.wrappedRow [ Element.spacing 32 ]

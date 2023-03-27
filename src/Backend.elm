@@ -138,13 +138,36 @@ update msg model =
                 Err error ->
                     ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error) )
 
-        EmailSent result ->
-            case result of
-                Ok _ ->
-                    ( model, Cmd.none )
+        ConfirmationEmailSent stripeSessionId result ->
+            case AssocList.get stripeSessionId model.orders of
+                Just order ->
+                    case result of
+                        Ok data ->
+                            ( { model
+                                | orders =
+                                    AssocList.insert
+                                        stripeSessionId
+                                        { order | emailResult = EmailSuccess data }
+                                        model.orders
+                              }
+                            , Cmd.none
+                            )
 
-                Err error ->
-                    ( model, errorEmail ("Send email failed: " ++ HttpHelpers.httpErrorToString error) )
+                        Err error ->
+                            ( { model
+                                | orders =
+                                    AssocList.insert
+                                        stripeSessionId
+                                        { order | emailResult = EmailFailed error }
+                                        model.orders
+                              }
+                            , errorEmail ("Confirmation email failed: " ++ HttpHelpers.httpErrorToString error)
+                            )
+
+                Nothing ->
+                    ( model
+                    , errorEmail ("StripeSessionId not found for confirmation email: " ++ Id.toString stripeSessionId)
+                    )
 
         ErrorEmailSent _ ->
             ( model, Cmd.none )

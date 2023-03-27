@@ -1,15 +1,19 @@
 module PurchaseForm exposing
-    ( PressedSubmit(..)
+    ( CouplePurchaseData
+    , PressedSubmit(..)
     , PurchaseForm
     , PurchaseFormValidated(..)
+    , SinglePurchaseData
     , SubmitStatus(..)
     , attendeeName
     , billingEmail
+    , codec
     , validateEmailAddress
     , validateForm
     , validateName
     )
 
+import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
 import Env
 import Id exposing (Id)
@@ -30,19 +34,25 @@ type alias PurchaseForm =
 
 
 type PurchaseFormValidated
-    = SinglePurchase
-        { attendeeName : Name
-        , billingEmail : EmailAddress
-        , originCity : String
-        , primaryModeOfTravel : TravelMode
-        }
-    | CouplePurchase
-        { attendee1Name : Name
-        , attendee2Name : Name
-        , billingEmail : EmailAddress
-        , originCity : String
-        , primaryModeOfTravel : TravelMode
-        }
+    = SinglePurchase SinglePurchaseData
+    | CouplePurchase CouplePurchaseData
+
+
+type alias SinglePurchaseData =
+    { attendeeName : Name
+    , billingEmail : EmailAddress
+    , originCity : String
+    , primaryModeOfTravel : TravelMode
+    }
+
+
+type alias CouplePurchaseData =
+    { attendee1Name : Name
+    , attendee2Name : Name
+    , billingEmail : EmailAddress
+    , originCity : String
+    , primaryModeOfTravel : TravelMode
+    }
 
 
 type SubmitStatus
@@ -135,3 +145,55 @@ validateForm productId form =
 
             _ ->
                 Nothing
+
+
+codec : Codec PurchaseFormValidated
+codec =
+    Codec.custom
+        (\a b value ->
+            case value of
+                SinglePurchase data0 ->
+                    a data0
+
+                CouplePurchase data0 ->
+                    b data0
+        )
+        |> Codec.variant1 "SinglePurchase" SinglePurchase singlePurchaseDataCodec
+        |> Codec.variant1 "CouplePurchase" CouplePurchase couplePurchaseDataCodec
+        |> Codec.buildCustom
+
+
+singlePurchaseDataCodec : Codec SinglePurchaseData
+singlePurchaseDataCodec =
+    Codec.object SinglePurchaseData
+        |> Codec.field "attendeeName" .attendeeName Name.codec
+        |> Codec.field "billingEmail" .billingEmail emailAddressCodec
+        |> Codec.field "originCity" .originCity Codec.string
+        |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+        |> Codec.buildObject
+
+
+couplePurchaseDataCodec : Codec CouplePurchaseData
+couplePurchaseDataCodec =
+    Codec.object CouplePurchaseData
+        |> Codec.field "attendee1Name" .attendee1Name Name.codec
+        |> Codec.field "attendee2Name" .attendee2Name Name.codec
+        |> Codec.field "billingEmail" .billingEmail emailAddressCodec
+        |> Codec.field "originCity" .originCity Codec.string
+        |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+        |> Codec.buildObject
+
+
+emailAddressCodec : Codec EmailAddress
+emailAddressCodec =
+    Codec.andThen
+        (\text ->
+            case EmailAddress.fromString text of
+                Just email ->
+                    Codec.succeed email
+
+                Nothing ->
+                    Codec.fail ("Invalid email: " ++ text)
+        )
+        EmailAddress.toString
+        Codec.string

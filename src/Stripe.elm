@@ -1,5 +1,5 @@
 module Stripe exposing
-    ( Price(..)
+    ( Price
     , PriceData
     , PriceId(..)
     , ProductId(..)
@@ -36,8 +36,8 @@ import Url.Builder
 -- HTTP Backend API
 
 
-type Price
-    = Price Money.Currency Int
+type alias Price =
+    { currency : Money.Currency, amount : Int }
 
 
 type ProductId

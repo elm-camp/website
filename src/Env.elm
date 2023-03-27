@@ -52,3 +52,7 @@ developerEmails_ =
 developerEmails : List EmailAddress
 developerEmails =
     List.filterMap (\email -> String.trim email |> EmailAddress.fromString) (String.split "," developerEmails_)
+
+
+adminPassword =
+    "123"
