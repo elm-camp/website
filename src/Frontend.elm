@@ -731,7 +731,9 @@ tooltip =
 content2 : Element msg
 content2 =
     """
-The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + external). Our plan is to prioritise ticket sales in the following order: Couple’s Camp tickets, Camp tickets, Campfire attendee tickets.
+The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + external). Our plan is to prioritise ticket sales in the following order: """
+        ++ String.join ", " [ Tickets.couplesCampTicket.name, Tickets.campTicket.name, Tickets.campfireTicket.name ]
+        ++ """.
 
 # Schedule
 

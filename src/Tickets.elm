@@ -1,4 +1,4 @@
-module Tickets exposing (Ticket, couplesCampTicket, dict, submitButtonAttributes, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, submitButtonAttributes, viewDesktop, viewMobile)
 
 import AssocList
 import Element exposing (Element)

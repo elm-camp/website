@@ -3,7 +3,7 @@ module Env exposing (..)
 import Postmark
 
 
-stripePostbackUrl =
+domain =
     "http://localhost:8000"
 
 

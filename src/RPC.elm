@@ -3,6 +3,8 @@ module RPC exposing (..)
 import AssocList
 import Backend
 import Email.Html as Html
+import Email.Html.Attributes as Attributes
+import EmailAddress exposing (EmailAddress)
 import Env
 import Http
 import Json.Decode
@@ -16,7 +18,7 @@ import PurchaseForm
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
-import Tickets
+import Tickets exposing (Ticket)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..))
 import Unsafe
 
@@ -45,59 +47,52 @@ purchaseCompletedEndpoint _ model request =
                     case AssocList.get stripeSessionId model.pendingOrder of
                         Just order ->
                             let
-                                maybeTicketName : Maybe String
-                                maybeTicketName =
+                                maybeTicket : Maybe Ticket
+                                maybeTicket =
                                     case Backend.priceIdToProductId model order.priceId of
                                         Just productId ->
-                                            case AssocList.get productId Tickets.dict of
-                                                Just ticket ->
-                                                    Just ticket.name
-
-                                                Nothing ->
-                                                    Nothing
+                                            AssocList.get productId Tickets.dict
 
                                         Nothing ->
                                             Nothing
                             in
-                            ( response
-                            , { model
-                                | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
-                                , orders =
-                                    AssocList.insert
-                                        stripeSessionId
-                                        { priceId = order.priceId
-                                        , submitTime = order.submitTime
-                                        , form = order.form
-                                        , emailResult = SendingEmail
+                            case maybeTicket of
+                                Just ticket ->
+                                    let
+                                        { subject, textBody, htmlBody } =
+                                            confirmationEmail ticket
+                                    in
+                                    ( response
+                                    , { model
+                                        | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
+                                        , orders =
+                                            AssocList.insert
+                                                stripeSessionId
+                                                { priceId = order.priceId
+                                                , submitTime = order.submitTime
+                                                , form = order.form
+                                                , emailResult = SendingEmail
+                                                }
+                                                model.orders
+                                      }
+                                    , Postmark.sendEmail
+                                        EmailSent
+                                        Env.postmarkApiKey
+                                        { from = { name = "elm-camp", email = elmCampEmailAddress }
+                                        , to =
+                                            Nonempty
+                                                { name = PurchaseForm.attendeeName order.form |> Name.toString
+                                                , email = PurchaseForm.billingEmail order.form
+                                                }
+                                                []
+                                        , subject = subject
+                                        , body = Postmark.BodyBoth htmlBody textBody
+                                        , messageStream = "outbound"
                                         }
-                                        model.orders
-                              }
-                            , Postmark.sendEmail
-                                EmailSent
-                                Env.postmarkApiKey
-                                { from = { name = "elm-camp", email = elmCampEmailAddress }
-                                , to =
-                                    Nonempty
-                                        { name = PurchaseForm.attendeeName order.form |> Name.toString
-                                        , email = PurchaseForm.billingEmail order.form
-                                        }
-                                        []
-                                , subject =
-                                    case maybeTicketName of
-                                        Just ticket ->
-                                            String.Nonempty.append
-                                                ticket
-                                                (NonemptyString ' ' "ticket purchase confirmation")
+                                    )
 
-                                        Nothing ->
-                                            NonemptyString 'T' "icket purchase confirmation"
-                                , body =
-                                    Postmark.BodyBoth
-                                        (Html.text "")
-                                        ""
-                                , messageStream = "outbound"
-                                }
-                            )
+                                Nothing ->
+                                    ( response, model, Cmd.none )
 
                         Nothing ->
                             ( response, model, Cmd.none )
@@ -106,8 +101,51 @@ purchaseCompletedEndpoint _ model request =
             ( response, model, Cmd.none )
 
 
+confirmationEmail : Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail ticket =
+    { subject =
+        String.Nonempty.append
+            ticket.name
+            (NonemptyString ' ' " purchase confirmation")
+    , textBody =
+        "This is a confirmation email for your purchase of "
+            ++ ticket.name
+            ++ "\n("
+            ++ ticket.description
+            ++ ")\n\n"
+            ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
+            ++ "You can review the schedule at "
+            ++ Env.domain
+            ++ "/#schedule"
+            ++ " and if you have any questions you can email us at "
+            ++ EmailAddress.toString elmCampEmailAddress
+            ++ " (or just reply to this email)"
+    , htmlBody =
+        Html.div
+            []
+            [ Html.div []
+                [ Html.text "This is a confirmation email for your purchase of the "
+                , Html.b [] [ Html.text ticket.name ]
+                ]
+            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text (" (" ++ ticket.description ++ ")") ]
+            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
+            , Html.div []
+                [ Html.a
+                    [ Attributes.href (Env.domain ++ "/#schedule") ]
+                    [ Html.text "You can review the schedule here" ]
+                , Html.text " and if you have any questions you can email us at "
+                , Html.a
+                    [ Attributes.href ("mailto:" ++ EmailAddress.toString elmCampEmailAddress) ]
+                    [ Html.text (EmailAddress.toString elmCampEmailAddress) ]
+                , Html.text " (or just reply to this email)"
+                ]
+            ]
+    }
+
+
+elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
-    Unsafe.emailAddress "no-reply@elm.camp"
+    Unsafe.emailAddress "hello@elm.camp"
 
 
 
