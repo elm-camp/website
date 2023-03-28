@@ -61,8 +61,8 @@ dict =
         ]
 
 
-viewDesktop : msg -> Price -> Ticket -> Element msg
-viewDesktop onPress price ticket =
+viewDesktop : Int -> msg -> Price -> Ticket -> Element msg
+viewDesktop slotsRemaining onPress price ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -80,15 +80,19 @@ viewDesktop onPress price ticket =
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
             (Element.text (priceText price))
         , Element.Input.button
-            [ Element.width Element.fill
-            , Element.Background.color (Element.rgb255 92 176 126)
-            , Element.padding 16
-            , Element.Border.rounded 8
-            , Element.alignBottom
-            , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-            ]
+            (submitButtonAttributes (slotsRemaining >= ticket.slots))
             { onPress = Just onPress
-            , label = Element.el [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ] (Element.text "Select")
+            , label =
+                Element.el
+                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
+                    (Element.text
+                        (if slotsRemaining >= ticket.slots then
+                            "Select"
+
+                         else
+                            "Sold out!"
+                        )
+                    )
             }
         ]
 
@@ -98,8 +102,8 @@ priceText { currency, amount } =
     Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
 
 
-viewMobile : msg -> Price -> Ticket -> Element msg
-viewMobile onPress { currency, amount } ticket =
+viewMobile : Int -> msg -> Price -> Ticket -> Element msg
+viewMobile slotsRemaining onPress { currency, amount } ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -125,17 +129,33 @@ viewMobile onPress { currency, amount } ticket =
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
         , Element.Input.button
-            submitButtonAttributes
+            (submitButtonAttributes (slotsRemaining >= ticket.slots))
             { onPress = Just onPress
-            , label = Element.el [ Element.centerX ] (Element.text "Select")
+            , label =
+                Element.el
+                    [ Element.centerX ]
+                    (Element.text
+                        (if slotsRemaining >= ticket.slots then
+                            "Select"
+
+                         else
+                            "Sold out!"
+                        )
+                    )
             }
         ]
 
 
-submitButtonAttributes : List (Element.Attribute msg)
-submitButtonAttributes =
+submitButtonAttributes : Bool -> List (Element.Attribute msg)
+submitButtonAttributes isEnabled =
     [ Element.width Element.fill
-    , Element.Background.color (Element.rgb255 92 176 126)
+    , Element.Background.color
+        (if isEnabled then
+            Element.rgb255 92 176 126
+
+         else
+            Element.rgb255 137 141 137
+        )
     , Element.padding 16
     , Element.Border.rounded 8
     , Element.alignBottom

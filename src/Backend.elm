@@ -56,7 +56,7 @@ subscriptions _ =
 
 update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 update msg model =
-    case msg of
+    (case msg of
         GotTime time ->
             let
                 expiredOrders : List (Id StripeSessionId)
@@ -104,11 +104,22 @@ update msg model =
                     ( model, errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error) )
 
         OnConnected _ clientId ->
-            ( model, Lamdera.sendToFrontend clientId (PricesToFrontend model.prices) )
+            ( model
+            , Lamdera.sendToFrontend
+                clientId
+                (InitData { prices = model.prices, slotsRemaining = slotsRemaining model })
+            )
 
-        CreatedCheckoutSession clientId priceId purchaseForm result ->
+        CreatedCheckoutSession sessionId clientId priceId purchaseForm result ->
             case result of
                 Ok ( stripeSessionId, submitTime ) ->
+                    let
+                        existingStripeSessions =
+                            AssocList.filter
+                                (\_ data -> data.sessionId == sessionId)
+                                model.pendingOrder
+                                |> AssocList.keys
+                    in
                     ( { model
                         | pendingOrder =
                             AssocList.insert
@@ -116,10 +127,20 @@ update msg model =
                                 { priceId = priceId
                                 , submitTime = submitTime
                                 , form = purchaseForm
+                                , sessionId = sessionId
                                 }
                                 model.pendingOrder
                       }
-                    , SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId
+                    , Cmd.batch
+                        [ SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId
+                        , List.map
+                            (\stripeSessionId2 ->
+                                Stripe.expireSession stripeSessionId2
+                                    |> Task.attempt (ExpiredStripeSession stripeSessionId2)
+                            )
+                            existingStripeSessions
+                            |> Cmd.batch
+                        ]
                     )
 
                 Err error ->
@@ -171,10 +192,22 @@ update msg model =
 
         ErrorEmailSent _ ->
             ( model, Cmd.none )
+    )
+        |> (\( newModel, cmd ) ->
+                let
+                    newSlotsRemaining =
+                        slotsRemaining newModel
+                in
+                if slotsRemaining model == newSlotsRemaining then
+                    ( newModel, cmd )
+
+                else
+                    ( newModel, Cmd.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
+           )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-updateFromFrontend _ clientId msg model =
+updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest priceId a ->
             case Untrusted.purchaseForm a of
@@ -199,7 +232,7 @@ updateFromFrontend _ clientId msg model =
                                     Tuple.pair
                                     (Stripe.createCheckoutSession priceId (PurchaseForm.billingEmail purchaseForm))
                                     Time.now
-                                    |> Task.attempt (CreatedCheckoutSession clientId priceId purchaseForm)
+                                    |> Task.attempt (CreatedCheckoutSession sessionId clientId priceId purchaseForm)
                                 )
 
                             else
@@ -211,9 +244,27 @@ updateFromFrontend _ clientId msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        CancelPurchaseRequest stripeSessionId ->
-            ( model
-            , Stripe.expireSession stripeSessionId |> Task.attempt (ExpiredStripeSession stripeSessionId)
+        CancelPurchaseRequest ->
+            case sessionIdToStripeSessionId sessionId model of
+                Just stripeSessionId ->
+                    ( model
+                    , Stripe.expireSession stripeSessionId |> Task.attempt (ExpiredStripeSession stripeSessionId)
+                    )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+
+sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)
+sessionIdToStripeSessionId sessionId model =
+    AssocList.toList model.pendingOrder
+        |> List.findMap
+            (\( stripeSessionId, data ) ->
+                if data.sessionId == sessionId then
+                    Just stripeSessionId
+
+                else
+                    Nothing
             )
 
 

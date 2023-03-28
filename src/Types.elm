@@ -5,7 +5,6 @@ import Browser exposing (UrlRequest)
 import Browser.Navigation exposing (Key)
 import Codec exposing (Codec)
 import Dict
-import EmailAddress exposing (EmailAddress)
 import Http
 import Id exposing (Id)
 import Lamdera exposing (ClientId, SessionId)
@@ -15,7 +14,6 @@ import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Time
-import TravelMode exposing (TravelMode)
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
 
@@ -29,6 +27,7 @@ type alias LoadingModel =
     { key : Key
     , windowSize : Maybe ( Int, Int )
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , slotsRemaining : Maybe Int
     , route : Route
     }
 
@@ -42,6 +41,7 @@ type alias LoadedModel =
     , form : PurchaseForm
     , route : Route
     , showCarbonOffsetTooltip : Bool
+    , slotsRemaining : Int
     }
 
 
@@ -115,6 +115,7 @@ type alias PendingOrder =
     { priceId : Id PriceId
     , submitTime : Time.Posix
     , form : PurchaseFormValidated
+    , sessionId : SessionId
     }
 
 
@@ -137,6 +138,7 @@ pendingOrderCodec =
         |> Codec.field "priceId" .priceId idCodec
         |> Codec.field "submitTime" .submitTime timeCodec
         |> Codec.field "form" .form PurchaseForm.codec
+        |> Codec.field "sessionId" .sessionId Codec.string
         |> Codec.buildObject
 
 
@@ -250,31 +252,36 @@ type FrontendMsg
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
-    | PressedBuy (Id ProductId) (Id PriceId)
+    | PressedSelectTicket (Id ProductId) (Id PriceId)
     | FormChanged PurchaseForm
     | PressedSubmitForm (Id ProductId) (Id PriceId)
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
+    | SetViewport
 
 
 type ToBackend
     = SubmitFormRequest (Id PriceId) (Untrusted PurchaseFormValidated)
-    | CancelPurchaseRequest (Id StripeSessionId)
+    | CancelPurchaseRequest
 
 
 type BackendMsg
     = GotTime Time.Posix
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
-    | CreatedCheckoutSession ClientId (Id PriceId) PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
+    | CreatedCheckoutSession SessionId ClientId (Id PriceId) PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
     | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error PostmarkSendResponse)
     | ErrorEmailSent (Result Http.Error PostmarkSendResponse)
 
 
 type ToFrontend
-    = PricesToFrontend (AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price })
+    = InitData
+        { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+        , slotsRemaining : Int
+        }
     | SubmitFormResponse (Result () (Id StripeSessionId))
+    | SlotRemainingChanged Int
 
 
 totalSlotsAvailable =

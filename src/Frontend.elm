@@ -25,7 +25,7 @@ import Route exposing (Route(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
-import Tickets
+import Tickets exposing (Ticket)
 import TravelMode
 import Types exposing (..)
 import Untrusted
@@ -58,13 +58,13 @@ init url key =
         route =
             Route.decode url
     in
-    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, route = route }
+    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, slotsRemaining = Nothing, route = route }
     , Cmd.batch
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , case route of
-            PaymentCancelRoute (Just stripeSessionId) ->
-                Lamdera.sendToBackend (CancelPurchaseRequest stripeSessionId)
+            PaymentCancelRoute ->
+                Lamdera.sendToBackend CancelPurchaseRequest
 
             _ ->
                 Cmd.none
@@ -89,8 +89,8 @@ update msg model =
 
 tryLoading : LoadingModel -> ( FrontendModel, Cmd FrontendMsg )
 tryLoading loadingModel =
-    Maybe.map
-        (\windowSize ->
+    Maybe.map2
+        (\windowSize slotsRemaining ->
             ( Loaded
                 { key = loadingModel.key
                 , windowSize = windowSize
@@ -108,15 +108,17 @@ tryLoading loadingModel =
                     }
                 , route = loadingModel.route
                 , showCarbonOffsetTooltip = False
+                , slotsRemaining = slotsRemaining
                 }
             , Cmd.none
             )
         )
         loadingModel.windowSize
+        loadingModel.slotsRemaining
         |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
 
 
-updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Cmd msg )
+updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Cmd FrontendMsg )
 updateLoaded msg model =
     case msg of
         UrlClicked urlRequest ->
@@ -143,8 +145,19 @@ updateLoaded msg model =
         MouseDown ->
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
 
-        PressedBuy productId priceId ->
-            ( { model | selectedTicket = Just ( productId, priceId ) }, Cmd.none )
+        PressedSelectTicket productId priceId ->
+            case AssocList.get productId Tickets.dict of
+                Just ticket ->
+                    if model.slotsRemaining >= ticket.slots then
+                        ( { model | selectedTicket = Just ( productId, priceId ) }
+                        , Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+                        )
+
+                    else
+                        ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         FormChanged form ->
             case model.form.submitStatus of
@@ -162,21 +175,39 @@ updateLoaded msg model =
                 form =
                     model.form
             in
-            case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
-                ( NotSubmitted _, Just validated ) ->
-                    ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
+            case AssocList.get productId Tickets.dict of
+                Just ticket ->
+                    if model.slotsRemaining >= ticket.slots then
+                        case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
+                            ( NotSubmitted _, Just validated ) ->
+                                ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
 
-                ( NotSubmitted _, Nothing ) ->
-                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }, Cmd.none )
+                            ( NotSubmitted _, Nothing ) ->
+                                ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
+                                , Cmd.none
+                                )
 
-                _ ->
+                            _ ->
+                                ( model, Cmd.none )
+
+                    else
+                        ( model, Cmd.none )
+
+                Nothing ->
                     ( model, Cmd.none )
 
         PressedCancelForm ->
-            ( { model | selectedTicket = Nothing }, Cmd.none )
+            ( { model | selectedTicket = Nothing }
+            , Browser.Dom.getElement ticketsHtmlId
+                |> Task.andThen (\{ element } -> Browser.Dom.setViewport 0 element.y)
+                |> Task.attempt (\_ -> SetViewport)
+            )
 
         PressedShowCarbonOffsetTooltip ->
             ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
+
+        SetViewport ->
+            ( model, Cmd.none )
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -184,8 +215,8 @@ updateFromBackend msg model =
     case model of
         Loading loading ->
             case msg of
-                PricesToFrontend prices ->
-                    ( Loading { loading | prices = prices }, Cmd.none )
+                InitData { prices, slotsRemaining } ->
+                    tryLoading { loading | prices = prices, slotsRemaining = Just slotsRemaining }
 
                 _ ->
                     ( model, Cmd.none )
@@ -197,8 +228,8 @@ updateFromBackend msg model =
 updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Cmd msg )
 updateFromBackendLoaded msg model =
     case msg of
-        PricesToFrontend prices ->
-            ( { model | prices = prices }, Cmd.none )
+        InitData { prices, slotsRemaining } ->
+            ( { model | prices = prices, slotsRemaining = slotsRemaining }, Cmd.none )
 
         SubmitFormResponse result ->
             case result of
@@ -213,6 +244,9 @@ updateFromBackendLoaded msg model =
                             model.form
                     in
                     ( { model | form = { form | submitStatus = SubmitBackendError } }, Cmd.none )
+
+        SlotRemainingChanged slotsRemaining ->
+            ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
 
 
 fontFace : Int -> String -> String
@@ -398,7 +432,7 @@ loadedView model =
                     }
                 ]
 
-        PaymentCancelRoute _ ->
+        PaymentCancelRoute ->
             Element.column
                 [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
                 [ Element.paragraph
@@ -410,6 +444,10 @@ loadedView model =
                     , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
+
+
+ticketsHtmlId =
+    "tickets"
 
 
 homepageView : LoadedModel -> Element FrontendMsg
@@ -453,7 +491,7 @@ homepageView model =
                                 ]
                             ]
                         , Element.paragraph [] [ Element.text ticket.description ]
-                        , formView model.windowSize productId priceId model.showCarbonOffsetTooltip model.form
+                        , formView model productId priceId ticket
                         ]
 
                 Nothing ->
@@ -492,9 +530,20 @@ homepageView model =
                                     )
                                 |> Element.column [ Element.spacing 10, Element.width Element.fill ]
                         , Element.column
-                            [ Element.width Element.fill ]
-                            [ Element.paragraph (contentAttributes ++ MarkdownThemed.heading1) [ Element.text "Tickets" ]
-                            , stripe model
+                            [ Element.width Element.fill
+                            , Element.spacing 24
+                            , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
+                            ]
+                            [ Element.row
+                                (Element.spacing 16 :: contentAttributes)
+                                [ Element.el
+                                    [ Element.Font.size 36, Element.Font.semiBold ]
+                                    (Element.text "Tickets")
+                                , Element.el
+                                    [ Element.Font.size 24, Element.centerY, Element.alignRight ]
+                                    (Element.text (slotsLeftText model))
+                                ]
+                            , ticketCardsView model
                             ]
                         , Element.el contentAttributes content2
                         , Element.column
@@ -507,6 +556,14 @@ homepageView model =
                     ]
                 , footer
                 ]
+
+
+slotsLeftText : { a | slotsRemaining : Int } -> String
+slotsLeftText model =
+    String.fromInt model.slotsRemaining
+        ++ "/"
+        ++ String.fromInt totalSlotsAvailable
+        ++ " slots left"
 
 
 footer : Element msg
@@ -550,9 +607,15 @@ errorText error =
     Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
 
 
-formView : ( Int, Int ) -> Id ProductId -> Id PriceId -> Bool -> PurchaseForm -> Element FrontendMsg
-formView ( windowWidth, _ ) productId priceId showCarbonOffsetTooltip form =
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Ticket -> Element FrontendMsg
+formView model productId priceId ticket =
     let
+        form =
+            model.form
+
+        ( windowWidth, _ ) =
+            model.windowSize
+
         textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
         textInput onChange title validator text =
             Element.column
@@ -574,9 +637,19 @@ formView ( windowWidth, _ ) productId priceId showCarbonOffsetTooltip form =
 
         submitButton =
             Element.Input.button
-                Tickets.submitButtonAttributes
+                (Tickets.submitButtonAttributes (model.slotsRemaining >= ticket.slots))
                 { onPress = Just (PressedSubmitForm productId priceId)
-                , label = Element.el [ Element.centerX ] (Element.text "Purchase ticket")
+                , label =
+                    Element.el
+                        [ Element.centerX ]
+                        (Element.text
+                            (if model.slotsRemaining >= ticket.slots then
+                                "Purchase ticket"
+
+                             else
+                                "Sold out!"
+                            )
+                        )
                 }
 
         cancelButton =
@@ -609,7 +682,7 @@ formView ( windowWidth, _ ) productId priceId showCarbonOffsetTooltip form =
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
             ]
-        , carbonOffsetForm textInput showCarbonOffsetTooltip form
+        , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
         , if windowWidth > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
@@ -741,8 +814,8 @@ contentAttributes =
     [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
 
 
-stripe : LoadedModel -> Element FrontendMsg
-stripe model =
+ticketCardsView : LoadedModel -> Element FrontendMsg
+ticketCardsView model =
     let
         ( windowWidth, _ ) =
             model.windowSize
@@ -752,7 +825,7 @@ stripe model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (PressedBuy productId price.priceId) price.price ticket
+                        Tickets.viewMobile model.slotsRemaining (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
@@ -765,23 +838,13 @@ stripe model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop (PressedBuy productId price.priceId) price.price ticket
+                        Tickets.viewDesktop model.slotsRemaining (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
             )
             (AssocList.toList Tickets.dict)
             |> Element.row (Element.spacing 16 :: contentAttributes)
-
-
-
---Html.node "stripe-pricing-table"
---    [ Attr.attribute "pricing-table-id" "prctbl_1MlWUcHHD80VvsjKINsykCtd"
---    , Attr.attribute "publishable-key" "pk_live_dIdCQ17pxxCWIeRJ5ZuJ4Ynm00FgRhZ4jR"
---    ]
---    []
---    |> Element.html
---    |> Element.el [ Element.width Element.fill ]
 
 
 content1 : Element msg
