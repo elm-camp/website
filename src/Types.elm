@@ -50,6 +50,7 @@ type alias BackendModel =
     , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
     , prices : AssocList.Dict (Id ProductId) Price2
     , time : Time.Posix
+    , dummyField : Int
     }
 
 
@@ -64,6 +65,7 @@ backendModelCodec =
         |> Codec.field "pendingOrder" .pendingOrder (assocListCodec pendingOrderCodec)
         |> Codec.field "prices" .prices (assocListCodec price2Codec)
         |> Codec.field "time" .time timeCodec
+        |> Codec.field "dummyField" .dummyField Codec.int
         |> Codec.buildObject
 
 

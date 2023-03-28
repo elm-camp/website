@@ -38,6 +38,7 @@ init =
       , pendingOrder = AssocList.empty
       , prices = AssocList.empty
       , time = Time.millisToPosix 0
+      , dummyField = 0
       }
     , Cmd.batch
         [ Time.now |> Task.perform GotTime
