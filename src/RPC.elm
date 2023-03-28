@@ -50,9 +50,6 @@ purchaseCompletedEndpoint :
     -> ( Result Http.Error String, BackendModel, Cmd BackendMsg )
 purchaseCompletedEndpoint _ model request =
     let
-        _ =
-            Debug.log "endpoint" request
-
         response =
             if Env.isProduction then
                 Ok "prod"
