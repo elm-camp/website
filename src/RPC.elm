@@ -10,6 +10,7 @@ import Env
 import Http
 import Id
 import Json.Decode
+import Json.Encode
 import Lamdera exposing (SessionId)
 import Lamdera.Wire3 as Wire3
 import LamderaRPC
@@ -22,7 +23,6 @@ import Stripe exposing (Webhook(..))
 import Task exposing (Task)
 import Tickets exposing (Ticket)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..))
-import Unsafe
 
 
 backendModelEndpoint :
@@ -46,18 +46,18 @@ backendModelEndpoint _ model request =
 purchaseCompletedEndpoint :
     SessionId
     -> BackendModel
-    -> String
-    -> ( Result Http.Error String, BackendModel, Cmd BackendMsg )
+    -> Json.Decode.Value
+    -> ( Result Http.Error Json.Decode.Value, BackendModel, Cmd BackendMsg )
 purchaseCompletedEndpoint _ model request =
     let
         response =
             if Env.isProduction then
-                Ok "prod"
+                Ok (Json.Encode.string "prod")
 
             else
-                Ok "dev"
+                Ok (Json.Encode.string "dev")
     in
-    case Json.Decode.decodeString Stripe.decodeWebhook request of
+    case Json.Decode.decodeValue Stripe.decodeWebhook request of
         Ok webhook ->
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
@@ -193,7 +193,7 @@ lamdera_handleEndpoints :
 lamdera_handleEndpoints args model =
     case args.endpoint of
         "stripe" ->
-            LamderaRPC.handleEndpointString purchaseCompletedEndpoint args model
+            LamderaRPC.handleEndpointJson purchaseCompletedEndpoint args model
 
         "backend-model" ->
             LamderaRPC.handleEndpointJson backendModelEndpoint args model
