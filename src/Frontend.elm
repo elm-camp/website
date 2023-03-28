@@ -398,14 +398,22 @@ loadedView model =
 
         AccessibilityRoute ->
             Element.column
-                contentAttributes
-                [ MarkdownThemed.renderFull "accessibility text here please!"
+                [ Element.width Element.fill, Element.height Element.fill ]
+                [ Element.column
+                    contentAttributes
+                    [ MarkdownThemed.renderFull "accessibility text here please!"
+                    ]
+                , footer
                 ]
 
         CodeOfConductRoute ->
             Element.column
-                contentAttributes
-                [ MarkdownThemed.renderFull "code of conduct text here please!"
+                [ Element.width Element.fill, Element.height Element.fill ]
+                [ Element.column
+                    contentAttributes
+                    [ MarkdownThemed.renderFull "code of conduct text here please!"
+                    ]
+                , footer
                 ]
 
         PaymentSuccessRoute maybeEmailAddress ->
@@ -572,6 +580,7 @@ footer =
         [ Element.Background.color (Element.rgb255 12 109 82)
         , Element.paddingXY 24 16
         , Element.width Element.fill
+        , Element.alignBottom
         ]
         (Element.wrappedRow
             ([ Element.spacing 32
