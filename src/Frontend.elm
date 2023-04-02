@@ -1060,9 +1060,9 @@ accessibilityContent =
 ### via train, bus & 2k walk or Elm Camp shuttle
 
 * Travel to Odense Train station
-* From here there is a bus from Odense Train Station to town of [cCc] which is 2k from the venue
+* From here there is a bus from Odense Train Station to Søndersø which is 2k from the venue
 * You can walk but note that there is a short section of unpaved road on this route
-* Elm Camp will be organising shuttles at key times. Details nearer the time.
+* Elm Camp will be organising shuttles at key times (details nearer the time)
 
 ### via car
 
@@ -1072,7 +1072,10 @@ accessibilityContent =
 
 ### Not step free.
 
-* Bedrooms, toilets, dining rooms and conference talk / workshop rooms can all be accessed via a lift which is 3 steps from ground level. #### It's an old manor house
+* Bedrooms, toilets, dining rooms and conference talk / workshop rooms can all be accessed via a lift which is 3 steps from ground level
+
+### It's an old manor house
+
 * The house has been renovated to a high standard but there are creaky bits, be sensible when exploring
 * There are plenty of spaces to hang out in private or in a small quiet group
 * There are a variety of seating options
