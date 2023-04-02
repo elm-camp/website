@@ -595,7 +595,7 @@ footer =
                 { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
             , Element.link
                 []
-                { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility Statement" }
+                { url = Route.encode AccessibilityRoute, label = Element.text "Venue & Accessibility" }
             ]
         )
 
@@ -1092,18 +1092,19 @@ accessibilityContent =
 * The house is set in landscaped grounds, there are paths and rough bits.
 * There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
 
-## Food and drink
-
-* There will be alcohol at the event available for purchase
-* Lunches will be vegetarian
-* Dinners will include a meat option
-* Vegan menu is available on request
-
 ## Participating in conversations
 
 * The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
 * We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
 * We hope to stream or record at least some of the content
-* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know 
+* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
+
+## Contacting the organisers
+
+If you have questions or concerns about this website or attending Elm Camp, please get in touch
+
+* email: hello@elm.camp
+* Elm slack: @katjam
+* Elmcraft Discord: Katja#0091
     """
         |> MarkdownThemed.renderFull
