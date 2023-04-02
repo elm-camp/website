@@ -401,7 +401,7 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ Element.column
                     contentAttributes
-                    [ MarkdownThemed.renderFull "accessibility text here please!"
+                    [ accessibilityContent
                     ]
                 , footer
                 ]
@@ -595,7 +595,7 @@ footer =
                 { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
             , Element.link
                 []
-                { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility" }
+                { url = Route.encode AccessibilityRoute, label = Element.text "Accessibility Statement" }
             ]
         )
 
@@ -1048,3 +1048,59 @@ sponsors ( windowWidth, _ ) =
                     }
             )
         |> Element.wrappedRow [ Element.spacing 32 ]
+
+
+accessibilityContent : Element msg
+accessibilityContent =
+    """
+# The venue and access
+
+## Getting here
+
+### via train, bus & 2k walk or Elm Camp shuttle
+
+* Travel to Odense Train station
+* From here there is a bus from Odense Train Station to town of [cCc] which is 2k from the venue
+* You can walk but note that there is a short section of unpaved road on this route
+* Elm Camp will be organising shuttles at key times. Details nearer the time.
+
+### via car
+
+* There is ample parking on site
+
+## The venue
+
+### Not step free.
+
+* Bedrooms, toilets, dining rooms and conference talk / workshop rooms can all be accessed via a lift which is 3 steps from ground level. #### It's an old manor house
+* The house has been renovated to a high standard but there are creaky bits, be sensible when exploring
+* There are plenty of spaces to hang out in private or in a small quiet group
+* There are a variety of seating options
+
+### Toilets
+
+* All toilets are gender neutral
+* There is one public toilet on each of the 3 floors
+* All attendees staying at the hotel have ensuites
+* The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
+
+### Open water & rough ground
+
+* The house is set in landscaped grounds, there are paths and rough bits.
+* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
+
+## Food and drink
+
+* There will be alcohol at the event available for purchase
+* Lunches will be vegetarian
+* Dinners will include a meat option
+* Vegan menu is available on request
+
+## Participating in conversations
+
+* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
+* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
+* We hope to stream or record at least some of the content
+* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know 
+    """
+        |> MarkdownThemed.renderFull
