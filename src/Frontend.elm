@@ -1103,7 +1103,7 @@ accessibilityContent =
 
 If you have questions or concerns about this website or attending Elm Camp, please get in touch
 
-* email: hello@elm.camp
+* email: [hello@elm.camp](mailto:hello@elm.camp)
 * Elm slack: @katjam
 * Elmcraft Discord: Katja#0091
     """
