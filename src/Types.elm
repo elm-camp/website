@@ -27,7 +27,7 @@ type alias LoadingModel =
     { key : Key
     , windowSize : Maybe ( Int, Int )
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
-    , slotsRemaining : Maybe Int
+    , slotsRemaining : Maybe TicketAvailability
     , route : Route
     }
 
@@ -41,7 +41,14 @@ type alias LoadedModel =
     , form : PurchaseForm
     , route : Route
     , showCarbonOffsetTooltip : Bool
-    , slotsRemaining : Int
+    , slotsRemaining : TicketAvailability
+    }
+
+
+type alias TicketAvailability =
+    { campTicket : Bool
+    , couplesCampTicket : Bool
+    , campfireTicket : Bool
     }
 
 
@@ -280,11 +287,11 @@ type BackendMsg
 type ToFrontend
     = InitData
         { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
-        , slotsRemaining : Int
+        , slotsRemaining : TicketAvailability
         }
     | SubmitFormResponse (Result () (Id StripeSessionId))
-    | SlotRemainingChanged Int
+    | SlotRemainingChanged TicketAvailability
 
 
-totalSlotsAvailable =
-    40
+maxSlotsAvailable =
+    50

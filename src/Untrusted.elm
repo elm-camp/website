@@ -34,7 +34,7 @@ emailAddress (Untrusted a) =
 purchaseForm : Untrusted PurchaseFormValidated -> Maybe PurchaseFormValidated
 purchaseForm (Untrusted a) =
     case a of
-        SinglePurchase b ->
+        CampfireTicketPurchase b ->
             case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
                 T2 (Just attendeeName) (Just billingEmail) ->
                     { attendeeName = attendeeName
@@ -43,13 +43,28 @@ purchaseForm (Untrusted a) =
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     }
-                        |> SinglePurchase
+                        |> CampfireTicketPurchase
                         |> Just
 
                 _ ->
                     Nothing
 
-        CouplePurchase b ->
+        CampTicketPurchase b ->
+            case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
+                T2 (Just attendeeName) (Just billingEmail) ->
+                    { attendeeName = attendeeName
+                    , billingEmail = billingEmail
+                    , country = b.country
+                    , originCity = b.originCity
+                    , primaryModeOfTravel = b.primaryModeOfTravel
+                    }
+                        |> CampTicketPurchase
+                        |> Just
+
+                _ ->
+                    Nothing
+
+        CouplesCampTicketPurchase b ->
             case T3 (untrust b.attendee1Name |> name) (untrust b.attendee2Name |> name) (untrust b.billingEmail |> emailAddress) of
                 T3 (Just attendee1Name) (Just attendee2Name) (Just billingEmail) ->
                     { attendee1Name = attendee1Name
@@ -59,7 +74,7 @@ purchaseForm (Untrusted a) =
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     }
-                        |> CouplePurchase
+                        |> CouplesCampTicketPurchase
                         |> Just
 
                 _ ->

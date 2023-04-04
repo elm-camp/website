@@ -213,16 +213,22 @@ updateFromFrontend sessionId clientId msg model =
         SubmitFormRequest priceId a ->
             case Untrusted.purchaseForm a of
                 Just purchaseForm ->
-                    case ( priceIdToProductId model priceId, slotsRemaining model > 0 ) of
-                        ( Just productId, True ) ->
+                    case priceIdToProductId model priceId of
+                        Just productId ->
                             let
+                                availability =
+                                    slotsRemaining model
+
                                 validProductAndForm =
                                     case ( productId == Id.fromString Env.couplesCampTicketProductId, purchaseForm ) of
-                                        ( True, CouplePurchase _ ) ->
-                                            True
+                                        ( True, CouplesCampTicketPurchase _ ) ->
+                                            True && availability.couplesCampTicket
 
-                                        ( False, SinglePurchase _ ) ->
-                                            True
+                                        ( False, CampTicketPurchase _ ) ->
+                                            True && availability.campTicket
+
+                                        ( False, CampfireTicketPurchase _ ) ->
+                                            True && availability.campfireTicket
 
                                         _ ->
                                             False
@@ -282,25 +288,108 @@ priceIdToProductId model priceId =
             )
 
 
-slotsRemaining : BackendModel -> Int
+slotsRemaining : BackendModel -> TicketAvailability
 slotsRemaining model =
     let
-        pendingOrders =
-            AssocList.values model.pendingOrder |> List.map ticketToSlots |> List.sum
+        pendingSlots =
+            AssocList.values model.pendingOrder |> List.map orderToSlots |> List.sum
 
-        orders =
-            AssocList.values model.orders |> List.map ticketToSlots |> List.sum
+        purchasedSlots =
+            AssocList.values model.orders |> List.map orderToSlots |> List.sum
+
+        totalOrderSlots =
+            pendingSlots + purchasedSlots
+
+        campFireOrders =
+            AssocList.values model.orders |> List.filter isCampfireTicket |> List.length
+
+        campOrders =
+            AssocList.values model.orders |> List.filter isCampTicket |> List.length
+
+        couplesCampOrders =
+            AssocList.values model.orders |> List.filter isCouplesCampTicket |> List.length
+
+        roomSlotsBooked =
+            AssocList.values model.orders |> List.filter isRoomTicketPurchase |> List.map orderToSlots |> List.sum
+
+        roomSlotsRemaining =
+            (20 - couplesCampOrders - campOrders) * 2
     in
-    totalSlotsAvailable - (pendingOrders + orders)
+    if totalOrderSlots < maxSlotsAvailable then
+        { campTicket = roomSlotsBooked < 24
+        , couplesCampTicket = couplesCampOrders < 20 && roomSlotsBooked < 24
+        , campfireTicket = (maxSlotsAvailable - roomSlotsBooked - roomSlotsRemaining) > 0
+        }
+
+    else
+        { campTicket = False
+        , couplesCampTicket = False
+        , campfireTicket = False
+        }
 
 
-ticketToSlots : { a | form : PurchaseFormValidated } -> number
-ticketToSlots pendingOrder =
-    case pendingOrder.form of
-        SinglePurchase _ ->
+isCampfireTicket : { order | form : PurchaseFormValidated } -> Bool
+isCampfireTicket order =
+    case order.form of
+        CampfireTicketPurchase _ ->
+            True
+
+        CampTicketPurchase _ ->
+            False
+
+        CouplesCampTicketPurchase _ ->
+            False
+
+
+isCampTicket : { order | form : PurchaseFormValidated } -> Bool
+isCampTicket order =
+    case order.form of
+        CampfireTicketPurchase _ ->
+            False
+
+        CampTicketPurchase _ ->
+            True
+
+        CouplesCampTicketPurchase _ ->
+            False
+
+
+isCouplesCampTicket : { order | form : PurchaseFormValidated } -> Bool
+isCouplesCampTicket order =
+    case order.form of
+        CampfireTicketPurchase _ ->
+            False
+
+        CampTicketPurchase _ ->
+            False
+
+        CouplesCampTicketPurchase _ ->
+            True
+
+
+isRoomTicketPurchase : { order | form : PurchaseFormValidated } -> Bool
+isRoomTicketPurchase order =
+    case order.form of
+        CampfireTicketPurchase _ ->
+            False
+
+        CampTicketPurchase _ ->
+            True
+
+        CouplesCampTicketPurchase _ ->
+            True
+
+
+orderToSlots : { order | form : PurchaseFormValidated } -> number
+orderToSlots order =
+    case order.form of
+        CampfireTicketPurchase _ ->
             1
 
-        CouplePurchase _ ->
+        CampTicketPurchase _ ->
+            1
+
+        CouplesCampTicketPurchase _ ->
             2
 
 

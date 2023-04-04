@@ -148,7 +148,7 @@ updateLoaded msg model =
         PressedSelectTicket productId priceId ->
             case AssocList.get productId Tickets.dict of
                 Just ticket ->
-                    if model.slotsRemaining >= ticket.slots then
+                    if purchaseable ticket.productId model then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
                         )
@@ -177,7 +177,7 @@ updateLoaded msg model =
             in
             case AssocList.get productId Tickets.dict of
                 Just ticket ->
-                    if model.slotsRemaining >= ticket.slots then
+                    if purchaseable ticket.productId model then
                         case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
                             ( NotSubmitted _, Just validated ) ->
                                 ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
@@ -249,6 +249,17 @@ updateFromBackendLoaded msg model =
             ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
 
 
+purchaseable productId model =
+    if productId == Env.campfireTicketProductId then
+        model.slotsRemaining.campfireTicket
+
+    else if productId == Env.campTicketProductId then
+        model.slotsRemaining.campTicket
+
+    else
+        model.slotsRemaining.couplesCampTicket
+
+
 fontFace : Int -> String -> String
 fontFace weight name =
     """
@@ -301,7 +312,7 @@ header model =
     in
     if windowWidth < 1000 then
         Element.column
-            [ Element.spacing 20, Element.centerX ]
+            [ Element.padding 20, Element.spacing 20, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.maximum 523 Element.fill) ]
                 { src = "/logo.webp", description = "Elm camp logo" }
@@ -330,12 +341,17 @@ header model =
                         , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
                         ]
                     ]
+                , Element.column
+                    [ glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
+                    [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
+                    , Element.text "🇩🇰 Dallund Castle, Denmark"
+                    ]
                 ]
             ]
 
     else
         Element.row
-            [ Element.spacing 40, Element.centerX ]
+            [ Element.padding 20, Element.spacing 40, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.px 523) ]
                 { src = "/logo.webp", description = "Elm camp logo" }
@@ -547,9 +563,10 @@ homepageView model =
                                 [ Element.el
                                     [ Element.Font.size 36, Element.Font.semiBold ]
                                     (Element.text "Tickets")
-                                , Element.el
-                                    [ Element.Font.size 24, Element.centerY, Element.alignRight ]
-                                    (Element.text (slotsLeftText model))
+
+                                -- , Element.el
+                                --     [ Element.Font.size 24, Element.centerY, Element.alignRight ]
+                                --     (Element.text (slotsLeftText model))
                                 ]
                             , ticketCardsView model
                             ]
@@ -630,7 +647,7 @@ formView model productId priceId ticket =
             Element.column
                 [ Element.spacing 4, Element.width Element.fill ]
                 [ Element.Input.text
-                    []
+                    [ Element.Border.rounded 8 ]
                     { text = text
                     , onChange = onChange
                     , placeholder = Nothing
@@ -646,13 +663,13 @@ formView model productId priceId ticket =
 
         submitButton =
             Element.Input.button
-                (Tickets.submitButtonAttributes (model.slotsRemaining >= ticket.slots))
+                (Tickets.submitButtonAttributes (purchaseable ticket.productId model))
                 { onPress = Just (PressedSubmitForm productId priceId)
                 , label =
                     Element.el
                         [ Element.centerX ]
                         (Element.text
-                            (if model.slotsRemaining >= ticket.slots then
+                            (if purchaseable ticket.productId model then
                                 "Purchase ticket"
 
                              else
@@ -711,7 +728,7 @@ carbonOffsetForm textInput showCarbonOffsetTooltip form =
         , Element.spacing 24
         , Element.paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
         , Element.Border.width 2
-        , Element.Border.color (Element.rgb 0.5 0.5 0.5)
+        , Element.Border.color (Element.rgb255 94 176 125)
         , Element.Border.rounded 12
         , Element.el
             [ (if showCarbonOffsetTooltip then
@@ -731,7 +748,9 @@ carbonOffsetForm textInput showCarbonOffsetTooltip form =
                 , label =
                     Element.row
                         []
-                        [ Element.el [ Element.Font.size 20 ] (Element.text "Carbon offsetting "), Element.el [ Element.Font.size 12, Element.moveUp 3 ] (Element.text "ℹ️") ]
+                        [ Element.el [ Element.Font.size 20 ] (Element.text "🌲 Carbon offsetting ")
+                        , Element.el [ Element.Font.size 12, Element.moveUp 3 ] (Element.text "ℹ️")
+                        ]
                 }
             )
             |> Element.inFront
@@ -834,7 +853,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile model.slotsRemaining (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
@@ -847,7 +866,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop model.slotsRemaining (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.none
@@ -1023,8 +1042,8 @@ sponsors : ( Int, Int ) -> Element msg
 sponsors ( windowWidth, _ ) =
     [ { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
     , { image = "cookiewolf-logo.png", url = "", width = 220 }
-    , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
     , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
+    , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
     , { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
     ]
         |> List.map

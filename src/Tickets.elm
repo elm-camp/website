@@ -22,6 +22,7 @@ type alias Ticket =
     , description : String
     , image : String
     , slots : Int
+    , productId : String
     }
 
 
@@ -31,6 +32,7 @@ campTicket =
     , description = "Ticket for 1 Person including: on-site accommodation with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product2.webp"
     , slots = 1
+    , productId = Env.campTicketProductId
     }
 
 
@@ -40,6 +42,7 @@ couplesCampTicket =
     , description = "Tickets for 2 people including: on-site accommodation for two people with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product3.webp"
     , slots = 2
+    , productId = Env.couplesCampTicketProductId
     }
 
 
@@ -49,6 +52,7 @@ campfireTicket =
     , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included."
     , image = "/product1.webp"
     , slots = 1
+    , productId = Env.campfireTicketProductId
     }
 
 
@@ -61,8 +65,8 @@ dict =
         ]
 
 
-viewDesktop : Int -> msg -> Price -> Ticket -> Element msg
-viewDesktop slotsRemaining onPress price ticket =
+viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
+viewDesktop ticketAvailable onPress price ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -80,13 +84,13 @@ viewDesktop slotsRemaining onPress price ticket =
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
             (Element.text (priceText price))
         , Element.Input.button
-            (submitButtonAttributes (slotsRemaining >= ticket.slots))
+            (submitButtonAttributes ticketAvailable)
             { onPress = Just onPress
             , label =
                 Element.el
                     [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
                     (Element.text
-                        (if slotsRemaining >= ticket.slots then
+                        (if ticketAvailable then
                             "Select"
 
                          else
@@ -102,8 +106,8 @@ priceText { currency, amount } =
     Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
 
 
-viewMobile : Int -> msg -> Price -> Ticket -> Element msg
-viewMobile slotsRemaining onPress { currency, amount } ticket =
+viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
+viewMobile ticketAvailable onPress { currency, amount } ticket =
     Element.column
         [ Element.width Element.fill
         , Element.alignTop
@@ -129,13 +133,13 @@ viewMobile slotsRemaining onPress { currency, amount } ticket =
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
         , Element.Input.button
-            (submitButtonAttributes (slotsRemaining >= ticket.slots))
+            (submitButtonAttributes ticketAvailable)
             { onPress = Just onPress
             , label =
                 Element.el
                     [ Element.centerX ]
                     (Element.text
-                        (if slotsRemaining >= ticket.slots then
+                        (if ticketAvailable then
                             "Select"
 
                          else

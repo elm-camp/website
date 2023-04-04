@@ -36,8 +36,9 @@ type alias PurchaseForm =
 
 
 type PurchaseFormValidated
-    = SinglePurchase SinglePurchaseData
-    | CouplePurchase CouplePurchaseData
+    = CampfireTicketPurchase SinglePurchaseData
+    | CampTicketPurchase SinglePurchaseData
+    | CouplesCampTicketPurchase CouplePurchaseData
 
 
 type alias SinglePurchaseData =
@@ -73,20 +74,26 @@ type PressedSubmit
 billingEmail : PurchaseFormValidated -> EmailAddress
 billingEmail paymentForm =
     case paymentForm of
-        SinglePurchase a ->
+        CampfireTicketPurchase a ->
             a.billingEmail
 
-        CouplePurchase a ->
+        CampTicketPurchase a ->
+            a.billingEmail
+
+        CouplesCampTicketPurchase a ->
             a.billingEmail
 
 
 attendeeName : PurchaseFormValidated -> Name
 attendeeName paymentForm =
     case paymentForm of
-        SinglePurchase a ->
+        CampfireTicketPurchase a ->
             a.attendeeName
 
-        CouplePurchase a ->
+        CampTicketPurchase a ->
+            a.attendeeName
+
+        CouplesCampTicketPurchase a ->
             a.attendee1Name
 
 
@@ -130,7 +137,7 @@ validateForm productId form =
     if productId == Id.fromString Env.couplesCampTicketProductId then
         case T6 name1 name2 emailAddress form.primaryModeOfTravel country originCity of
             T6 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
-                CouplePurchase
+                CouplesCampTicketPurchase
                     { attendee1Name = name1Ok
                     , attendee2Name = name2Ok
                     , billingEmail = emailAddressOk
@@ -144,9 +151,17 @@ validateForm productId form =
                 Nothing
 
     else
+        let
+            product =
+                if productId == Id.fromString Env.campTicketProductId then
+                    CampTicketPurchase
+
+                else
+                    CampfireTicketPurchase
+        in
         case T5 name1 emailAddress form.primaryModeOfTravel country originCity of
             T5 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
-                SinglePurchase
+                product
                     { attendeeName = name1Ok
                     , billingEmail = emailAddressOk
                     , country = countryOk
@@ -162,16 +177,20 @@ validateForm productId form =
 codec : Codec PurchaseFormValidated
 codec =
     Codec.custom
-        (\a b value ->
+        (\a b c value ->
             case value of
-                SinglePurchase data0 ->
+                CampfireTicketPurchase data0 ->
                     a data0
 
-                CouplePurchase data0 ->
+                CampTicketPurchase data0 ->
                     b data0
+
+                CouplesCampTicketPurchase data0 ->
+                    c data0
         )
-        |> Codec.variant1 "SinglePurchase" SinglePurchase singlePurchaseDataCodec
-        |> Codec.variant1 "CouplePurchase" CouplePurchase couplePurchaseDataCodec
+        |> Codec.variant1 "CampfireTicketPurchase" CampfireTicketPurchase singlePurchaseDataCodec
+        |> Codec.variant1 "CampTicketPurchase" CampTicketPurchase singlePurchaseDataCodec
+        |> Codec.variant1 "CouplesCampTicketPurchase" CouplesCampTicketPurchase couplePurchaseDataCodec
         |> Codec.buildCustom
 
 
