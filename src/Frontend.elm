@@ -312,7 +312,7 @@ header model =
     in
     if windowWidth < 1000 then
         Element.column
-            [ Element.padding 20, Element.spacing 20, Element.centerX ]
+            [ Element.padding 30, Element.spacing 20, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.maximum 523 Element.fill) ]
                 { src = "/logo.webp", description = "Elm camp logo" }
@@ -351,7 +351,7 @@ header model =
 
     else
         Element.row
-            [ Element.padding 20, Element.spacing 40, Element.centerX ]
+            [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.px 523) ]
                 { src = "/logo.webp", description = "Elm camp logo" }
@@ -525,7 +525,7 @@ homepageView model =
             Element.column
                 [ Element.width Element.fill ]
                 [ Element.column
-                    [ Element.spacing 80
+                    [ Element.spacing 50
                     , Element.width Element.fill
                     , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
                     ]
