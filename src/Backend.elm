@@ -7,6 +7,7 @@ import Env
 import Html
 import HttpHelpers
 import Id exposing (Id)
+import Inventory
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
@@ -108,7 +109,7 @@ update msg model =
             ( model
             , Lamdera.sendToFrontend
                 clientId
-                (InitData { prices = model.prices, slotsRemaining = slotsRemaining model })
+                (InitData { prices = model.prices, slotsRemaining = Inventory.slotsRemaining model })
             )
 
         CreatedCheckoutSession sessionId clientId priceId purchaseForm result ->
@@ -197,9 +198,9 @@ update msg model =
         |> (\( newModel, cmd ) ->
                 let
                     newSlotsRemaining =
-                        slotsRemaining newModel
+                        Inventory.slotsRemaining newModel
                 in
-                if slotsRemaining model == newSlotsRemaining then
+                if Inventory.slotsRemaining model == newSlotsRemaining then
                     ( newModel, cmd )
 
                 else
@@ -217,7 +218,7 @@ updateFromFrontend sessionId clientId msg model =
                         Just productId ->
                             let
                                 availability =
-                                    slotsRemaining model
+                                    Inventory.slotsRemaining model
 
                                 validProductAndForm =
                                     case ( productId == Id.fromString Env.couplesCampTicketProductId, purchaseForm ) of
@@ -286,111 +287,6 @@ priceIdToProductId model priceId =
                 else
                     Nothing
             )
-
-
-slotsRemaining : BackendModel -> TicketAvailability
-slotsRemaining model =
-    let
-        pendingSlots =
-            AssocList.values model.pendingOrder |> List.map orderToSlots |> List.sum
-
-        purchasedSlots =
-            AssocList.values model.orders |> List.map orderToSlots |> List.sum
-
-        totalOrderSlots =
-            pendingSlots + purchasedSlots
-
-        campFireOrders =
-            AssocList.values model.orders |> List.filter isCampfireTicket |> List.length
-
-        campOrders =
-            AssocList.values model.orders |> List.filter isCampTicket |> List.length
-
-        couplesCampOrders =
-            AssocList.values model.orders |> List.filter isCouplesCampTicket |> List.length
-
-        roomSlotsBooked =
-            AssocList.values model.orders |> List.filter isRoomTicketPurchase |> List.map orderToSlots |> List.sum
-
-        roomSlotsRemaining =
-            (20 - couplesCampOrders - campOrders) * 2
-    in
-    if totalOrderSlots < maxSlotsAvailable then
-        { campTicket = roomSlotsBooked < 24
-        , couplesCampTicket = couplesCampOrders < 20 && roomSlotsBooked < 24
-        , campfireTicket = (maxSlotsAvailable - roomSlotsBooked - roomSlotsRemaining) > 0
-        }
-
-    else
-        { campTicket = False
-        , couplesCampTicket = False
-        , campfireTicket = False
-        }
-
-
-isCampfireTicket : { order | form : PurchaseFormValidated } -> Bool
-isCampfireTicket order =
-    case order.form of
-        CampfireTicketPurchase _ ->
-            True
-
-        CampTicketPurchase _ ->
-            False
-
-        CouplesCampTicketPurchase _ ->
-            False
-
-
-isCampTicket : { order | form : PurchaseFormValidated } -> Bool
-isCampTicket order =
-    case order.form of
-        CampfireTicketPurchase _ ->
-            False
-
-        CampTicketPurchase _ ->
-            True
-
-        CouplesCampTicketPurchase _ ->
-            False
-
-
-isCouplesCampTicket : { order | form : PurchaseFormValidated } -> Bool
-isCouplesCampTicket order =
-    case order.form of
-        CampfireTicketPurchase _ ->
-            False
-
-        CampTicketPurchase _ ->
-            False
-
-        CouplesCampTicketPurchase _ ->
-            True
-
-
-isRoomTicketPurchase : { order | form : PurchaseFormValidated } -> Bool
-isRoomTicketPurchase order =
-    case order.form of
-        CampfireTicketPurchase _ ->
-            False
-
-        CampTicketPurchase _ ->
-            True
-
-        CouplesCampTicketPurchase _ ->
-            True
-
-
-orderToSlots : { order | form : PurchaseFormValidated } -> number
-orderToSlots order =
-    case order.form of
-        CampfireTicketPurchase _ ->
-            1
-
-        CampTicketPurchase _ ->
-            1
-
-        CouplesCampTicketPurchase _ ->
-            2
 
 
 errorEmail : String -> Cmd BackendMsg
