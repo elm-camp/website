@@ -1158,7 +1158,7 @@ The Code of Conduct is in place to protect everyone at Elm Camp. If any particip
 
 We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly.
 
-However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in that case that they prefer to remain anonymous.
+However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in the case that they prefer to remain anonymous.
 
 Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise.
 
