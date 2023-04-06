@@ -1075,7 +1075,7 @@ sponsors ( windowWidth, _ ) =
         |> List.map
             (\{ image, url, width } ->
                 Element.newTabLink
-                    []
+                    [ Element.width Element.fill]
                     { url = url
                     , label =
                         Element.image
