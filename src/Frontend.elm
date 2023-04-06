@@ -271,7 +271,7 @@ fontFace weight name =
   font-style: normal;
   font-weight: """ ++ String.fromInt weight ++ """;
   font-stretch: normal;
-  font-display: swap;
+
   src: url(/fonts/""" ++ name ++ """.ttf) format('truetype');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+2192, U+2713;
 }"""
@@ -1098,7 +1098,7 @@ sponsors ( windowWidth, _ ) =
 codeOfConductContent : Element msg
 codeOfConductContent =
     """
-    # Code of Conduct
+# Code of Conduct
 
 Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions.
 
@@ -1137,7 +1137,7 @@ We expect everyone here to ensure that our community is harrassment-free for eve
 
 As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it.
 
-If you have any concerns when planning, during or after a session, please get in touch with one of the organisers so we can help you.
+If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you.
 
 
 ## Talk to us
@@ -1146,7 +1146,23 @@ If you have any concerns when planning, during or after a session, please get in
 
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
 
+## How we handle Code of Conduct issues
+
+If someone makes you or anyone else feel unsafe or unwelcome, please report it as soon as possible. You can make a report personally, anonymously or ask someone to do it on your behalf.
+
+The Code of Conduct is in place to protect everyone at Elm Camp. If any participant violates these rules the organisers will take action.
+
+We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly.
+
+But, if you feel you want help resolving something more privately, please ask an organiser. You can contact us yourself or ask someone relay the issue on your behalf. The organisers will never disclose who brought the matter to our attention, in that case that they prefer to remain anonymous.
+
+Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise.
+
+Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can’t possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn’t write down explicitly here.
+
 If you have any questions, concerns or suggestions regarding this policy, please get in touch.
+
+This code of conduct was inspired by the [!!Con code of conduct](https://bangbangcon.com/conduct.html) and drafted with the guidance of the [Geek Feminism Wiki](https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources)
     """
         |> MarkdownThemed.renderFull
 
