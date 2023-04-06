@@ -1128,7 +1128,7 @@ We expect everyone here to ensure that our community is harrassment-free for eve
 
 * Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion
 * The use of sexualised language or imagery, and sexual attention or advances of any kind
-* interrupting people when they are speaking
+* Interrupting people when they are speaking
 * Sharing others' private information, such as a physical or email address, without their explicit permission
 * Other conduct which could reasonably be considered inappropriate in a professional setting
 
