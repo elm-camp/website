@@ -588,12 +588,13 @@ homepageView model =
                 ]
 
 
-slotsLeftText : { a | slotsRemaining : Int } -> String
-slotsLeftText model =
-    String.fromInt model.slotsRemaining
-        ++ "/"
-        ++ String.fromInt totalSlotsAvailable
-        ++ " slots left"
+
+-- slotsLeftText : { a | slotsRemaining : Int } -> String
+-- slotsLeftText model =
+--     String.fromInt model.slotsRemaining
+--         ++ "/"
+--         ++ String.fromInt totalSlotsAvailable
+--         ++ " slots left"
 
 
 footer : Element msg
