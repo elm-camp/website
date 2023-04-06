@@ -432,7 +432,7 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ Element.column
                     contentAttributes
-                    [ MarkdownThemed.renderFull "code of conduct text here please!"
+                    [ codeOfConductContent
                     ]
                 , footer
                 ]
@@ -1092,6 +1092,62 @@ sponsors ( windowWidth, _ ) =
                     }
             )
         |> Element.wrappedRow [ Element.spacing 32 ]
+
+
+codeOfConductContent : Element msg
+codeOfConductContent =
+    """
+    # Code of Conduct
+
+Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions.
+
+## Help everyone feel welcome at Elm Camp
+
+Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and preparing food, but there are no other guests at the hotel.
+
+We expect everyone here to ensure that our community is harrassment-free for everyone.
+
+### Examples of behaviours that help us to provide an an open, welcoming, diverse, inclusive, and healthy community:
+
+* Demonstrating empathy and kindness toward other people
+* Being respectful of differing opinions, viewpoints, and experiences
+* Giving and gracefully accepting constructive feedback
+* Accepting responsibility and apologising to those affected by our mistakes
+* Learning from our and others' mistakes and not repeating negative behaviour
+* Focusing on what is best for the overall community, not just ourselves as individuals
+* Consider sharing your pronouns when introducing yourself, even if you think they are obvious
+* Respect the name and pronouns others introduce themselves with
+* When discussing code, avoid criticising the person who wrote the code or referring to the quality of the code in a negative way
+* Leave silences to allow everyone a chance to speak
+* When standing around talking, leave space for new people to join your converation (sometimes referred to pacman shape)
+* If you think something you are about to say might be offensive, consider not saying it. If you need to say it, please warn people beforehand.
+
+
+### Examples of unacceptable behavior include:
+
+* Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion
+* The use of sexualised language or imagery, and sexual attention or advances of any kind
+* interrupting people when they are speaking
+* Sharing others' private information, such as a physical or email address, without their explicit permission
+* Other conduct which could reasonably be considered inappropriate in a professional setting
+
+
+## Guidelines for running a camp session
+
+As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it.
+
+If you have any concerns when planning, during or after a session, please get in touch with one of the organisers so we can help you.
+
+
+## Talk to us
+
+### hello@elm.camp
+
+If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
+
+If you have any questions, concerns or suggestions regarding this policy, please get in touch.
+    """
+        |> MarkdownThemed.renderFull
 
 
 accessibilityContent : Element msg
