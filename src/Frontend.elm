@@ -1142,9 +1142,13 @@ If you have any concerns when planning, during or after your session, please get
 
 ## Talk to us
 
-### hello@elm.camp
-
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
+
+### [hello@elm.camp](mailto:hello@elm.camp)
+
+* Elm slack: @katjam
+* Elmcraft Discord: Katja#0091
+
 
 ## How we handle Code of Conduct issues
 
