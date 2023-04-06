@@ -25,6 +25,7 @@ import Route exposing (Route(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
+import Theme
 import Tickets exposing (Ticket)
 import TravelMode
 import Types exposing (..)
@@ -107,7 +108,7 @@ tryLoading loadingModel =
                     , country = ""
                     , originCity = ""
                     , primaryModeOfTravel = Nothing
-                    , diversityFundContribution = ""
+                    , grantContribution = "0"
                     }
                 , route = loadingModel.route
                 , showCarbonOffsetTooltip = False
@@ -208,6 +209,9 @@ updateLoaded msg model =
 
         PressedShowCarbonOffsetTooltip ->
             ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
+
+        PressedSponsorship ->
+            ( model, Cmd.none )
 
         SetViewport ->
             ( model, Cmd.none )
@@ -391,8 +395,9 @@ view model =
     { title = "Elm Camp"
     , body =
         [ css
-        , W.Styles.globalStyles
-        , W.Styles.baseTheme
+
+        -- , W.Styles.globalStyles
+        -- , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
             , Element.Font.color colors.defaultText
@@ -512,7 +517,7 @@ homepageView model =
                                 , case AssocList.get productId model.prices of
                                     Just { price } ->
                                         " - "
-                                            ++ Tickets.priceText price
+                                            ++ Theme.priceText price
                                             |> Element.text
 
                                     Nothing ->
@@ -669,14 +674,14 @@ formView model productId priceId ticket =
 
         submitButton =
             Element.Input.button
-                (Tickets.submitButtonAttributes (purchaseable ticket.productId model))
+                (Theme.submitButtonAttributes (purchaseable ticket.productId model))
                 { onPress = Just (PressedSubmitForm productId priceId)
                 , label =
                     Element.el
                         [ Element.centerX ]
                         (Element.text
                             (if purchaseable ticket.productId model then
-                                "Purchase ticket"
+                                "Purchase"
 
                              else
                                 "Sold out!"
@@ -715,31 +720,133 @@ formView model productId priceId ticket =
                 form.billingEmail
             ]
         , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
-        , Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Diversity fund")
-        , Element.paragraph [] [ Element.text "Optional contributions to our diversity fund allow us to allocate resources to assist underrepresented and marginalised community members in attending Elm Camp." ]
-        , Element.row [ Element.width Element.fill ]
-            [ textInput (\a -> FormChanged { form | diversityFundContribution = a }) "Contribution" PurchaseForm.validateInt form.diversityFundContribution
-            , Element.column [ Element.width (Element.fillPortion 3), Element.padding 30 ]
-                [ W.InputSlider.view []
-                    { min = 0
-                    , max = 500
-                    , step = 10
-                    , value = String.toFloat form.diversityFundContribution |> Maybe.withDefault 0
-                    , onInput = \a -> FormChanged { form | diversityFundContribution = String.fromFloat a }
-                    }
-                    |> Element.html
-                    |> Element.el [ Element.width (Element.fillPortion 3), Element.height (Element.px 20) ]
-                , Element.row [ Element.width (Element.fillPortion 3) ]
-                    [ Element.el [ Element.padding 10 ] <| Element.text "No thanks"
-                    , Element.el [ Element.padding 10, Element.alignRight ] <| Element.text "Full ticket"
-                    ]
-                ]
-            ]
+        , opportunityGrant form textInput
+        , sponsorships form textInput
         , if windowWidth > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
           else
             Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
+        ]
+
+
+opportunityGrant form textInput =
+    Element.column [ Element.spacing 20 ]
+        [ Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Opportunity grants")
+        , Element.paragraph [] [ Element.text "The opportunity grant fund allows us to support underrepresented and marginalised people who may not otherwise have the opportunity to attend Elm Camp for financial reasons." ]
+        , Theme.panel []
+            [ Element.row [ Element.width Element.fill, Element.spacing 30 ]
+                [ Element.text "Contribute"
+                , Element.text "Apply"
+                ]
+            , Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
+            , Element.row [ Element.width Element.fill, Element.spacing 30 ]
+                [ textInput (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                , Element.column [ Element.width (Element.fillPortion 3) ]
+                    [ Element.row [ Element.width (Element.fillPortion 3) ]
+                        [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "0"
+                        , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "500"
+                        ]
+                    , Element.Input.slider
+                        [ Element.behindContent
+                            (Element.el
+                                [ Element.width Element.fill
+                                , Element.height (Element.px 5)
+                                , Element.centerY
+                                , Element.Background.color (Element.rgb255 94 176 125)
+                                , Element.Border.rounded 2
+                                ]
+                                Element.none
+                            )
+                        ]
+                        { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                        , label = Element.Input.labelHidden "Diversity contribution slider value selector"
+                        , min = 0
+                        , max = 500
+                        , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                        , thumb = Element.Input.defaultThumb
+                        , step = Just 10
+                        }
+                    , Element.row [ Element.width (Element.fillPortion 3) ]
+                        [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "No thanks"
+                        , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "Full ticket"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+
+sponsorships form textInput =
+    Element.column [ Element.spacing 20 ]
+        [ Element.el [ Element.Font.size 20 ] (Element.text "🤝 Sponsor Elm Camp")
+        , Element.paragraph [] [ Element.text "Position your company as a leading supporter of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering." ]
+        , Element.row [ Element.spacing 20, Element.width Element.fill ]
+            [ sponsorshipOption True
+                "Silver"
+                1000
+                "You will be a major supporter of Elm Camp Europe 2023."
+                [ "Thank you tweet"
+                , "Logo on webpage"
+                , "Small logo on shared slide, displayed during breaks"
+                ]
+            , sponsorshipOption False
+                "Gold"
+                2500
+                "You will be a pivotal supporter of Elm Camp Europe 2023."
+                [ "Thank you tweet"
+                , "Rollup or poster inside the venue (provided by you)"
+                , "Logo on webpage"
+                , "Medium logo on shared slide, displayed during breaks"
+                , "1 free campfire ticket"
+                ]
+            , sponsorshipOption False
+                "Platinum"
+                5000
+                "You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success."
+                [ "Thank you tweet"
+                , "Rollup or poster inside the venue (provided by you)"
+                , "Self-written snippet on shared web page about use of Elm at your company"
+                , "Logo on webpage"
+                , "2 free campfire tickets or 1 free camp ticket"
+                , "Big logo on shared slide, displayed during breaks"
+                , "Honorary mention in opening and closing talks"
+                ]
+            ]
+        ]
+
+
+sponsorshipOption selected name num description features =
+    let
+        attrs =
+            if selected then
+                [ Element.Border.color (Element.rgb255 94 176 125), Element.Border.width 3 ]
+
+            else
+                []
+    in
+    Theme.panel attrs
+        [ Element.el [ Element.Font.size 20, Element.Font.bold ] (Element.text name)
+        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| String.fromInt num)
+        , Element.paragraph [] [ Element.text description ]
+        , features
+            |> List.map (\point -> Element.paragraph [ Element.Font.size 12 ] [ Element.text <| "• " ++ point ])
+            |> Element.column [ Element.spacing 5 ]
+        , Element.Input.button
+            (Theme.submitButtonAttributes True)
+            { onPress = Just PressedSponsorship
+            , label =
+                Element.el
+                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
+                    (Element.text
+                        (if selected then
+                            "Un-select"
+
+                         else
+                            "Select"
+                        )
+                    )
+            }
         ]
 
 

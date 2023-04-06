@@ -266,6 +266,7 @@ type FrontendMsg
     | PressedSubmitForm (Id ProductId) (Id PriceId)
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
+    | PressedSponsorship
     | SetViewport
 
 

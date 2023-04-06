@@ -1,4 +1,4 @@
-module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, priceText, submitButtonAttributes, viewDesktop, viewMobile)
+module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, viewDesktop, viewMobile)
 
 import AssocList
 import Element exposing (Element)
@@ -10,6 +10,7 @@ import Env
 import Id exposing (Id)
 import Money
 import Stripe exposing (Price, ProductId(..))
+import Theme
 
 
 
@@ -67,24 +68,15 @@ dict =
 
 viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
 viewDesktop ticketAvailable onPress price ticket =
-    Element.column
-        [ Element.width Element.fill
-        , Element.alignTop
-        , Element.spacing 16
-        , Element.Background.color (Element.rgb 1 1 1)
-        , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
-        , Element.height Element.fill
-        , Element.Border.rounded 16
-        , Element.padding 16
-        ]
+    Theme.panel []
         [ Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
         , Element.paragraph [] [ Element.text ticket.description ]
         , Element.el
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
-            (Element.text (priceText price))
+            (Element.text (Theme.priceText price))
         , Element.Input.button
-            (submitButtonAttributes ticketAvailable)
+            (Theme.submitButtonAttributes ticketAvailable)
             { onPress = Just onPress
             , label =
                 Element.el
@@ -101,23 +93,9 @@ viewDesktop ticketAvailable onPress price ticket =
         ]
 
 
-priceText : Price -> String
-priceText { currency, amount } =
-    Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
-
-
 viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
 viewMobile ticketAvailable onPress { currency, amount } ticket =
-    Element.column
-        [ Element.width Element.fill
-        , Element.alignTop
-        , Element.spacing 16
-        , Element.Background.color (Element.rgb 1 1 1)
-        , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
-        , Element.height Element.fill
-        , Element.Border.rounded 16
-        , Element.padding 16
-        ]
+    Theme.panel []
         [ Element.row
             [ Element.spacing 16 ]
             [ Element.column
@@ -133,7 +111,7 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
         , Element.Input.button
-            (submitButtonAttributes ticketAvailable)
+            (Theme.submitButtonAttributes ticketAvailable)
             { onPress = Just onPress
             , label =
                 Element.el
@@ -148,22 +126,3 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                     )
             }
         ]
-
-
-submitButtonAttributes : Bool -> List (Element.Attribute msg)
-submitButtonAttributes isEnabled =
-    [ Element.width Element.fill
-    , Element.Background.color
-        (if isEnabled then
-            Element.rgb255 92 176 126
-
-         else
-            Element.rgb255 137 141 137
-        )
-    , Element.padding 16
-    , Element.Border.rounded 8
-    , Element.alignBottom
-    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Element.Font.semiBold
-    , Element.Font.color (Element.rgb 1 1 1)
-    ]

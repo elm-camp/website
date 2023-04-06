@@ -33,7 +33,7 @@ type alias PurchaseForm =
     , country : String
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
-    , diversityFundContribution : String
+    , grantContribution : String
     }
 
 
@@ -49,7 +49,7 @@ type alias SinglePurchaseData =
     , country : NonemptyString
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
-    , diversityFundContribution : Int
+    , grantContribution : Int
     }
 
 
@@ -60,7 +60,7 @@ type alias CouplePurchaseData =
     , country : NonemptyString
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
-    , diversityFundContribution : Int
+    , grantContribution : Int
     }
 
 
@@ -148,12 +148,12 @@ validateForm productId form =
         originCity =
             String.Nonempty.fromString form.originCity
 
-        diversityFundContribution =
-            validateInt form.diversityFundContribution
+        grantContribution =
+            validateInt form.grantContribution
     in
     if productId == Id.fromString Env.couplesCampTicketProductId then
-        case T7 name1 name2 emailAddress form.primaryModeOfTravel country originCity diversityFundContribution of
-            T7 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok diversityFundContributionOk) ->
+        case T7 name1 name2 emailAddress form.primaryModeOfTravel country originCity grantContribution of
+            T7 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) ->
                 CouplesCampTicketPurchase
                     { attendee1Name = name1Ok
                     , attendee2Name = name2Ok
@@ -161,7 +161,7 @@ validateForm productId form =
                     , country = countryOk
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
-                    , diversityFundContribution = diversityFundContributionOk
+                    , grantContribution = grantContributionOk
                     }
                     |> Just
 
@@ -177,15 +177,15 @@ validateForm productId form =
                 else
                     CampfireTicketPurchase
         in
-        case T6 name1 emailAddress form.primaryModeOfTravel country originCity diversityFundContribution of
-            T6 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok diversityFundContributionOk) ->
+        case T6 name1 emailAddress form.primaryModeOfTravel country originCity grantContribution of
+            T6 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) ->
                 product
                     { attendeeName = name1Ok
                     , billingEmail = emailAddressOk
                     , country = countryOk
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
-                    , diversityFundContribution = diversityFundContributionOk
+                    , grantContribution = grantContributionOk
                     }
                     |> Just
 
@@ -221,7 +221,7 @@ singlePurchaseDataCodec =
         |> Codec.field "country" .country nonemptyStringCodec
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
-        |> Codec.field "diversityFundContribution" .diversityFundContribution Codec.int
+        |> Codec.field "grantContribution" .grantContribution Codec.int
         |> Codec.buildObject
 
 
@@ -234,7 +234,7 @@ couplePurchaseDataCodec =
         |> Codec.field "country" .country nonemptyStringCodec
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
-        |> Codec.field "diversityFundContribution" .diversityFundContribution Codec.int
+        |> Codec.field "grantContribution" .grantContribution Codec.int
         |> Codec.buildObject
 
 
