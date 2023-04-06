@@ -10,6 +10,7 @@ module PurchaseForm exposing
     , codec
     , validateEmailAddress
     , validateForm
+    , validateInt
     , validateName
     )
 
@@ -20,7 +21,7 @@ import Id exposing (Id)
 import Name exposing (Name)
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
-import Toop exposing (T3(..), T4(..), T5(..), T6(..))
+import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..))
 import TravelMode exposing (TravelMode)
 
 
@@ -32,6 +33,7 @@ type alias PurchaseForm =
     , country : String
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
+    , diversityFundContribution : String
     }
 
 
@@ -47,6 +49,7 @@ type alias SinglePurchaseData =
     , country : NonemptyString
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
+    , diversityFundContribution : Int
     }
 
 
@@ -57,6 +60,7 @@ type alias CouplePurchaseData =
     , country : NonemptyString
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
+    , diversityFundContribution : Int
     }
 
 
@@ -97,6 +101,16 @@ attendeeName paymentForm =
             a.attendee1Name
 
 
+validateInt : String -> Result String Int
+validateInt s =
+    case String.toInt s of
+        Nothing ->
+            Err "Invalid number"
+
+        Just x ->
+            Ok x
+
+
 validateName : String -> Result String Name
 validateName name =
     Name.fromString name |> Result.mapError Name.errorToString
@@ -133,10 +147,13 @@ validateForm productId form =
 
         originCity =
             String.Nonempty.fromString form.originCity
+
+        diversityFundContribution =
+            validateInt form.diversityFundContribution
     in
     if productId == Id.fromString Env.couplesCampTicketProductId then
-        case T6 name1 name2 emailAddress form.primaryModeOfTravel country originCity of
-            T6 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
+        case T7 name1 name2 emailAddress form.primaryModeOfTravel country originCity diversityFundContribution of
+            T7 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok diversityFundContributionOk) ->
                 CouplesCampTicketPurchase
                     { attendee1Name = name1Ok
                     , attendee2Name = name2Ok
@@ -144,6 +161,7 @@ validateForm productId form =
                     , country = countryOk
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
+                    , diversityFundContribution = diversityFundContributionOk
                     }
                     |> Just
 
@@ -159,14 +177,15 @@ validateForm productId form =
                 else
                     CampfireTicketPurchase
         in
-        case T5 name1 emailAddress form.primaryModeOfTravel country originCity of
-            T5 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) ->
+        case T6 name1 emailAddress form.primaryModeOfTravel country originCity diversityFundContribution of
+            T6 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok diversityFundContributionOk) ->
                 product
                     { attendeeName = name1Ok
                     , billingEmail = emailAddressOk
                     , country = countryOk
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
+                    , diversityFundContribution = diversityFundContributionOk
                     }
                     |> Just
 
@@ -202,6 +221,7 @@ singlePurchaseDataCodec =
         |> Codec.field "country" .country nonemptyStringCodec
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+        |> Codec.field "diversityFundContribution" .diversityFundContribution Codec.int
         |> Codec.buildObject
 
 
@@ -214,6 +234,7 @@ couplePurchaseDataCodec =
         |> Codec.field "country" .country nonemptyStringCodec
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+        |> Codec.field "diversityFundContribution" .diversityFundContribution Codec.int
         |> Codec.buildObject
 
 

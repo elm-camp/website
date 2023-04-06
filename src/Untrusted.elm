@@ -42,6 +42,7 @@ purchaseForm (Untrusted a) =
                     , country = b.country
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
+                    , diversityFundContribution = b.diversityFundContribution
                     }
                         |> CampfireTicketPurchase
                         |> Just
@@ -57,6 +58,7 @@ purchaseForm (Untrusted a) =
                     , country = b.country
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
+                    , diversityFundContribution = b.diversityFundContribution
                     }
                         |> CampTicketPurchase
                         |> Just
@@ -73,6 +75,7 @@ purchaseForm (Untrusted a) =
                     , country = b.country
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
+                    , diversityFundContribution = b.diversityFundContribution
                     }
                         |> CouplesCampTicketPurchase
                         |> Just

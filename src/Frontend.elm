@@ -30,6 +30,8 @@ import TravelMode
 import Types exposing (..)
 import Untrusted
 import Url
+import W.InputSlider
+import W.Styles
 
 
 app =
@@ -105,6 +107,7 @@ tryLoading loadingModel =
                     , country = ""
                     , originCity = ""
                     , primaryModeOfTravel = Nothing
+                    , diversityFundContribution = ""
                     }
                 , route = loadingModel.route
                 , showCarbonOffsetTooltip = False
@@ -388,6 +391,8 @@ view model =
     { title = "Elm Camp"
     , body =
         [ css
+        , W.Styles.globalStyles
+        , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
             , Element.Font.color colors.defaultText
@@ -709,6 +714,26 @@ formView model productId priceId ticket =
                 form.billingEmail
             ]
         , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
+        , Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Diversity fund")
+        , Element.paragraph [] [ Element.text "Optional contributions to our diversity fund allow us to allocate resources to assist underrepresented and marginalised community members in attending Elm Camp." ]
+        , Element.row [ Element.width Element.fill ]
+            [ textInput (\a -> FormChanged { form | diversityFundContribution = a }) "Contribution" PurchaseForm.validateInt form.diversityFundContribution
+            , Element.column [ Element.width (Element.fillPortion 3), Element.padding 30 ]
+                [ W.InputSlider.view []
+                    { min = 0
+                    , max = 500
+                    , step = 10
+                    , value = String.toFloat form.diversityFundContribution |> Maybe.withDefault 0
+                    , onInput = \a -> FormChanged { form | diversityFundContribution = String.fromFloat a }
+                    }
+                    |> Element.html
+                    |> Element.el [ Element.width (Element.fillPortion 3), Element.height (Element.px 20) ]
+                , Element.row [ Element.width (Element.fillPortion 3) ]
+                    [ Element.el [ Element.padding 10 ] <| Element.text "No thanks"
+                    , Element.el [ Element.padding 10, Element.alignRight ] <| Element.text "Full ticket"
+                    ]
+                ]
+            ]
         , if windowWidth > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
@@ -749,7 +774,7 @@ carbonOffsetForm textInput showCarbonOffsetTooltip form =
                     Element.row
                         []
                         [ Element.el [ Element.Font.size 20 ] (Element.text "🌲 Carbon offsetting ")
-                        , Element.el [ Element.Font.size 12, Element.moveUp 3 ] (Element.text "ℹ️")
+                        , Element.el [ Element.Font.size 12 ] (Element.text "ℹ️")
                         ]
                 }
             )

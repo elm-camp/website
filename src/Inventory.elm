@@ -56,6 +56,9 @@ slotsRemaining model =
 
         potentialRoomSlotsRemaining =
             maxRoomSlots - roomSlotsBooked
+
+        remainingCapacity =
+            venueCapacity - totalOrderSlots
     in
     if totalOrderSlots < venueCapacity then
         { campTicket = roomSlotsBooked < 24
@@ -63,7 +66,7 @@ slotsRemaining model =
 
         -- We want to prioritise camp tickets over campfire tickets, so this inventory is dynamic
         -- based on the number of potential room slots remaining
-        , campfireTicket = (venueCapacity - roomSlotsBooked - potentialRoomSlotsRemaining) > 0
+        , campfireTicket = (remainingCapacity - potentialRoomSlotsRemaining) > 0
         }
 
     else
