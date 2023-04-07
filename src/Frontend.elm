@@ -1019,7 +1019,9 @@ content3 =
     """
 # Sponsorship options
 
-Sponsors will position themselves as leading supporters of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering so that people can attend regardless of their financial circumstance.
+Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
+
+All levels of contribution are appreciated and acknowledged.
 
 ## Bronze - less than €1000 EUR
 
