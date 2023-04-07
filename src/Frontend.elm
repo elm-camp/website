@@ -142,7 +142,7 @@ updateLoaded msg model =
                     )
 
         UrlChanged url ->
-            ( { model | route = Route.decode url }, Cmd.none )
+            ( { model | route = Route.decode url }, scrollToTop )
 
         GotWindowSize width height ->
             ( { model | windowSize = ( width, height ) }, Cmd.none )
@@ -158,7 +158,7 @@ updateLoaded msg model =
                 Just ticket ->
                     if purchaseable ticket.productId model then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
-                        , Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+                        , scrollToTop
                         )
 
                     else
@@ -216,6 +216,11 @@ updateLoaded msg model =
 
         SetViewport ->
             ( model, Cmd.none )
+
+
+scrollToTop : Cmd FrontendMsg
+scrollToTop =
+    Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
