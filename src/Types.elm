@@ -290,7 +290,7 @@ type ToFrontend
         { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
         , slotsRemaining : TicketAvailability
         }
-    | SubmitFormResponse (Result () (Id StripeSessionId))
+    | SubmitFormResponse (Result String (Id StripeSessionId))
     | SlotRemainingChanged TicketAvailability
 
 

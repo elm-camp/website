@@ -171,8 +171,8 @@ updateLoaded msg model =
                 Submitting ->
                     ( model, Cmd.none )
 
-                SubmitBackendError ->
-                    ( model, Cmd.none )
+                SubmitBackendError str ->
+                    ( { model | form = form }, Cmd.none )
 
         PressedSubmitForm productId priceId ->
             let
@@ -245,12 +245,12 @@ updateFromBackendLoaded msg model =
                     , Stripe.loadCheckout Env.stripePublicApiKey stripeSessionId
                     )
 
-                Err () ->
+                Err str ->
                     let
                         form =
                             model.form
                     in
-                    ( { model | form = { form | submitStatus = SubmitBackendError } }, Cmd.none )
+                    ( { model | form = { form | submitStatus = SubmitBackendError str } }, Cmd.none )
 
         SlotRemainingChanged slotsRemaining ->
             ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
@@ -722,6 +722,16 @@ formView model productId priceId ticket =
         , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
         , opportunityGrant form textInput
         , sponsorships form textInput
+        , case form.submitStatus of
+            NotSubmitted pressedSubmit ->
+                Element.none
+
+            Submitting ->
+                -- @TODO spinner
+                Element.none
+
+            SubmitBackendError err ->
+                Element.paragraph [] [ Element.text err ]
         , if windowWidth > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 

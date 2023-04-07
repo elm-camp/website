@@ -120,14 +120,28 @@ decodeCurrency =
         D.string
 
 
-createCheckoutSession : Id PriceId -> EmailAddress -> Task Http.Error (Id StripeSessionId)
-createCheckoutSession priceId emailAddress =
+createCheckoutSession :
+    { priceId : Id PriceId, opportunityGrantDonation : Int, emailAddress : EmailAddress }
+    -> Task Http.Error (Id StripeSessionId)
+createCheckoutSession { priceId, opportunityGrantDonation, emailAddress } =
     -- @TODO support multiple prices, see Data.Tickets
     let
+        opportunityGrantAttrs =
+            if opportunityGrantDonation > 0 then
+                [ ( "line_items[1][price_data][currency]", "eur" )
+                , ( "line_items[1][price_data][product_data][name]", "Opportunity Grant Sponsorship" )
+                , ( "line_items[1][price_data][product_data][description]", "Thank you for your generous donation!" )
+                , ( "line_items[1][price_data][unit_amount_decimal]", String.fromInt (opportunityGrantDonation * 100) )
+                , ( "line_items[1][quantity]", "1" )
+                ]
+
+            else
+                []
+
         body =
-            formBody
-                [ ( "line_items[][price]", Id.toString priceId )
-                , ( "line_items[][quantity]", "1" )
+            formBody <|
+                [ ( "line_items[0][price]", Id.toString priceId )
+                , ( "line_items[0][quantity]", "1" )
                 , ( "mode", "payment" )
                 , ( "success_url"
                   , Url.Builder.crossOrigin
@@ -140,6 +154,7 @@ createCheckoutSession priceId emailAddress =
                   )
                 , ( "customer_email", EmailAddress.toString emailAddress )
                 ]
+                    ++ opportunityGrantAttrs
     in
     Http.task
         { method = "POST"

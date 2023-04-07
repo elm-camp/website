@@ -146,10 +146,14 @@ update msg model =
                     )
 
                 Err error ->
+                    let
+                        err =
+                            "CreatedCheckoutSession failed: " ++ HttpHelpers.httpErrorToString error
+                    in
                     ( model
                     , Cmd.batch
-                        [ SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId
-                        , errorEmail ("CreatedCheckoutSession failed: " ++ HttpHelpers.httpErrorToString error)
+                        [ SubmitFormResponse (Err err) |> Lamdera.sendToFrontend clientId
+                        , errorEmail err
                         ]
                     )
 
@@ -238,16 +242,21 @@ updateFromFrontend sessionId clientId msg model =
                                 ( model
                                 , Task.map2
                                     Tuple.pair
-                                    (Stripe.createCheckoutSession priceId (PurchaseForm.billingEmail purchaseForm))
+                                    (Stripe.createCheckoutSession
+                                        { priceId = priceId
+                                        , opportunityGrantDonation = purchaseForm |> PurchaseForm.commonPurchaseData |> .grantContribution
+                                        , emailAddress = PurchaseForm.billingEmail purchaseForm
+                                        }
+                                    )
                                     Time.now
                                     |> Task.attempt (CreatedCheckoutSession sessionId clientId priceId purchaseForm)
                                 )
 
                             else
-                                ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
+                                ( model, SubmitFormResponse (Err "Form was invalid, please fix the issues & try again.") |> Lamdera.sendToFrontend clientId )
 
                         _ ->
-                            ( model, SubmitFormResponse (Err ()) |> Lamdera.sendToFrontend clientId )
+                            ( model, SubmitFormResponse (Err "Invalid product item, please refresh & try again.") |> Lamdera.sendToFrontend clientId )
 
                 Nothing ->
                     ( model, Cmd.none )

@@ -8,6 +8,7 @@ module PurchaseForm exposing
     , attendeeName
     , billingEmail
     , codec
+    , commonPurchaseData
     , validateEmailAddress
     , validateForm
     , validateInt
@@ -64,10 +65,28 @@ type alias CouplePurchaseData =
     }
 
 
+commonPurchaseData purchaseFormValidated =
+    case purchaseFormValidated of
+        CampfireTicketPurchase a ->
+            a
+
+        CampTicketPurchase a ->
+            a
+
+        CouplesCampTicketPurchase a ->
+            { attendeeName = a.attendee1Name
+            , billingEmail = a.billingEmail
+            , country = a.country
+            , originCity = a.originCity
+            , primaryModeOfTravel = a.primaryModeOfTravel
+            , grantContribution = a.grantContribution
+            }
+
+
 type SubmitStatus
     = NotSubmitted PressedSubmit
     | Submitting
-    | SubmitBackendError
+    | SubmitBackendError String
 
 
 type PressedSubmit
