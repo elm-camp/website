@@ -17,18 +17,6 @@ stripePublicApiKey =
     "pk_test_S7leIg6SGfj2NMkUaP6ipIOv00gGgSlmgj"
 
 
-campfireTicketProductId =
-    "prod_NZEShNjlWMPhTA"
-
-
-couplesCampTicketProductId =
-    "prod_NZERuXB2me9wRw"
-
-
-campTicketProductId =
-    "prod_NZEQV1gtsmmSbR"
-
-
 isProduction_ =
     "false"
 

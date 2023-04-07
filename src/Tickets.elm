@@ -9,6 +9,7 @@ import Element.Input
 import Env
 import Id exposing (Id)
 import Money
+import Product
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -33,7 +34,7 @@ campTicket =
     , description = "Ticket for 1 Person including: on-site accommodation with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product2.webp"
     , slots = 1
-    , productId = Env.campTicketProductId
+    , productId = Product.ticket.camp
     }
 
 
@@ -43,7 +44,7 @@ couplesCampTicket =
     , description = "Tickets for 2 people including: on-site accommodation for two people with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product3.webp"
     , slots = 2
-    , productId = Env.couplesCampTicketProductId
+    , productId = Product.ticket.couplesCamp
     }
 
 
@@ -53,17 +54,15 @@ campfireTicket =
     , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included."
     , image = "/product1.webp"
     , slots = 1
-    , productId = Env.campfireTicketProductId
+    , productId = Product.ticket.campFire
     }
 
 
 dict : AssocList.Dict (Id ProductId) Ticket
 dict =
-    AssocList.fromList
-        [ ( Id.fromString Env.campfireTicketProductId, campfireTicket )
-        , ( Id.fromString Env.couplesCampTicketProductId, couplesCampTicket )
-        , ( Id.fromString Env.campTicketProductId, campTicket )
-        ]
+    [ campfireTicket, couplesCampTicket, campTicket ]
+        |> List.map (\t -> ( Id.fromString t.productId, t ))
+        |> AssocList.fromList
 
 
 viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg

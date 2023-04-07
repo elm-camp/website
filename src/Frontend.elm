@@ -20,6 +20,7 @@ import Json.Decode
 import Lamdera
 import List.Extra as List
 import MarkdownThemed
+import Product
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
 import Route exposing (Route(..))
 import String.Nonempty
@@ -102,12 +103,12 @@ tryLoading loadingModel =
                 , selectedTicket = Nothing
                 , form =
                     { submitStatus = NotSubmitted NotPressedSubmit
-                    , attendee1Name = ""
-                    , attendee2Name = ""
-                    , billingEmail = ""
-                    , country = ""
-                    , originCity = ""
-                    , primaryModeOfTravel = Nothing
+                    , attendee1Name = "Testing"
+                    , attendee2Name = "Testing"
+                    , billingEmail = "hello@mario.net.au"
+                    , country = "United Kingdom"
+                    , originCity = "London"
+                    , primaryModeOfTravel = Just TravelMode.Flight
                     , grantContribution = "0"
                     }
                 , route = loadingModel.route
@@ -257,10 +258,10 @@ updateFromBackendLoaded msg model =
 
 
 purchaseable productId model =
-    if productId == Env.campfireTicketProductId then
+    if productId == Product.ticket.campFire then
         model.slotsRemaining.campfireTicket
 
-    else if productId == Env.campTicketProductId then
+    else if productId == Product.ticket.camp then
         model.slotsRemaining.campTicket
 
     else
@@ -704,7 +705,7 @@ formView model productId priceId ticket =
             , Element.padding 16
             ]
             [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-            , if productId == Id.fromString Env.couplesCampTicketProductId then
+            , if productId == Id.fromString Product.ticket.couplesCamp then
                 textInput
                     (\a -> FormChanged { form | attendee2Name = a })
                     "Person you're sharing a room with"
@@ -1197,7 +1198,7 @@ sponsors ( windowWidth, _ ) =
         |> List.map
             (\{ image, url, width } ->
                 Element.newTabLink
-                    [ Element.width Element.fill]
+                    [ Element.width Element.fill ]
                     { url = url
                     , label =
                         Element.image

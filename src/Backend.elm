@@ -12,6 +12,7 @@ import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
 import Postmark exposing (PostmarkEmailBody(..))
+import Product
 import PurchaseForm exposing (PurchaseFormValidated(..))
 import Quantity
 import String.Nonempty exposing (NonemptyString(..))
@@ -225,7 +226,7 @@ updateFromFrontend sessionId clientId msg model =
                                     Inventory.slotsRemaining model
 
                                 validProductAndForm =
-                                    case ( productId == Id.fromString Env.couplesCampTicketProductId, purchaseForm ) of
+                                    case ( productId == Id.fromString Product.ticket.couplesCamp, purchaseForm ) of
                                         ( True, CouplesCampTicketPurchase _ ) ->
                                             True && availability.couplesCampTicket
 

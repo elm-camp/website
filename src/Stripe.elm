@@ -129,7 +129,7 @@ createCheckoutSession { priceId, opportunityGrantDonation, emailAddress } =
         opportunityGrantAttrs =
             if opportunityGrantDonation > 0 then
                 [ ( "line_items[1][price_data][currency]", "eur" )
-                , ( "line_items[1][price_data][product_data][name]", "Opportunity Grant Sponsorship" )
+                , ( "line_items[1][price_data][product_data][name]", "Elm Camp Denmark 23 - Opportunity Grant Sponsorship" )
                 , ( "line_items[1][price_data][product_data][description]", "Thank you for your generous donation!" )
                 , ( "line_items[1][price_data][unit_amount_decimal]", String.fromInt (opportunityGrantDonation * 100) )
                 , ( "line_items[1][quantity]", "1" )

@@ -20,6 +20,7 @@ import EmailAddress exposing (EmailAddress)
 import Env
 import Id exposing (Id)
 import Name exposing (Name)
+import Product
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..))
@@ -170,7 +171,7 @@ validateForm productId form =
         grantContribution =
             validateInt form.grantContribution
     in
-    if productId == Id.fromString Env.couplesCampTicketProductId then
+    if productId == Id.fromString Product.ticket.couplesCamp then
         case T7 name1 name2 emailAddress form.primaryModeOfTravel country originCity grantContribution of
             T7 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) ->
                 CouplesCampTicketPurchase
@@ -190,7 +191,7 @@ validateForm productId form =
     else
         let
             product =
-                if productId == Id.fromString Env.campTicketProductId then
+                if productId == Id.fromString Product.ticket.camp then
                     CampTicketPurchase
 
                 else
