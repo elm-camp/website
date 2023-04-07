@@ -320,6 +320,12 @@ header model =
         glow =
             Element.Font.glow (colorWithAlpha 0.25 colors.defaultText) 4
 
+        illustrationAltText =
+            "Illustration of a small camp site in a richly green forest"
+
+        logoAltText =
+            "The logo of Elm Camp, a tangram in green forest colors"
+
         ( windowWidth, _ ) =
             model.windowSize
     in
@@ -328,7 +334,7 @@ header model =
             [ Element.padding 30, Element.spacing 20, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.maximum 523 Element.fill) ]
-                { src = "/logo.webp", description = "Elm camp logo" }
+                { src = "/logo.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ Element.el
@@ -347,7 +353,7 @@ header model =
                     [ Element.centerX, Element.spacing 13 ]
                     [ Element.image
                         [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                        { src = "/elm-camp-tangram.webp", description = logoAltText }
                     , Element.column
                         [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
                         [ Element.el [ glow ] (Element.text "Unconference")
@@ -367,7 +373,7 @@ header model =
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.px 523) ]
-                { src = "/logo.webp", description = "Elm camp logo" }
+                { src = "/logo.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24 ]
                 [ Element.el
@@ -380,7 +386,7 @@ header model =
                     [ Element.centerX, Element.spacing 13 ]
                     [ Element.image
                         [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                        { src = "/elm-camp-tangram.webp", description = logoAltText }
                     , Element.column
                         [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
                         [ Element.el [ glow ] (Element.text "Unconference")
@@ -516,7 +522,7 @@ homepageView model =
                             [ Element.spacing 16, Element.width Element.fill ]
                             [ Element.image
                                 [ Element.width (Element.px 50) ]
-                                { src = ticket.image, description = "Illustration of camp" }
+                                { src = ticket.image, description = "Illustration of a cozy camp site at evening time" }
                             , Element.paragraph
                                 [ Element.Font.size 24 ]
                                 [ Element.el [ Element.Font.semiBold ] (Element.text ticket.name)
