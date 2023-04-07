@@ -1019,7 +1019,9 @@ content3 =
     """
 # Sponsorship options
 
-Sponsors will position themselves as leading supporters of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering so that people can attend regardless of their financial circumstance.
+Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
+
+All levels of contribution are appreciated and acknowledged.
 
 ## Bronze - less than €1000 EUR
 
@@ -1045,6 +1047,7 @@ You will be a pivotal supporter of Elm Camp Europe 2023.
 * 1 free camp ticket
 
 ## Platinum - €5000 EUR  (£4500 / $5300 USD)
+
 You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success.
 
 * Thank you tweet
@@ -1054,6 +1057,8 @@ You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a succe
 * 2 free camp tickets
 * Big logo on shared slide, displayed during breaks
 * Honorary mention in opening and closing talks
+
+Limited to two.
 
 ## Addon: Attendee Sponsor – €500
 You will make it possible for a student and/or underprivileged community member to attend Elm Camp Europe 2023.
@@ -1075,7 +1080,7 @@ sponsors ( windowWidth, _ ) =
         |> List.map
             (\{ image, url, width } ->
                 Element.newTabLink
-                    []
+                    [ Element.width Element.fill]
                     { url = url
                     , label =
                         Element.image
