@@ -1047,6 +1047,7 @@ You will be a pivotal supporter of Elm Camp Europe 2023.
 * 1 free camp ticket
 
 ## Platinum - €5000 EUR  (£4500 / $5300 USD)
+
 You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success.
 
 * Thank you tweet
@@ -1056,6 +1057,8 @@ You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a succe
 * 2 free camp tickets
 * Big logo on shared slide, displayed during breaks
 * Honorary mention in opening and closing talks
+
+Limited to two.
 
 ## Addon: Attendee Sponsor – €500
 You will make it possible for a student and/or underprivileged community member to attend Elm Camp Europe 2023.
