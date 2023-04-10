@@ -19,8 +19,12 @@ manualOrders =
     6
 
 
+opportunityGrantTickets =
+    4
+
+
 venueCapacity =
-    50 - manualOrders
+    50
 
 
 maxRoomSlots =
@@ -55,12 +59,12 @@ slotsRemaining model =
                 |> (+) manualOrders
 
         potentialRoomSlotsRemaining =
-            maxRoomSlots - roomSlotsBooked
+            maxRoomSlots - roomSlotsBooked - manualOrders - opportunityGrantTickets
 
         remainingCapacity =
-            venueCapacity - totalOrderSlots
+            venueCapacity - totalOrderSlots - manualOrders - opportunityGrantTickets
     in
-    if totalOrderSlots < venueCapacity then
+    if remainingCapacity > 0 then
         { campTicket = roomSlotsBooked < 24
         , couplesCampTicket = couplesCampOrders < 20 && roomSlotsBooked < 24
 
