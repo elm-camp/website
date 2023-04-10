@@ -9,6 +9,12 @@ import Money
 import Stripe exposing (Price)
 
 
+colors =
+    { green = Element.rgb255 92 176 126
+    , lightGrey = Element.rgb255 200 200 200
+    }
+
+
 priceText : Price -> String
 priceText { currency, amount } =
     Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
@@ -39,6 +45,32 @@ submitButtonAttributes isEnabled =
 
          else
             Element.rgb255 137 141 137
+        )
+    , Element.padding 16
+    , Element.Border.rounded 8
+    , Element.alignBottom
+    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Element.Font.semiBold
+    , Element.Font.color (Element.rgb 1 1 1)
+    ]
+
+
+toggleButton label isActive onPress =
+    Element.Input.button
+        (toggleButtonAttributes isActive)
+        { onPress = onPress
+        , label = Element.el [ Element.centerX ] (Element.text label)
+        }
+
+
+toggleButtonAttributes : Bool -> List (Element.Attribute msg)
+toggleButtonAttributes isActive =
+    [ Element.Background.color
+        (if isActive then
+            colors.green
+
+         else
+            colors.lightGrey
         )
     , Element.padding 16
     , Element.Border.rounded 8

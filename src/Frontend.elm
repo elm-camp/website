@@ -8,6 +8,7 @@ import Browser.Navigation
 import Element exposing (Element)
 import Element.Background
 import Element.Border
+import Element.Events
 import Element.Font
 import Element.Input
 import EmailAddress exposing (EmailAddress)
@@ -103,13 +104,14 @@ tryLoading loadingModel =
                 , selectedTicket = Nothing
                 , form =
                     { submitStatus = NotSubmitted NotPressedSubmit
-                    , attendee1Name = "Testing"
-                    , attendee2Name = "Testing"
-                    , billingEmail = "hello@mario.net.au"
-                    , country = "United Kingdom"
-                    , originCity = "London"
-                    , primaryModeOfTravel = Just TravelMode.Flight
+                    , attendee1Name = ""
+                    , attendee2Name = ""
+                    , billingEmail = ""
+                    , country = ""
+                    , originCity = ""
+                    , primaryModeOfTravel = Nothing
                     , grantContribution = "0"
+                    , grantApply = False
                     , sponsorship = Nothing
                     }
                 , route = loadingModel.route
@@ -742,46 +744,60 @@ formView model productId priceId ticket =
 opportunityGrant form textInput =
     Element.column [ Element.spacing 20 ]
         [ Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Opportunity grants")
-        , Element.paragraph [] [ Element.text "The opportunity grant fund allows us to support underrepresented and marginalised people who may not otherwise have the opportunity to attend Elm Camp for financial reasons." ]
+        , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
-            [ Element.row [ Element.width Element.fill, Element.spacing 30 ]
-                [ Element.text "Contribute"
-                , Element.text "Apply"
+            [ Element.row [ Element.width Element.fill, Element.spacing 15 ]
+                [ Theme.toggleButton "Contribute" (form.grantApply == False) (Just <| FormChanged { form | grantApply = False })
+                , Theme.toggleButton "Apply" (form.grantApply == True) (Just <| FormChanged { form | grantApply = True })
                 ]
-            , Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
-            , Element.row [ Element.width Element.fill, Element.spacing 30 ]
-                [ textInput (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
-                , Element.column [ Element.width (Element.fillPortion 3) ]
-                    [ Element.row [ Element.width (Element.fillPortion 3) ]
-                        [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "0"
-                        , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "500"
-                        ]
-                    , Element.Input.slider
-                        [ Element.behindContent
-                            (Element.el
-                                [ Element.width Element.fill
-                                , Element.height (Element.px 5)
-                                , Element.centerY
-                                , Element.Background.color (Element.rgb255 94 176 125)
-                                , Element.Border.rounded 2
+            , case form.grantApply of
+                True ->
+                    """
+If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
+
+Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is 8th of May. Decisions will be communicated directly to each applicant by 12th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
+
+All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
+"""
+                        |> MarkdownThemed.renderFull
+
+                False ->
+                    Element.column []
+                        [ Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
+                        , Element.row [ Element.width Element.fill, Element.spacing 30 ]
+                            [ textInput (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                            , Element.column [ Element.width (Element.fillPortion 3) ]
+                                [ Element.row [ Element.width (Element.fillPortion 3) ]
+                                    [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "0"
+                                    , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "500"
+                                    ]
+                                , Element.Input.slider
+                                    [ Element.behindContent
+                                        (Element.el
+                                            [ Element.width Element.fill
+                                            , Element.height (Element.px 5)
+                                            , Element.centerY
+                                            , Element.Background.color (Element.rgb255 94 176 125)
+                                            , Element.Border.rounded 2
+                                            ]
+                                            Element.none
+                                        )
+                                    ]
+                                    { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                                    , label = Element.Input.labelHidden "Opportunity grant contribution value selection slider"
+                                    , min = 0
+                                    , max = 550
+                                    , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                                    , thumb = Element.Input.defaultThumb
+                                    , step = Just 10
+                                    }
+                                , Element.row [ Element.width (Element.fillPortion 3) ]
+                                    [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "No contribution"
+                                    , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "Donate full ticket"
+                                    ]
                                 ]
-                                Element.none
-                            )
+                            ]
                         ]
-                        { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
-                        , label = Element.Input.labelHidden "Diversity contribution slider value selector"
-                        , min = 0
-                        , max = 500
-                        , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
-                        , thumb = Element.Input.defaultThumb
-                        , step = Just 10
-                        }
-                    , Element.row [ Element.width (Element.fillPortion 3) ]
-                        [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "No thanks"
-                        , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "Full ticket"
-                        ]
-                    ]
-                ]
             ]
         ]
 

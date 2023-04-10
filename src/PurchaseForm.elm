@@ -36,6 +36,7 @@ type alias PurchaseForm =
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
     , grantContribution : String
+    , grantApply : Bool
     , sponsorship : Maybe String
     }
 
