@@ -43,6 +43,7 @@ purchaseForm (Untrusted a) =
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     , grantContribution = b.grantContribution
+                    , sponsorship = b.sponsorship
                     }
                         |> CampfireTicketPurchase
                         |> Just
@@ -59,6 +60,7 @@ purchaseForm (Untrusted a) =
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     , grantContribution = b.grantContribution
+                    , sponsorship = b.sponsorship
                     }
                         |> CampTicketPurchase
                         |> Just
@@ -76,6 +78,7 @@ purchaseForm (Untrusted a) =
                     , originCity = b.originCity
                     , primaryModeOfTravel = b.primaryModeOfTravel
                     , grantContribution = b.grantContribution
+                    , sponsorship = b.sponsorship
                     }
                         |> CouplesCampTicketPurchase
                         |> Just

@@ -110,6 +110,7 @@ tryLoading loadingModel =
                     , originCity = "London"
                     , primaryModeOfTravel = Just TravelMode.Flight
                     , grantContribution = "0"
+                    , sponsorship = Nothing
                     }
                 , route = loadingModel.route
                 , showCarbonOffsetTooltip = False
@@ -210,9 +211,6 @@ updateLoaded msg model =
 
         PressedShowCarbonOffsetTooltip ->
             ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
-
-        PressedSponsorship ->
-            ( model, Cmd.none )
 
         SetViewport ->
             ( model, Cmd.none )
@@ -792,60 +790,53 @@ sponsorships form textInput =
     Element.column [ Element.spacing 20 ]
         [ Element.el [ Element.Font.size 20 ] (Element.text "🤝 Sponsor Elm Camp")
         , Element.paragraph [] [ Element.text "Position your company as a leading supporter of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering." ]
-        , Element.row [ Element.spacing 20, Element.width Element.fill ]
-            [ sponsorshipOption True
-                "Silver"
-                1000
-                "You will be a major supporter of Elm Camp Europe 2023."
-                [ "Thank you tweet"
-                , "Logo on webpage"
-                , "Small logo on shared slide, displayed during breaks"
-                ]
-            , sponsorshipOption False
-                "Gold"
-                2500
-                "You will be a pivotal supporter of Elm Camp Europe 2023."
-                [ "Thank you tweet"
-                , "Rollup or poster inside the venue (provided by you)"
-                , "Logo on webpage"
-                , "Medium logo on shared slide, displayed during breaks"
-                , "1 free campfire ticket"
-                ]
-            , sponsorshipOption False
-                "Platinum"
-                5000
-                "You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success."
-                [ "Thank you tweet"
-                , "Rollup or poster inside the venue (provided by you)"
-                , "Self-written snippet on shared web page about use of Elm at your company"
-                , "Logo on webpage"
-                , "2 free campfire tickets or 1 free camp ticket"
-                , "Big logo on shared slide, displayed during breaks"
-                , "Honorary mention in opening and closing talks"
-                ]
-            ]
+        , Product.sponsorshipItems
+            |> List.map (sponsorshipOption form)
+            |> Element.row [ Element.spacing 20, Element.width Element.fill ]
         ]
 
 
-sponsorshipOption selected name num description features =
+
+-- sponsorshipView form s =
+--     sponsorshipOption (form.sponsorship == Just s.productId)
+--         s.name
+--         s.price
+--         s.description
+--         s.features
+
+
+sponsorshipOption form s =
     let
+        selected =
+            form.sponsorship == Just s.productId
+
         attrs =
             if selected then
                 [ Element.Border.color (Element.rgb255 94 176 125), Element.Border.width 3 ]
 
             else
-                []
+                [ Element.Border.color (Element.rgba255 0 0 0 0), Element.Border.width 3 ]
     in
     Theme.panel attrs
-        [ Element.el [ Element.Font.size 20, Element.Font.bold ] (Element.text name)
-        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| String.fromInt num)
-        , Element.paragraph [] [ Element.text description ]
-        , features
+        [ Element.el [ Element.Font.size 20, Element.Font.bold ] (Element.text s.name)
+        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| String.fromInt s.price)
+        , Element.paragraph [] [ Element.text s.description ]
+        , s.features
             |> List.map (\point -> Element.paragraph [ Element.Font.size 12 ] [ Element.text <| "• " ++ point ])
             |> Element.column [ Element.spacing 5 ]
         , Element.Input.button
             (Theme.submitButtonAttributes True)
-            { onPress = Just PressedSponsorship
+            { onPress =
+                Just <|
+                    FormChanged
+                        { form
+                            | sponsorship =
+                                if selected then
+                                    Nothing
+
+                                else
+                                    Just s.productId
+                        }
             , label =
                 Element.el
                     [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]

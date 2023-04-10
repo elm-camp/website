@@ -23,7 +23,7 @@ import Name exposing (Name)
 import Product
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
-import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..))
+import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
 import TravelMode exposing (TravelMode)
 
 
@@ -36,6 +36,7 @@ type alias PurchaseForm =
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
     , grantContribution : String
+    , sponsorship : Maybe String
     }
 
 
@@ -52,6 +53,7 @@ type alias SinglePurchaseData =
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
     , grantContribution : Int
+    , sponsorship : Maybe String
     }
 
 
@@ -63,6 +65,7 @@ type alias CouplePurchaseData =
     , originCity : NonemptyString
     , primaryModeOfTravel : TravelMode
     , grantContribution : Int
+    , sponsorship : Maybe String
     }
 
 
@@ -81,6 +84,7 @@ commonPurchaseData purchaseFormValidated =
             , originCity = a.originCity
             , primaryModeOfTravel = a.primaryModeOfTravel
             , grantContribution = a.grantContribution
+            , sponsorship = a.sponsorship
             }
 
 
@@ -170,10 +174,18 @@ validateForm productId form =
 
         grantContribution =
             validateInt form.grantContribution
+
+        sponsorship =
+            case form.sponsorship of
+                Just id ->
+                    Product.sponsorshipItems |> List.filter (\s -> s.productId == id) |> List.head |> Result.fromMaybe "Invalid sponsorship" |> Result.map (.productId >> Just)
+
+                Nothing ->
+                    Ok Nothing
     in
     if productId == Id.fromString Product.ticket.couplesCamp then
-        case T7 name1 name2 emailAddress form.primaryModeOfTravel country originCity grantContribution of
-            T7 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) ->
+        case T8 name1 name2 emailAddress form.primaryModeOfTravel country originCity grantContribution sponsorship of
+            T8 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) (Ok sponsorshipOk) ->
                 CouplesCampTicketPurchase
                     { attendee1Name = name1Ok
                     , attendee2Name = name2Ok
@@ -182,6 +194,7 @@ validateForm productId form =
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
                     , grantContribution = grantContributionOk
+                    , sponsorship = sponsorshipOk
                     }
                     |> Just
 
@@ -197,8 +210,8 @@ validateForm productId form =
                 else
                     CampfireTicketPurchase
         in
-        case T6 name1 emailAddress form.primaryModeOfTravel country originCity grantContribution of
-            T6 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) ->
+        case T7 name1 emailAddress form.primaryModeOfTravel country originCity grantContribution sponsorship of
+            T7 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) (Ok sponsorshipOk) ->
                 product
                     { attendeeName = name1Ok
                     , billingEmail = emailAddressOk
@@ -206,6 +219,7 @@ validateForm productId form =
                     , originCity = originCityOk
                     , primaryModeOfTravel = primaryModeOfTravel
                     , grantContribution = grantContributionOk
+                    , sponsorship = sponsorshipOk
                     }
                     |> Just
 
@@ -242,6 +256,7 @@ singlePurchaseDataCodec =
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
         |> Codec.field "grantContribution" .grantContribution Codec.int
+        |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
         |> Codec.buildObject
 
 
@@ -255,6 +270,7 @@ couplePurchaseDataCodec =
         |> Codec.field "originCity" .originCity nonemptyStringCodec
         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
         |> Codec.field "grantContribution" .grantContribution Codec.int
+        |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
         |> Codec.buildObject
 
 

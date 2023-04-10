@@ -35,9 +35,14 @@ sponsorship =
             }
 
 
+type alias Sponsorship =
+    { name : String, price : Int, productId : String, description : String, features : List String }
+
+
 sponsorshipItems =
     [ { name = "Silver"
       , price = 1000
+      , productId = sponsorship.silver
       , description = "You will be a major supporter of Elm Camp Europe 2023."
       , features =
             [ "Thank you tweet"
@@ -47,6 +52,7 @@ sponsorshipItems =
       }
     , { name = "Gold"
       , price = 2500
+      , productId = sponsorship.gold
       , description = "You will be a pivotal supporter of Elm Camp Europe 2023."
       , features =
             [ "Thank you tweet"
@@ -58,6 +64,7 @@ sponsorshipItems =
       }
     , { name = "Platinum"
       , price = 5000
+      , productId = sponsorship.platinum
       , description = "You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success."
       , features =
             [ "Thank you tweet"
