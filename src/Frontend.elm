@@ -142,7 +142,7 @@ updateLoaded msg model =
                     )
 
         UrlChanged url ->
-            ( { model | route = Route.decode url }, Cmd.none )
+            ( { model | route = Route.decode url }, scrollToTop )
 
         GotWindowSize width height ->
             ( { model | windowSize = ( width, height ) }, Cmd.none )
@@ -158,7 +158,7 @@ updateLoaded msg model =
                 Just ticket ->
                     if purchaseable ticket.productId model then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
-                        , Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+                        , scrollToTop
                         )
 
                     else
@@ -216,6 +216,11 @@ updateLoaded msg model =
 
         SetViewport ->
             ( model, Cmd.none )
+
+
+scrollToTop : Cmd FrontendMsg
+scrollToTop =
+    Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
@@ -309,40 +314,53 @@ colorWithAlpha alpha color =
     Element.rgba red green blue alpha
 
 
-header : LoadedModel -> Element msg
-header model =
+header : { windowSize : ( Int, Int ), isCompact : Bool } -> Element msg
+header config =
     let
         glow =
             Element.Font.glow (colorWithAlpha 0.25 colors.defaultText) 4
 
+        illustrationAltText =
+            "Illustration of a small camp site in a richly green forest"
+
+        logoAltText =
+            "The logo of Elm Camp, a tangram in green forest colors"
+
+        titleSize =
+            if windowWidth < 800 then
+                64
+
+            else
+                80
+
+        elmCampTitle =
+            Element.link
+                []
+                { url = Route.encode HomepageRoute
+                , label = Element.el [ Element.Font.size titleSize, glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
+                }
+
         ( windowWidth, _ ) =
-            model.windowSize
+            config.windowSize
     in
-    if windowWidth < 1000 then
+    if windowWidth < 1000 || config.isCompact then
         Element.column
             [ Element.padding 30, Element.spacing 20, Element.centerX ]
-            [ Element.image
-                [ Element.width (Element.maximum 523 Element.fill) ]
-                { src = "/logo.webp", description = "Elm camp logo" }
+            [ if config.isCompact then
+                Element.none
+
+              else
+                Element.image
+                    [ Element.width (Element.maximum 523 Element.fill) ]
+                    { src = "/logo.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
-                [ Element.el
-                    [ Element.Font.size
-                        (if windowWidth < 800 then
-                            64
-
-                         else
-                            80
-                        )
-                    , glow
-                    , Element.paddingXY 0 8
-                    ]
-                    (Element.text "Elm Camp")
+                [ elmCampTitle
                 , Element.row
                     [ Element.centerX, Element.spacing 13 ]
                     [ Element.image
                         [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                        { src = "/elm-camp-tangram.webp", description = logoAltText }
                     , Element.column
                         [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
                         [ Element.el [ glow ] (Element.text "Unconference")
@@ -362,20 +380,15 @@ header model =
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.px 523) ]
-                { src = "/logo.webp", description = "Elm camp logo" }
+                { src = "/logo.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24 ]
-                [ Element.el
-                    [ Element.Font.size 80
-                    , glow
-                    , Element.paddingXY 0 8
-                    ]
-                    (Element.text "Elm Camp")
+                [ elmCampTitle
                 , Element.row
                     [ Element.centerX, Element.spacing 13 ]
                     [ Element.image
                         [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = "Elm camp logo" }
+                        { src = "/elm-camp-tangram.webp", description = logoAltText }
                     , Element.column
                         [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
                         [ Element.el [ glow ] (Element.text "Unconference")
@@ -426,7 +439,8 @@ loadedView model =
         AccessibilityRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ Element.column
+                [ header { windowSize = model.windowSize, isCompact = True }
+                , Element.column
                     contentAttributes
                     [ accessibilityContent
                     ]
@@ -436,7 +450,8 @@ loadedView model =
         CodeOfConductRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ Element.column
+                [ header { windowSize = model.windowSize, isCompact = True }
+                , Element.column
                     contentAttributes
                     [ codeOfConductContent
                     ]
@@ -511,7 +526,7 @@ homepageView model =
                             [ Element.spacing 16, Element.width Element.fill ]
                             [ Element.image
                                 [ Element.width (Element.px 50) ]
-                                { src = ticket.image, description = "Illustration of camp" }
+                                { src = ticket.image, description = "Illustration of a cozy camp site at evening time" }
                             , Element.paragraph
                                 [ Element.Font.size 24 ]
                                 [ Element.el [ Element.Font.semiBold ] (Element.text ticket.name)
@@ -540,7 +555,7 @@ homepageView model =
                     , Element.width Element.fill
                     , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
                     ]
-                    [ header model
+                    [ header { windowSize = model.windowSize, isCompact = False }
                     , Element.column
                         [ Element.width Element.fill, Element.spacing 40 ]
                         [ Element.column
