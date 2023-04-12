@@ -13,13 +13,7 @@ minCampTickets =
     4
 
 
-manualOrders =
-    -- Team & sponsor room bookings
-    -- Katja, Jim, Martin, Mario, Johannes, Concentric
-    6
-
-
-opportunityGrantTickets =
+roomReserve =
     4
 
 
@@ -56,13 +50,13 @@ slotsRemaining model =
                 |> List.filter isRoomTicketPurchase
                 |> List.map orderToSlots
                 |> List.sum
-                |> (+) manualOrders
+                |> (+) roomReserve
 
         potentialRoomSlotsRemaining =
-            maxRoomSlots - roomSlotsBooked - manualOrders - opportunityGrantTickets
+            maxRoomSlots - roomSlotsBooked - roomReserve
 
         remainingCapacity =
-            venueCapacity - totalOrderSlots - manualOrders - opportunityGrantTickets
+            venueCapacity - totalOrderSlots - roomReserve
     in
     if remainingCapacity > 0 then
         { campTicket = roomSlotsBooked < 24

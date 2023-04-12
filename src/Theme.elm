@@ -15,6 +15,14 @@ colors =
     }
 
 
+viewIf condition view =
+    if condition then
+        view
+
+    else
+        Element.none
+
+
 priceText : Price -> String
 priceText { currency, amount } =
     Money.toNativeSymbol currency ++ String.fromInt (amount // 100)

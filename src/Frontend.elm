@@ -5,6 +5,7 @@ import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
+import Countdown
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -29,6 +30,7 @@ import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Theme
 import Tickets exposing (Ticket)
+import Time
 import TravelMode
 import Types exposing (..)
 import Untrusted
@@ -54,6 +56,7 @@ subscriptions _ =
     Sub.batch
         [ Browser.Events.onResize GotWindowSize
         , Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
+        , Time.every 1000 Tick
         ]
 
 
@@ -63,7 +66,14 @@ init url key =
         route =
             Route.decode url
     in
-    ( Loading { key = key, windowSize = Nothing, prices = AssocList.empty, slotsRemaining = Nothing, route = route }
+    ( Loading
+        { key = key
+        , now = Time.millisToPosix 0
+        , windowSize = Nothing
+        , prices = AssocList.empty
+        , slotsRemaining = Nothing
+        , route = route
+        }
     , Cmd.batch
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
@@ -98,6 +108,7 @@ tryLoading loadingModel =
         (\windowSize slotsRemaining ->
             ( Loaded
                 { key = loadingModel.key
+                , now = loadingModel.now
                 , windowSize = windowSize
                 , showTooltip = False
                 , prices = loadingModel.prices
@@ -143,6 +154,9 @@ updateLoaded msg model =
 
         UrlChanged url ->
             ( { model | route = Route.decode url }, scrollToTop )
+
+        Tick now ->
+            ( { model | now = now }, Cmd.none )
 
         GotWindowSize width height ->
             ( { model | windowSize = ( width, height ) }, Cmd.none )
@@ -580,29 +594,42 @@ homepageView model =
                                     )
                                 |> Element.column [ Element.spacing 10, Element.width Element.fill ]
                         , Element.column
-                            [ Element.width Element.fill
-                            , Element.spacing 24
-                            , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
-                            ]
-                            [ Element.row
-                                (Element.spacing 16 :: contentAttributes)
-                                [ Element.el
-                                    [ Element.Font.size 36, Element.Font.semiBold ]
-                                    (Element.text "Tickets")
-
-                                -- , Element.el
-                                --     [ Element.Font.size 24, Element.centerY, Element.alignRight ]
-                                --     (Element.text (slotsLeftText model))
-                                ]
-                            , ticketCardsView model
-                            ]
-                        , Element.el contentAttributes content2
-                        , Element.column
                             contentAttributes
                             [ MarkdownThemed.renderFull "# Our sponsors"
                             , sponsors model.windowSize
                             ]
-                        , Element.el contentAttributes content3
+                        , Element.column
+                            [ Element.width Element.fill
+                            , Element.spacing 24
+                            , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
+                            ]
+                            [ Element.column
+                                (Element.spacing 16 :: contentAttributes)
+                                [ MarkdownThemed.renderFull <|
+                                    """
+# Tickets
+"""
+                                , -- We'll open ticket sales later
+                                  ticketCardsView model
+                                , MarkdownThemed.renderFull <|
+                                    """
+## Ticket sales open in """
+                                        ++ (if Time.posixToMillis model.now /= 0 then
+                                                let
+                                                    launch =
+                                                        1681718400000
+                                                in
+                                                Countdown.secondsAsText ((launch - Time.posixToMillis model.now) // 1000)
+
+                                            else
+                                                ""
+                                           )
+                                        ++ """
+UTC 8AM Monday 17th April 2023"""
+                                ]
+                            , Element.el contentAttributes content2
+                            , Element.el contentAttributes content3
+                            ]
                         ]
                     ]
                 , footer
@@ -770,7 +797,7 @@ opportunityGrant form textInput =
                     """
 If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
-Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is 8th of May. Decisions will be communicated directly to each applicant by 12th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
+Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
 
 All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
 """
@@ -1022,7 +1049,7 @@ ticketCardsView model =
                         Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
-                        Element.none
+                        Element.text "No ticket prices found"
             )
             (AssocList.toList Tickets.dict)
             |> Element.column [ Element.spacing 16 ]
@@ -1035,7 +1062,7 @@ ticketCardsView model =
                         Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
-                        Element.none
+                        Element.text "No ticket prices found"
             )
             (AssocList.toList Tickets.dict)
             |> Element.row (Element.spacing 16 :: contentAttributes)
@@ -1080,7 +1107,7 @@ unconferenceBulletPoints model =
         ]
         (Element.Input.button
             []
-            { onPress = Just PressedShowTooltip, label = Element.text "40 attendees ℹ️" }
+            { onPress = Just PressedShowTooltip, label = Element.text "50 attendees ℹ️" }
         )
     ]
         |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
@@ -1200,7 +1227,7 @@ You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a succe
 
 Limited to two.
 
-## Addon: Attendee Sponsor – €500
+## Addon: Attendee Sponsor – €550
 You will make it possible for a student and/or underprivileged community member to attend Elm Camp Europe 2023.
 
 # Something else?

@@ -8,6 +8,7 @@ import Element.Font
 import Element.Input
 import Env
 import Id exposing (Id)
+import MarkdownThemed
 import Money
 import Product
 import Stripe exposing (Price, ProductId(..))
@@ -51,7 +52,7 @@ couplesCampTicket =
 campfireTicket : Ticket
 campfireTicket =
     { name = "Campfire Ticket"
-    , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included."
+    , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included. [See nearby accommodation options](/nearby-accommodation)."
     , image = "/product1.webp"
     , slots = 1
     , productId = Product.ticket.campFire
@@ -70,25 +71,26 @@ viewDesktop ticketAvailable onPress price ticket =
     Theme.panel []
         [ Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
-        , Element.paragraph [] [ Element.text ticket.description ]
+        , MarkdownThemed.renderFull ticket.description
         , Element.el
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
             (Element.text (Theme.priceText price))
-        , Element.Input.button
-            (Theme.submitButtonAttributes ticketAvailable)
-            { onPress = Just onPress
-            , label =
-                Element.el
-                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
-                    (Element.text
-                        (if ticketAvailable then
-                            "Select"
+        , Theme.viewIf (Env.mode == Env.Development) <|
+            Element.Input.button
+                (Theme.submitButtonAttributes ticketAvailable)
+                { onPress = Just onPress
+                , label =
+                    Element.el
+                        [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
+                        (Element.text
+                            (if ticketAvailable then
+                                "Select"
 
-                         else
-                            "Sold out!"
+                             else
+                                "Sold out!"
+                            )
                         )
-                    )
-            }
+                }
         ]
 
 
@@ -100,7 +102,7 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
             [ Element.column
                 [ Element.width Element.fill, Element.spacing 16 ]
                 [ Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
-                , Element.paragraph [] [ Element.text ticket.description ]
+                , MarkdownThemed.renderFull ticket.description
                 , Element.el
                     [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
                     (Element.text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
@@ -109,19 +111,20 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                 [ Element.width (Element.px 80), Element.alignTop ]
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
-        , Element.Input.button
-            (Theme.submitButtonAttributes ticketAvailable)
-            { onPress = Just onPress
-            , label =
-                Element.el
-                    [ Element.centerX ]
-                    (Element.text
-                        (if ticketAvailable then
-                            "Select"
+        , Theme.viewIf (Env.mode == Env.Development) <|
+            Element.Input.button
+                (Theme.submitButtonAttributes ticketAvailable)
+                { onPress = Just onPress
+                , label =
+                    Element.el
+                        [ Element.centerX ]
+                        (Element.text
+                            (if ticketAvailable then
+                                "Select"
 
-                         else
-                            "Sold out!"
+                             else
+                                "Sold out!"
+                            )
                         )
-                    )
-            }
+                }
         ]

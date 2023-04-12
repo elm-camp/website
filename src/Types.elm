@@ -25,6 +25,7 @@ type FrontendModel
 
 type alias LoadingModel =
     { key : Key
+    , now : Time.Posix
     , windowSize : Maybe ( Int, Int )
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , slotsRemaining : Maybe TicketAvailability
@@ -34,6 +35,7 @@ type alias LoadingModel =
 
 type alias LoadedModel =
     { key : Key
+    , now : Time.Posix
     , windowSize : ( Int, Int )
     , showTooltip : Bool
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
@@ -258,6 +260,7 @@ type alias CityCode =
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
+    | Tick Time.Posix
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
