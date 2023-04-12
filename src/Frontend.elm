@@ -443,7 +443,9 @@ view model =
             ]
             (case model of
                 Loading _ ->
-                    Element.text "Loading..."
+                    Element.column [ Element.width Element.fill, Element.padding 20 ]
+                        [ Element.el [ Element.centerX ] <| Element.text "Loading..."
+                        ]
 
                 Loaded loaded ->
                     loadedView loaded
