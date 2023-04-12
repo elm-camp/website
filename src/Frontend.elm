@@ -287,6 +287,14 @@ purchaseable productId model =
         model.slotsRemaining.couplesCampTicket
 
 
+includesAccom productId =
+    if productId == Product.ticket.campFire then
+        False
+
+    else
+        True
+
+
 fontFace : Int -> String -> String
 fontFace weight name =
     """
@@ -765,6 +773,19 @@ formView model productId priceId ticket =
         , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
         , opportunityGrant form textInput
         , sponsorships form textInput
+        , """
+By purchasing a ticket, you agree to the event [Code of Conduct](/code-of-conduct).
+
+Please note: you have selected a ticket that ***${ticketAccom} accommodation***.
+"""
+            |> String.replace "${ticketAccom}"
+                (if includesAccom ticket.productId then
+                    "includes"
+
+                 else
+                    "does not include"
+                )
+            |> MarkdownThemed.renderFull
         , case form.submitStatus of
             NotSubmitted pressedSubmit ->
                 Element.none
