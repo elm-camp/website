@@ -465,7 +465,7 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { windowSize = model.windowSize, isCompact = True }
                 , Element.column
-                    contentAttributes
+                    (Element.padding 20 :: contentAttributes)
                     [ accessibilityContent
                     ]
                 , footer
@@ -476,7 +476,7 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { windowSize = model.windowSize, isCompact = True }
                 , Element.column
-                    contentAttributes
+                    (Element.padding 20 :: contentAttributes)
                     [ codeOfConductContent
                     ]
                 , footer
