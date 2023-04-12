@@ -122,9 +122,15 @@ decodeCurrency =
 
 
 createCheckoutSession :
-    { priceId : Id PriceId, opportunityGrantDonation : Int, emailAddress : EmailAddress, sponsorship : Maybe String }
+    { priceId : Id PriceId
+    , opportunityGrantDonation : Int
+    , emailAddress : EmailAddress
+    , sponsorship : Maybe String
+    , now : Time.Posix
+    , expiresInMinutes : Int
+    }
     -> Task Http.Error (Id StripeSessionId)
-createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsorship } =
+createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsorship, now, expiresInMinutes } =
     -- @TODO support multiple prices, see Data.Tickets
     let
         opportunityGrantAttrs =
@@ -161,6 +167,9 @@ createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsor
                 [ ( "line_items[0][price]", Id.toString priceId )
                 , ( "line_items[0][quantity]", "1" )
                 , ( "mode", "payment" )
+
+                -- Stripe expects seconds since epoch
+                , ( "expires_at", String.fromInt <| (Time.posixToMillis now // 1000) + (expiresInMinutes * 60) )
                 , ( "success_url"
                   , Url.Builder.crossOrigin
                         Env.domain

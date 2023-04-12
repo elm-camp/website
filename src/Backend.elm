@@ -252,16 +252,19 @@ updateFromFrontend sessionId clientId msg model =
                             in
                             if validProductAndForm then
                                 ( model
-                                , Task.map2
-                                    Tuple.pair
-                                    (Stripe.createCheckoutSession
-                                        { priceId = priceId
-                                        , opportunityGrantDonation = purchaseForm |> PurchaseForm.commonPurchaseData |> .grantContribution
-                                        , sponsorship = sponsorship |> Maybe.map (.priceId >> Id.toString)
-                                        , emailAddress = PurchaseForm.billingEmail purchaseForm
-                                        }
-                                    )
-                                    Time.now
+                                , Time.now
+                                    |> Task.andThen
+                                        (\now ->
+                                            Stripe.createCheckoutSession
+                                                { priceId = priceId
+                                                , opportunityGrantDonation = purchaseForm |> PurchaseForm.commonPurchaseData |> .grantContribution
+                                                , sponsorship = sponsorship |> Maybe.map (.priceId >> Id.toString)
+                                                , emailAddress = PurchaseForm.billingEmail purchaseForm
+                                                , now = now
+                                                , expiresInMinutes = 15
+                                                }
+                                                |> Task.andThen (\res -> Task.succeed ( res, now ))
+                                        )
                                     |> Task.attempt (CreatedCheckoutSession sessionId clientId priceId purchaseForm)
                                 )
 
