@@ -1098,9 +1098,9 @@ Elm Camp brings an opportunity for Elm makers & tool builders to gather, communi
 
 Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language.
 
-Over the last few years Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
+Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
 
-There is great potential for progress and innovation in a creative, focussed, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
+There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
 Elm Camp is the first Elm Unconference. Our intention is to debut as a small, casual and low-stress event, paving the way for future Elm Camps across the world.
 
@@ -1181,7 +1181,7 @@ The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + ext
 * 9am - 12pm Unconference sessions
 * 12-1:30pm - Lunch
 * 2pm Closing Unkeynote
-* 3pm unconfernce wrap-up
+* 3pm unconference wrap-up
 * 4pm - Departure
 
 # Travel and Accommodation
@@ -1192,7 +1192,7 @@ Odense can be reached directly by train from Hamburg, Copenhagen and other locat
 
 Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense.
 
-All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free ranging & organic meat with a vegetarian option.
+All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option.
 
 More details can be found on our [venue & accessibility page](/accessibility).
 
