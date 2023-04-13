@@ -1184,8 +1184,17 @@ The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + ext
 * 3pm unconfernce wrap-up
 * 4pm - Departure
 
+# Travel and Accommodation
+
+Elm Camp takes place at Dallund Castle near Odense in Denmark.
+
+Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations.
+
+Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense.
 
 All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free ranging & organic meat with a vegetarian option.
+
+More details can be found on our [accessibility page](/accessibility).
 
 # Organisers
 
