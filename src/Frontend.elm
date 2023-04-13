@@ -1458,7 +1458,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
     """
             |> MarkdownThemed.renderFull
         , Html.iframe
-            [ Html.Attributes.src "map.html"
+            [ Html.Attributes.src "/map.html"
             , Html.Attributes.style "width" "100%"
             , Html.Attributes.style "height" "auto"
             , Html.Attributes.style "aspect-ratio" "21 / 9"
