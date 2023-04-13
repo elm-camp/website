@@ -1180,7 +1180,7 @@ The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + ext
 * 7am-9am - Breakfast
 * 9am - 12pm Unconference sessions
 * 12-1:30pm - Lunch
-* 2- Closing Unkeynote
+* 2pm Closing Unkeynote
 * 3pm unconfernce wrap-up
 * 4pm - Departure
 
