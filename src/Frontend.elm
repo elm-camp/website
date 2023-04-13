@@ -1194,7 +1194,7 @@ Dallund Castle itself offers 24 rooms, additional accommodation can be found in 
 
 All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free ranging & organic meat with a vegetarian option.
 
-More details can be found on our [accessibility page](/accessibility).
+More details can be found on our [venue & accessibility page](/accessibility).
 
 # Organisers
 
