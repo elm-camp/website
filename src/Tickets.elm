@@ -52,7 +52,7 @@ couplesCampTicket =
 campfireTicket : Ticket
 campfireTicket =
     { name = "Campfire Ticket"
-    , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included. [See nearby accommodation options](/nearby-accommodation)."
+    , description = "Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included. [See nearby accommodation options](/accessibility)."
     , image = "/product1.webp"
     , slots = 1
     , productId = Product.ticket.campFire
