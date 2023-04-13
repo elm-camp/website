@@ -1184,8 +1184,17 @@ The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + ext
 * 3pm unconfernce wrap-up
 * 4pm - Departure
 
+# Travel and Accommodation
+
+Elm Camp takes place at Dallund Castle near Odense in Denmark.
+
+Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations.
+
+Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense.
 
 All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free ranging & organic meat with a vegetarian option.
+
+More details can be found on our [venue & accessibility page](/accessibility).
 
 # Organisers
 
@@ -1368,23 +1377,47 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
 
 accessibilityContent : Element msg
 accessibilityContent =
-    """
+    Element.column
+        []
+        [ """
 # The venue and access
 
-## Getting here
+## The venue
 
-### via train, bus & 2k walk or Elm Camp shuttle
+**Dallund Slot**  
+Dallundvej 63  
+5471 Søndersø  
+Denmark
 
-* Travel to Odense Train station
-* From here there is a bus from Odense Train Station to Søndersø which is 2k from the venue
-* You can walk but note that there is a short section of unpaved road on this route
-* Elm Camp will be organising shuttles at key times (details nearer the time)
+[https://www.dallundcastle.dk/](https://www.dallundcastle.dk/)
+
+## Getting there
+
+### via train, bus & 2 km walk/Elm Camp shuttle
+
+* Travel to Odense train station ([Danske Statsbaner](https://www.dsb.dk/en/))
+* From the station take [bus 191](https://www.fynbus.dk/find-din-rejse/rute,190) to Søndersø (_OBC Nord Plads H_ to _Søndersø Bypark_)
+* Elm Camp will be organising shuttles between Søndersø and the venue at key times
+* You can walk 2 km from Søndersø to the venue if you don't mind a short section of unpaved road
 
 ### via car
 
 * There is ample parking on site
 
-## The venue
+### via plane
+
+* Major airports in Denmark are Copenhagen, Billund and Aarhus
+* Malmö (Sweden) also has good connections to Denmark
+
+For other travel options also check [Rejseplanen](https://www.rejseplanen.dk/), [The Man in Seat 61](https://www.seat61.com/Denmark.htm), [Trainline](https://www.thetrainline.com/) and [Flixbus](https://www.flixbus.co.uk/coach/odense).
+
+## External accommodation
+
+Dallund Castle itself offers 24 rooms, so we suggest considering additional accommodation options if you don't mind a short travel time from and to the venue.
+
+There are only a few holiday homes in and around Søndersø, but Odense is a major town with several hotels and apartments to choose from. We are also looking into options for literal outdoor camping in the vicinity of the venue if there are interested attendees.
+
+## Accessibility
 
 ### Not step free.
 
@@ -1423,4 +1456,14 @@ If you have questions or concerns about this website or attending Elm Camp, plea
 * Elm slack: @katjam
 * Elmcraft Discord: Katja#0091
     """
-        |> MarkdownThemed.renderFull
+            |> MarkdownThemed.renderFull
+        , Html.iframe
+            [ Html.Attributes.src "/map.html"
+            , Html.Attributes.style "width" "100%"
+            , Html.Attributes.style "height" "auto"
+            , Html.Attributes.style "aspect-ratio" "21 / 9"
+            , Html.Attributes.style "border" "none"
+            ]
+            []
+            |> Element.html
+        ]
