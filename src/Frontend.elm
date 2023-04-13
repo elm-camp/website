@@ -1220,7 +1220,7 @@ content3 =
 
 Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
 
-All levels of contribution are appreciated and acknowledged.
+All levels of contribution are appreciated and acknowledged. Get in touch with the team at [hello@elm.camp](mailto:hello@elm.camp).
 
 ## Bronze - less than €1000 EUR
 
@@ -1384,9 +1384,9 @@ accessibilityContent =
 
 ## The venue
 
-**Dallund Slot**  
-Dallundvej 63  
-5471 Søndersø  
+**Dallund Slot**
+Dallundvej 63
+5471 Søndersø
 Denmark
 
 [https://www.dallundcastle.dk/](https://www.dallundcastle.dk/)
