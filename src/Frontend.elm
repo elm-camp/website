@@ -1270,7 +1270,8 @@ Problem with something above? Get in touch with the team at [hello@elm.camp](mai
 
 sponsors : ( Int, Int ) -> Element msg
 sponsors ( windowWidth, _ ) =
-    [ { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
+    [ { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
+    , { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
     , { image = "cookiewolf-logo.png", url = "", width = 220 }
     , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
     , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
