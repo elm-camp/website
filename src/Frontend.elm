@@ -1411,6 +1411,12 @@ Denmark
 
 For other travel options also check [The Man in Seat 61](https://www.seat61.com/Denmark.htm), [Trainline](https://www.thetrainline.com/) and [Flixbus](https://www.flixbus.co.uk/coach/odense).
 
+## External accommodation
+
+Dallund Castle itself offers 24 rooms, so we suggest considering additional accommodation options if you don't mind a short travel time from and to the venue.
+
+There are only a few holiday homes in and around Søndersø, but Odense is a major town with several hotels and apartments to choose from. We are also looking into options for literal outdoor camping in the vicinity of the venue if there are interested attendees.
+
 ## Accessibility
 
 ### Not step free.
