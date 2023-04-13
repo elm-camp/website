@@ -1409,7 +1409,7 @@ Denmark
 * Major airports in Denmark are Copenhagen, Billund and Aarhus
 * Malmö (Sweden) also has good connections to Denmark
 
-For other travel options also check [The Man in Seat 61](https://www.seat61.com/Denmark.htm), [Trainline](https://www.thetrainline.com/) and [Flixbus](https://www.flixbus.co.uk/coach/odense).
+For other travel options also check [Rejseplanen](https://www.rejseplanen.dk/), [The Man in Seat 61](https://www.seat61.com/Denmark.htm), [Trainline](https://www.thetrainline.com/) and [Flixbus](https://www.flixbus.co.uk/coach/odense).
 
 ## External accommodation
 
