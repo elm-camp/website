@@ -817,14 +817,7 @@ opportunityGrant form textInput =
                 ]
             , case form.grantApply of
                 True ->
-                    """
-If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
-
-Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
-
-All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
-"""
-                        |> MarkdownThemed.renderFull
+                    grantApplicationCopy |> MarkdownThemed.renderFull
 
                 False ->
                     Element.column []
@@ -865,6 +858,16 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
                         ]
             ]
         ]
+
+
+grantApplicationCopy =
+    """
+If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
+
+Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
+
+All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
+"""
 
 
 sponsorships form textInput =
@@ -1153,7 +1156,16 @@ content2 =
     """
 The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + external). Our plan is to prioritise ticket sales in the following order: """
         ++ String.join ", " [ Tickets.couplesCampTicket.name, Tickets.campTicket.name, Tickets.campfireTicket.name ]
-        ++ """.
+        ++ """
+
+# Opportunity grants
+
+"""
+        ++ grantApplicationCopy
+        ++ """
+
+**Thanks to Concentric and generous individual sponsors for making the opportunity grants possible**.
+
 
 # Schedule
 
@@ -1272,10 +1284,10 @@ sponsors : ( Int, Int ) -> Element msg
 sponsors ( windowWidth, _ ) =
     [ { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
     , { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
-    , { image = "cookiewolf-logo.png", url = "", width = 220 }
     , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
     , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
     , { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
+    , { image = "cookiewolf-logo.png", url = "", width = 220 }
     ]
         |> List.map
             (\{ image, url, width } ->

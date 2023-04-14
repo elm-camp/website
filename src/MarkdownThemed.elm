@@ -95,7 +95,7 @@ renderer theme =
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
         \content -> Element.html (Html.code [] [ Html.text content ])
-    , strong = \list -> Element.paragraph [ Element.Font.medium ] list
+    , strong = \list -> Element.paragraph [ Element.Font.bold ] list
     , emphasis = \list -> Element.paragraph [ Element.Font.italic ] list
     , hardLineBreak = Element.html (Html.br [] [])
     , link =
