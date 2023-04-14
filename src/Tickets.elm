@@ -32,7 +32,7 @@ type alias Ticket =
 campTicket : Ticket
 campTicket =
     { name = "Camp Ticket"
-    , description = "Ticket for 1 Person including: on-site accommodation with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
+    , description = "Ticket for 1 Person including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product2.webp"
     , slots = 1
     , productId = Product.ticket.camp
@@ -42,7 +42,7 @@ campTicket =
 couplesCampTicket : Ticket
 couplesCampTicket =
     { name = "Couples Camp Ticket"
-    , description = "Tickets for 2 people including: on-site accommodation for two people with private ensuite for 2 nights, breakfast, lunch, tea & dinners included."
+    , description = "Tickets for 2 people including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product3.webp"
     , slots = 2
     , productId = Product.ticket.couplesCamp
