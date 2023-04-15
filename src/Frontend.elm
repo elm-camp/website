@@ -75,7 +75,7 @@ init url key =
             Route.decode url
 
         isOrganiser =
-            case url |> Url.Parser.parse (Url.Parser.top <?> queryBool "organiser") |> Debug.log "organiser" of
+            case url |> Url.Parser.parse (Url.Parser.top <?> queryBool "organiser") of
                 Just (Just isOrganiser_) ->
                     isOrganiser_
 
