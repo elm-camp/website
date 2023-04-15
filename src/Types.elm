@@ -26,7 +26,7 @@ type FrontendModel
 type alias LoadingModel =
     { key : Key
     , now : Time.Posix
-    , windowSize : Maybe ( Int, Int )
+    , window : Maybe { width : Int, height : Int }
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , slotsRemaining : Maybe TicketAvailability
     , route : Route
@@ -36,7 +36,7 @@ type alias LoadingModel =
 type alias LoadedModel =
     { key : Key
     , now : Time.Posix
-    , windowSize : ( Int, Int )
+    , window : { width : Int, height : Int }
     , showTooltip : Bool
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )

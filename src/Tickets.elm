@@ -56,7 +56,7 @@ campfireTicket =
 Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included.
 
 • [Nearby accommodation options](/accessibility)
-• [Coordinate with other attenddees](https://discord.gg/QeZDXJrN78)
+• [Coordinate with other attendees](https://discord.gg/QeZDXJrN78)
 """
     , image = "/product1.webp"
     , slots = 1

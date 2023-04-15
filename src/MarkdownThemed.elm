@@ -1,6 +1,6 @@
 module MarkdownThemed exposing (bulletPoint, heading1, lightTheme, renderFull)
 
-import Element exposing (Element)
+import Element exposing (..)
 import Element.Background
 import Element.Border
 import Element.Font
@@ -91,7 +91,40 @@ renderer theme =
                 , Element.padding 10
                 ]
                 children
-    , html = Markdown.Html.oneOf []
+    , html =
+        Markdown.Html.oneOf
+            [ Markdown.Html.tag "img"
+                (\src width_ maxWidth_ bg_ content ->
+                    let
+                        attrs =
+                            case maxWidth_ of
+                                Just maxWidth ->
+                                    [ maxWidth
+                                        |> String.toInt
+                                        |> Maybe.map (\w -> width (fill |> maximum w))
+                                        |> Maybe.withDefault (width fill)
+                                    , centerX
+                                    ]
+
+                                Nothing ->
+                                    [ width_
+                                        |> Maybe.andThen String.toInt
+                                        |> Maybe.map (\w -> width (px w))
+                                        |> Maybe.withDefault (width fill)
+                                    ]
+                    in
+                    case bg_ of
+                        Just bg ->
+                            el [ Element.Border.rounded 10, padding 20 ] <| image attrs { src = src, description = "" }
+
+                        Nothing ->
+                            image attrs { src = src, description = "" }
+                )
+                |> Markdown.Html.withAttribute "src"
+                |> Markdown.Html.withOptionalAttribute "width"
+                |> Markdown.Html.withOptionalAttribute "maxwidth"
+                |> Markdown.Html.withOptionalAttribute "bg"
+            ]
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
         \content -> Element.html (Html.code [] [ Html.text content ])

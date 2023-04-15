@@ -70,7 +70,7 @@ init url key =
     ( Loading
         { key = key
         , now = Time.millisToPosix 0
-        , windowSize = Nothing
+        , window = Nothing
         , prices = AssocList.empty
         , slotsRemaining = Nothing
         , route = route
@@ -94,7 +94,7 @@ update msg model =
         Loading loading ->
             case msg of
                 GotWindowSize width height ->
-                    tryLoading { loading | windowSize = Just ( width, height ) }
+                    tryLoading { loading | window = Just { width = width, height = height } }
 
                 _ ->
                     ( model, Cmd.none )
@@ -106,11 +106,11 @@ update msg model =
 tryLoading : LoadingModel -> ( FrontendModel, Cmd FrontendMsg )
 tryLoading loadingModel =
     Maybe.map2
-        (\windowSize slotsRemaining ->
+        (\window slotsRemaining ->
             ( Loaded
                 { key = loadingModel.key
                 , now = loadingModel.now
-                , windowSize = windowSize
+                , window = window
                 , showTooltip = False
                 , prices = loadingModel.prices
                 , selectedTicket = Nothing
@@ -133,7 +133,7 @@ tryLoading loadingModel =
             , Cmd.none
             )
         )
-        loadingModel.windowSize
+        loadingModel.window
         loadingModel.slotsRemaining
         |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
 
@@ -160,7 +160,7 @@ updateLoaded msg model =
             ( { model | now = now }, Cmd.none )
 
         GotWindowSize width height ->
-            ( { model | windowSize = ( width, height ) }, Cmd.none )
+            ( { model | window = { width = width, height = height } }, Cmd.none )
 
         PressedShowTooltip ->
             ( { model | showTooltip = True }, Cmd.none )
@@ -337,7 +337,7 @@ colorWithAlpha alpha color =
     Element.rgba red green blue alpha
 
 
-header : { windowSize : ( Int, Int ), isCompact : Bool } -> Element msg
+header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element msg
 header config =
     let
         glow =
@@ -350,7 +350,7 @@ header config =
             "The logo of Elm Camp, a tangram in green forest colors"
 
         titleSize =
-            if windowWidth < 800 then
+            if config.window.width < 800 then
                 64
 
             else
@@ -362,11 +362,8 @@ header config =
                 { url = Route.encode HomepageRoute
                 , label = Element.el [ Element.Font.size titleSize, glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
                 }
-
-        ( windowWidth, _ ) =
-            config.windowSize
     in
-    if windowWidth < 1000 || config.isCompact then
+    if config.window.width < 1000 || config.isCompact then
         Element.column
             [ Element.padding 30, Element.spacing 20, Element.centerX ]
             [ if config.isCompact then
@@ -464,7 +461,7 @@ loadedView model =
         AccessibilityRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { windowSize = model.windowSize, isCompact = True }
+                [ header { window = model.window, isCompact = True }
                 , Element.column
                     (Element.padding 20 :: contentAttributes)
                     [ accessibilityContent
@@ -475,7 +472,7 @@ loadedView model =
         CodeOfConductRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { windowSize = model.windowSize, isCompact = True }
+                [ header { window = model.window, isCompact = True }
                 , Element.column
                     (Element.padding 20 :: contentAttributes)
                     [ codeOfConductContent
@@ -528,14 +525,11 @@ ticketsHtmlId =
 homepageView : LoadedModel -> Element FrontendMsg
 homepageView model =
     let
-        ( windowWidth, _ ) =
-            model.windowSize
-
         padding =
             Element.paddingXY sidePadding 24
 
         sidePadding =
-            if windowWidth < 800 then
+            if model.window.width < 800 then
                 24
 
             else
@@ -580,13 +574,13 @@ homepageView model =
                     , Element.width Element.fill
                     , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
                     ]
-                    [ header { windowSize = model.windowSize, isCompact = False }
+                    [ header { window = model.window, isCompact = False }
                     , Element.column
                         [ Element.width Element.fill, Element.spacing 40 ]
                         [ Element.column
                             contentAttributes
                             [ content1, unconferenceBulletPoints model ]
-                        , if windowWidth > 950 then
+                        , if model.window.width > 950 then
                             [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
                                 |> List.map (dallundCastleImage (Element.px 288))
                                 |> Element.wrappedRow
@@ -607,7 +601,7 @@ homepageView model =
                         , Element.column
                             contentAttributes
                             [ MarkdownThemed.renderFull "# Our sponsors"
-                            , sponsors model.windowSize
+                            , sponsors model.window
                             ]
                         , Element.column
                             [ Element.width Element.fill
@@ -708,9 +702,6 @@ formView model productId priceId ticket =
         form =
             model.form
 
-        ( windowWidth, _ ) =
-            model.windowSize
-
         textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
         textInput onChange title validator text =
             Element.column
@@ -779,7 +770,7 @@ formView model productId priceId ticket =
             ]
         , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
         , opportunityGrant form textInput
-        , sponsorships form textInput
+        , sponsorships model form textInput
         , """
 By purchasing a ticket, you agree to the event [Code of Conduct](/code-of-conduct).
 
@@ -803,11 +794,14 @@ Please note: you have selected a ticket that ***${ticketAccom} accommodation***.
 
             SubmitBackendError err ->
                 Element.paragraph [] [ Element.text err ]
-        , if windowWidth > 600 then
+        , if model.window.width > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
           else
             Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
+        , """
+Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
+""" |> MarkdownThemed.renderFull
         ]
 
 
@@ -875,13 +869,13 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 """
 
 
-sponsorships form textInput =
+sponsorships model form textInput =
     Element.column [ Element.spacing 20 ]
         [ Element.el [ Element.Font.size 20 ] (Element.text "🤝 Sponsor Elm Camp")
         , Element.paragraph [] [ Element.text "Position your company as a leading supporter of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
-            |> Element.row [ Element.spacing 20, Element.width Element.fill ]
+            |> Theme.rowToColumnWhen 700 model [ Element.spacing 20, Element.width Element.fill ]
         ]
 
 
@@ -1068,11 +1062,7 @@ contentAttributes =
 
 ticketCardsView : LoadedModel -> Element FrontendMsg
 ticketCardsView model =
-    let
-        ( windowWidth, _ ) =
-            model.windowSize
-    in
-    if windowWidth < 950 then
+    if model.window.width < 950 then
         List.map
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
@@ -1285,8 +1275,8 @@ Problem with something above? Get in touch with the team at [hello@elm.camp](mai
         |> MarkdownThemed.renderFull
 
 
-sponsors : ( Int, Int ) -> Element msg
-sponsors ( windowWidth, _ ) =
+sponsors : { window | width : Int } -> Element msg
+sponsors window =
     [ { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
     , { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
     , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
@@ -1303,7 +1293,7 @@ sponsors ( windowWidth, _ ) =
                         Element.image
                             [ Element.width
                                 (Element.px
-                                    (if windowWidth < 800 then
+                                    (if window.width < 800 then
                                         toFloat width * 0.7 |> round
 
                                      else

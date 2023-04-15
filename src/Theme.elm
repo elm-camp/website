@@ -87,3 +87,11 @@ toggleButtonAttributes isActive =
     , Element.Font.semiBold
     , Element.Font.color (Element.rgb 1 1 1)
     ]
+
+
+rowToColumnWhen width model attrs children =
+    if model.window.width > width then
+        Element.row attrs children
+
+    else
+        Element.column attrs children
