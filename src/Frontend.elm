@@ -18,6 +18,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Id exposing (Id)
+import Inventory
 import Json.Decode
 import Lamdera
 import List.Extra as List
@@ -621,6 +622,10 @@ homepageView model =
 """
                                 , -- We'll open ticket sales later
                                   ticketCardsView model
+                                , Theme.viewIf (Inventory.anySoldOut model.slotsRemaining) <|
+                                    MarkdownThemed.renderFull <|
+                                        """
+Missed out on the ticket you wanted? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the wait list."""
                                 , MarkdownThemed.renderFull <|
                                     """
 ## Ticket sales open in """

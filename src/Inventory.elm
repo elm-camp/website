@@ -75,6 +75,11 @@ slotsRemaining model =
         }
 
 
+anySoldOut : TicketAvailability -> Bool
+anySoldOut { campTicket, couplesCampTicket, campfireTicket } =
+    campTicket == False || couplesCampTicket == False || campfireTicket == False
+
+
 isCampfireTicket : { order | form : PurchaseFormValidated } -> Bool
 isCampfireTicket order =
     case order.form of
