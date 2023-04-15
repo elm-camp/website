@@ -65,7 +65,7 @@ update msg model =
                 expiredOrders : List (Id StripeSessionId)
                 expiredOrders =
                     AssocList.filter
-                        (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan Duration.hour)
+                        (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
                         model.pendingOrder
                         |> AssocList.keys
             in
@@ -261,7 +261,7 @@ updateFromFrontend sessionId clientId msg model =
                                                 , sponsorship = sponsorship |> Maybe.map (.priceId >> Id.toString)
                                                 , emailAddress = PurchaseForm.billingEmail purchaseForm
                                                 , now = now
-                                                , expiresInMinutes = 15
+                                                , expiresInMinutes = 30
                                                 }
                                                 |> Task.andThen (\res -> Task.succeed ( res, now ))
                                         )
