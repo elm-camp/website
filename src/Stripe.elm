@@ -102,7 +102,7 @@ decodePrice =
         )
         |> required "id" Id.decoder
         |> required "currency" decodeCurrency
-        |> required "unit_amount" D.int
+        |> optional "unit_amount" D.int 0
         |> required "product" Id.decoder
         |> required "active" D.bool
         |> required "created" (D.map Time.millisToPosix D.int)
