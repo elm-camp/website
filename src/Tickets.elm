@@ -71,8 +71,8 @@ dict =
         |> AssocList.fromList
 
 
-viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
-viewDesktop ticketAvailable onPress price ticket =
+viewDesktop : Bool -> Bool -> msg -> Price -> Ticket -> Element msg
+viewDesktop isOrganiser ticketAvailable onPress price ticket =
     Theme.panel []
         [ Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
@@ -80,7 +80,7 @@ viewDesktop ticketAvailable onPress price ticket =
         , Element.el
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
             (Element.text (Theme.priceText price))
-        , Theme.viewIf (Env.mode == Env.Development) <|
+        , Theme.viewIf isOrganiser <|
             Element.Input.button
                 (Theme.submitButtonAttributes ticketAvailable)
                 { onPress = Just onPress
@@ -99,8 +99,8 @@ viewDesktop ticketAvailable onPress price ticket =
         ]
 
 
-viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
-viewMobile ticketAvailable onPress { currency, amount } ticket =
+viewMobile : Bool -> Bool -> msg -> Price -> Ticket -> Element msg
+viewMobile isOrganiser ticketAvailable onPress { currency, amount } ticket =
     Theme.panel []
         [ Element.row
             [ Element.spacing 16 ]
@@ -116,7 +116,7 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                 [ Element.width (Element.px 80), Element.alignTop ]
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
-        , Theme.viewIf (Env.mode == Env.Development) <|
+        , Theme.viewIf isOrganiser <|
             Element.Input.button
                 (Theme.submitButtonAttributes ticketAvailable)
                 { onPress = Just onPress

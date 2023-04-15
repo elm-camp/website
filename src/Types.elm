@@ -30,6 +30,7 @@ type alias LoadingModel =
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , slotsRemaining : Maybe TicketAvailability
     , route : Route
+    , isOrganiser : Bool
     }
 
 
@@ -44,6 +45,7 @@ type alias LoadedModel =
     , route : Route
     , showCarbonOffsetTooltip : Bool
     , slotsRemaining : TicketAvailability
+    , isOrganiser : Bool
     }
 
 

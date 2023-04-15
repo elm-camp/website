@@ -6,6 +6,7 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation
 import Countdown
+import Dict
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -36,6 +37,8 @@ import TravelMode
 import Types exposing (..)
 import Untrusted
 import Url
+import Url.Parser exposing ((</>), (<?>))
+import Url.Parser.Query as Query
 import W.InputSlider
 import W.Styles
 
@@ -61,11 +64,23 @@ subscriptions _ =
         ]
 
 
+queryBool name =
+    Query.enum name (Dict.fromList [ ( "true", True ), ( "false", False ) ])
+
+
 init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
 init url key =
     let
         route =
             Route.decode url
+
+        isOrganiser =
+            case url |> Url.Parser.parse (Url.Parser.top <?> queryBool "organiser") |> Debug.log "organiser" of
+                Just (Just isOrganiser_) ->
+                    isOrganiser_
+
+                _ ->
+                    False
     in
     ( Loading
         { key = key
@@ -74,6 +89,7 @@ init url key =
         , prices = AssocList.empty
         , slotsRemaining = Nothing
         , route = route
+        , isOrganiser = isOrganiser
         }
     , Cmd.batch
         [ Browser.Dom.getViewport
@@ -129,6 +145,7 @@ tryLoading loadingModel =
                 , route = loadingModel.route
                 , showCarbonOffsetTooltip = False
                 , slotsRemaining = slotsRemaining
+                , isOrganiser = loadingModel.isOrganiser
                 }
             , Cmd.none
             )
@@ -1067,7 +1084,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewMobile model.isOrganiser (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"
@@ -1080,7 +1097,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewDesktop model.isOrganiser (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"
