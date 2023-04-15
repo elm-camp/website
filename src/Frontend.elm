@@ -1366,11 +1366,8 @@ If you have any concerns when planning, during or after your session, please get
 
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
 
-### [hello@elm.camp](mailto:hello@elm.camp)
-
-* Elm slack: @katjam
-* Elmcraft Discord: Katja#0091
-
+* Email the organiser team: [hello@elm.camp](mailto:hello@elm.camp)
+* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord](https://discord.gg/QeZDXJrN78): Katja#0091
 
 ## How we handle Code of Conduct issues
 
@@ -1406,6 +1403,8 @@ accessibilityContent =
 Dallundvej 63
 5471 Søndersø
 Denmark
+
+[Google Maps](https://goo.gl/maps/1WGiHRc7NaNimBzx5)
 
 [https://www.dallundcastle.dk/](https://www.dallundcastle.dk/)
 
@@ -1451,7 +1450,7 @@ There are only a few holiday homes in and around Søndersø, but Odense is a maj
 
 * All toilets are gender neutral
 * There is one public toilet on each of the 3 floors
-* All attendees staying at the hotel have ensuites
+* All attendees staying at the hotel have a private ensuite in their room
 * The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
 
 ### Open water & rough ground
@@ -1470,10 +1469,8 @@ There are only a few holiday homes in and around Søndersø, but Odense is a maj
 
 If you have questions or concerns about this website or attending Elm Camp, please get in touch
 
-* email: [hello@elm.camp](mailto:hello@elm.camp)
-* Elm slack: @katjam
-* Elmcraft Discord: Katja#0091
     """
+            ++ contactDetails
             |> MarkdownThemed.renderFull
         , Html.iframe
             [ Html.Attributes.src "/map.html"
@@ -1485,3 +1482,12 @@ If you have questions or concerns about this website or attending Elm Camp, plea
             []
             |> Element.html
         ]
+
+
+contactDetails : String
+contactDetails =
+    """
+* Elmcraft Discord: [#elm-camp-23](https://discord.gg/QeZDXJrN78) channel or DM Katja#0091
+* Email: [hello@elm.camp](mailto:hello@elm.camp)
+* Elm Slack: @katjam
+"""
