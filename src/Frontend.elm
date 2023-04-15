@@ -896,15 +896,6 @@ sponsorships model form textInput =
         ]
 
 
-
--- sponsorshipView form s =
---     sponsorshipOption (form.sponsorship == Just s.productId)
---         s.name
---         s.price
---         s.description
---         s.features
-
-
 sponsorshipOption form s =
     let
         selected =
@@ -919,7 +910,7 @@ sponsorshipOption form s =
     in
     Theme.panel attrs
         [ Element.el [ Element.Font.size 20, Element.Font.bold ] (Element.text s.name)
-        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| String.fromInt s.price)
+        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| "€" ++ String.fromInt s.price)
         , Element.paragraph [] [ Element.text s.description ]
         , s.features
             |> List.map (\point -> Element.paragraph [ Element.Font.size 12 ] [ Element.text <| "• " ++ point ])
