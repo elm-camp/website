@@ -71,6 +71,11 @@ update msg model =
             in
             ( { model
                 | time = time
+                , pendingOrder =
+                    List.foldl
+                        (\expiredId state -> AssocList.remove expiredId state)
+                        model.pendingOrder
+                        expiredOrders
               }
             , Cmd.batch
                 [ Stripe.getPrices GotPrices
