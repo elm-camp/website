@@ -328,7 +328,16 @@ errorEmail errorMessage =
                 Env.postmarkApiKey
                 { from = { name = "elm-camp", email = elmCampEmailAddress }
                 , to = List.Nonempty.map (\email -> { name = "", email = email }) to
-                , subject = NonemptyString 'E' "rror occurred"
+                , subject =
+                    NonemptyString 'E'
+                        ("rror occurred "
+                            ++ (if Env.isProduction then
+                                    "(prod)"
+
+                                else
+                                    "(dev)"
+                               )
+                        )
                 , body = BodyText errorMessage
                 , messageStream = "outbound"
                 }
