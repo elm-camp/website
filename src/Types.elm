@@ -27,10 +27,9 @@ type alias LoadingModel =
     { key : Key
     , now : Time.Posix
     , window : Maybe { width : Int, height : Int }
-    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
-    , slotsRemaining : Maybe TicketAvailability
     , route : Route
     , isOrganiser : Bool
+    , initData : Maybe InitData2
     }
 
 
@@ -46,6 +45,7 @@ type alias LoadedModel =
     , showCarbonOffsetTooltip : Bool
     , slotsRemaining : TicketAvailability
     , isOrganiser : Bool
+    , ticketsEnabled : TicketsEnabled
     }
 
 
@@ -59,9 +59,10 @@ type alias TicketAvailability =
 type alias BackendModel =
     { orders : AssocList.Dict (Id StripeSessionId) Order
     , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
+    , expiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder
     , prices : AssocList.Dict (Id ProductId) Price2
     , time : Time.Posix
-    , dummyField : Int
+    , ticketsEnabled : TicketsEnabled
     }
 
 
@@ -74,10 +75,27 @@ backendModelCodec =
     Codec.object BackendModel
         |> Codec.field "orders" .orders (assocListCodec orderCodec)
         |> Codec.field "pendingOrder" .pendingOrder (assocListCodec pendingOrderCodec)
+        |> Codec.field "expiredOrders" .expiredOrders (assocListCodec pendingOrderCodec)
         |> Codec.field "prices" .prices (assocListCodec price2Codec)
         |> Codec.field "time" .time timeCodec
-        |> Codec.field "dummyField" .dummyField Codec.int
+        |> Codec.field "ticketsEnabled" .ticketsEnabled ticketsEnabledCodec
         |> Codec.buildObject
+
+
+ticketsEnabledCodec : Codec TicketsEnabled
+ticketsEnabledCodec =
+    Codec.custom
+        (\a b value ->
+            case value of
+                TicketsEnabled ->
+                    a
+
+                TicketsDisabled { adminMessage } ->
+                    b adminMessage
+        )
+        |> Codec.variant0 "TicketsEnabled" TicketsEnabled
+        |> Codec.variant1 "TicketsDisabled" (\a -> TicketsDisabled { adminMessage = a }) Codec.string
+        |> Codec.buildCustom
 
 
 price2Codec : Codec Price2
@@ -289,13 +307,23 @@ type BackendMsg
     | ErrorEmailSent (Result Http.Error PostmarkSendResponse)
 
 
+type alias InitData2 =
+    { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , slotsRemaining : TicketAvailability
+    , ticketsEnabled : TicketsEnabled
+    }
+
+
 type ToFrontend
-    = InitData
-        { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
-        , slotsRemaining : TicketAvailability
-        }
+    = InitData InitData2
     | SubmitFormResponse (Result String (Id StripeSessionId))
     | SlotRemainingChanged TicketAvailability
+    | TicketsEnabledChanged TicketsEnabled
+
+
+type TicketsEnabled
+    = TicketsEnabled
+    | TicketsDisabled { adminMessage : String }
 
 
 maxSlotsAvailable =

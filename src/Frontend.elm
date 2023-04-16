@@ -86,8 +86,7 @@ init url key =
         { key = key
         , now = Time.millisToPosix 0
         , window = Nothing
-        , prices = AssocList.empty
-        , slotsRemaining = Nothing
+        , initData = Nothing
         , route = route
         , isOrganiser = isOrganiser
         }
@@ -122,13 +121,13 @@ update msg model =
 tryLoading : LoadingModel -> ( FrontendModel, Cmd FrontendMsg )
 tryLoading loadingModel =
     Maybe.map2
-        (\window slotsRemaining ->
+        (\window { slotsRemaining, prices, ticketsEnabled } ->
             ( Loaded
                 { key = loadingModel.key
                 , now = loadingModel.now
                 , window = window
                 , showTooltip = False
-                , prices = loadingModel.prices
+                , prices = prices
                 , selectedTicket = Nothing
                 , form =
                     { submitStatus = NotSubmitted NotPressedSubmit
@@ -146,12 +145,13 @@ tryLoading loadingModel =
                 , showCarbonOffsetTooltip = False
                 , slotsRemaining = slotsRemaining
                 , isOrganiser = loadingModel.isOrganiser
+                , ticketsEnabled = ticketsEnabled
                 }
             , Cmd.none
             )
         )
         loadingModel.window
-        loadingModel.slotsRemaining
+        loadingModel.initData
         |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
 
 
@@ -186,8 +186,8 @@ updateLoaded msg model =
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
 
         PressedSelectTicket productId priceId ->
-            case AssocList.get productId Tickets.dict of
-                Just ticket ->
+            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
+                ( Just ticket, TicketsEnabled ) ->
                     if purchaseable ticket.productId model then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , scrollToTop
@@ -196,7 +196,7 @@ updateLoaded msg model =
                     else
                         ( model, Cmd.none )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         FormChanged form ->
@@ -215,8 +215,8 @@ updateLoaded msg model =
                 form =
                     model.form
             in
-            case AssocList.get productId Tickets.dict of
-                Just ticket ->
+            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
+                ( Just ticket, TicketsEnabled ) ->
                     if purchaseable ticket.productId model then
                         case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
                             ( NotSubmitted _, Just validated ) ->
@@ -235,7 +235,7 @@ updateLoaded msg model =
                     else
                         ( model, Cmd.none )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         PressedCancelForm ->
@@ -262,8 +262,8 @@ updateFromBackend msg model =
     case model of
         Loading loading ->
             case msg of
-                InitData { prices, slotsRemaining } ->
-                    tryLoading { loading | prices = prices, slotsRemaining = Just slotsRemaining }
+                InitData initData ->
+                    tryLoading { loading | initData = Just initData }
 
                 _ ->
                     ( model, Cmd.none )
@@ -275,8 +275,8 @@ updateFromBackend msg model =
 updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Cmd msg )
 updateFromBackendLoaded msg model =
     case msg of
-        InitData { prices, slotsRemaining } ->
-            ( { model | prices = prices, slotsRemaining = slotsRemaining }, Cmd.none )
+        InitData { prices, slotsRemaining, ticketsEnabled } ->
+            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Cmd.none )
 
         SubmitFormResponse result ->
             case result of
@@ -294,6 +294,9 @@ updateFromBackendLoaded msg model =
 
         SlotRemainingChanged slotsRemaining ->
             ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
+
+        TicketsEnabledChanged ticketsEnabled ->
+            ( { model | ticketsEnabled = ticketsEnabled }, Cmd.none )
 
 
 purchaseable productId model =
@@ -429,6 +432,27 @@ view model =
             , Element.Font.size 16
             , Element.Font.medium
             , Element.Background.color backgroundColor
+            , (case model of
+                Loading _ ->
+                    Element.none
+
+                Loaded loaded ->
+                    case loaded.ticketsEnabled of
+                        TicketsEnabled ->
+                            Element.none
+
+                        TicketsDisabled { adminMessage } ->
+                            Element.paragraph
+                                [ Element.Font.color (Element.rgb 1 1 1)
+                                , Element.Font.medium
+                                , Element.Font.size 20
+                                , Element.Background.color (Element.rgb 0.5 0 0)
+                                , Element.padding 8
+                                , Element.width Element.fill
+                                ]
+                                [ Element.text adminMessage ]
+              )
+                |> Element.inFront
             ]
             (case model of
                 Loading _ ->

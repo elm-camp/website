@@ -4,7 +4,6 @@ import AssocList
 import Duration
 import EmailAddress exposing (EmailAddress)
 import Env
-import Html
 import HttpHelpers
 import Id exposing (Id)
 import Inventory
@@ -18,7 +17,6 @@ import Quantity
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
 import Task
-import Tickets
 import Time
 import Types exposing (..)
 import Unsafe
@@ -38,9 +36,10 @@ init : ( BackendModel, Cmd BackendMsg )
 init =
     ( { orders = AssocList.empty
       , pendingOrder = AssocList.empty
+      , expiredOrders = AssocList.empty
       , prices = AssocList.empty
       , time = Time.millisToPosix 0
-      , dummyField = 0
+      , ticketsEnabled = TicketsEnabled
       }
     , Cmd.batch
         [ Time.now |> Task.perform GotTime
@@ -62,20 +61,15 @@ update msg model =
     (case msg of
         GotTime time ->
             let
-                expiredOrders : List (Id StripeSessionId)
-                expiredOrders =
-                    AssocList.filter
+                ( expiredOrders, remainingOrders ) =
+                    AssocList.partition
                         (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
                         model.pendingOrder
-                        |> AssocList.keys
             in
             ( { model
                 | time = time
-                , pendingOrder =
-                    List.foldl
-                        (\expiredId state -> AssocList.remove expiredId state)
-                        model.pendingOrder
-                        expiredOrders
+                , pendingOrder = remainingOrders
+                , expiredOrders = AssocList.union expiredOrders model.expiredOrders
               }
             , Cmd.batch
                 [ Stripe.getPrices GotPrices
@@ -84,7 +78,7 @@ update msg model =
                         Stripe.expireSession stripeSessionId
                             |> Task.attempt (ExpiredStripeSession stripeSessionId)
                     )
-                    expiredOrders
+                    (AssocList.keys expiredOrders)
                     |> Cmd.batch
                 ]
             )
@@ -115,7 +109,12 @@ update msg model =
             ( model
             , Lamdera.sendToFrontend
                 clientId
-                (InitData { prices = model.prices, slotsRemaining = Inventory.slotsRemaining model })
+                (InitData
+                    { prices = model.prices
+                    , slotsRemaining = Inventory.slotsRemaining model
+                    , ticketsEnabled = model.ticketsEnabled
+                    }
+                )
             )
 
         CreatedCheckoutSession sessionId clientId priceId purchaseForm result ->
@@ -222,8 +221,8 @@ updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( Bac
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest priceId a ->
-            case Untrusted.purchaseForm a of
-                Just purchaseForm ->
+            case ( Untrusted.purchaseForm a, model.ticketsEnabled ) of
+                ( Just purchaseForm, TicketsEnabled ) ->
                     case priceIdToProductId model priceId of
                         Just productId ->
                             let
@@ -279,7 +278,7 @@ updateFromFrontend sessionId clientId msg model =
                         _ ->
                             ( model, SubmitFormResponse (Err "Invalid product item, please refresh & try again.") |> Lamdera.sendToFrontend clientId )
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         CancelPurchaseRequest ->

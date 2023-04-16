@@ -22,7 +22,7 @@ import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
 import Tickets exposing (Ticket)
-import Types exposing (BackendModel, BackendMsg(..), EmailResult(..))
+import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
 
 
 backendModelEndpoint :
@@ -197,6 +197,22 @@ lamdera_handleEndpoints args model =
 
         "backend-model" ->
             LamderaRPC.handleEndpointJson backendModelEndpoint args model
+
+        "tickets-enabled" ->
+            ( LamderaRPC.ResultString "enabled"
+            , { model | ticketsEnabled = TicketsEnabled }
+            , Lamdera.broadcast (TicketsEnabledChanged TicketsEnabled)
+            )
+
+        "tickets-disabled" ->
+            let
+                ticketStatus =
+                    TicketsDisabled { adminMessage = "Ticket sales temporarily disabled" }
+            in
+            ( LamderaRPC.ResultString "enabled"
+            , { model | ticketsEnabled = ticketStatus }
+            , Lamdera.broadcast (TicketsEnabledChanged ticketStatus)
+            )
 
         _ ->
             ( LamderaRPC.ResultFailure <| Http.BadBody <| "Unknown endpoint " ++ args.endpoint, model, Cmd.none )
