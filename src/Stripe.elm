@@ -167,6 +167,7 @@ createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsor
                 [ ( "line_items[0][price]", Id.toString priceId )
                 , ( "line_items[0][quantity]", "1" )
                 , ( "mode", "payment" )
+                , ( "allow_promotion_codes", "true" )
 
                 -- Stripe expects seconds since epoch
                 , ( "expires_at", String.fromInt <| (Time.posixToMillis now // 1000) + (expiresInMinutes * 60) )
