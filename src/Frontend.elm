@@ -550,7 +550,7 @@ homepageView model =
                                         Element.none
                                 ]
                             ]
-                        , Element.paragraph [] [ Element.text ticket.description ]
+                        , Element.paragraph [] [ MarkdownThemed.renderFull ticket.description ]
                         , formView model productId priceId ticket
                         ]
 
