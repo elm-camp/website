@@ -220,7 +220,9 @@ updateLoaded msg model =
                     if purchaseable ticket.productId model then
                         case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
                             ( NotSubmitted _, Just validated ) ->
-                                ( model, Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated)) )
+                                ( { model | form = { form | submitStatus = Submitting } }
+                                , Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated))
+                                )
 
                             ( NotSubmitted _, Nothing ) ->
                                 ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
@@ -311,34 +313,6 @@ includesAccom productId =
 
     else
         True
-
-
-fontFace : Int -> String -> String
-fontFace weight name =
-    """
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: """ ++ String.fromInt weight ++ """;
-  font-stretch: normal;
-  font-display: swap;
-  src: url(/fonts/""" ++ name ++ """.ttf) format('truetype');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+2192, U+2713;
-}"""
-
-
-css : Html msg
-css =
-    Html.node "style"
-        []
-        [ Html.text <|
-            fontFace 800 "Figtree-ExtraBold"
-                ++ fontFace 700 "Figtree-Bold"
-                ++ fontFace 600 "Figtree-SemiBold"
-                ++ fontFace 500 "Figtree-Medium"
-                ++ fontFace 400 "Figtree-Regular"
-                ++ fontFace 300 "Figtree-Light"
-        ]
 
 
 colors =
@@ -445,7 +419,7 @@ view : FrontendModel -> Browser.Document FrontendMsg
 view model =
     { title = "Elm Camp"
     , body =
-        [ css
+        [ Theme.css
 
         -- , W.Styles.globalStyles
         -- , W.Styles.baseTheme
@@ -743,16 +717,25 @@ formView model productId priceId ticket =
                 (Theme.submitButtonAttributes (purchaseable ticket.productId model))
                 { onPress = Just (PressedSubmitForm productId priceId)
                 , label =
-                    Element.el
-                        [ Element.centerX ]
-                        (Element.text
+                    Element.paragraph
+                        [ Element.Font.center ]
+                        [ Element.text
                             (if purchaseable ticket.productId model then
-                                "Purchase"
+                                "Purchase "
 
                              else
                                 "Sold out!"
                             )
-                        )
+                        , case form.submitStatus of
+                            NotSubmitted pressedSubmit ->
+                                Element.none
+
+                            Submitting ->
+                                Element.el [ Element.moveDown 5 ] Theme.spinnerWhite
+
+                            SubmitBackendError err ->
+                                Element.none
+                        ]
                 }
 
         cancelButton =
