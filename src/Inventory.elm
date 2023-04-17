@@ -14,7 +14,7 @@ minCampTickets =
 
 
 roomReserve =
-    4
+    10
 
 
 venueCapacity =
