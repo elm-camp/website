@@ -728,7 +728,7 @@ formView model productId priceId ticket =
                                 "Purchase "
 
                              else
-                                "Sold out!"
+                                "Waitlist"
                             )
                         , case form.submitStatus of
                             NotSubmitted pressedSubmit ->
