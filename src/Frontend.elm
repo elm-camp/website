@@ -5,12 +5,10 @@ import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
-import Countdown
 import Dict
 import Element exposing (Element)
 import Element.Background
 import Element.Border
-import Element.Events
 import Element.Font
 import Element.Input
 import EmailAddress exposing (EmailAddress)
@@ -22,7 +20,6 @@ import Id exposing (Id)
 import Inventory
 import Json.Decode
 import Lamdera
-import List.Extra as List
 import MarkdownThemed
 import Product
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
@@ -39,8 +36,6 @@ import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
-import W.InputSlider
-import W.Styles
 
 
 app =
@@ -635,21 +630,6 @@ homepageView model =
                                     MarkdownThemed.renderFull <|
                                         """
 Missed out on the ticket you wanted? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the wait list."""
-                                , MarkdownThemed.renderFull <|
-                                    """
-## Ticket sales open in """
-                                        ++ (if Time.posixToMillis model.now /= 0 then
-                                                let
-                                                    launch =
-                                                        1681718400000
-                                                in
-                                                Countdown.secondsAsText ((launch - Time.posixToMillis model.now) // 1000)
-
-                                            else
-                                                ""
-                                           )
-                                        ++ """
-UTC 8AM Monday 17th April 2023"""
                                 ]
                             , Element.el contentAttributes content2
                             , Element.el contentAttributes content3
@@ -1082,7 +1062,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile model.isOrganiser (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"
@@ -1095,7 +1075,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop model.isOrganiser (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"

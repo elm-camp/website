@@ -71,8 +71,8 @@ dict =
         |> AssocList.fromList
 
 
-viewDesktop : Bool -> Bool -> msg -> Price -> Ticket -> Element msg
-viewDesktop isOrganiser ticketAvailable onPress price ticket =
+viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
+viewDesktop ticketAvailable onPress price ticket =
     Theme.panel []
         [ Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
@@ -80,27 +80,26 @@ viewDesktop isOrganiser ticketAvailable onPress price ticket =
         , Element.el
             [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
             (Element.text (Theme.priceText price))
-        , Theme.viewIf isOrganiser <|
-            Element.Input.button
-                (Theme.submitButtonAttributes ticketAvailable)
-                { onPress = Just onPress
-                , label =
-                    Element.el
-                        [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
-                        (Element.text
-                            (if ticketAvailable then
-                                "Select"
+        , Element.Input.button
+            (Theme.submitButtonAttributes ticketAvailable)
+            { onPress = Just onPress
+            , label =
+                Element.el
+                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
+                    (Element.text
+                        (if ticketAvailable then
+                            "Select"
 
-                             else
-                                "Sold out!"
-                            )
+                         else
+                            "Sold out!"
                         )
-                }
+                    )
+            }
         ]
 
 
-viewMobile : Bool -> Bool -> msg -> Price -> Ticket -> Element msg
-viewMobile isOrganiser ticketAvailable onPress { currency, amount } ticket =
+viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
+viewMobile ticketAvailable onPress { currency, amount } ticket =
     Theme.panel []
         [ Element.row
             [ Element.spacing 16 ]
@@ -116,20 +115,19 @@ viewMobile isOrganiser ticketAvailable onPress { currency, amount } ticket =
                 [ Element.width (Element.px 80), Element.alignTop ]
                 { src = ticket.image, description = "Illustration of a camp" }
             ]
-        , Theme.viewIf isOrganiser <|
-            Element.Input.button
-                (Theme.submitButtonAttributes ticketAvailable)
-                { onPress = Just onPress
-                , label =
-                    Element.el
-                        [ Element.centerX ]
-                        (Element.text
-                            (if ticketAvailable then
-                                "Select"
+        , Element.Input.button
+            (Theme.submitButtonAttributes ticketAvailable)
+            { onPress = Just onPress
+            , label =
+                Element.el
+                    [ Element.centerX ]
+                    (Element.text
+                        (if ticketAvailable then
+                            "Select"
 
-                             else
-                                "Sold out!"
-                            )
+                         else
+                            "Sold out!"
                         )
-                }
+                    )
+            }
         ]
