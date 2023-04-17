@@ -574,7 +574,7 @@ homepageView model =
                                         Element.none
                                 ]
                             ]
-                        , Element.paragraph [] [ Element.text ticket.description ]
+                        , Element.paragraph [] [ MarkdownThemed.renderFull ticket.description ]
                         , formView model productId priceId ticket
                         ]
 
@@ -1404,9 +1404,9 @@ accessibilityContent =
 
 ## The venue
 
-**Dallund Slot**
-Dallundvej 63
-5471 Søndersø
+**Dallund Slot**  
+Dallundvej 63  
+5471 Søndersø  
 Denmark
 
 [Google Maps](https://goo.gl/maps/1WGiHRc7NaNimBzx5)
