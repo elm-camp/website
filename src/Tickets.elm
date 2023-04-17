@@ -91,7 +91,7 @@ viewDesktop ticketAvailable onPress price ticket =
                             "Select"
 
                          else
-                            "Sold out!"
+                            "Waitlist"
                         )
                     )
             }
@@ -126,7 +126,7 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                             "Select"
 
                          else
-                            "Sold out!"
+                            "Waitlist"
                         )
                     )
             }
