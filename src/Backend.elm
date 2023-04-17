@@ -169,7 +169,7 @@ update msg model =
                         Just expired ->
                             ( { model
                                 | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
-                                , expiredOrders = AssocList.insert stripeSessionId expired model.pendingOrder
+                                , expiredOrders = AssocList.insert stripeSessionId expired model.expiredOrders
                               }
                             , Cmd.none
                             )
@@ -178,7 +178,7 @@ update msg model =
                             ( model, Cmd.none )
 
                 Err error ->
-                    ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error) )
+                    ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error ++ " stripeSessionId: " ++ Id.toString stripeSessionId) )
 
         ConfirmationEmailSent stripeSessionId result ->
             case AssocList.get stripeSessionId model.orders of
