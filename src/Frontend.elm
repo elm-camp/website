@@ -1272,33 +1272,38 @@ Problem with something above? Get in touch with the team at [hello@elm.camp](mai
 
 sponsors : { window | width : Int } -> Element msg
 sponsors window =
-    [ { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
-    , { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
-    , { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
-    , { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
-    , { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
-    , { image = "cookiewolf-logo.png", url = "", width = 220 }
-    ]
-        |> List.map
-            (\{ image, url, width } ->
-                Element.newTabLink
-                    [ Element.width Element.fill ]
-                    { url = url
-                    , label =
-                        Element.image
-                            [ Element.width
-                                (Element.px
-                                    (if window.width < 800 then
-                                        toFloat width * 0.7 |> round
+    let
+        asImg { image, url, width } =
+            Element.newTabLink
+                [ Element.width Element.fill ]
+                { url = url
+                , label =
+                    Element.image
+                        [ Element.width
+                            (Element.px
+                                (if window.width < 800 then
+                                    toFloat width * 0.7 |> round
 
-                                     else
-                                        width
-                                    )
+                                 else
+                                    width
                                 )
-                            ]
-                            { src = "/sponsors/" ++ image, description = url }
-                    }
-            )
+                            )
+                        ]
+                        { src = "/sponsors/" ++ image, description = url }
+                }
+    in
+    [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
+    , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
+    , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
+    , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
+    , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
+    , Element.row [ Element.spacing 10, Element.width Element.fill ]
+        [ asImg { image = "elm-weekly.svg", url = "https://www.elmweekly.nl", width = 60 }
+        , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
+        ]
+    , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
+    ]
+        -- |> List.map asImg
         |> Element.wrappedRow [ Element.spacing 32 ]
 
 
