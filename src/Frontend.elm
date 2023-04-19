@@ -624,12 +624,12 @@ homepageView model =
                                     """
 # Tickets
 """
-                                , -- We'll open ticket sales later
-                                  ticketCardsView model
-                                , Theme.viewIf (Inventory.anySoldOut model.slotsRemaining) <|
-                                    MarkdownThemed.renderFull <|
-                                        """
-Missed out on the ticket you wanted? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the wait list."""
+                                , ticketCardsView model
+
+                                -- , Theme.viewIf (Inventory.anySoldOut model.slotsRemaining) <|
+                                --     MarkdownThemed.renderFull <|
+                                --         """
+                                -- Missed out on the ticket you wanted? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the wait list."""
                                 ]
                             , Element.el contentAttributes content2
                             , Element.el contentAttributes content3
