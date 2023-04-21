@@ -641,11 +641,9 @@ homepageView model =
 # Tickets
 """
                                 , ticketCardsView model
-
-                                -- , Theme.viewIf (Inventory.anySoldOut model.slotsRemaining) <|
-                                --     MarkdownThemed.renderFull <|
-                                --         """
-                                -- Missed out on the ticket you wanted? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the wait list."""
+                                , Theme.viewIf (Inventory.allSoldOut model.slotsRemaining) <|
+                                    MarkdownThemed.renderFull <|
+                                        """**Missed out on a ticket? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the Campfire Ticket wait list.**"""
                                 ]
                             , Element.el contentAttributes content2
                             , Element.el contentAttributes content3

@@ -90,6 +90,9 @@ viewDesktop ticketAvailable onPress price ticket =
                         (if ticketAvailable then
                             "Select"
 
+                         else if ticket.name == "Campfire Ticket" then
+                            "Waitlist"
+
                          else
                             "Sold out!"
                         )
@@ -124,6 +127,9 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                     (Element.text
                         (if ticketAvailable then
                             "Select"
+
+                         else if ticket.name == "Campfire Ticket" then
+                            "Waitlist"
 
                          else
                             "Sold out!"

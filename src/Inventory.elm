@@ -80,6 +80,11 @@ anySoldOut { campTicket, couplesCampTicket, campfireTicket } =
     campTicket == False || couplesCampTicket == False || campfireTicket == False
 
 
+allSoldOut : TicketAvailability -> Bool
+allSoldOut { campTicket, couplesCampTicket, campfireTicket } =
+    campTicket == False && couplesCampTicket == False && campfireTicket == False
+
+
 isCampfireTicket : { order | form : PurchaseFormValidated } -> Bool
 isCampfireTicket order =
     case order.form of
