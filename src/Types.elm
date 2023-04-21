@@ -46,6 +46,7 @@ type alias LoadedModel =
     , slotsRemaining : TicketAvailability
     , isOrganiser : Bool
     , ticketsEnabled : TicketsEnabled
+    , backendModel : Maybe BackendModel
     }
 
 
@@ -295,6 +296,7 @@ type FrontendMsg
 type ToBackend
     = SubmitFormRequest (Id PriceId) (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
+    | AdminInspect String
 
 
 type BackendMsg
@@ -319,6 +321,7 @@ type ToFrontend
     | SubmitFormResponse (Result String (Id StripeSessionId))
     | SlotRemainingChanged TicketAvailability
     | TicketsEnabledChanged TicketsEnabled
+    | AdminInspectResponse BackendModel
 
 
 type TicketsEnabled

@@ -1,5 +1,6 @@
 module Frontend exposing (app)
 
+import Admin
 import AssocList
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -92,6 +93,14 @@ init url key =
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
 
+            AdminRoute passM ->
+                case passM of
+                    Just pass ->
+                        Lamdera.sendToBackend (AdminInspect pass)
+
+                    Nothing ->
+                        Cmd.none
+
             _ ->
                 Cmd.none
         ]
@@ -141,6 +150,7 @@ tryLoading loadingModel =
                 , slotsRemaining = slotsRemaining
                 , isOrganiser = loadingModel.isOrganiser
                 , ticketsEnabled = ticketsEnabled
+                , backendModel = Nothing
                 }
             , Cmd.none
             )
@@ -292,6 +302,9 @@ updateFromBackendLoaded msg model =
 
         TicketsEnabledChanged ticketsEnabled ->
             ( { model | ticketsEnabled = ticketsEnabled }, Cmd.none )
+
+        AdminInspectResponse backendModel ->
+            ( { model | backendModel = Just backendModel }, Cmd.none )
 
 
 purchaseable productId model =
@@ -489,6 +502,9 @@ loadedView model =
                     ]
                 , footer
                 ]
+
+        AdminRoute passM ->
+            Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->
             Element.column

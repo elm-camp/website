@@ -13,6 +13,7 @@ type Route
     = HomepageRoute
     | AccessibilityRoute
     | CodeOfConductRoute
+    | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
     | PaymentCancelRoute
 
@@ -23,6 +24,7 @@ decode url =
         [ Url.Parser.top |> Url.Parser.map HomepageRoute
         , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
+        , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
         ]
@@ -34,6 +36,11 @@ parseEmail =
     Url.Parser.Query.map
         (Maybe.andThen EmailAddress.fromString)
         (Url.Parser.Query.string Stripe.emailAddressParameter)
+
+
+parseAdminPass : Url.Parser.Query.Parser (Maybe String)
+parseAdminPass =
+    Url.Parser.Query.string "pass"
 
 
 parseStripeSessionId : Url.Parser.Query.Parser (Maybe (Id StripeSessionId))
@@ -54,6 +61,9 @@ encode route =
             CodeOfConductRoute ->
                 [ "code-of-conduct" ]
 
+            AdminRoute passM ->
+                [ "admin" ]
+
             PaymentSuccessRoute _ ->
                 [ Stripe.successPath ]
 
@@ -68,6 +78,9 @@ encode route =
                 []
 
             CodeOfConductRoute ->
+                []
+
+            AdminRoute passM ->
                 []
 
             PaymentSuccessRoute maybeEmailAddress ->

@@ -301,6 +301,13 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        AdminInspect pass ->
+            if pass == Env.adminPassword then
+                ( model, Lamdera.sendToFrontend clientId (AdminInspectResponse model) )
+
+            else
+                ( model, Cmd.none )
+
 
 sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)
 sessionIdToStripeSessionId sessionId model =
