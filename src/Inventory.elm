@@ -18,7 +18,7 @@ roomReserve =
 
 
 venueCapacity =
-    56
+    50
 
 
 maxRoomSlots =
