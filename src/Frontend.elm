@@ -1311,10 +1311,27 @@ sponsors window =
     , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
     , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
     , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
-    , Element.row [ Element.spacing 10, Element.width Element.fill ]
-        [ asImg { image = "elm-weekly.svg", url = "https://www.elmweekly.nl", width = 60 }
-        , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
-        ]
+    , asImg { image = "bekk.svg", url = "https://www.bekk.no/", width = 200 }
+    , Element.newTabLink
+        [ Element.width Element.fill ]
+        { url = "https://www.elmweekly.nl"
+        , label =
+            Element.row [ Element.spacing 10, Element.width (Element.px 200) ]
+                [ Element.image
+                    [ Element.width
+                        (Element.px
+                            (if window.width < 800 then
+                                toFloat 60 * 0.7 |> round
+
+                             else
+                                60
+                            )
+                        )
+                    ]
+                    { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
+                , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
+                ]
+        }
     , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
     ]
         -- |> List.map asImg
