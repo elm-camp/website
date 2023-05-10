@@ -1440,7 +1440,7 @@ There are only a few holiday homes in and around Søndersø, but Odense is a maj
 
 ## Local amenities
 
-Food is provided on site, but if you forgot to pack a toothbrush or need that gum you like, Søndersø offers a few shops.
+Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, Søndersø offers a few shops.
 
 ### Supermarkets
 
