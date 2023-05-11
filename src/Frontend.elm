@@ -1455,6 +1455,20 @@ Dallund Castle itself offers 24 rooms, so we suggest considering additional acco
 
 There are only a few holiday homes in and around Søndersø, but Odense is a major town with several hotels and apartments to choose from. We are also looking into options for literal outdoor camping in the vicinity of the venue if there are interested attendees.
 
+## Local amenities
+
+Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, Søndersø offers a few shops.
+
+### Supermarkets
+
+- SuperBrugsen (7 am—8 pm), Toftekær 4
+- Rema 1000 (7 am—9 pm), Odensevej 3
+- Netto (7 am—10 pm), Vesterled 45
+
+### Health
+
+- Pharmacy ([Søndersø Apotek](https://soendersoeapotek.a-apoteket.dk/)) (9 am—5:30 pm), near SuperBrugsen supermarket
+
 ## Accessibility
 
 ### Not step free.
