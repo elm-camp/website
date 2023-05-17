@@ -481,6 +481,17 @@ loadedView model =
         HomepageRoute ->
             homepageView model
 
+        UnconferenceFormatRoute ->
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
+                [ header { window = model.window, isCompact = True }
+                , Element.column
+                    (Element.padding 20 :: contentAttributes)
+                    [ unconferenceFormatContent
+                    ]
+                , footer
+                ]
+
         AccessibilityRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
@@ -1336,6 +1347,49 @@ sponsors window =
     ]
         -- |> List.map asImg
         |> Element.wrappedRow [ Element.spacing 32 ]
+
+
+unconferenceFormatContent : Element msg
+unconferenceFormatContent =
+    """
+# Unconference Format
+
+### First and foremost, there are no unchangeable rules.
+### We are doing this together. The following are intended as collective starting points.
+
+## Plan
+- Invite submissions 2 weeks before (Trello we can double as archive and place to make schedule?)
+- Block out 2 pre-planned sessions (the unkeynotes)
+- Have 3 tracks - if we get too many submissions, allow for 4
+- Offer 2 lengths (15 what are they 30)
+- Keep tracks in sync so people can move easily
+- Have a slot for announcements (5 min on stage)
+- Pitch sessions at start of each day (1 min each)
+- Have a visible schedule (online & on a screen)
+- Give the rooms / session locations easy to remember names
+- Make session end very obvious & maybe give nearly over warnings in the rooms (Mario has timer app we’ll put laptops in rooms)
+- Some kind of collective scheduling of sessions (morning & lunch time?) vote & move stuff around?
+- Leave doors open to make it easier to flow
+- Schedule in breaks
+- Invite people to come up with ways to document / share our discussions. specific things like drone. or blog.
+- Schedule in housekeeping & questions
+- Have one of us available (out of session?) at all times
+
+## Guidelines
+- Types of sessions. Do we want to explicitly state a theme or ban subjects? Framing appropriate do no harm - not negatively framed
+- Being inclusive
+- Expectation of moving between session. Warn people - if you find yourself in an empty room, migrate!
+- Frame as a gathering of people having open conversations
+- If you want to talk about something and someone here wants to talk with you about it, we'll try to make space for that to happen.
+- Do we want to ensure one of us is in every session to be there in case something needs deciding? If possible but not essential.
+- Expect the unexpected - but we will have some unchangeble infrastructure:
+    - people can rely on confidentiality, sharing, photos, being open and not held back by the thought of anything that happens or is said will be made public.
+    - Happens here. Stays here. by default? Share in these 4? specific ways and if one makes you uncomfortable but obvious to opt out. 
+    - Assume people are comfortable saying stuff here because it’s not going on twitter so if you do want to publish, get permission
+- Think discussion - talk with not talk at a simple 20-second description of what you think would be interesting to talk about and why. 
+- A simple, open question is best. organisers want to be involved as much as possible, we’re just one of you
+    """
+        |> MarkdownThemed.renderFull
 
 
 codeOfConductContent : Element msg
