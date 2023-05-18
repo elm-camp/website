@@ -1354,40 +1354,49 @@ unconferenceFormatContent =
     """
 # Unconference Format
 
-### First and foremost, there are no unchangeable rules.
-### We are doing this together. The following are intended as collective starting points.
+## First and foremost, there are no unchangeable rules, with the exception of the "rule of two feet".
+### It is expected that people move freely between sessions at any time. If you are no longer interested in listening or contributing to the conversation, find another one.
 
-## Plan
-- Invite submissions 2 weeks before (Trello we can double as archive and place to make schedule?)
-- Block out 2 pre-planned sessions (the unkeynotes)
-- Have 3 tracks - if we get too many submissions, allow for 4
-- Offer 2 lengths (15 what are they 30)
+## We are doing this together.
+## The following are intended as collective starting points.
+
+# Plan
+
+## Before Elm Camp
+- Invite submissions 2 weeks before Elm Camp. Probably in the form of cards on a Trello board which can be a place for conversations and serve as a schedule during the unconference and an archive after.
+- Block out 2 pre-planned sessions (the unkeynotes at the start and end of Elm Camp)
+- Start with 3 tracks. If we get too many submissions, we'll add more.
+- Sessions will be offered in 15 and 30 minute blocks.
+- Invite people to come up with ways to document / share our discussions. specific things like drone. or blog.
+
+## During Elm Camp
 - Keep tracks in sync so people can move easily
-- Have a slot for announcements (5 min on stage)
+- Block out a slot for announcements (5 min each on stage)
 - Pitch sessions at start of each day (1 min each)
-- Have a visible schedule (online & on a screen)
+- Have a visible schedule (online & on a screen in the venue)
 - Give the rooms / session locations easy to remember names
-- Make session end very obvious & maybe give nearly over warnings in the rooms (Mario has timer app we’ll put laptops in rooms)
+- Make session end very obvious, so they can't run over
 - Some kind of collective scheduling of sessions (morning & lunch time?) vote & move stuff around?
 - Leave doors open to make it easier to flow
 - Schedule in breaks
-- Invite people to come up with ways to document / share our discussions. specific things like drone. or blog.
 - Schedule in housekeeping & questions
-- Have one of us available (out of session?) at all times
+- Make sure organisers are easy to find and happy to help
 
-## Guidelines
-- Types of sessions. Do we want to explicitly state a theme or ban subjects? Framing appropriate do no harm - not negatively framed
-- Being inclusive
-- Expectation of moving between session. Warn people - if you find yourself in an empty room, migrate!
-- Frame as a gathering of people having open conversations
+# Guidelines
+
+## Be inclusive
+- There is no restriction or theme on the subject for proposed topics, except that they should be with positive intent. Think do no harm and don't frame your session negatively. A simple, open question is best.
 - If you want to talk about something and someone here wants to talk with you about it, we'll try to make space for that to happen.
-- Do we want to ensure one of us is in every session to be there in case something needs deciding? If possible but not essential.
-- Expect the unexpected - but we will have some unchangeble infrastructure:
-    - people can rely on confidentiality, sharing, photos, being open and not held back by the thought of anything that happens or is said will be made public.
-    - Happens here. Stays here. by default? Share in these 4? specific ways and if one makes you uncomfortable but obvious to opt out. 
-    - Assume people are comfortable saying stuff here because it’s not going on twitter so if you do want to publish, get permission
-- Think discussion - talk with not talk at a simple 20-second description of what you think would be interesting to talk about and why. 
-- A simple, open question is best. organisers want to be involved as much as possible, we’re just one of you
+- Think of it as a gathering of people having open conversations
+- Think discussion - Talk with, not talk at. Share a 20-second description of what you think would be interesting to talk about and why. 
+- Organisers want to be involved as much as possible, we’re one of you
+- People will be freely moving in and out of sessions. If you find yourself in an empty room, migrate.
+- We will have some unchangeble infrastructure, to keep the environment positive, but outside of that, if you want to change something, feel free to make it happen.
+
+## What happens here, stays here, by default.
+- People can rely on confidentiality, being open and not held back by the thought of anything that happens or is said will be made public.
+- Assume people are comfortable saying stuff here because it’s not going on twitter so if you do want to publish something during or after Elm Camp, get permission
+- We will make it possible to delibrately share outside of Elm Camp in specific ways. If one of them makes you uncomfortable, it will be obvious how to opt out.
     """
         |> MarkdownThemed.renderFull
 
