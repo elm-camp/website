@@ -307,6 +307,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Cmd.none )
 
 
+purchaseable : String -> { a | slotsRemaining : { b | campfireTicket : Bool, campTicket : Bool, couplesCampTicket : Bool } } -> Bool
 purchaseable productId model =
     if productId == Product.ticket.campFire then
         model.slotsRemaining.campfireTicket
