@@ -695,7 +695,10 @@ footer =
                 { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
             , Element.link
                 []
-                { url = Route.encode AccessibilityRoute, label = Element.text "Venue & Accessibility" }
+                { url = Route.encode UnconferenceFormatRoute, label = Element.text "Unconference Guidelines" }
+            , Element.link
+                []
+                { url = Route.encode AccessibilityRoute, label = Element.text "Venue & Access" }
             ]
         )
 
