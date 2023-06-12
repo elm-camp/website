@@ -1357,6 +1357,8 @@ unconferenceFormatContent =
 ## First and foremost, there are no unchangeable rules, with the exception of the "rule of two feet".
 ### It is expected that people move freely between sessions at any time. If you are no longer interested in listening or contributing to the conversation, find another one.
 
+> You know how at a conference, the best discussions often occur when people are relaxed during coffee breaks? That's the whole idea of an unconference: it's like a long, informal coffee break where everyone can contribute to the conversation. The participants drive the agenda. Any structure that exists at an unconference is just there to kick things off and to help the conversations flow smoothly, not to restrict or dictate the topics.
+
 ## We are doing this together.
 ## The following are intended as collective starting points.
 
