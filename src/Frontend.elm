@@ -1370,17 +1370,16 @@ unconferenceFormatContent =
 - We encourage attendees to think about how they might like to document or share our discussions with the community after Elm Camp. e.g. blog posts, graphics, videos
 
 ## During Elm Camp
-- Keep tracks in sync so people can move easily
-- Block out a slot for announcements (5 min each on stage)
-- Pitch sessions at start of each day (1 min each)
-- Have a visible schedule (online & on a screen in the venue)
-- Give the rooms / session locations easy to remember names
-- Make session end very obvious, so they can't run over
-- Some kind of collective scheduling of sessions (morning & lunch time?) vote & move stuff around?
-- Leave doors open to make it easier to flow
-- Schedule in breaks
-- Schedule in housekeeping & questions
-- Make sure organisers are easy to find and happy to help
+
+- All tracks will run in sync to allow for easy switching between sessions.
+- We arrange collective scheduling sessions every morning, where together we pitch, vote for and schedule sessions.
+- We have reserved time for public announcements. You'll have 5 minutes on stage if needed.
+- The schedule will be clearly displayed both online and at the venue for easy reference.
+- Session locations have distinctive names for effortless navigation.
+- Session endings will be made clear to prevent overruns.
+- Doors will be kept open to make moving along easy.
+- Breaks are scheduled to provide downtime.
+- The organisers will be readily available and identifiable for any assistance needed.
 
 # Guidelines
 
