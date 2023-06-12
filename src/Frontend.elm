@@ -1395,7 +1395,6 @@ unconferenceFormatContent =
 ## What happens here, stays here, by default.
 - People can rely on confidentiality, being open and not held back by the thought of anything that happens or is said will be made public.
 - Assume people are comfortable saying stuff here because it’s not going on twitter so if you do want to quote someone during or after Elm Camp, please get their permission.
-- We will make it possible to delibrately share outside of Elm Camp in specific ways. If one of them makes you uncomfortable, it will be obvious how to opt out.
     """
         |> MarkdownThemed.renderFull
 
