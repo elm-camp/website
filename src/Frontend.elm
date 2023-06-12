@@ -1363,7 +1363,7 @@ unconferenceFormatContent =
 # Plan
 
 ## Before Elm Camp
--  People can propose presentations 2 weeks before Elm camp. Probably in the form of cards on a Trello board which can be a place for conversations and serve as a schedule during the unconference and an archive after.
+- People can propose presentations 2 weeks before Elm camp. Probably in the form of cards on a Trello board which can be a place for conversations and serve as a schedule during the unconference and an archive after.
 - Block out 2 pre-planned sessions (the unkeynotes at the start and end of Elm Camp)
 - Start with 3 tracks. If we get too many submissions, we'll add more.
 - Sessions will be offered in 15 and 30 minute blocks.
