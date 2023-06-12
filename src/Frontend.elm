@@ -1385,7 +1385,7 @@ unconferenceFormatContent =
 
 ## Be inclusive
 - There is no restriction or theme on the subject for proposed topics, except that they should be with positive intent. Think do no harm and don't frame your session negatively. A simple, open question is best.
-- If you want to talk about something and someone here wants to talk with you about it, we'll try to make space for that to happen.
+- If you want to talk about something and someone here wants to talk with you about it, grab some space and make it happen. You don't need permission, but keep it open to everyone and not disrupt running sessions.
 - Think of it as a gathering of people having open conversations
 - Think discussion - Talk with, not talk at. Share a 20-second description of what you think would be interesting to talk about and why. 
 - Organisers want to be involved as much as possible, we’re one of you
