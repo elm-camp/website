@@ -1388,7 +1388,7 @@ unconferenceFormatContent =
 - If you want to talk about something and someone here wants to talk with you about it, grab some space and make it happen. You don't need permission, but keep it open to everyone and not disrupt running sessions.
 - Think of it as a gathering of people having open conversations
 - Think discussion - Talk with, not talk at. Share a 20-second description of what you think would be interesting to talk about and why. 
-- Organisers want to be involved as much as possible, we’re one of you
+- As much as possible, the organisers want to be normal session participants. We’re one of you.
 - People will be freely moving in and out of sessions. If you find yourself in an empty room, migrate.
 - We will have some unchangeble infrastructure, to keep the environment positive, but outside of that, if you want to change something, feel free to make it happen.
 
