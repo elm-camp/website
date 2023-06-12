@@ -1367,7 +1367,7 @@ unconferenceFormatContent =
 - Block out 2 pre-planned sessions (the unkeynotes at the start and end of Elm Camp)
 - Start with 3 tracks. If we get too many submissions, we'll add more.
 - Sessions will be offered in 15 and 30 minute blocks.
-- Invite people to come up with ways to document / share our discussions. specific things like drone. or blog.
+- We encourage attendees to think about how they might like to document or share our discussions with the community after Elm Camp. e.g. blog posts, graphics, videos
 
 ## During Elm Camp
 - Keep tracks in sync so people can move easily
