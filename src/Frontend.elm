@@ -1497,9 +1497,9 @@ accessibilityContent =
 
 ## The venue
 
-**Dallund Slot**
-Dallundvej 63
-5471 Søndersø
+**Dallund Slot**<br/>
+Dallundvej 63<br/>
+5471 Søndersø<br/>
 Denmark
 
 [Google Maps](https://goo.gl/maps/1WGiHRc7NaNimBzx5)
