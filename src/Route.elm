@@ -11,6 +11,7 @@ import Url.Parser.Query
 
 type Route
     = HomepageRoute
+    | UnconferenceFormatRoute
     | AccessibilityRoute
     | CodeOfConductRoute
     | AdminRoute (Maybe String)
@@ -22,6 +23,7 @@ decode : Url -> Route
 decode url =
     Url.Parser.oneOf
         [ Url.Parser.top |> Url.Parser.map HomepageRoute
+        , Url.Parser.s "unconference-format" |> Url.Parser.map UnconferenceFormatRoute
         , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
@@ -55,6 +57,9 @@ encode route =
             HomepageRoute ->
                 []
 
+            UnconferenceFormatRoute ->
+                [ "unconference-format" ]
+
             AccessibilityRoute ->
                 [ "accessibility" ]
 
@@ -72,6 +77,9 @@ encode route =
         )
         (case route of
             HomepageRoute ->
+                []
+
+            UnconferenceFormatRoute ->
                 []
 
             AccessibilityRoute ->
