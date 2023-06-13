@@ -1378,7 +1378,7 @@ unconferenceFormatContent =
 
 - People can start proposing presentations before Elm camp in the form of cards on a Trello board which will be a place for conversations and serve as a schedule during the unconference and an archive after.
 - There are 2 pre-planned sessions (the unkeynotes at the start and end of Elm Camp)
-- We'll start with 3 tracks. If we get too many submissions, we can decide to add more.
+- We'll start with 3 tracks. If needed, more concurrent sessions may be scheduled during the unconference.
 - Sessions will be offered in 15 and 30 minute blocks.
 - We encourage attendees to think about how they might like to document or share our discussions with the community after Elm Camp. e.g. blog posts, graphics, videos
 
