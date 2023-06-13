@@ -1408,7 +1408,6 @@ unconferenceFormatContent =
 
 ## What happens here, stays here, by default.
 
-- People can rely on confidentiality, being open and not held back by the thought of anything that happens or is said will be made public.
 - Assume people are comfortable saying stuff here because it's not going on twitter, so if you do want to quote someone during or after Elm Camp, please get their permission.
 - Any outputs from the event should focus on the ideas, initiatives and projects discussed, as opposed to personal opinons or statements by individuals.
     """
