@@ -124,6 +124,7 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "width"
                 |> Markdown.Html.withOptionalAttribute "maxwidth"
                 |> Markdown.Html.withOptionalAttribute "bg"
+            , Markdown.Html.tag "br" (\_ -> html <| Html.br [] [])
             ]
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
