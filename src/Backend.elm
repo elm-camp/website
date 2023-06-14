@@ -364,4 +364,4 @@ errorEmail errorMessage =
 
 elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
-    Unsafe.emailAddress "hello@elm.camp"
+    Unsafe.emailAddress "team@elm.camp"

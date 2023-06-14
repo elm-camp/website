@@ -655,7 +655,7 @@ homepageView model =
                                 , ticketCardsView model
                                 , Theme.viewIf (Inventory.allSoldOut model.slotsRemaining) <|
                                     MarkdownThemed.renderFull <|
-                                        """**Missed out on a ticket? Send an email to [hello@elm.camp](mailto:hello@elm.camp) and we'll add you to the Campfire Ticket wait list.**"""
+                                        """**Missed out on a ticket? Send an email to [team@elm.camp](mailto:team@elm.camp) and we'll add you to the Campfire Ticket wait list.**"""
                                 ]
                             , Element.el contentAttributes content2
                             , Element.el contentAttributes content3
@@ -896,7 +896,7 @@ grantApplicationCopy =
     """
 If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
-Please apply by sending an email to [hello@elm.camp](mailto:hello@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
+Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
 
 All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
 """
@@ -1251,7 +1251,7 @@ content3 =
 
 Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
 
-All levels of contribution are appreciated and acknowledged. Get in touch with the team at [hello@elm.camp](mailto:hello@elm.camp).
+All levels of contribution are appreciated and acknowledged. Get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
 
 ## Bronze - less than €1000 EUR
 
@@ -1295,7 +1295,7 @@ You will make it possible for a student and/or underprivileged community member 
 
 # Something else?
 
-Problem with something above? Get in touch with the team at [hello@elm.camp](mailto:hello@elm.camp)."""
+Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
         |> MarkdownThemed.renderFull
 
 
@@ -1463,7 +1463,7 @@ If you have any concerns when planning, during or after your session, please get
 
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
 
-* Email the organiser team: [hello@elm.camp](mailto:hello@elm.camp)
+* Email the organiser team: [team@elm.camp](mailto:team@elm.camp)
 * Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord](https://discord.gg/QeZDXJrN78): Katja#0091
 
 ## How we handle Code of Conduct issues
@@ -1567,7 +1567,6 @@ Food and drinks are available on site, but if you forgot to pack a toothbrush or
 
 * The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
 * We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-* We hope to stream or record at least some of the content
 * We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
 
 ## Contacting the organisers
@@ -1593,6 +1592,6 @@ contactDetails : String
 contactDetails =
     """
 * Elmcraft Discord: [#elm-camp-23](https://discord.gg/QeZDXJrN78) channel or DM Katja#0091
-* Email: [hello@elm.camp](mailto:hello@elm.camp)
+* Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """
