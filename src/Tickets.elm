@@ -55,7 +55,7 @@ campfireTicket =
     , description = """
 Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included.
 
-• [Nearby accommodation options](/accessibility)
+• [Nearby accommodation options](/venue-and-access)
 • [Coordinate with other attendees](https://discord.gg/QeZDXJrN78)
 """
     , image = "/product1.webp"

@@ -12,7 +12,7 @@ import Url.Parser.Query
 type Route
     = HomepageRoute
     | UnconferenceFormatRoute
-    | AccessibilityRoute
+    | VenueAndAccessRoute
     | CodeOfConductRoute
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
@@ -24,7 +24,7 @@ decode url =
     Url.Parser.oneOf
         [ Url.Parser.top |> Url.Parser.map HomepageRoute
         , Url.Parser.s "unconference-format" |> Url.Parser.map UnconferenceFormatRoute
-        , Url.Parser.s "accessibility" |> Url.Parser.map AccessibilityRoute
+        , Url.Parser.s "venue-and-access" |> Url.Parser.map VenueAndAccessRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
@@ -60,8 +60,8 @@ encode route =
             UnconferenceFormatRoute ->
                 [ "unconference-format" ]
 
-            AccessibilityRoute ->
-                [ "accessibility" ]
+            VenueAndAccessRoute ->
+                [ "venue-and-access" ]
 
             CodeOfConductRoute ->
                 [ "code-of-conduct" ]
@@ -82,7 +82,7 @@ encode route =
             UnconferenceFormatRoute ->
                 []
 
-            AccessibilityRoute ->
+            VenueAndAccessRoute ->
                 []
 
             CodeOfConductRoute ->

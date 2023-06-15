@@ -493,13 +493,13 @@ loadedView model =
                 , footer
                 ]
 
-        AccessibilityRoute ->
+        VenueAndAccessRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
                 , Element.column
                     (Element.padding 20 :: contentAttributes)
-                    [ accessibilityContent
+                    [ venueAccessContent
                     ]
                 , footer
                 ]
@@ -699,7 +699,7 @@ footer =
                 { url = Route.encode UnconferenceFormatRoute, label = Element.text "Unconference Guidelines" }
             , Element.link
                 []
-                { url = Route.encode AccessibilityRoute, label = Element.text "Venue & Access" }
+                { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
             ]
         )
 
@@ -1225,7 +1225,7 @@ Dallund Castle itself offers 24 rooms, additional accommodation can be found in 
 
 All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option.
 
-More details can be found on our [venue & accessibility page](/accessibility).
+More details can be found on our [venue & access page](/venue-and-access).
 
 # Organisers
 
@@ -1358,7 +1358,7 @@ unconferenceFormatContent =
     """
 # Unconference Format
 
-## First and foremost, there are no unchangeable rules, with the exception of the "rule of two feet".
+## First and foremost, there are no unchangeable rules, with the exception of the "rule of two feet":
 ### It is expected that people move freely between sessions at any time. If you are no longer interested in listening or contributing to the conversation, find another one.
 
 <br/>
@@ -1487,8 +1487,8 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
         |> MarkdownThemed.renderFull
 
 
-accessibilityContent : Element msg
-accessibilityContent =
+venueAccessContent : Element msg
+venueAccessContent =
     Element.column
         []
         [ """
