@@ -1404,7 +1404,7 @@ unconferenceFormatContent =
 - Think discussion: talk _with_, not talk _at_. Share a 20-second description of what you think would be interesting to talk about and why.
 - As much as possible, the organisers want to be normal session participants. We're one of you.
 - People will be freely moving in and out of sessions. If you find yourself in an empty room, migrate.
-- We will have some unchangeble infrastructure, to keep the environment positive, but outside of that, if you want to change something, feel free to make it happen.
+- The event has some fixed infrastructure to keep the environment positive. But outside of that if you want to change something, feel free to make it happen.
 
 ## What happens here, stays here, by default.
 
