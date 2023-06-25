@@ -557,7 +557,7 @@ loadedView model =
                 ]
 
         LiveScheduleRoute ->
-            LiveSchedule.view model.now
+            LiveSchedule.view model
 
 
 ticketsHtmlId =

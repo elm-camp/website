@@ -3,6 +3,7 @@ module LiveSchedule exposing (..)
 import Duration
 import Element exposing (Element)
 import Element.Background
+import Element.Font
 import List.Extra
 import Quantity
 import Time
@@ -119,69 +120,122 @@ remainingEvents time =
             ( Nothing, [] )
 
 
-view : Time.Posix -> Element msg
-view time =
-    case remainingEvents (Duration.addTo day29 (Duration.hours 10.1)) of
-        ( Just current, next :: _ ) ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
-                [ Element.row
-                    [ Element.width Element.fill ]
-                    [ Element.text "Currently: In-session"
-                    , Element.text "4min left"
+fontSize : Float -> { width : Int, height : Int } -> Element.Attribute msg
+fontSize size window =
+    size * toFloat window.width / 1920 |> round |> Element.Font.size
+
+
+spacing : Float -> { width : Int, height : Int } -> Element.Attribute msg
+spacing size window =
+    size * toFloat window.width / 1920 |> round |> Element.spacing
+
+
+padding : Float -> { width : Int, height : Int } -> Element.Attribute msg
+padding size window =
+    size * toFloat window.width / 1920 |> round |> Element.padding
+
+
+view : { a | now : Time.Posix, window : { width : Int, height : Int } } -> Element msg
+view { now, window } =
+    let
+        now2 =
+            Duration.addTo day29 (Duration.hours 10.1)
+    in
+    Element.el
+        [ Element.width Element.fill, Element.height Element.fill, padding 40 window ]
+        (case remainingEvents now2 of
+            ( Just current, next :: _ ) ->
+                let
+                    timeLeft : Int
+                    timeLeft =
+                        Duration.from now2 next.start |> Duration.inMinutes |> floor |> (+) -5
+                in
+                Element.column
+                    [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
+                    [ Element.row
+                        [ Element.width Element.fill, fontSize 80 window ]
+                        [ Element.text "Currently: In-session"
+                        , Element.el
+                            [ Element.alignRight ]
+                            (Element.text (String.fromInt timeLeft ++ "min left"))
+                        ]
+                    , Element.row
+                        [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
+                        [ currentView window current, nextView window next ]
                     ]
-                , Element.row
-                    [ Element.width Element.fill ]
-                    [ currentView current, nextView next ]
-                ]
 
-        ( Just current, [] ) ->
-            currentView current
+            ( Just current, [] ) ->
+                currentView window current
 
-        ( Nothing, _ ) ->
-            Element.none
+            ( Nothing, _ ) ->
+                Element.none
+        )
 
 
 cardBackground : Element.Attr decorative msg
 cardBackground =
-    Element.Background.color (Element.rgb 0.7 0.7 0.7)
+    Element.Background.color (Element.rgb 0.85 0.85 0.85)
 
 
-currentView : EventAndTime -> Element msg
-currentView { start, event } =
+currentView : { width : Int, height : Int } -> EventAndTime -> Element msg
+currentView window { start, event } =
+    Element.el
+        [ Element.width (Element.fillPortion 2)
+        , Element.height Element.fill
+        ]
+        (case event of
+            Presentation presentations ->
+                List.map
+                    (\presentation ->
+                        Element.column
+                            [ Element.width Element.fill
+                            , Element.height Element.fill
+                            , cardBackground
+                            , padding 20 window
+                            ]
+                            [ roomText presentation.room window
+                            , Element.paragraph [ fontSize 60 window, Element.centerY ] [ Element.text presentation.title ]
+                            ]
+                    )
+                    presentations
+                    |> Element.column
+                        [ Element.width Element.fill
+                        , Element.height Element.fill
+                        , spacing 30 window
+                        ]
+
+            Other title ->
+                Element.paragraph [] [ Element.text title ]
+        )
+
+
+roomText text window =
+    Element.el [ fontSize 36 window ] (Element.text text)
+
+
+nextView : { width : Int, height : Int } -> EventAndTime -> Element msg
+nextView window { start, event } =
     case event of
         Presentation presentations ->
             List.map
                 (\presentation ->
                     Element.column
-                        [ Element.height (Element.fillPortion 5), cardBackground ]
-                        [ Element.text presentation.room
-                        , Element.text presentation.title
+                        [ Element.width Element.fill
+                        , Element.height Element.fill
+                        , padding 20 window
+                        , cardBackground
+                        ]
+                        [ roomText presentation.room window
+                        , Element.paragraph [ fontSize 40 window, Element.centerY ] [ Element.text presentation.title ]
                         ]
                 )
                 presentations
-                |> List.intersperse (Element.el [ Element.height Element.fill ] Element.none)
-                |> Element.column [ Element.width Element.fill ]
-
-        Other title ->
-            Element.paragraph [] [ Element.text title ]
-
-
-nextView : EventAndTime -> Element msg
-nextView { start, event } =
-    case event of
-        Presentation presentations ->
-            List.map
-                (\presentation ->
-                    Element.column
-                        [ Element.height (Element.fillPortion 5), cardBackground ]
-                        [ Element.text presentation.room
-                        , Element.text presentation.title
-                        ]
-                )
-                presentations
-                |> List.intersperse (Element.el [ Element.height Element.fill ] Element.none)
-                |> Element.column [ Element.width Element.fill ]
+                |> Element.column
+                    [ Element.width Element.fill
+                    , Element.height Element.fill
+                    , spacing 30 window
+                    , Element.above (Element.el [ fontSize 30 window ] (Element.text "Up next:"))
+                    ]
 
         Other title ->
             Element.paragraph [] [ Element.text title ]
