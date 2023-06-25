@@ -21,6 +21,7 @@ import Id exposing (Id)
 import Inventory
 import Json.Decode
 import Lamdera
+import LiveSchedule
 import MarkdownThemed
 import Product
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
@@ -554,6 +555,9 @@ loadedView model =
                     , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
+
+        LiveScheduleRoute ->
+            LiveSchedule.view model.now
 
 
 ticketsHtmlId =
