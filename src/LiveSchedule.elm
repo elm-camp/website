@@ -163,31 +163,16 @@ padding size window =
     size * toFloat window.width / 1920 |> round |> Element.padding
 
 
-fontFace : Int -> String -> String
-fontFace weight name =
-    """
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: """ ++ String.fromInt weight ++ """;
-  font-stretch: normal;
-  font-display: swap;
-  src: url(/fonts/""" ++ name ++ """.ttf) format('truetype');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+2192, U+2713;
-}"""
-
-
 view : { a | now : Time.Posix, window : { width : Int, height : Int } } -> Element msg
 view { now, window } =
     let
         now2 =
-            Duration.addTo day29 (Duration.hours 9.6)
+            Duration.addTo day29 (Duration.hours 11.9)
     in
     Element.el
         [ Element.width Element.fill
         , Element.height Element.fill
         , padding 30 window
-        , Html.node "style" [] [ Html.text (fontFace 700 "Fredoka") ] |> Element.html |> Element.inFront
         ]
         (case remainingEvents now2 of
             ( Just current, next :: _ ) ->
@@ -228,9 +213,12 @@ cardBackground =
 currentView : { width : Int, height : Int } -> Time.Posix -> EventAndTime -> Element msg
 currentView window now { start, duration, event } =
     let
+        durationLeft =
+            Duration.from now (Duration.addTo start duration)
+
         timeLeft : Int
         timeLeft =
-            Duration.from now (Duration.addTo start duration) |> Duration.inMinutes |> floor |> (+) -5
+            durationLeft |> Duration.inMinutes |> floor |> (+) -5
     in
     case event of
         Presentation presentations ->
@@ -269,6 +257,11 @@ currentView window now { start, duration, event } =
                             , Element.height Element.fill
                             , cardBackground
                             , padding 20 window
+                            , if timeLeft < 0 then
+                                Element.alpha 0.6
+
+                              else
+                                Element.alpha 1
                             ]
                             [ roomText presentation.room window
                             , Element.paragraph
@@ -292,9 +285,21 @@ currentView window now { start, duration, event } =
                     [ padding 80 window, spacing 10 window ]
                     [ Element.el [ fontSize 30 window ] (Element.text "Currently")
                     , Element.paragraph [ fontSize 80 window ] [ Element.text title ]
-                    , Element.el [ fontSize 40 window ] (Element.text "1h3min left")
+                    , Element.el [ fontSize 40 window ] (Element.text (timeLeftText durationLeft))
                     ]
                 )
+
+
+timeLeftText : Duration -> String
+timeLeftText duration =
+    let
+        hours =
+            Duration.inHours duration |> floor
+
+        minutes =
+            duration |> Quantity.minus (Duration.hours (toFloat hours)) |> Duration.inMinutes |> floor
+    in
+    String.fromInt hours ++ "h" ++ String.fromInt minutes ++ "min left"
 
 
 padList : { width : Int, height : Int } -> List (Element msg) -> List (Element msg)
@@ -306,20 +311,31 @@ roomText text window =
     Element.el [ fontSize 36 window ] (Element.text text)
 
 
+denmarkTimezone =
+    Time.customZone 60 []
+
+
+nextTimeText : Time.Posix -> String
+nextTimeText start =
+    "Next: @ "
+        ++ String.fromInt (Time.toHour denmarkTimezone start)
+        ++ ":"
+        ++ String.padLeft 2 '0' (String.fromInt (Time.toMinute denmarkTimezone start))
+
+
 nextView : { width : Int, height : Int } -> EventAndTime -> Element msg
 nextView window { start, event } =
     case event of
         Presentation presentations ->
             Element.column
-                [ spacing 60 window, Element.width (Element.fillPortion 2), Element.height Element.fill ]
+                [ spacing 60 window, Element.width Element.fill, Element.height Element.fill ]
                 [ Element.row
                     [ Element.width Element.fill
                     , fontSize 60 window
                     , height 80 window
                     , Element.Font.family [ Element.Font.typeface "Fredoka" ]
                     ]
-                    [ Element.text "Next"
-                    ]
+                    [ Element.text (nextTimeText start) ]
                 , List.map
                     (\presentation ->
                         Element.column
@@ -348,7 +364,11 @@ nextView window { start, event } =
                 ]
                 (Element.column
                     [ Element.centerX, Element.centerY ]
-                    [ Element.el [ fontSize 30 window ] (Element.text "Next:")
-                    , Element.paragraph [ fontSize 60 window ] [ Element.text title ]
+                    [ Element.el
+                        [ fontSize 40 window
+                        , Element.Font.family [ Element.Font.typeface "Fredoka" ]
+                        ]
+                        (Element.text (nextTimeText start))
+                    , Element.paragraph [ fontSize 80 window ] [ Element.text title ]
                     ]
                 )
