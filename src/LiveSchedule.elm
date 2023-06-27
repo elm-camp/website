@@ -1,13 +1,56 @@
 module LiveSchedule exposing (..)
 
+import Audio exposing (Audio)
 import Duration exposing (Duration)
 import Element exposing (Element)
 import Element.Background
 import Element.Font
-import Html
+import Element.Input
 import List.Extra
 import Quantity
+import Theme
 import Time
+
+
+type Msg
+    = PressedAllowAudio
+
+
+presentationBreak : Duration
+presentationBreak =
+    Duration.minutes 5
+
+
+audio : Audio.Source -> Audio
+audio song =
+    let
+        playSong : Time.Posix -> Audio
+        playSong startTime =
+            Audio.audio
+                song
+                startTime
+                |> Audio.scaleVolumeAt
+                    [ ( startTime, 1 )
+                    , ( Duration.addTo startTime (Duration.seconds 15), 1 )
+                    , ( Duration.addTo startTime (Duration.seconds 20), 0 )
+                    ]
+    in
+    List.filterMap
+        (\{ start, duration, event } ->
+            case event of
+                Presentation _ ->
+                    playSong
+                        (duration
+                            |> Quantity.minus presentationBreak
+                            |> Duration.addTo start
+                        )
+                        |> Just
+
+                Other _ ->
+                    Nothing
+        )
+        fullSchedule
+        |> Audio.group
 
 
 day28 =
@@ -15,7 +58,8 @@ day28 =
 
 
 day29 =
-    Time.millisToPosix 1687989600000
+    --Duration.addTo (Time.millisToPosix 1687989600000) Duration.hour
+    Time.millisToPosix 1687816800000
 
 
 day30 =
@@ -39,9 +83,12 @@ day28Schedule =
     ]
 
 
-placeholderEvent =
+placeholderEvent index =
     Presentation
-        [ { speaker = "Martin Stewart", title = "Interactive GUIs in WebGL with zero html", room = "Room A" }
+        [ { speaker = "Martin Stewart"
+          , title = "Interactive GUIs in WebGL with zero html " ++ String.fromInt index
+          , room = "Room A"
+          }
         , { speaker = "Mario Rogic", title = "The worst Elm code possible", room = "Room B" }
         , { speaker = "Evan Czaplicki", title = "Making a Five Year Plan", room = "Room C" }
         ]
@@ -55,36 +102,36 @@ day29Schedule =
       }
     , { start = 10
       , duration = 0.5
-      , event = placeholderEvent
+      , event = placeholderEvent 1
       }
     , { start = 10.5
       , duration = 0.5
-      , event = placeholderEvent
+      , event = placeholderEvent 2
       }
-    , { start = 11, duration = 0.5, event = placeholderEvent }
+    , { start = 11, duration = 0.5, event = placeholderEvent 3 }
     , { start = 11.5
       , duration = 0.5
-      , event = placeholderEvent
+      , event = placeholderEvent 4
       }
     , { start = 12, duration = 1.5, event = Other "Lunchtime" }
-    , { start = 14, duration = 0.5, event = placeholderEvent }
-    , { start = 14.5, duration = 0.5, event = placeholderEvent }
+    , { start = 14, duration = 0.5, event = placeholderEvent 5 }
+    , { start = 14.5, duration = 0.5, event = placeholderEvent 6 }
     , { start = 15, duration = 0.5, event = Other "Coffee and snacks" }
-    , { start = 15.5, duration = 0.5, event = placeholderEvent }
-    , { start = 16, duration = 0.5, event = placeholderEvent }
-    , { start = 16.5, duration = 0.5, event = placeholderEvent }
+    , { start = 15.5, duration = 0.5, event = placeholderEvent 7 }
+    , { start = 16, duration = 0.5, event = placeholderEvent 8 }
+    , { start = 16.5, duration = 0.5, event = placeholderEvent 9 }
     , { start = 18, duration = 1.5, event = Other "Dinner" }
     ]
 
 
 day30Schedule =
     [ { start = 7, duration = 2, event = Other "Breakfast" }
-    , { start = 9, duration = 0.5, event = placeholderEvent }
-    , { start = 9.5, duration = 0.5, event = placeholderEvent }
+    , { start = 9, duration = 0.5, event = placeholderEvent 10 }
+    , { start = 9.5, duration = 0.5, event = placeholderEvent 11 }
     , { start = 10, duration = 0.5, event = Other "Checkout of rooms" }
-    , { start = 10.5, duration = 0.5, event = placeholderEvent }
-    , { start = 11, duration = 0.5, event = placeholderEvent }
-    , { start = 11.5, duration = 0.5, event = placeholderEvent }
+    , { start = 10.5, duration = 0.5, event = placeholderEvent 12 }
+    , { start = 11, duration = 0.5, event = placeholderEvent 13 }
+    , { start = 11.5, duration = 0.5, event = placeholderEvent 14 }
     , { start = 12, duration = 1.5, event = Other "Lunchtime" }
     , { start = 14
       , duration = 1
@@ -163,46 +210,62 @@ padding size window =
     size * toFloat window.width / 1920 |> round |> Element.padding
 
 
-view : { a | now : Time.Posix, window : { width : Int, height : Int } } -> Element msg
-view { now, window } =
+view :
+    { a | now : Time.Posix, window : { width : Int, height : Int }, pressedAudioButton : Bool }
+    -> Element Msg
+view { now, window, pressedAudioButton } =
     let
         now2 =
-            Duration.addTo day29 (Duration.hours 11.9)
+            now
+
+        --Duration.addTo day29 (Duration.hours 11.917)
     in
-    Element.el
-        [ Element.width Element.fill
-        , Element.height Element.fill
-        , padding 30 window
-        ]
-        (case remainingEvents now2 of
-            ( Just current, next :: _ ) ->
-                Element.row
-                    [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
-                    [ currentView window now2 current
-                    , nextView window next
-                    ]
-
-            ( Just current, [] ) ->
-                Element.row
-                    [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
-                    [ currentView window now2 current
-                    , Element.el [ Element.width Element.fill ] Element.none
-                    ]
-
-            ( Nothing, next :: _ ) ->
-                Element.row
-                    [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
-                    [ Element.el
-                        [ Element.width (Element.fillPortion 2)
-                        , Element.height Element.fill
+    if pressedAudioButton then
+        Element.el
+            [ Element.width Element.fill
+            , Element.height Element.fill
+            , padding 30 window
+            ]
+            (case remainingEvents now2 of
+                ( Just current, next :: _ ) ->
+                    Element.row
+                        [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
+                        [ currentView window now2 current
+                        , nextView window next
                         ]
-                        Element.none
-                    , nextView window next
-                    ]
 
-            ( Nothing, [] ) ->
-                Element.none
-        )
+                ( Just current, [] ) ->
+                    Element.row
+                        [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
+                        [ currentView window now2 current
+                        , Element.el [ Element.width Element.fill ] Element.none
+                        ]
+
+                ( Nothing, next :: _ ) ->
+                    Element.row
+                        [ Element.width Element.fill, Element.height Element.fill, spacing 40 window ]
+                        [ Element.el
+                            [ Element.width (Element.fillPortion 2)
+                            , Element.height Element.fill
+                            ]
+                            Element.none
+                        , nextView window next
+                        ]
+
+                ( Nothing, [] ) ->
+                    Element.none
+            )
+
+    else
+        Element.Input.button
+            [ Element.padding 36
+            , Element.Background.color (Element.rgb 0.8 0.8 0.8)
+            , Element.centerX
+            , Element.centerY
+            ]
+            { onPress = Just PressedAllowAudio
+            , label = Element.text "Click to enable audio"
+            }
 
 
 cardBackground : Element.Attr decorative msg
@@ -216,9 +279,12 @@ currentView window now { start, duration, event } =
         durationLeft =
             Duration.from now (Duration.addTo start duration)
 
+        minutes =
+            Duration.inMinutes presentationBreak |> round
+
         timeLeft : Int
         timeLeft =
-            durationLeft |> Duration.inMinutes |> floor |> (+) -5
+            durationLeft |> Duration.inMinutes |> floor |> (+) -minutes
     in
     case event of
         Presentation presentations ->
@@ -241,7 +307,7 @@ currentView window now { start, duration, event } =
                         (Element.text
                             (String.fromInt
                                 (if timeLeft < 0 then
-                                    timeLeft + 5
+                                    timeLeft + minutes
 
                                  else
                                     timeLeft
@@ -312,7 +378,7 @@ roomText text window =
 
 
 denmarkTimezone =
-    Time.customZone 60 []
+    Time.customZone 120 []
 
 
 nextTimeText : Time.Posix -> String
