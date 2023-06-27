@@ -31,7 +31,10 @@ audio song =
                 startTime
                 |> Audio.scaleVolumeAt
                     [ ( startTime, 1 )
-                    , ( Duration.addTo startTime (Duration.seconds 15), 1 )
+                    , ( Duration.addTo startTime (Duration.seconds 14), 1 )
+                    , ( Duration.addTo startTime (Duration.seconds 15), 0.5 )
+                    , ( Duration.addTo startTime (Duration.seconds 16), 0.25 )
+                    , ( Duration.addTo startTime (Duration.seconds 17), 0.125 )
                     , ( Duration.addTo startTime (Duration.seconds 20), 0 )
                     ]
     in
@@ -58,8 +61,7 @@ day28 =
 
 
 day29 =
-    --Duration.addTo (Time.millisToPosix 1687989600000) Duration.hour
-    Time.millisToPosix 1687816800000
+    Time.millisToPosix 1687996800000
 
 
 day30 =
@@ -284,7 +286,7 @@ currentView window now { start, duration, event } =
 
         timeLeft : Int
         timeLeft =
-            durationLeft |> Duration.inMinutes |> floor |> (+) -minutes
+            durationLeft |> Duration.inMinutes |> ceiling |> (+) -minutes
     in
     case event of
         Presentation presentations ->
@@ -294,7 +296,7 @@ currentView window now { start, duration, event } =
                     [ Element.width Element.fill, fontSize 80 window, height 80 window ]
                     [ case event of
                         Presentation _ ->
-                            if timeLeft < 0 then
+                            if timeLeft <= 0 then
                                 Element.text "Short break"
 
                             else
@@ -306,7 +308,7 @@ currentView window now { start, duration, event } =
                         [ Element.alignRight ]
                         (Element.text
                             (String.fromInt
-                                (if timeLeft < 0 then
+                                (if timeLeft <= 0 then
                                     timeLeft + minutes
 
                                  else
@@ -323,7 +325,7 @@ currentView window now { start, duration, event } =
                             , Element.height Element.fill
                             , cardBackground
                             , padding 20 window
-                            , if timeLeft < 0 then
+                            , if timeLeft <= 0 then
                                 Element.alpha 0.6
 
                               else
@@ -363,7 +365,7 @@ timeLeftText duration =
             Duration.inHours duration |> floor
 
         minutes =
-            duration |> Quantity.minus (Duration.hours (toFloat hours)) |> Duration.inMinutes |> floor
+            duration |> Quantity.minus (Duration.hours (toFloat hours)) |> Duration.inMinutes |> ceiling
     in
     String.fromInt hours ++ "h" ++ String.fromInt minutes ++ "min left"
 
