@@ -17,6 +17,7 @@ type Route
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
     | PaymentCancelRoute
+    | LiveScheduleRoute
 
 
 decode : Url -> Route
@@ -29,8 +30,13 @@ decode url =
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
+        , Url.Parser.s liveSchedulePath |> Url.Parser.map LiveScheduleRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
+
+
+liveSchedulePath =
+    "live"
 
 
 parseEmail : Url.Parser.Query.Parser (Maybe EmailAddress)
@@ -74,6 +80,9 @@ encode route =
 
             PaymentCancelRoute ->
                 [ Stripe.cancelPath ]
+
+            LiveScheduleRoute ->
+                [ liveSchedulePath ]
         )
         (case route of
             HomepageRoute ->
@@ -100,5 +109,8 @@ encode route =
                         []
 
             PaymentCancelRoute ->
+                []
+
+            LiveScheduleRoute ->
                 []
         )

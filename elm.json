@@ -8,6 +8,7 @@
     "dependencies": {
         "direct": {
             "Chadtech/elm-money": "7.0.0",
+            "MartinSStewart/elm-audio": "4.0.2",
             "MartinSStewart/elm-nonempty-string": "2.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "bburdette/toop": "1.2.0",
