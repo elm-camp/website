@@ -31,25 +31,26 @@ audio song =
                 startTime
                 |> Audio.scaleVolumeAt
                     [ ( startTime, 1 )
-                    , ( Duration.addTo startTime (Duration.seconds 14), 1 )
-                    , ( Duration.addTo startTime (Duration.seconds 15), 0.5 )
-                    , ( Duration.addTo startTime (Duration.seconds 16), 0.25 )
-                    , ( Duration.addTo startTime (Duration.seconds 17), 0.125 )
-                    , ( Duration.addTo startTime (Duration.seconds 20), 0 )
+                    , ( Duration.addTo startTime (Duration.seconds 60), 1 )
+                    , ( Duration.addTo startTime (Duration.seconds 61), 0.5 )
+                    , ( Duration.addTo startTime (Duration.seconds 62), 0.25 )
+                    , ( Duration.addTo startTime (Duration.seconds 63), 0.125 )
+                    , ( Duration.addTo startTime (Duration.seconds 65), 0 )
                     ]
     in
     List.filterMap
         (\{ start, duration, event } ->
             case event of
-                Presentation _ ->
+                Presentation _ EndsWithShortBreak ->
                     playSong
                         (duration
                             |> Quantity.minus presentationBreak
+                            |> Quantity.minus Duration.minute
                             |> Duration.addTo start
                         )
                         |> Just
 
-                Other _ ->
+                _ ->
                     Nothing
         )
         fullSchedule
@@ -61,7 +62,7 @@ day28 =
 
 
 day29 =
-    Time.millisToPosix 1687996800000
+    Time.millisToPosix 1687989600000
 
 
 day30 =
@@ -72,8 +73,13 @@ type alias EventAndTime =
     { start : Time.Posix, duration : Duration, event : Event }
 
 
+type ShortBreak
+    = EndsWithShortBreak
+    | NoBreak
+
+
 type Event
-    = Presentation (List { speaker : String, title : String, room : String })
+    = Presentation (List { speaker : String, title : String, room : Room }) ShortBreak
     | Other String
 
 
@@ -85,60 +91,123 @@ day28Schedule =
     ]
 
 
-placeholderEvent index =
-    Presentation
-        [ { speaker = "Martin Stewart"
-          , title = "Interactive GUIs in WebGL with zero html " ++ String.fromInt index
-          , room = "Room A"
-          }
-        , { speaker = "Mario Rogic", title = "The worst Elm code possible", room = "Room B" }
-        , { speaker = "Evan Czaplicki", title = "Making a Five Year Plan", room = "Room C" }
-        ]
+type Room
+    = West
+    | Middle
+    | East
+    | Courtyard
 
 
+day29Schedule : List { start : Float, duration : Float, event : Event }
 day29Schedule =
     [ { start = 7, duration = 2, event = Other "Breakfast" }
     , { start = 9
       , duration = 1
-      , event = Presentation [ { speaker = "Evan Czaplicki", title = "Opening keynote", room = "" } ]
+      , event = Other "Opening keynote"
       }
     , { start = 10
-      , duration = 0.5
-      , event = placeholderEvent 1
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "Evan", title = "5 years for Elm", room = West } ]
+                EndsWithShortBreak
       }
-    , { start = 10.5
-      , duration = 0.5
-      , event = placeholderEvent 2
+    , { start = 10 + 35 / 60
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "Jim", title = "Elm in Business", room = West }
+                , { speaker = "Othman", title = "Error messages using LLM", room = Middle }
+                , { speaker = "Mario", title = "Worst Elm code possible", room = East }
+                ]
+                EndsWithShortBreak
       }
-    , { start = 11, duration = 0.5, event = placeholderEvent 3 }
+    , { start = 11 + 10 / 60
+      , duration = 20 / 60
+      , event =
+            Presentation
+                [ { speaker = "Martin", title = "Debugger for Lamdera backend", room = West }
+                , { speaker = "John", title = "Elm Store pattern", room = Middle }
+                , { speaker = "Evan", title = "Reflecting on last few years", room = Courtyard }
+                ]
+                EndsWithShortBreak
+      }
     , { start = 11.5
-      , duration = 0.5
-      , event = placeholderEvent 4
+      , duration = 30 / 60
+      , event =
+            Presentation
+                [ { speaker = "Jeroen", title = "Write an elm-review rule together", room = West }
+                , { speaker = "Wolfgang", title = "Games with Elm", room = East }
+                ]
+                NoBreak
       }
     , { start = 12, duration = 1.5, event = Other "Lunchtime" }
-    , { start = 14, duration = 0.5, event = placeholderEvent 5 }
-    , { start = 14.5, duration = 0.5, event = placeholderEvent 6 }
-    , { start = 15, duration = 0.5, event = Other "Coffee and snacks" }
-    , { start = 15.5, duration = 0.5, event = placeholderEvent 7 }
-    , { start = 16, duration = 0.5, event = placeholderEvent 8 }
-    , { start = 16.5, duration = 0.5, event = placeholderEvent 9 }
+    , { start = 14
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "Matt", title = "elm-dev", room = West }
+                , { speaker = "Martin", title = "Lamdera at work", room = Middle }
+                , { speaker = "Tomaz", title = "elm-csg, 3d objects in Elm", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 14 + 35 / 60
+      , duration = 30 / 60
+      , event =
+            Presentation
+                [ { speaker = "Casper", title = "Elm for beautiful art and music", room = West }
+                , { speaker = "Johannes", title = "Handling Github renames", room = Middle }
+                , { speaker = "Ryan", title = "Live elm-land app", room = East }
+                ]
+                NoBreak
+      }
+    , { start = 15 + 5 / 60, duration = 0.5, event = Other "Coffee and snacks" }
+    , { start = 15 + 35 / 60
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "Leonardo", title = "Debugger needs and wants", room = West }
+                , { speaker = "Othman", title = "Errors with LLM/AI", room = Middle }
+                , { speaker = "Simon", title = "Future Elm IDE plugins", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 16 + 10 / 60
+      , duration = 20 / 60
+      , event =
+            Presentation
+                [ { speaker = "Martyn", title = "JS mutation observer", room = West }
+                , { speaker = "Georges", title = "elm-book V2", room = Middle }
+                , { speaker = "Rupert", title = "Elm Janitor PRs", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 16.5
+      , duration = 0.5
+      , event =
+            Presentation
+                [ { speaker = "Marc", title = "Elm init GUI", room = West }
+                , { speaker = "Georges", title = "New exciting not-elm bubble", room = Middle }
+                , { speaker = "Martin", title = "WebGL UI (no HTML)", room = East }
+                ]
+                NoBreak
+      }
     , { start = 18, duration = 1.5, event = Other "Dinner" }
     ]
 
 
+day30Schedule : List { start : Float, duration : Float, event : Event }
 day30Schedule =
     [ { start = 7, duration = 2, event = Other "Breakfast" }
-    , { start = 9, duration = 0.5, event = placeholderEvent 10 }
-    , { start = 9.5, duration = 0.5, event = placeholderEvent 11 }
+    , { start = 9, duration = 0.5, event = Presentation [] EndsWithShortBreak }
+    , { start = 9.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
     , { start = 10, duration = 0.5, event = Other "Checkout of rooms" }
-    , { start = 10.5, duration = 0.5, event = placeholderEvent 12 }
-    , { start = 11, duration = 0.5, event = placeholderEvent 13 }
-    , { start = 11.5, duration = 0.5, event = placeholderEvent 14 }
+    , { start = 10.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
+    , { start = 11, duration = 0.5, event = Presentation [] EndsWithShortBreak }
+    , { start = 11.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
     , { start = 12, duration = 1.5, event = Other "Lunchtime" }
-    , { start = 14
-      , duration = 1
-      , event = Presentation [ { speaker = "", title = "Closing keynote", room = "" } ]
-      }
+    , { start = 14, duration = 1, event = Other "Closing keynote" }
     ]
 
 
@@ -286,16 +355,26 @@ currentView window now { start, duration, event } =
 
         timeLeft : Int
         timeLeft =
-            durationLeft |> Duration.inMinutes |> ceiling |> (+) -minutes
+            durationLeft
+                |> Duration.inMinutes
+                |> ceiling
+                |> (\a ->
+                        case event of
+                            Presentation _ EndsWithShortBreak ->
+                                a - minutes
+
+                            _ ->
+                                a
+                   )
     in
     case event of
-        Presentation presentations ->
+        Presentation presentations _ ->
             Element.column
                 [ spacing 60 window, Element.width (Element.fillPortion 2), Element.height Element.fill ]
                 [ Element.row
                     [ Element.width Element.fill, fontSize 80 window, height 80 window ]
                     [ case event of
-                        Presentation _ ->
+                        Presentation _ _ ->
                             if timeLeft <= 0 then
                                 Element.text "Short break"
 
@@ -375,8 +454,24 @@ padList window list =
     list ++ List.repeat (3 - List.length list) (Element.el [ Element.height Element.fill, padding 20 window ] Element.none)
 
 
-roomText text window =
-    Element.el [ fontSize 36 window ] (Element.text text)
+roomText : Room -> { width : Int, height : Int } -> Element msg
+roomText room window =
+    Element.el [ fontSize 36 window ]
+        (Element.text
+            (case room of
+                East ->
+                    "East Elm room"
+
+                West ->
+                    "West Elm room"
+
+                Middle ->
+                    "Middle Elm room"
+
+                Courtyard ->
+                    "Courtyard"
+            )
+        )
 
 
 denmarkTimezone =
@@ -394,7 +489,7 @@ nextTimeText start =
 nextView : { width : Int, height : Int } -> EventAndTime -> Element msg
 nextView window { start, event } =
     case event of
-        Presentation presentations ->
+        Presentation presentations _ ->
             Element.column
                 [ spacing 60 window, Element.width Element.fill, Element.height Element.fill ]
                 [ Element.row
@@ -413,7 +508,11 @@ nextView window { start, event } =
                             , cardBackground
                             ]
                             [ roomText presentation.room window
-                            , Element.paragraph [ fontSize 40 window, Element.centerY ] [ Element.text presentation.title ]
+                            , Element.column
+                                [ Element.centerY, spacing 10 window ]
+                                [ Element.paragraph [ fontSize 40 window ] [ Element.text presentation.title ]
+                                , Element.paragraph [ fontSize 30 window ] [ Element.text presentation.speaker ]
+                                ]
                             ]
                     )
                     presentations
