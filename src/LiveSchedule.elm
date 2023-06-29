@@ -50,7 +50,15 @@ audio song =
                         )
                         |> Just
 
-                _ ->
+                Presentation _ NoBreak ->
+                    playSong
+                        (duration
+                            |> Quantity.minus Duration.minute
+                            |> Duration.addTo start
+                        )
+                        |> Just
+
+                Other _ ->
                     Nothing
         )
         fullSchedule
