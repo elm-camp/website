@@ -411,9 +411,15 @@ currentView window now { start, duration, event } =
                                 Element.alpha 1
                             ]
                             [ roomText presentation.room window
-                            , Element.paragraph
-                                [ fontSize 60 window, Element.centerY ]
-                                [ Element.text presentation.title ]
+                            , Element.column
+                                [ Element.centerY, spacing 10 window ]
+                                [ Element.paragraph
+                                    [ fontSize 60 window ]
+                                    [ Element.text presentation.title ]
+                                , Element.paragraph
+                                    [ fontSize 40 window ]
+                                    [ Element.text presentation.speaker ]
+                                ]
                             ]
                     )
                     presentations
@@ -432,7 +438,7 @@ currentView window now { start, duration, event } =
                     [ padding 80 window, spacing 10 window ]
                     [ Element.el [ fontSize 30 window ] (Element.text "Currently")
                     , Element.paragraph [ fontSize 80 window ] [ Element.text title ]
-                    , Element.el [ fontSize 40 window ] (Element.text (timeLeftText durationLeft))
+                    , Element.el [ fontSize 30 window ] (Element.text (timeLeftText durationLeft))
                     ]
                 )
 
