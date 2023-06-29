@@ -208,14 +208,57 @@ day29Schedule =
 day30Schedule : List { start : Float, duration : Float, event : Event }
 day30Schedule =
     [ { start = 7, duration = 2, event = Other "Breakfast" }
-    , { start = 9, duration = 0.5, event = Presentation [] EndsWithShortBreak }
-    , { start = 9.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
-    , { start = 10, duration = 0.5, event = Other "Checkout of rooms" }
-    , { start = 10.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
-    , { start = 11, duration = 0.5, event = Presentation [] EndsWithShortBreak }
-    , { start = 11.5, duration = 0.5, event = Presentation [] EndsWithShortBreak }
+    , { start = 9
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "Simon", title = "IDE-as", room = West }
+                , { speaker = "Mario", title = "Getting an Elm certification", room = Middle }
+                , { speaker = "Joaquin", title = "Generative art with Elm", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 9 + 35 / 60
+      , duration = 30 / 60
+      , event =
+            Presentation
+                [ { speaker = "Ryan", title = "elm-land", room = West }
+                , { speaker = "Martin", title = "Funding Elm", room = East }
+                ]
+                NoBreak
+      }
+    , { start = 10 + 5 / 60, duration = 0.5, event = Other "Checkout of rooms" }
+    , { start = 10 + 35 / 60
+      , duration = 35 / 60
+      , event =
+            Presentation
+                [ { speaker = "John", title = "elm-store (take 2)", room = West }
+                , { speaker = "Johannes", title = "Lets play games", room = Middle }
+                , { speaker = "Tomås", title = "3D objects in Elm", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 11 + 10 / 60
+      , duration = 20 / 60
+      , event =
+            Presentation
+                [ { speaker = "Jim", title = "elm-notebook", room = West }
+                , { speaker = "Katja", title = "Internationalizing Elm compiler messages", room = Middle }
+                , { speaker = "Macario", title = "Elm + postgrest", room = East }
+                ]
+                EndsWithShortBreak
+      }
+    , { start = 11.5
+      , duration = 0.5
+      , event =
+            Presentation
+                [ { speaker = "Johannes", title = "Forms", room = West }
+                , { speaker = "Andrey", title = "3D vehicle simulation", room = East }
+                ]
+                NoBreak
+      }
     , { start = 12, duration = 1.5, event = Other "Lunchtime" }
-    , { start = 14, duration = 1, event = Other "Closing keynote" }
+    , { start = 13.5, duration = 1.5, event = Other "Closing keynote" }
     ]
 
 
