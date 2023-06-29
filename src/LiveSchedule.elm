@@ -176,7 +176,7 @@ day29Schedule =
       , event =
             Presentation
                 [ { speaker = "Leonardo", title = "Debugger needs and wants", room = West }
-                , { speaker = "Othman", title = "Errors with LLM/AI", room = Middle }
+                , { speaker = "Othman", title = "TEA with LLM/AI (actor pattern)", room = Middle }
                 , { speaker = "Simon", title = "Future Elm IDE plugins", room = East }
                 ]
                 EndsWithShortBreak
