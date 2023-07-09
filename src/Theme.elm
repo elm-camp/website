@@ -7,8 +7,15 @@ import Element.Font
 import Element.Input
 import Html exposing (Html)
 import Html.Attributes
+import MarkdownThemed
 import Money
+import Route exposing (Route(..))
 import Stripe exposing (Price)
+
+
+contentAttributes : List (Element.Attribute msg)
+contentAttributes =
+    [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
 
 
 css : Html msg
@@ -44,6 +51,15 @@ colors =
     { green = Element.rgb255 92 176 126
     , lightGrey = Element.rgb255 200 200 200
     }
+
+
+colorWithAlpha : Float -> Element.Color -> Element.Color
+colorWithAlpha alpha color =
+    let
+        { red, green, blue } =
+            Element.toRgb color
+    in
+    Element.rgba red green blue alpha
 
 
 fontFace : Int -> String -> String -> String
@@ -152,3 +168,35 @@ spinnerWhite =
         , htmlAttribute <| Html.Attributes.style "border-radius" "50px"
         ]
         none
+
+
+glow =
+    Element.Font.glow (colorWithAlpha 0.25 MarkdownThemed.lightTheme.defaultText) 4
+
+
+footer : Element msg
+footer =
+    Element.el
+        [ Element.Background.color (Element.rgb255 12 109 82)
+        , Element.paddingXY 24 16
+        , Element.width Element.fill
+        , Element.alignBottom
+        ]
+        (Element.wrappedRow
+            ([ Element.spacing 32
+             , Element.Background.color (Element.rgb255 12 109 82)
+             , Element.Font.color (Element.rgb 1 1 1)
+             ]
+                ++ contentAttributes
+            )
+            [ Element.link
+                []
+                { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
+            , Element.link
+                []
+                { url = Route.encode UnconferenceFormatRoute, label = Element.text "Unconference Guidelines" }
+            , Element.link
+                []
+                { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
+            ]
+        )

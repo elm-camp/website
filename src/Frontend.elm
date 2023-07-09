@@ -7,6 +7,7 @@ import Browser exposing (UrlRequest(..))
 import Browser.Dom
 import Browser.Events
 import Browser.Navigation
+import Camp23Denmark
 import Dict
 import Element exposing (Element)
 import Element.Background
@@ -27,7 +28,7 @@ import MarkdownThemed
 import Ports
 import Product
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
-import Route exposing (Route(..))
+import Route exposing (Route(..), SubPage(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
@@ -420,30 +421,11 @@ includesAccom productId =
         True
 
 
-colors =
-    MarkdownThemed.lightTheme
-
-
-colorWithAlpha : Float -> Element.Color -> Element.Color
-colorWithAlpha alpha color =
-    let
-        { red, green, blue } =
-            Element.toRgb color
-    in
-    Element.rgba red green blue alpha
-
-
 header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element msg
 header config =
     let
-        glow =
-            Element.Font.glow (colorWithAlpha 0.25 colors.defaultText) 4
-
         illustrationAltText =
             "Illustration of a small camp site in a richly green forest"
-
-        logoAltText =
-            "The logo of Elm Camp, a tangram in green forest colors"
 
         titleSize =
             if config.window.width < 800 then
@@ -456,7 +438,7 @@ header config =
             Element.link
                 []
                 { url = Route.encode HomepageRoute
-                , label = Element.el [ Element.Font.size titleSize, glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
+                , label = Element.el [ Element.Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
                 }
     in
     if config.window.width < 1000 || config.isCompact then
@@ -472,22 +454,8 @@ header config =
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
-                , Element.row
-                    [ Element.centerX, Element.spacing 13 ]
-                    [ Element.image
-                        [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = logoAltText }
-                    , Element.column
-                        [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                        [ Element.el [ glow ] (Element.text "Unconference")
-                        , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
-                        ]
-                    ]
-                , Element.column
-                    [ glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
-                    [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
-                    , Element.text "🇩🇰 Dallund Castle, Denmark"
-                    ]
+                , Camp23Denmark.elmCampDenmarkTopLine
+                , Camp23Denmark.elmCampDenmarkBottomLine
                 ]
             ]
 
@@ -500,22 +468,8 @@ header config =
             , Element.column
                 [ Element.spacing 24 ]
                 [ elmCampTitle
-                , Element.row
-                    [ Element.centerX, Element.spacing 13 ]
-                    [ Element.image
-                        [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = logoAltText }
-                    , Element.column
-                        [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                        [ Element.el [ glow ] (Element.text "Unconference")
-                        , Element.el [ Element.Font.extraBold, Element.Font.color colors.elmText ] (Element.text "Europe 2023")
-                        ]
-                    ]
-                , Element.column
-                    [ glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
-                    [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
-                    , Element.text "🇩🇰 Dallund Castle, Denmark"
-                    ]
+                , Camp23Denmark.elmCampDenmarkTopLine
+                , Camp23Denmark.elmCampDenmarkBottomLine
                 ]
             ]
 
@@ -530,7 +484,7 @@ view model =
         -- , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
-            , Element.Font.color colors.defaultText
+            , Element.Font.color MarkdownThemed.lightTheme.defaultText
             , Element.Font.size 16
             , Element.Font.medium
             , Element.Background.color backgroundColor
@@ -599,10 +553,10 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
                 , Element.column
-                    (Element.padding 20 :: contentAttributes)
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ unconferenceFormatContent
                     ]
-                , footer
+                , Theme.footer
                 ]
 
         VenueAndAccessRoute ->
@@ -610,10 +564,10 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
                 , Element.column
-                    (Element.padding 20 :: contentAttributes)
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ venueAccessContent
                     ]
-                , footer
+                , Theme.footer
                 ]
 
         CodeOfConductRoute ->
@@ -621,10 +575,10 @@ loadedView model =
                 [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
                 , Element.column
-                    (Element.padding 20 :: contentAttributes)
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
                     ]
-                , footer
+                , Theme.footer
                 ]
 
         AdminRoute passM ->
@@ -670,6 +624,9 @@ loadedView model =
         LiveScheduleRoute ->
             LiveSchedule.view model |> Element.map LiveScheduleMsg
 
+        Camp23Denmark subpage ->
+            Camp23Denmark.view model subpage
+
 
 ticketsHtmlId =
     "tickets"
@@ -693,7 +650,7 @@ homepageView model =
             case AssocList.get productId Tickets.dict of
                 Just ticket ->
                     Element.column
-                        (Element.spacing 24 :: padding :: contentAttributes)
+                        (Element.spacing 24 :: padding :: Theme.contentAttributes)
                         [ Element.row
                             [ Element.spacing 16, Element.width Element.fill ]
                             [ Element.image
@@ -731,7 +688,7 @@ homepageView model =
                     , Element.column
                         [ Element.width Element.fill, Element.spacing 40 ]
                         [ Element.column
-                            contentAttributes
+                            Theme.contentAttributes
                             [ content1, unconferenceBulletPoints model ]
                         , if model.window.width > 950 then
                             [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
@@ -752,7 +709,7 @@ homepageView model =
                                     )
                                 |> Element.column [ Element.spacing 10, Element.width Element.fill ]
                         , Element.column
-                            contentAttributes
+                            Theme.contentAttributes
                             [ MarkdownThemed.renderFull "# Our sponsors"
                             , sponsors model.window
                             ]
@@ -762,7 +719,7 @@ homepageView model =
                             , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
                             ]
                             [ Element.column
-                                (Element.spacing 16 :: contentAttributes)
+                                (Element.spacing 16 :: Theme.contentAttributes)
                                 [ MarkdownThemed.renderFull <|
                                     """
 # Tickets
@@ -772,12 +729,12 @@ homepageView model =
                                     MarkdownThemed.renderFull <|
                                         """**Missed out on a ticket? Send an email to [team@elm.camp](mailto:team@elm.camp) and we'll add you to the Campfire Ticket wait list.**"""
                                 ]
-                            , Element.el contentAttributes content2
-                            , Element.el contentAttributes content3
+                            , Element.el Theme.contentAttributes content2
+                            , Element.el Theme.contentAttributes content3
                             ]
                         ]
                     ]
-                , footer
+                , Theme.footer
                 ]
 
 
@@ -788,35 +745,6 @@ homepageView model =
 --         ++ "/"
 --         ++ String.fromInt totalSlotsAvailable
 --         ++ " slots left"
-
-
-footer : Element msg
-footer =
-    Element.el
-        [ Element.Background.color (Element.rgb255 12 109 82)
-        , Element.paddingXY 24 16
-        , Element.width Element.fill
-        , Element.alignBottom
-        ]
-        (Element.wrappedRow
-            ([ Element.spacing 32
-             , Element.Background.color (Element.rgb255 12 109 82)
-             , Element.width Element.fill
-             , Element.Font.color (Element.rgb 1 1 1)
-             ]
-                ++ contentAttributes
-            )
-            [ Element.link
-                []
-                { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
-            , Element.link
-                []
-                { url = Route.encode UnconferenceFormatRoute, label = Element.text "Unconference Guidelines" }
-            , Element.link
-                []
-                { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
-            ]
-        )
 
 
 normalButtonAttributes =
@@ -955,7 +883,7 @@ Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofo
 
 opportunityGrant form textInput =
     Element.column [ Element.spacing 20 ]
-        [ Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Opportunity grants")
+        [ Element.el [ Element.Font.size 20 ] (Element.text "🫶 Opportunity grants")
         , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ Element.row [ Element.width Element.fill, Element.spacing 15 ]
@@ -1194,11 +1122,6 @@ dallundCastleImage width path =
         { src = "/" ++ path, description = "Photo of part of the Dallund Castle" }
 
 
-contentAttributes : List (Element.Attribute msg)
-contentAttributes =
-    [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
-
-
 ticketCardsView : LoadedModel -> Element FrontendMsg_
 ticketCardsView model =
     if model.window.width < 950 then
@@ -1225,7 +1148,7 @@ ticketCardsView model =
                         Element.text "No ticket prices found"
             )
             (AssocList.toList Tickets.dict)
-            |> Element.row (Element.spacing 16 :: contentAttributes)
+            |> Element.row (Element.spacing 16 :: Theme.contentAttributes)
 
 
 content1 : Element msg
