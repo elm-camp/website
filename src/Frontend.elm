@@ -8,6 +8,7 @@ import Browser.Dom
 import Browser.Events
 import Browser.Navigation
 import Camp23Denmark
+import Camp23Denmark.Artifacts
 import Dict
 import Element exposing (Element)
 import Element.Background
@@ -1113,7 +1114,17 @@ Last year was our first Elm Camp and unconference. Our intention remains the sam
 
 We're still working out the details for Elm Camp 2024. We're on the hunt for a new venue, and we need your help! If you have ideas for a local (to you) venue, please take a few minutes to fill out our [venue survey](https://docs.google.com/forms/d/e/1FAIpQLSemvyUQURU_Dowyvp-5K6miBve5KWjoVTb9D65w82lrPpnBIg)
 
+# What happened at Elm Camp 2023
+
+Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
+
 """
+        ++ Camp23Denmark.Artifacts.posts
+        ++ Camp23Denmark.Artifacts.media
+        ++ """<br/>
+
+Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
+        """
         |> MarkdownThemed.renderFull
 
 
