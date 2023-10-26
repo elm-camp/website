@@ -440,6 +440,19 @@ header config =
                 { url = Route.encode HomepageRoute
                 , label = Element.el [ Element.Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
                 }
+
+        elmCampNextTopLine =
+            Element.row
+                [ Element.centerX, Element.spacing 13 ]
+                [ Element.image
+                    [ Element.width (Element.px 49) ]
+                    { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+                , Element.column
+                    [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
+                    [ Element.el [ Theme.glow ] (Element.text "Unconference")
+                    , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "Planet Earth 2024")
+                    ]
+                ]
     in
     if config.window.width < 1000 || config.isCompact then
         Element.column
@@ -454,8 +467,7 @@ header config =
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
-                , Camp23Denmark.elmCampDenmarkTopLine
-                , Camp23Denmark.elmCampDenmarkBottomLine
+                , elmCampNextTopLine
                 ]
             ]
 
@@ -468,8 +480,7 @@ header config =
             , Element.column
                 [ Element.spacing 24 ]
                 [ elmCampTitle
-                , Camp23Denmark.elmCampDenmarkTopLine
-                , Camp23Denmark.elmCampDenmarkBottomLine
+                , elmCampNextTopLine
                 ]
             ]
 
@@ -635,9 +646,6 @@ ticketsHtmlId =
 homepageView : LoadedModel -> Element FrontendMsg_
 homepageView model =
     let
-        padding =
-            Element.paddingXY sidePadding 24
-
         sidePadding =
             if model.window.width < 800 then
                 24
@@ -645,97 +653,34 @@ homepageView model =
             else
                 60
     in
-    case model.selectedTicket of
-        Just ( productId, priceId ) ->
-            case AssocList.get productId Tickets.dict of
-                Just ticket ->
-                    Element.column
-                        (Element.spacing 24 :: padding :: Theme.contentAttributes)
-                        [ Element.row
-                            [ Element.spacing 16, Element.width Element.fill ]
-                            [ Element.image
-                                [ Element.width (Element.px 50) ]
-                                { src = ticket.image, description = "Illustration of a cozy camp site at evening time" }
-                            , Element.paragraph
-                                [ Element.Font.size 24 ]
-                                [ Element.el [ Element.Font.semiBold ] (Element.text ticket.name)
-                                , case AssocList.get productId model.prices of
-                                    Just { price } ->
-                                        " - "
-                                            ++ Theme.priceText price
-                                            |> Element.text
-
-                                    Nothing ->
-                                        Element.none
-                                ]
-                            ]
-                        , Element.paragraph [] [ MarkdownThemed.renderFull ticket.description ]
-                        , formView model productId priceId ticket
-                        ]
-
-                Nothing ->
-                    Element.text "Ticket not found"
-
-        Nothing ->
-            Element.column
-                [ Element.width Element.fill ]
-                [ Element.column
-                    [ Element.spacing 50
-                    , Element.width Element.fill
-                    , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+    Element.column
+        [ Element.width Element.fill ]
+        [ Element.column
+            [ Element.spacing 50
+            , Element.width Element.fill
+            , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+            ]
+            [ header { window = model.window, isCompact = False }
+            , Element.column
+                [ Element.width Element.fill, Element.spacing 40 ]
+                [ Element.column Theme.contentAttributes [ content1 ]
+                , Element.column
+                    Theme.contentAttributes
+                    [ MarkdownThemed.renderFull "# Last year's sponsors"
+                    , sponsors model.window
                     ]
-                    [ header { window = model.window, isCompact = False }
-                    , Element.column
-                        [ Element.width Element.fill, Element.spacing 40 ]
-                        [ Element.column
-                            Theme.contentAttributes
-                            [ content1, unconferenceBulletPoints model ]
-                        , if model.window.width > 950 then
-                            [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-                                |> List.map (dallundCastleImage (Element.px 288))
-                                |> Element.wrappedRow
-                                    [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
-
-                          else
-                            [ [ "image1.webp", "image2.webp" ]
-                            , [ "image3.webp", "image4.webp" ]
-                            , [ "image5.webp", "image6.webp" ]
-                            ]
-                                |> List.map
-                                    (\paths ->
-                                        Element.row
-                                            [ Element.spacing 10, Element.width Element.fill ]
-                                            (List.map (dallundCastleImage Element.fill) paths)
-                                    )
-                                |> Element.column [ Element.spacing 10, Element.width Element.fill ]
-                        , Element.column
-                            Theme.contentAttributes
-                            [ MarkdownThemed.renderFull "# Our sponsors"
-                            , sponsors model.window
-                            ]
-                        , Element.column
-                            [ Element.width Element.fill
-                            , Element.spacing 24
-                            , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
-                            ]
-                            [ Element.column
-                                (Element.spacing 16 :: Theme.contentAttributes)
-                                [ MarkdownThemed.renderFull <|
-                                    """
-# Tickets
-"""
-                                , ticketCardsView model
-                                , Theme.viewIf (Inventory.allSoldOut model.slotsRemaining) <|
-                                    MarkdownThemed.renderFull <|
-                                        """**Missed out on a ticket? Send an email to [team@elm.camp](mailto:team@elm.camp) and we'll add you to the Campfire Ticket wait list.**"""
-                                ]
-                            , Element.el Theme.contentAttributes content2
-                            , Element.el Theme.contentAttributes content3
-                            ]
-                        ]
+                , Element.column
+                    [ Element.width Element.fill
+                    , Element.spacing 24
+                    , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
-                , Theme.footer
+                    [ Element.el Theme.contentAttributes content2
+                    , Element.el Theme.contentAttributes content3
+                    ]
                 ]
+            ]
+        , Theme.footer
+        ]
 
 
 
@@ -1162,39 +1107,14 @@ Over the last few years, Elm has seen community-driven tools and libraries expan
 
 There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
-Elm Camp is the first Elm Unconference. Our intention is to debut as a small, casual and low-stress event, paving the way for future Elm Camps across the world.
+Last year was our first Elm Camp and unconference. Our intention remains the same: to run as a small, casual and low-stress event, and pave the way for future Elm Camps across the world.
 
-# The Unconference
+# Help us plan Elm Camp 2024!
+
+We're still working out the details for Elm Camp 2024. We're on the hunt for a new venue, and we need your help! If you have ideas for a local (to you) venue, please take a few minutes to fill out our [venue survey](https://docs.google.com/forms/d/e/1FAIpQLSemvyUQURU_Dowyvp-5K6miBve5KWjoVTb9D65w82lrPpnBIg)
 
 """
         |> MarkdownThemed.renderFull
-
-
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
-unconferenceBulletPoints model =
-    [ Element.text "Arrive 3pm Wed 28 June"
-    , Element.text "Depart 4pm Fri 30 June"
-    , Element.text "Dallund Castle, Denmark"
-    , Element.text "Daily opener un-keynote"
-    , Element.text "Collaborative session creation throughout"
-    , Element.text "Countless hallway conversations and mealtime connections"
-    , Element.text "Access to full castle grounds including lake swimming"
-    , Element.el
-        [ (if model.showTooltip then
-            tooltip "This is our first Elm Unconference, so we're starting small and working backwards from a venue. We understand that this might mean some folks miss out this year – we plan to take what we learn & apply it to the next event. If you know of a bigger venue that would be suitable for future years, please let the team know!"
-
-           else
-            Element.none
-          )
-            |> Element.below
-        ]
-        (Element.Input.button
-            []
-            { onPress = Just PressedShowTooltip, label = Element.text "50 attendees ℹ️" }
-        )
-    ]
-        |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
-        |> Element.column [ Element.spacing 15 ]
 
 
 tooltip : String -> Element msg
@@ -1211,59 +1131,12 @@ tooltip text =
 content2 : Element msg
 content2 =
     """
-The venue has a capacity of 24 rooms, and 50 total attendees (i.e. on-site + external). Our plan is to prioritise ticket sales in the following order: """
-        ++ String.join ", " [ Tickets.couplesCampTicket.name, Tickets.campTicket.name, Tickets.campfireTicket.name ]
-        ++ """
 
 # Opportunity grants
 
-"""
-        ++ grantApplicationCopy
-        ++ """
+Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for next year's event, but we hope to be able to offer the same opportunity again.
 
-**Thanks to Concentric and generous individual sponsors for making the opportunity grants possible**.
-
-
-# Schedule
-
-## Wed 28th June
-
-* 3pm - Arrivals & halls officially open
-* 6pm - Opening of session board
-* 7pm - Informal dinner
-* 8:30pm+ Evening stroll and informal chats
-* 9:57pm - 🌅Sunset
-
-## Thu 29th June
-
-* 7am-9am - Breakfast
-* 9am - Opening Unkeynote
-* 10am-12pm - Unconference sessions
-* 12-1:30pm - Lunch
-* 2pm-5pm Unconference sessions
-* 6-7:30pm Dinner
-* Onwards - Board Games and informal chats
-
-## Fri 30th June
-
-* 7am-9am - Breakfast
-* 9am - 12pm Unconference sessions
-* 12-1:30pm - Lunch
-* 2pm Closing Unkeynote
-* 3pm unconference wrap-up
-* 4pm - Departure
-
-# Travel and Accommodation
-
-Elm Camp takes place at Dallund Castle near Odense in Denmark.
-
-Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations.
-
-Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense.
-
-All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option.
-
-More details can be found on our [venue & access page](/venue-and-access).
+**Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
 # Organisers
 
@@ -1287,49 +1160,9 @@ content3 =
     """
 # Sponsorship options
 
-Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
+Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level. 
 
-All levels of contribution are appreciated and acknowledged. Get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
-
-## Bronze - less than €1000 EUR
-
-You will be an appreciated supporter of Elm Camp Europe 2023.
-
-* Listed as additional supporter on webpage
-
-## Silver - €1000 EUR  (£880 / $1100 USD)
-You will be a major supporter of Elm Camp Europe 2023.
-
-* Thank you tweet
-* Logo on webpage
-* Small logo on shared slide, displayed during breaks
-
-## Gold - €2500 EUR  (£2200 / $2700 USD)
-
-You will be a pivotal supporter of Elm Camp Europe 2023.
-
-* Thank you tweet
-* Rollup or poster inside the venue (provided by you)
-* Logo on webpage
-* Medium logo on shared slide, displayed during breaks
-* 1 free camp ticket
-
-## Platinum - €5000 EUR  (£4500 / $5300 USD)
-
-You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success.
-
-* Thank you tweet
-* Rollup or poster inside the venue (provided by you)
-* Self-written snippet on shared web page about use of Elm at your company
-* Logo on webpage
-* 2 free camp tickets
-* Big logo on shared slide, displayed during breaks
-* Honorary mention in opening and closing talks
-
-Limited to two.
-
-## Addon: Attendee Sponsor – €550
-You will make it possible for a student and/or underprivileged community member to attend Elm Camp Europe 2023.
+We haven’t worked out the detalis for Elm Camp 2024 yet, but if you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
 
 # Something else?
 
