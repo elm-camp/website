@@ -1,5 +1,6 @@
 module Camp23Denmark exposing (..)
 
+import Camp23Denmark.Archive
 import Camp23Denmark.Artifacts
 import Element
 import Element.Font
@@ -9,31 +10,31 @@ import Theme
 
 
 view model subpage =
-    case subpage of
-        Home ->
-            Element.text "todo"
-
-        Artifacts ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
-                [ Element.column
-                    (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
-                    [ Theme.rowToColumnWhen 700
-                        model
-                        [ Element.spacing 30, Element.centerX, Element.Font.center ]
-                        [ Element.image
-                            [ Element.width (Element.px 300) ]
-                            { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
-                        , Element.column [ Element.width Element.fill, Element.spacing 20 ]
-                            [ Element.paragraph [ Element.Font.size 50, Element.Font.center ] [ Element.text "Artifacts" ]
-                            , elmCampDenmarkTopLine
-                            , elmCampDenmarkBottomLine
-                            ]
-                        ]
-                    , Camp23Denmark.Artifacts.view model
+    Element.column
+        [ Element.width Element.fill, Element.height Element.fill ]
+        [ Element.column
+            (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
+            [ Theme.rowToColumnWhen 700
+                model
+                [ Element.spacing 30, Element.centerX, Element.Font.center ]
+                [ Element.image
+                    [ Element.width (Element.px 300) ]
+                    { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
+                , Element.column [ Element.width Element.fill, Element.spacing 20 ]
+                    [ Element.paragraph [ Element.Font.size 50, Element.Font.center ] [ Element.text "Archive" ]
+                    , elmCampDenmarkTopLine
+                    , elmCampDenmarkBottomLine
                     ]
-                , Theme.footer
                 ]
+            , case subpage of
+                Home ->
+                    Camp23Denmark.Archive.view model
+
+                Artifacts ->
+                    Camp23Denmark.Artifacts.view model
+            ]
+        , Theme.footer
+        ]
 
 
 elmCampDenmarkTopLine =
