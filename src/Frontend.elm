@@ -1149,7 +1149,7 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
-# Organisers
+# 2024 Organisers
 
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
