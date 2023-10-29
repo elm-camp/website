@@ -1173,7 +1173,7 @@ content3 =
 
 Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level. 
 
-We haven’t worked out the detalis for Elm Camp 2024 yet, but if you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
+If you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
 
 # Something else?
 
