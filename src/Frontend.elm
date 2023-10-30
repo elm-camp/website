@@ -829,7 +829,7 @@ Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofo
 
 opportunityGrant form textInput =
     Element.column [ Element.spacing 20 ]
-        [ Element.el [ Element.Font.size 20 ] (Element.text "🫶 Opportunity grants")
+        [ Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Opportunity grants")
         , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ Element.row [ Element.width Element.fill, Element.spacing 15 ]
@@ -1153,25 +1153,32 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
 
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
-🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
+"""
+        ++ organisers2024
+        |> MarkdownThemed.renderFull
+
+
+organisers2024 =
+    """
+🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of [codereading.club](https://codereading.club/)
 
 🇺🇸 James Carlson – Developer of [Scripta.io](https://scripta.io), a web publishing platform for technical documents in mathematics, physics, and the like. Currently working for [exosphere.app](https://exosphere.app), an all-Elm cloud-computing project
 
-🇸🇪 Martin Stewart – Makes games and apps using Lamdera. Also runs the state-of-elm survey every year.
+🇬🇧 Mario Rogic – Organiser of the [Elm London](https://meetdown.app/group/37aa26/Elm-London-Meetup) and [Elm Online](https://meetdown.app/group/10561/Elm-Online-Meetup) meetups. Groundskeeper of [Elmcraft](https://elmcraft.org/), founder of [Lamdera](https://lamdera.com/).
 
-🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
+🇩🇪 Johannes Emerich – Works at [Dividat](https://dividat.com/en), making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
 
-🇬🇧 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
+🇺🇸 Wolfgang Schuster – Author of [Elm weekly](https://www.elmweekly.nl/), hobbyist and professional Elm developer. Currently working at [Vendr](https://www.vendr.com/).
 
-🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps."""
-        |> MarkdownThemed.renderFull
+🇬🇧 Hayleigh Thompson – Terminally online in the Elm community. Competitive person-help. Developer relations engineer at [xyflow](https://www.xyflow.com/).
+"""
 
 
 content3 =
     """
 # Sponsorship options
 
-Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level. 
+Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
 
 If you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
 
