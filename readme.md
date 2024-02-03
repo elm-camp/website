@@ -13,3 +13,6 @@ Features:
 
 - [Install lamdera](https://dashboard.lamdera.app/docs/download)
 - Run `lamdera live`
+
+## Troubleshooting
+- To fix `resource busy (file is locked)` error Run `lamdera reset`
