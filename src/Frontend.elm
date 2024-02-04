@@ -1385,23 +1385,25 @@ venueAccessContent =
 
 ## The venue
 
-**Dallund Slot**<br/>
-Dallundvej 63<br/>
-5471 Søndersø<br/>
-Denmark
+**Colehayes Park**<br/>
+Haytor Road<br/>
+Bovey Tracey<br/>
+South Devon<br/>
+TQ13 9LD<br/>
+England
 
-[Google Maps](https://goo.gl/maps/1WGiHRc7NaNimBzx5)
+[Google Maps](https://goo.gl/maps/Q44YiJCJ79apMmQ8A)
 
-[https://www.dallundcastle.dk/](https://www.dallundcastle.dk/)
+[https://www.colehayes.co.uk//](https://www.colehayes.co.uk//)
 
 ## Getting there
 
-### via train, bus & 2 km walk/Elm Camp shuttle
+### via train & cab/Elm Camp shuttle
 
-* Travel to Odense train station ([Danske Statsbaner](https://www.dsb.dk/en/))
-* From the station take [bus 191](https://www.fynbus.dk/find-din-rejse/rute,190) to Søndersø (_OBC Nord Plads H_ to _Søndersø Bypark_)
-* Elm Camp will be organising shuttles between Søndersø and the venue at key times
-* You can walk 2 km from Søndersø to the venue if you don't mind a short section of unpaved road
+* The closest train station is ([Newton Abbot station](https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot))
+* Express direct trains from London Paddington take 2.5 – 3.5 hours
+* Colehayes Park is then a 20 minute cab from Newton Abbot station.
+* Elm Camp will also be organising shuttles between Newton Abbot and the venue at key times
 
 ### via car
 
@@ -1409,24 +1411,20 @@ Denmark
 
 ### via plane
 
-* Major airports in Denmark are Copenhagen, Billund and Aarhus
-* Malmö (Sweden) also has good connections to Denmark
-
-For other travel options also check [Rejseplanen](https://www.rejseplanen.dk/), [The Man in Seat 61](https://www.seat61.com/Denmark.htm), [Trainline](https://www.thetrainline.com/) and [Flixbus](https://www.flixbus.co.uk/coach/odense).
+* The closest airport is Exeter, with flight connections to a number of European cities
+* Major airports in England are Heathrow and Gatwick
 
 ## Local amenities
 
-Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, Søndersø offers a few shops.
+Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, nearby Bovey Tracey offers a few shops.
 
 ### Supermarkets
 
-- SuperBrugsen (7 am—8 pm), Toftekær 4
-- Rema 1000 (7 am—9 pm), Odensevej 3
-- Netto (7 am—10 pm), Vesterled 45
+- [Tesco Express](https://www.tesco.com/store-locator/newton-abbot/47-fore-st) (7 am—11 pm), 47 Fore St
 
 ### Health
 
-- Pharmacy ([Søndersø Apotek](https://soendersoeapotek.a-apoteket.dk/)) (9 am—5:30 pm), near SuperBrugsen supermarket
+- Pharmacy ([Bovey Tracey Pharmacy](https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40)) (9 am—5:30 pm), near Tesco Express supermarket
 
 ## Accessibility
 
@@ -1480,7 +1478,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
 contactDetails : String
 contactDetails =
     """
-* Elmcraft Discord: [#elm-camp-23](https://discord.gg/QeZDXJrN78) channel or DM Katja#0091
+* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM Katja#0091
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """
