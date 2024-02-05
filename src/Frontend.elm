@@ -1401,7 +1401,9 @@ England
 ### via train & cab/Elm Camp shuttle
 
 * The closest train station is ([Newton Abbot station](https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot))
-* Express direct trains from London Paddington take 2.5 – 3.5 hours
+  * Express direct trains from London Paddington take 2.5 – 3.5 hours (best for all London Airports)
+  * Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)
+  * From Exeter Airport a 30 minute cab/rideshare directly to the venue is best
 * Colehayes Park is then a 20 minute cab from Newton Abbot station.
 * Elm Camp will also be organising shuttles between Newton Abbot and the venue at key times
 
