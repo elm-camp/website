@@ -1414,7 +1414,7 @@ England
 ### via plane
 
 * The closest airport is Exeter, with flight connections to a number of European cities
-* Major airports in England are Heathrow and Gatwick
+* The next closest major airports in order of travel time are: Bristol, London Heathrow, London Gatwick, London Stanstead, London Luton.
 
 ## Local amenities
 
