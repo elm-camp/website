@@ -1312,7 +1312,7 @@ Elm Camp welcomes people with a wide range of backgrounds, experiences and knowl
 
 ## Help everyone feel welcome at Elm Camp
 
-Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and preparing food, but there are no other guests at the hotel.
+Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds.
 
 We expect everyone here to ensure that our community is harrassment-free for everyone.
 
