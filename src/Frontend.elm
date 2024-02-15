@@ -443,15 +443,24 @@ header config =
                 }
 
         elmCampNextTopLine =
-            Element.row
-                [ Element.centerX, Element.spacing 13 ]
-                [ Element.image
-                    [ Element.width (Element.px 49) ]
-                    { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+            Element.column [ Element.spacing 8 ]
+                [ Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
+                        { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+                    , Element.column []
+                        [ Element.column
+                            [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
+                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
+                            , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "UK 2024")
+                            ]
+                        ]
+                    ]
                 , Element.column
-                    [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                    [ Element.el [ Theme.glow ] (Element.text "Unconference")
-                    , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "Planet Earth 2024")
+                    [ Element.moveRight 0, Element.spacing 2, Element.Font.size 18, Element.moveUp 1 ]
+                    [ Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Tues 18th — Fri 21st June")
+                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Colehayes Park Devon")
                     ]
                 ]
     in
@@ -1108,8 +1117,7 @@ Over the last few years, Elm has seen community-driven tools and libraries expan
 
 There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
-Last year was our first Elm Camp and unconference. Our intention remains the same: to run as a small, casual and low-stress event, and pave the way for future Elm Camps across the world.
-
+Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
 # Help us plan Elm Camp 2024!
 
 We're still working out the details for Elm Camp 2024. We're on the hunt for a new venue, and we need your help! If you have ideas for a local (to you) venue, please take a few minutes to fill out our [venue survey](https://docs.google.com/forms/d/e/1FAIpQLSemvyUQURU_Dowyvp-5K6miBve5KWjoVTb9D65w82lrPpnBIg)
