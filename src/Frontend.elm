@@ -593,6 +593,17 @@ loadedView model =
                 , Theme.footer
                 ]
 
+        ElmCampArchiveRoute ->
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
+                [ header { window = model.window, isCompact = True }
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
+                    [ elmCampArchiveContent model
+                    ]
+                , Theme.footer
+                ]
+
         AdminRoute passM ->
             Admin.view model
 
@@ -665,11 +676,6 @@ homepageView model =
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
                 [ Element.column Theme.contentAttributes [ content1 ]
-                , Element.column
-                    Theme.contentAttributes
-                    [ MarkdownThemed.renderFull "# Last year's sponsors"
-                    , sponsors model.window
-                    ]
                 , Element.column
                     [ Element.width Element.fill
                     , Element.spacing 24
@@ -1109,22 +1115,7 @@ Over the last few years, Elm has seen community-driven tools and libraries expan
 There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
 Last year was our first Elm Camp and unconference. Our intention remains the same: to run as a small, casual and low-stress event, and pave the way for future Elm Camps across the world.
-
-# Help us plan Elm Camp 2024!
-
-We're still working out the details for Elm Camp 2024. We're on the hunt for a new venue, and we need your help! If you have ideas for a local (to you) venue, please take a few minutes to fill out our [venue survey](https://docs.google.com/forms/d/e/1FAIpQLSemvyUQURU_Dowyvp-5K6miBve5KWjoVTb9D65w82lrPpnBIg)
-
-# What happened at Elm Camp 2023
-
-Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
-
 """
-        ++ Camp23Denmark.Artifacts.posts
-        ++ Camp23Denmark.Artifacts.media
-        ++ """<br/>
-
-Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
-        """
         |> MarkdownThemed.renderFull
 
 
@@ -1484,3 +1475,23 @@ contactDetails =
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """
+
+
+elmCampArchiveContent : LoadedModel -> Element msg
+elmCampArchiveContent model =
+    Element.column []
+        [ """
+# What happened at Elm Camp 2023
+
+Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
+
+"""
+            ++ Camp23Denmark.Artifacts.posts
+            ++ Camp23Denmark.Artifacts.media
+            ++ """
+Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
+
+[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+        """
+            |> MarkdownThemed.renderFull
+        ]
