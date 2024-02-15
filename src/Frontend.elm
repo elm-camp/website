@@ -460,7 +460,7 @@ header config =
                 , Element.column
                     [ Element.moveRight 0, Element.spacing 2, Element.Font.size 18, Element.moveUp 1 ]
                     [ Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Tues 18th — Fri 21st June")
-                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Colehayes Park Devon")
+                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Colehayes Park, Devon")
                     ]
                 ]
     in
