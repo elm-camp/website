@@ -1139,6 +1139,45 @@ Elm Camp is now in its second year! Following last year’s delightful debut in 
 
 - 60 attendees
 
+# Tickets
+
+
+There is a mix of room types — singles, doubles, dorm style rooms
+suitable for up to four people. We will have to self-organize
+to distribute ourselves among the rooms and share bathrooms.
+The facilities for those who wish to bring a tent and camp
+are excellent. The surrounding grounds and countryside are
+beautiful and include woodland, a swimming lake and a firepit.
+
+Each attendee will need to purchase a campfire ticket AND either
+a single room ticket (limited availability), or organize
+with others for a shared double room ticket or a shared  dorm room ticket.
+See the example ticket combinations below for more details.
+
+## Campfire Ticket – £200
+- Attendee ticket, full access to the event 18th - 21st June 2024
+- Breakfast, lunch, tea & dinner included as per schedule Room Add-ons
+You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+Outdoor camping space – Free
+- Bring your own tent or campervan and stay on site
+- Showers & toilets provided
+
+## Dorm room - £600
+- Suitable for up to 4 people
+
+## Double room – £500
+
+- Suitable for couple or twin beds
+
+## Single room – £400
+- Limited availability
+
+
+**Example ticket combinations:**
+Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
+Purchase 1 campfire ticket (£200) and a single room (£400) for £600
+This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
+
 # What happened at Elm Camp 2023
 
 Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
