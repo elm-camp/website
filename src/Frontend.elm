@@ -1155,8 +1155,9 @@ The facilities for those who wish to bring a tent and camp
 are excellent. The surrounding grounds and countryside are
 beautiful and include woodland, a swimming lake and a firepit.
 
-Each attendee will need to purchase a campfire ticket AND either
-a single room ticket (limited availability), or organize
+Each attendee will need to purchase a campfire ticket and (1)
+ plan to camp or (2) purchase a
+a single room ticket (limited availability), or (3) organize
 with others for a shared double room ticket or a shared  dorm room ticket.
 See the example ticket combinations below for more details.
 
