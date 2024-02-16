@@ -1118,9 +1118,26 @@ Over the last few years, Elm has seen community-driven tools and libraries expan
 There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
 Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
-# Help us plan Elm Camp 2024!
 
-We're still working out the details for Elm Camp 2024. We're on the hunt for a new venue, and we need your help! If you have ideas for a local (to you) venue, please take a few minutes to fill out our [venue survey](https://docs.google.com/forms/d/e/1FAIpQLSemvyUQURU_Dowyvp-5K6miBve5KWjoVTb9D65w82lrPpnBIg)
+# Unconference
+
+- Arrive 3pm Wed 18 June
+
+- Depart 10am Fri 21st June
+
+- Colehayes Park, Devon UK
+
+- Collaborative session creation throughout.
+
+- Periodic collective scheduling sessions.
+
+- Three tracks, sessions in both short and long blocks
+
+- Countless hallway conversations and mealtime connectiona
+
+- Access to the Park grounds and facilities
+
+- 60 attendees
 
 # What happened at Elm Camp 2023
 
