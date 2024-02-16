@@ -1127,23 +1127,23 @@ Elm Camp is now in its second year! Following last year’s delightful debut in 
 
 # Unconference
 
-- Arrive 3pm Wed 18 June
+- Arrive anytime on Wed 18th June 2024
 
-- Depart 10am Fri 21st June
+- Depart 10am Fri 21st June 2024
 
 - Colehayes Park, Devon UK
 
-- Collaborative session creation throughout.
+- Collaborative session creation throughout
 
-- Periodic collective scheduling sessions.
+- Periodic collective scheduling sessions
 
-- Three tracks, sessions in both short and long blocks
+- At least 3 tracks, sessions in both short and long blocks
 
-- Countless hallway conversations and mealtime connectiona
+- Countless hallway conversations and mealtime connections
 
-- Access to the Park grounds and facilities
+- Full and exclusive access to the Park grounds and facilities
 
-- 60 attendees
+- 60+ attendees
 
 # Tickets
 
