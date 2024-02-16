@@ -602,6 +602,17 @@ loadedView model =
                 , Theme.footer
                 ]
 
+        ElmCampArchiveRoute ->
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
+                [ header { window = model.window, isCompact = True }
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
+                    [ elmCampArchiveContent model
+                    ]
+                , Theme.footer
+                ]
+
         AdminRoute passM ->
             Admin.view model
 
@@ -674,11 +685,6 @@ homepageView model =
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
                 [ Element.column Theme.contentAttributes [ content1 ]
-                , Element.column
-                    Theme.contentAttributes
-                    [ MarkdownThemed.renderFull "# Last year's sponsors"
-                    , sponsors model.window
-                    ]
                 , Element.column
                     [ Element.width Element.fill
                     , Element.spacing 24
@@ -1177,18 +1183,7 @@ Outdoor camping space – Free
 Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
 Purchase 1 campfire ticket (£200) and a single room (£400) for £600
 This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
-
-# What happened at Elm Camp 2023
-
-Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
-
 """
-        ++ Camp23Denmark.Artifacts.posts
-        ++ Camp23Denmark.Artifacts.media
-        ++ """<br/>
-
-Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
-        """
         |> MarkdownThemed.renderFull
 
 
@@ -1213,7 +1208,7 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
-# 2024 Organisers
+# Organisers
 
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
@@ -1276,12 +1271,6 @@ You will be principal sponsor and guarantee that Elm Camp 2024 is a success.
 - Self-written snippet on shared web page about use of Elm at your company
 - 2 free campfire tickets or 1 free camp-bed reservation
 - Honorary mention in opening and closing talks
-
-
-
-
-
-
 
 # Something else?
 
@@ -1585,3 +1574,23 @@ contactDetails =
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """
+
+
+elmCampArchiveContent : LoadedModel -> Element msg
+elmCampArchiveContent model =
+    Element.column []
+        [ """
+# What happened at Elm Camp 2023
+
+Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
+
+"""
+            ++ Camp23Denmark.Artifacts.posts
+            ++ Camp23Denmark.Artifacts.media
+            ++ """
+Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
+
+[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+        """
+            |> MarkdownThemed.renderFull
+        ]
