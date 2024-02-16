@@ -1166,7 +1166,8 @@ See the example ticket combinations below for more details.
 
 ## Room Add-ons
 You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
-Outdoor camping space – Free
+
+### Outdoor camping space – Free
 - Bring your own tent or campervan and stay on site
 - Showers & toilets provided
 
