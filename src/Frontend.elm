@@ -1162,20 +1162,21 @@ See the example ticket combinations below for more details.
 
 ## Campfire Ticket – £200
 - Attendee ticket, full access to the event 18th - 21st June 2024
-- Breakfast, lunch, tea & dinner included as per schedule Room Add-ons
+- Breakfast, lunch, tea & dinner included as per schedule
+
+## Room Add-ons
 You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
 Outdoor camping space – Free
 - Bring your own tent or campervan and stay on site
 - Showers & toilets provided
 
-## Dorm room - £600
+### Dorm room - £600
 - Suitable for up to 4 people
 
-## Double room – £500
-
+### Double room – £500
 - Suitable for couple or twin beds
 
-## Single room – £400
+### Single room – £400
 - Limited availability
 
 
