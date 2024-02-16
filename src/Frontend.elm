@@ -1228,8 +1228,6 @@ organisers2024 =
 
 🇬🇧 Mario Rogic – Organiser of the [Elm London](https://meetdown.app/group/37aa26/Elm-London-Meetup) and [Elm Online](https://meetdown.app/group/10561/Elm-Online-Meetup) meetups. Groundskeeper of [Elmcraft](https://elmcraft.org/), founder of [Lamdera](https://lamdera.com/).
 
-🇩🇪 Johannes Emerich – Works at [Dividat](https://dividat.com/en), making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
-
 🇺🇸 Wolfgang Schuster – Author of [Elm weekly](https://www.elmweekly.nl/), hobbyist and professional Elm developer. Currently working at [Vendr](https://www.vendr.com/).
 
 🇬🇧 Hayleigh Thompson – Terminally online in the Elm community. Competitive person-help. Developer relations engineer at [xyflow](https://www.xyflow.com/).
@@ -1247,16 +1245,18 @@ If you're interested in sponsoring please get in touch with the team at [team@el
 
 ## Bronze - less than £750
 
-You will be an appreciated supporter of Elm Camp 2024. - Listed as additional supporter on webpage
+You will be an appreciated supporter of Elm Camp 2024.
+- Listed as additional supporter on webpage
 
 ## Silver - £750 (€875 EUR / $1000 USD)
 
 You will be a major supporter of Elm Camp 2024.
-
 - Thank you tweet
--- Small logo on shared slide, displayed during breaks
+- Logo on webpage
+- Small logo on shared slide, displayed during breaks
 
 ##  Gold - £1500 (€1750 EUR / $1900 USD)
+
 You will be a pivotal supporter of Elm Camp 2024.
 - Thank you tweet
 - Logo on webpage
