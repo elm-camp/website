@@ -1246,6 +1246,43 @@ Sponsoring Elm Camp gives your company the opportunity to support and connect wi
 
 If you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
 
+
+## Bronze - less than £750
+
+You will be an appreciated supporter of Elm Camp 2024. - Listed as additional supporter on webpage
+
+## Silver - £750 (€875 EUR / $1000 USD)
+
+You will be a major supporter of Elm Camp 2024.
+
+- Thank you tweet
+-- Small logo on shared slide, displayed during breaks
+
+##  Gold - £1500 (€1750 EUR / $1900 USD)
+You will be a pivotal supporter of Elm Camp 2024.
+- Thank you tweet
+- Logo on webpage
+- Medium logo on shared slide, displayed during breaks
+- Rollup or poster inside the venue (provided by you)
+- 1 free campfire ticket
+
+## Platinum - £3000 (€3500 EUR / $3800 USD)
+
+You will be principal sponsor and guarantee that Elm Camp 2024 is a success.
+- Thank you tweet
+- Logo on webpage
+- Big logo on shared slide, displayed during breaks
+- Rollup or poster inside the venue (provided by you)
+- Self-written snippet on shared web page about use of Elm at your company
+- 2 free campfire tickets or 1 free camp-bed reservation
+- Honorary mention in opening and closing talks
+
+
+
+
+
+
+
 # Something else?
 
 Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
