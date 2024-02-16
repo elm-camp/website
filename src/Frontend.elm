@@ -443,15 +443,24 @@ header config =
                 }
 
         elmCampNextTopLine =
-            Element.row
-                [ Element.centerX, Element.spacing 13 ]
-                [ Element.image
-                    [ Element.width (Element.px 49) ]
-                    { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+            Element.column [ Element.spacing 8 ]
+                [ Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
+                        { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+                    , Element.column []
+                        [ Element.column
+                            [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
+                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
+                            , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "UK 2024")
+                            ]
+                        ]
+                    ]
                 , Element.column
-                    [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                    [ Element.el [ Theme.glow ] (Element.text "Unconference")
-                    , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "Planet Earth 2024")
+                    [ Element.moveRight 0, Element.spacing 2, Element.Font.size 18, Element.moveUp 1 ]
+                    [ Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Tues 18th — Fri 21st June")
+                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Colehayes Park, Devon")
                     ]
                 ]
     in
@@ -1114,7 +1123,66 @@ Over the last few years, Elm has seen community-driven tools and libraries expan
 
 There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
 
-Last year was our first Elm Camp and unconference. Our intention remains the same: to run as a small, casual and low-stress event, and pave the way for future Elm Camps across the world.
+Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
+
+# Unconference
+
+- Arrive 3pm Wed 18 June
+
+- Depart 10am Fri 21st June
+
+- Colehayes Park, Devon UK
+
+- Collaborative session creation throughout.
+
+- Periodic collective scheduling sessions.
+
+- Three tracks, sessions in both short and long blocks
+
+- Countless hallway conversations and mealtime connectiona
+
+- Access to the Park grounds and facilities
+
+- 60 attendees
+
+# Tickets
+
+
+There is a mix of room types — singles, doubles, dorm style rooms
+suitable for up to four people. We will have to self-organize
+to distribute ourselves among the rooms and share bathrooms.
+The facilities for those who wish to bring a tent and camp
+are excellent. The surrounding grounds and countryside are
+beautiful and include woodland, a swimming lake and a firepit.
+
+Each attendee will need to purchase a campfire ticket AND either
+a single room ticket (limited availability), or organize
+with others for a shared double room ticket or a shared  dorm room ticket.
+See the example ticket combinations below for more details.
+
+## Campfire Ticket – £200
+- Attendee ticket, full access to the event 18th - 21st June 2024
+- Breakfast, lunch, tea & dinner included as per schedule Room Add-ons
+You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+Outdoor camping space – Free
+- Bring your own tent or campervan and stay on site
+- Showers & toilets provided
+
+## Dorm room - £600
+- Suitable for up to 4 people
+
+## Double room – £500
+
+- Suitable for couple or twin beds
+
+## Single room – £400
+- Limited availability
+
+
+**Example ticket combinations:**
+Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
+Purchase 1 campfire ticket (£200) and a single room (£400) for £600
+This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """
         |> MarkdownThemed.renderFull
 
@@ -1172,6 +1240,37 @@ content3 =
 Sponsoring Elm Camp gives your company the opportunity to support and connect with the Elm community. Your contribution helps members of the community to get together by keeping individual ticket prices at a reasonable level.
 
 If you're interested in sponsoring please get in touch with the team at [team@elm.camp](mailto:team@elm.camp).
+
+
+## Bronze - less than £750
+
+You will be an appreciated supporter of Elm Camp 2024. - Listed as additional supporter on webpage
+
+## Silver - £750 (€875 EUR / $1000 USD)
+
+You will be a major supporter of Elm Camp 2024.
+
+- Thank you tweet
+-- Small logo on shared slide, displayed during breaks
+
+##  Gold - £1500 (€1750 EUR / $1900 USD)
+You will be a pivotal supporter of Elm Camp 2024.
+- Thank you tweet
+- Logo on webpage
+- Medium logo on shared slide, displayed during breaks
+- Rollup or poster inside the venue (provided by you)
+- 1 free campfire ticket
+
+## Platinum - £3000 (€3500 EUR / $3800 USD)
+
+You will be principal sponsor and guarantee that Elm Camp 2024 is a success.
+- Thank you tweet
+- Logo on webpage
+- Big logo on shared slide, displayed during breaks
+- Rollup or poster inside the venue (provided by you)
+- Self-written snippet on shared web page about use of Elm at your company
+- 2 free campfire tickets or 1 free camp-bed reservation
+- Honorary mention in opening and closing talks
 
 # Something else?
 
