@@ -1182,8 +1182,9 @@ You can upgrade a camp ticket with any of the below on-site accommodation option
 
 
 **Example ticket combinations:**
-Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
-Purchase 1 campfire ticket (£200) and a single room (£400) for £600
+- Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
+- Purchase 1 campfire ticket (£200) and a single room (£400) for £600
+
 This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """
         |> MarkdownThemed.renderFull
@@ -1206,7 +1207,7 @@ content2 =
 
 # Opportunity grants
 
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for next year's event, but we hope to be able to offer the same opportunity again.
+Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for this year's event, but we hope to be able to offer the same opportunity again.
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
