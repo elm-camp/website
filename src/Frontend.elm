@@ -1127,7 +1127,7 @@ Elm Camp is now in its second year! Following last year’s delightful debut in 
 
 # Unconference
 
-- Arrive anytime on Wed 18th June 2024
+- Arrive anytime on Tue 18th June 2024
 
 - Depart 10am Fri 21st June 2024
 
