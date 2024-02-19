@@ -1506,7 +1506,7 @@ England
 
 [Google Maps](https://goo.gl/maps/Q44YiJCJ79apMmQ8A)
 
-[https://www.colehayes.co.uk//](https://www.colehayes.co.uk//)
+[https://www.colehayes.co.uk/](https://www.colehayes.co.uk/)
 
 ## Getting there
 
@@ -1517,7 +1517,7 @@ England
   * Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)
   * From Exeter Airport a 30 minute cab/rideshare directly to the venue is best
 * Colehayes Park is then a 20 minute cab from Newton Abbot station.
-* Elm Camp will also be organising shuttles between Newton Abbot and the venue at key times
+* Elm Camp will organise shuttles between Exeter or Newton Abbot and the venue at key times
 
 ### via car
 
@@ -1542,22 +1542,35 @@ Food and drinks are available on site, but if you forgot to pack a toothbrush or
 
 ## Accessibility
 
-### Not step free.
 
-* Bedrooms, toilets, dining rooms and conference talk / workshop rooms can all be accessed via a lift which is 3 steps from ground level
+Attendees will be able to camp in the grounds or book a variety of rooms in the main house or the cottage.
+
+Please let us know if you have specific needs so that we can work with the venue to accommodate you.
+
+### Floor plans
+
+* [The main house](https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf)
+* [The cottage](https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf)
+
+
+### Partially step free.
+Please ask if you require step free accommodation. There is one bedroom on the ground floor.
+
+* Toilets, dining rooms and conference talk / workshop rooms can be accessed from ground level.
 
 ### It's an old manor house
 
-* The house has been renovated to a high standard but there are creaky bits, be sensible when exploring
+* The house has been renovated to a high standard but there are creaky bits. We ask that you be sensible when exploring
 * There are plenty of spaces to hang out in private or in a small quiet group
 * There are a variety of seating options
 
 ### Toilets
 
 * All toilets are gender neutral
-* There is one public toilet on each of the 3 floors
-* All attendees staying at the hotel have a private ensuite in their room
+* There are blocks of toilets and showers on each floor and a couple of single units
+* There is at least one bath in the house
 * The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
+* There are also toilet and shower blocks in the garden for campers
 
 ### Open water & rough ground
 
