@@ -685,6 +685,24 @@ homepageView model =
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
                 [ Element.column Theme.contentAttributes [ content1 ]
+                , if model.window.width > 950 then
+                    [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
+                        |> List.map (venueImage (Element.px 288))
+                        |> Element.wrappedRow
+                            [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+
+                  else
+                    [ [ "image1.webp", "image2.webp" ]
+                    , [ "image3.webp", "image4.webp" ]
+                    , [ "image5.webp", "image6.webp" ]
+                    ]
+                        |> List.map
+                            (\paths ->
+                                Element.row
+                                    [ Element.spacing 10, Element.width Element.fill ]
+                                    (List.map (venueImage Element.fill) paths)
+                            )
+                        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
                 , Element.column
                     [ Element.width Element.fill
                     , Element.spacing 24
@@ -1076,11 +1094,11 @@ radioButton groupName text isChecked =
         |> Element.el []
 
 
-dallundCastleImage : Element.Length -> String -> Element msg
-dallundCastleImage width path =
+venueImage : Element.Length -> String -> Element msg
+venueImage width path =
     Element.image
         [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of the Dallund Castle" }
+        { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
 
 
 ticketCardsView : LoadedModel -> Element FrontendMsg_
