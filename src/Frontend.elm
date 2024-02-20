@@ -1143,6 +1143,9 @@ There is great potential for progress and innovation in a creative, focused, in-
 
 Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
 
+**Note.** Tickets will go on sale in early March. When that happens we will post a notice hear,
+in Slack, Discourse, etc.
+
 # Unconference
 
 - Arrive anytime on Tue 18th June 2024
