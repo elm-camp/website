@@ -443,7 +443,7 @@ header config =
                 }
 
         elmCampNextTopLine =
-            Element.column [ Element.spacing 8 ]
+            Element.column [ Element.spacing 30 ]
                 [ Element.row
                     [ Element.centerX, Element.spacing 13 ]
                     [ Element.image
@@ -460,7 +460,7 @@ header config =
                 , Element.column
                     [ Element.moveRight 0, Element.spacing 2, Element.Font.size 18, Element.moveUp 1 ]
                     [ Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Tues 18th — Fri 21st June")
-                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Colehayes Park, Devon")
+                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "🇬🇧 Colehayes Park, Devon")
                     ]
                 ]
     in
@@ -862,7 +862,7 @@ Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofo
 
 opportunityGrant form textInput =
     Element.column [ Element.spacing 20 ]
-        [ Element.el [ Element.Font.size 20 ] (Element.text "\u{1FAF6} Opportunity grants")
+        [ Element.el [ Element.Font.size 20 ] (Element.text "🫶 Opportunity grants")
         , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ Element.row [ Element.width Element.fill, Element.spacing 15 ]
@@ -1152,7 +1152,7 @@ in Slack, Discourse, etc.
 
 - Depart 10am Fri 21st June 2024
 
-- Colehayes Park, Devon UK
+- 🇬🇧 Colehayes Park, Devon UK
 
 - Collaborative session creation throughout
 
