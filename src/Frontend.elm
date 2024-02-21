@@ -473,7 +473,7 @@ header config =
               else
                 Element.image
                     [ Element.width (Element.maximum 523 Element.fill) ]
-                    { src = "/logo.webp", description = illustrationAltText }
+                    { src = "/logo-24.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
@@ -486,7 +486,7 @@ header config =
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ Element.image
                 [ Element.width (Element.px 523) ]
-                { src = "/logo.webp", description = illustrationAltText }
+                { src = "/logo-24.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24 ]
                 [ elmCampTitle
@@ -685,9 +685,13 @@ homepageView model =
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
                 [ Element.column Theme.contentAttributes [ content1 ]
-                , if model.window.width > 950 then
+                , let
+                    prefix =
+                        "24-colehayes/colehayes-"
+                  in
+                  if model.window.width > 950 then
                     [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-                        |> List.map (venueImage (Element.px 288))
+                        |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
                         |> Element.wrappedRow
                             [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
 
@@ -700,9 +704,10 @@ homepageView model =
                             (\paths ->
                                 Element.row
                                     [ Element.spacing 10, Element.width Element.fill ]
-                                    (List.map (venueImage Element.fill) paths)
+                                    (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
                             )
                         |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+                , Element.column Theme.contentAttributes [ ticketInfo ]
                 , Element.column
                     [ Element.width Element.fill
                     , Element.spacing 24
@@ -1166,8 +1171,13 @@ in Slack, Discourse, etc.
 
 - 60+ attendees
 
-# Tickets
+"""
+        |> MarkdownThemed.renderFull
 
+
+ticketInfo =
+    """
+# Tickets
 
 There is a mix of room types — singles, doubles, dorm style rooms
 suitable for up to four people. We will have to self-organize
