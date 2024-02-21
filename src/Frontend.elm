@@ -472,7 +472,7 @@ header config =
 
               else
                 Element.image
-                    [ Element.width (Element.maximum 523 Element.fill) ]
+                    [ Element.width (Element.maximum 523 Element.fill), Theme.attr "fetchpriority" "high" ]
                     { src = "/logo-24.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24, Element.centerX ]
@@ -485,7 +485,7 @@ header config =
         Element.row
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ Element.image
-                [ Element.width (Element.px 523) ]
+                [ Element.width (Element.px 523), Theme.attr "fetchpriority" "high" ]
                 { src = "/logo-24.webp", description = illustrationAltText }
             , Element.column
                 [ Element.spacing 24 ]

@@ -163,11 +163,15 @@ spinnerWhite =
         [ width (px 16)
         , height (px 16)
         , htmlAttribute <| Html.Attributes.class "spin"
-        , htmlAttribute <| Html.Attributes.style "border" "2px solid #fff"
-        , htmlAttribute <| Html.Attributes.style "border-top-color" "transparent"
-        , htmlAttribute <| Html.Attributes.style "border-radius" "50px"
+        , attr "border" "2px solid #fff"
+        , attr "border-top-color" "transparent"
+        , attr "border-radius" "50px"
         ]
         none
+
+
+attr name value =
+    htmlAttribute <| Html.Attributes.style name value
 
 
 glow =
