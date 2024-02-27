@@ -1,18 +1,18 @@
 module Backend exposing (..)
 
 import AssocList
+import Camp24Devon.Inventory as Inventory
 import Duration
 import EmailAddress exposing (EmailAddress)
 import Env
 import HttpHelpers
 import Id exposing (Id)
-import Inventory
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
 import Postmark exposing (PostmarkEmailBody(..))
 import Product
-import PurchaseForm exposing (PurchaseFormValidated(..))
+import PurchaseForm exposing (PurchaseFormValidated)
 import Quantity
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)

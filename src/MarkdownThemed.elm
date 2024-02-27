@@ -5,6 +5,7 @@ import Element.Background
 import Element.Border
 import Element.Font
 import Element.Region
+import Helpers exposing (justs)
 import Html
 import Html.Attributes
 import Markdown.Block exposing (HeadingLevel, ListItem(..))
@@ -283,17 +284,3 @@ rawTextToId rawText =
         |> String.toLower
         |> String.replace " " "-"
         |> String.replace "." ""
-
-
-justs : List (Maybe a) -> List a
-justs =
-    List.foldl
-        (\v acc ->
-            case v of
-                Just el ->
-                    el :: acc
-
-                Nothing ->
-                    acc
-        )
-        []

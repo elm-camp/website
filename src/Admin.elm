@@ -62,8 +62,9 @@ viewPrices prices =
     column
         [ width fill
         ]
-        [ text "Prices"
-        , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> text
+        [ text "Prices TODO"
+
+        -- , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> text
         ]
 
 
@@ -72,8 +73,9 @@ viewOrders orders =
     column
         [ width fill
         ]
-        [ text "Orders"
-        , Codec.encodeToString 2 (Types.assocListCodec Types.orderCodec) orders |> text
+        [ text "Orders TODO"
+
+        -- , Codec.encodeToString 2 (Types.assocListCodec Types.orderCodec) orders |> text
         ]
 
 
@@ -82,8 +84,9 @@ viewPendingOrder pendingOrders =
     column
         [ width fill
         ]
-        [ text "Pending Orders"
-        , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) pendingOrders |> text
+        [ text "Pending Orders TODO"
+
+        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) pendingOrders |> text
         ]
 
 
@@ -92,8 +95,9 @@ viewExpiredOrders expiredOrders =
     column
         [ width fill
         ]
-        [ text "Expired Orders"
-        , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) expiredOrders |> text
+        [ text "Expired Orders TODO"
+
+        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) expiredOrders |> text
         ]
 
 

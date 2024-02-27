@@ -7,8 +7,9 @@ module Untrusted exposing
     )
 
 import EmailAddress exposing (EmailAddress)
+import Helpers
 import Name exposing (Name)
-import PurchaseForm exposing (PurchaseFormValidated(..))
+import PurchaseForm exposing (..)
 import Toop exposing (T2(..), T3(..))
 
 
@@ -33,58 +34,98 @@ emailAddress (Untrusted a) =
 
 purchaseForm : Untrusted PurchaseFormValidated -> Maybe PurchaseFormValidated
 purchaseForm (Untrusted a) =
-    case a of
-        CampfireTicketPurchase b ->
-            case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
-                T2 (Just attendeeName) (Just billingEmail) ->
-                    { attendeeName = attendeeName
-                    , billingEmail = billingEmail
-                    , country = b.country
-                    , originCity = b.originCity
-                    , primaryModeOfTravel = b.primaryModeOfTravel
-                    , grantContribution = b.grantContribution
-                    , sponsorship = b.sponsorship
-                    }
-                        |> CampfireTicketPurchase
-                        |> Just
+    case
+        T2 (untrust a.billingEmail |> emailAddress)
+            (a.attendees
+                |> List.map (untrust >> attendeeForm)
+                |> validateList
+            )
+    of
+        T2 (Just billingEmail) (Ok attendees) ->
+            Just
+                { attendees = attendees
+                , accommodationBookings = a.accommodationBookings
+                , billingEmail = billingEmail
+                , grantContribution = a.grantContribution
+                , sponsorship = a.sponsorship
+                }
 
-                _ ->
-                    Nothing
+        _ ->
+            Nothing
 
-        CampTicketPurchase b ->
-            case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
-                T2 (Just attendeeName) (Just billingEmail) ->
-                    { attendeeName = attendeeName
-                    , billingEmail = billingEmail
-                    , country = b.country
-                    , originCity = b.originCity
-                    , primaryModeOfTravel = b.primaryModeOfTravel
-                    , grantContribution = b.grantContribution
-                    , sponsorship = b.sponsorship
-                    }
-                        |> CampTicketPurchase
-                        |> Just
 
-                _ ->
-                    Nothing
+validateList validated =
+    if validated |> List.all Helpers.isJust then
+        validated |> Helpers.justs |> Ok
 
-        CouplesCampTicketPurchase b ->
-            case T3 (untrust b.attendee1Name |> name) (untrust b.attendee2Name |> name) (untrust b.billingEmail |> emailAddress) of
-                T3 (Just attendee1Name) (Just attendee2Name) (Just billingEmail) ->
-                    { attendee1Name = attendee1Name
-                    , attendee2Name = attendee2Name
-                    , billingEmail = billingEmail
-                    , country = b.country
-                    , originCity = b.originCity
-                    , primaryModeOfTravel = b.primaryModeOfTravel
-                    , grantContribution = b.grantContribution
-                    , sponsorship = b.sponsorship
-                    }
-                        |> CouplesCampTicketPurchase
-                        |> Just
+    else
+        Err "Invalid attendees"
 
-                _ ->
-                    Nothing
+
+attendeeForm : Untrusted AttendeeFormValidated -> Maybe AttendeeFormValidated
+attendeeForm (Untrusted a) =
+    case T2 (untrust a.name |> name) (untrust a.email |> emailAddress) of
+        T2 (Just name_) (Just email) ->
+            Just
+                { name = name_
+                , email = email
+                , country = a.country
+                , originCity = a.originCity
+                , primaryModeOfTravel = a.primaryModeOfTravel
+                }
+
+        _ ->
+            Nothing
+
+
+
+-- case a of
+--     CampfireTicketPurchase b ->
+--         case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
+--             T2 (Just attendeeName) (Just billingEmail) ->
+--                 { attendeeName = attendeeName
+--                 , billingEmail = billingEmail
+--                 , country = b.country
+--                 , originCity = b.originCity
+--                 , primaryModeOfTravel = b.primaryModeOfTravel
+--                 , grantContribution = b.grantContribution
+--                 , sponsorship = b.sponsorship
+--                 }
+--                     |> CampfireTicketPurchase
+--                     |> Just
+--             _ ->
+--                 Nothing
+--     CampTicketPurchase b ->
+--         case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
+--             T2 (Just attendeeName) (Just billingEmail) ->
+--                 { attendeeName = attendeeName
+--                 , billingEmail = billingEmail
+--                 , country = b.country
+--                 , originCity = b.originCity
+--                 , primaryModeOfTravel = b.primaryModeOfTravel
+--                 , grantContribution = b.grantContribution
+--                 , sponsorship = b.sponsorship
+--                 }
+--                     |> CampTicketPurchase
+--                     |> Just
+--             _ ->
+--                 Nothing
+--     CouplesCampTicketPurchase b ->
+--         case T3 (untrust b.attendee1Name |> name) (untrust b.attendee2Name |> name) (untrust b.billingEmail |> emailAddress) of
+--             T3 (Just attendee1Name) (Just attendee2Name) (Just billingEmail) ->
+--                 { attendee1Name = attendee1Name
+--                 , attendee2Name = attendee2Name
+--                 , billingEmail = billingEmail
+--                 , country = b.country
+--                 , originCity = b.originCity
+--                 , primaryModeOfTravel = b.primaryModeOfTravel
+--                 , grantContribution = b.grantContribution
+--                 , sponsorship = b.sponsorship
+--                 }
+--                     |> CouplesCampTicketPurchase
+--                     |> Just
+--             _ ->
+--                 Nothing
 
 
 untrust : a -> Untrusted a
