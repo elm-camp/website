@@ -1,21 +1,46 @@
-module Product exposing (..)
+module Camp24Devon.Product exposing (..)
 
 import Env
 
 
-ticket : { campFire : String, camp : String, couplesCamp : String }
+year =
+    "2024"
+
+
+includesAccom productId =
+    if productId == ticket.attendanceTicket then
+        False
+
+    else if productId == ticket.campingSpot then
+        False
+
+    else
+        True
+
+
+ticket :
+    { attendanceTicket : String
+    , campingSpot : String
+    , singleRoom : String
+    , doubleRoom : String
+    , groupRoom : String
+    }
 ticket =
     case Env.mode of
         Env.Production ->
-            { campFire = "prod_NWZAQ3eQgK0XlF"
-            , camp = "prod_NWZ5JHXspU1l8p"
-            , couplesCamp = "prod_NWZ8FJ1Ckl9fIc"
+            { attendanceTicket = "prod_PhhIapmx1JVmy9"
+            , campingSpot = "prod_PhhJG27yB8GmzH"
+            , singleRoom = "prod_PhhLtqV8I5Spjo"
+            , doubleRoom = "prod_PhhLZ9pJjyEDfF"
+            , groupRoom = "prod_PhhLsuxKXAfjse"
             }
 
         Env.Development ->
-            { campFire = "prod_NZEShNjlWMPhTA"
-            , camp = "prod_NZEQV1gtsmmSbR"
-            , couplesCamp = "prod_NZERuXB2me9wRw"
+            { attendanceTicket = ""
+            , campingSpot = ""
+            , singleRoom = ""
+            , doubleRoom = ""
+            , groupRoom = ""
             }
 
 
@@ -23,15 +48,15 @@ sponsorship : { silver : String, gold : String, platinum : String }
 sponsorship =
     case Env.mode of
         Env.Production ->
-            { silver = "prod_NfXP14FBQBsK1z"
-            , gold = "prod_NfXQ32t5vx7Sik"
-            , platinum = "prod_NfXRgLoadOXG6n"
+            { silver = ""
+            , gold = ""
+            , platinum = ""
             }
 
         Env.Development ->
-            { silver = "prod_NfgZ9Lztw4rqY1"
-            , gold = "prod_NfgaDIHFcTZaXO"
-            , platinum = "prod_NfgasPyftxzylU"
+            { silver = ""
+            , gold = ""
+            , platinum = ""
             }
 
 
@@ -43,7 +68,7 @@ sponsorshipItems =
     [ { name = "Silver"
       , price = 1000
       , productId = sponsorship.silver
-      , description = "You will be a major supporter of Elm Camp Europe 2023."
+      , description = "You will be a major supporter of Elm Camp Europe " ++ year ++ "."
       , features =
             [ "Thank you tweet"
             , "Logo on webpage"
@@ -53,7 +78,7 @@ sponsorshipItems =
     , { name = "Gold"
       , price = 2500
       , productId = sponsorship.gold
-      , description = "You will be a pivotal supporter of Elm Camp Europe 2023."
+      , description = "You will be a pivotal supporter of Elm Camp Europe " ++ year ++ "."
       , features =
             [ "Thank you tweet"
             , "Rollup or poster inside the venue (provided by you)"
@@ -65,7 +90,7 @@ sponsorshipItems =
     , { name = "Platinum"
       , price = 5000
       , productId = sponsorship.platinum
-      , description = "You will be principal sponsor and guarantee that Elm Camp Europe 2023 is a success."
+      , description = "You will be principal sponsor and guarantee that Elm Camp Europe " ++ year ++ " is a success."
       , features =
             [ "Thank you tweet"
             , "Rollup or poster inside the venue (provided by you)"

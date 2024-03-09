@@ -9,6 +9,9 @@ import Browser.Events
 import Browser.Navigation
 import Camp23Denmark
 import Camp23Denmark.Artifacts
+import Camp24Devon.Inventory as Inventory
+import Camp24Devon.Product as Product
+import Camp24Devon.Tickets as Tickets
 import Dict
 import Element exposing (Element)
 import Element.Background
@@ -21,20 +24,17 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Events
 import Id exposing (Id)
-import Inventory
 import Json.Decode
 import Lamdera
 import LiveSchedule
 import MarkdownThemed
 import Ports
-import Product
-import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
+import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Theme
-import Tickets exposing (Ticket)
 import Time
 import TravelMode
 import Types exposing (..)
@@ -183,18 +183,7 @@ tryLoading loadingModel =
                         , showTooltip = False
                         , prices = prices
                         , selectedTicket = Nothing
-                        , form =
-                            { submitStatus = NotSubmitted NotPressedSubmit
-                            , attendee1Name = ""
-                            , attendee2Name = ""
-                            , billingEmail = ""
-                            , country = ""
-                            , originCity = ""
-                            , primaryModeOfTravel = Nothing
-                            , grantContribution = "0"
-                            , grantApply = False
-                            , sponsorship = Nothing
-                            }
+                        , form = PurchaseForm.init
                         , route = loadingModel.route
                         , showCarbonOffsetTooltip = False
                         , slotsRemaining = slotsRemaining
@@ -218,18 +207,7 @@ tryLoading loadingModel =
                         , showTooltip = False
                         , prices = prices
                         , selectedTicket = Nothing
-                        , form =
-                            { submitStatus = NotSubmitted NotPressedSubmit
-                            , attendee1Name = ""
-                            , attendee2Name = ""
-                            , billingEmail = ""
-                            , country = ""
-                            , originCity = ""
-                            , primaryModeOfTravel = Nothing
-                            , grantContribution = "0"
-                            , grantApply = False
-                            , sponsorship = Nothing
-                            }
+                        , form = PurchaseForm.init
                         , route = loadingModel.route
                         , showCarbonOffsetTooltip = False
                         , slotsRemaining = slotsRemaining
@@ -280,7 +258,7 @@ updateLoaded msg model =
         PressedSelectTicket productId priceId ->
             case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
                 ( Just ticket, TicketsEnabled ) ->
-                    if purchaseable ticket.productId model then
+                    if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , scrollToTop
                         )
@@ -309,8 +287,8 @@ updateLoaded msg model =
             in
             case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
                 ( Just ticket, TicketsEnabled ) ->
-                    if purchaseable ticket.productId model then
-                        case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
+                    if Inventory.purchaseable ticket.productId model.slotsRemaining then
+                        case ( form.submitStatus, PurchaseForm.validateForm form ) of
                             ( NotSubmitted _, Just validated ) ->
                                 ( { model | form = { form | submitStatus = Submitting } }
                                 , Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated))
@@ -400,26 +378,6 @@ updateFromBackendLoaded msg model =
 
         AdminInspectResponse backendModel ->
             ( { model | backendModel = Just backendModel }, Cmd.none )
-
-
-purchaseable : String -> { a | slotsRemaining : { b | campfireTicket : Bool, campTicket : Bool, couplesCampTicket : Bool } } -> Bool
-purchaseable productId model =
-    if productId == Product.ticket.campFire then
-        model.slotsRemaining.campfireTicket
-
-    else if productId == Product.ticket.camp then
-        model.slotsRemaining.campTicket
-
-    else
-        model.slotsRemaining.couplesCampTicket
-
-
-includesAccom productId =
-    if productId == Product.ticket.campFire then
-        False
-
-    else
-        True
 
 
 header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element msg
@@ -747,7 +705,7 @@ errorText error =
     Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Ticket -> Element FrontendMsg_
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
 formView model productId priceId ticket =
     let
         form =
@@ -774,13 +732,13 @@ formView model productId priceId ticket =
 
         submitButton =
             Element.Input.button
-                (Theme.submitButtonAttributes (purchaseable ticket.productId model))
+                (Theme.submitButtonAttributes (Inventory.purchaseable ticket.productId model.slotsRemaining))
                 { onPress = Just (PressedSubmitForm productId priceId)
                 , label =
                     Element.paragraph
                         [ Element.Font.center ]
                         [ Element.text
-                            (if purchaseable ticket.productId model then
+                            (if Inventory.purchaseable ticket.productId model.slotsRemaining then
                                 "Purchase "
 
                              else
@@ -812,23 +770,25 @@ formView model productId priceId ticket =
             , Element.spacing 24
             , Element.padding 16
             ]
-            [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-            , if productId == Id.fromString Product.ticket.couplesCamp then
-                textInput
-                    (\a -> FormChanged { form | attendee2Name = a })
-                    "Person you're sharing a room with"
-                    PurchaseForm.validateName
-                    form.attendee2Name
+            [ Element.none
 
-              else
-                Element.none
+            -- , textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
+            -- , if productId == Id.fromString Product.ticket.couplesCamp then
+            --     textInput
+            --         (\a -> FormChanged { form | attendee2Name = a })
+            --         "Person you're sharing a room with"
+            --         PurchaseForm.validateName
+            --         form.attendee2Name
+            --   else
+            --     Element.none
             , textInput
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
             ]
-        , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
+
+        -- , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
         , opportunityGrant form textInput
         , sponsorships model form textInput
         , """
@@ -837,7 +797,7 @@ By purchasing a ticket, you agree to the event [Code of Conduct](/code-of-conduc
 Please note: you have selected a ticket that ***${ticketAccom} accommodation***.
 """
             |> String.replace "${ticketAccom}"
-                (if includesAccom ticket.productId then
+                (if Product.includesAccom ticket.productId then
                     "includes"
 
                  else
@@ -1024,49 +984,49 @@ carbonOffsetForm textInput showCarbonOffsetTooltip form =
             )
             |> Element.inFront
         ]
-        [ textInput
-            (\a -> FormChanged { form | country = a })
-            "Country you live in"
-            (\text ->
-                case String.Nonempty.fromString text of
-                    Just nonempty ->
-                        Ok nonempty
+        [ Element.none
 
-                    Nothing ->
-                        Err "Please type in the name of the country you live in"
-            )
-            form.country
-        , textInput
-            (\a -> FormChanged { form | originCity = a })
-            "City you live in (or nearest city to you)"
-            (\text ->
-                case String.Nonempty.fromString text of
-                    Just nonempty ->
-                        Ok nonempty
-
-                    Nothing ->
-                        Err "Please type in the name of city nearest to you"
-            )
-            form.originCity
+        -- , textInput
+        --     (\a -> FormChanged { form | country = a })
+        --     "Country you live in"
+        --     (\text ->
+        --         case String.Nonempty.fromString text of
+        --             Just nonempty ->
+        --                 Ok nonempty
+        --             Nothing ->
+        --                 Err "Please type in the name of the country you live in"
+        --     )
+        --     form.country
+        -- , textInput
+        --     (\a -> FormChanged { form | originCity = a })
+        --     "City you live in (or nearest city to you)"
+        --     (\text ->
+        --         case String.Nonempty.fromString text of
+        --             Just nonempty ->
+        --                 Ok nonempty
+        --             Nothing ->
+        --                 Err "Please type in the name of city nearest to you"
+        --     )
+        --     form.originCity
         , Element.column
             [ Element.spacing 8 ]
             [ Element.paragraph
                 [ Element.Font.semiBold ]
                 [ Element.text "What will be your primary method of travelling to the event?" ]
-            , TravelMode.all
-                |> List.map
-                    (\choice ->
-                        radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
-                            |> Element.map
-                                (\() ->
-                                    if Just choice == form.primaryModeOfTravel then
-                                        FormChanged { form | primaryModeOfTravel = Nothing }
 
-                                    else
-                                        FormChanged { form | primaryModeOfTravel = Just choice }
-                                )
-                    )
-                |> Element.column []
+            -- , TravelMode.all
+            --     |> List.map
+            --         (\choice ->
+            --             radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
+            --                 |> Element.map
+            --                     (\() ->
+            --                         if Just choice == form.primaryModeOfTravel then
+            --                             FormChanged { form | primaryModeOfTravel = Nothing }
+            --                         else
+            --                             FormChanged { form | primaryModeOfTravel = Just choice }
+            --                     )
+            --         )
+            --     |> Element.column []
             , case ( form.submitStatus, form.primaryModeOfTravel ) of
                 ( NotSubmitted PressedSubmit, Nothing ) ->
                     errorText "Please select one of the above"
@@ -1113,7 +1073,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewMobile (Inventory.purchaseable ticket.productId model.slotsRemaining) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"
@@ -1126,7 +1086,7 @@ ticketCardsView model =
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Tickets.viewDesktop (Inventory.purchaseable ticket.productId model.slotsRemaining) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"

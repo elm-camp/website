@@ -7,7 +7,7 @@ import Element.Border
 import Element.Font
 import Element.Input
 import MarkdownThemed
-import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated(..), SubmitStatus(..))
+import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
 import Stripe exposing (ProductId(..))
 import Theme

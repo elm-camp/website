@@ -2,6 +2,7 @@ module Backend exposing (..)
 
 import AssocList
 import Camp24Devon.Inventory as Inventory
+import Camp24Devon.Product as Product
 import Duration
 import EmailAddress exposing (EmailAddress)
 import Env
@@ -11,7 +12,6 @@ import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
 import Postmark exposing (PostmarkEmailBody(..))
-import Product
 import PurchaseForm exposing (PurchaseFormValidated)
 import Quantity
 import String.Nonempty exposing (NonemptyString(..))
@@ -240,21 +240,20 @@ updateFromFrontend sessionId clientId msg model =
                                     Inventory.slotsRemaining model
 
                                 validProductAndForm =
-                                    case ( productId == Id.fromString Product.ticket.couplesCamp, purchaseForm ) of
-                                        ( True, CouplesCampTicketPurchase _ ) ->
-                                            True && availability.couplesCampTicket
+                                    -- @TODO FIXME!
+                                    True
 
-                                        ( False, CampTicketPurchase _ ) ->
-                                            True && availability.campTicket
-
-                                        ( False, CampfireTicketPurchase _ ) ->
-                                            True && availability.campfireTicket
-
-                                        _ ->
-                                            False
-
+                                -- case ( productId == Id.fromString Product.ticket.couplesCamp, purchaseForm ) of
+                                --     ( True, CouplesCampTicketPurchase _ ) ->
+                                --         True && availability.couplesCampTicket
+                                --     ( False, CampTicketPurchase _ ) ->
+                                --         True && availability.campTicket
+                                --     ( False, CampfireTicketPurchase _ ) ->
+                                --         True && availability.campfireTicket
+                                --     _ ->
+                                --         False
                                 sponsorshipIdM =
-                                    purchaseForm |> PurchaseForm.commonPurchaseData |> .sponsorship
+                                    purchaseForm.sponsorship
 
                                 sponsorship =
                                     case sponsorshipIdM of
@@ -271,9 +270,9 @@ updateFromFrontend sessionId clientId msg model =
                                         (\now ->
                                             Stripe.createCheckoutSession
                                                 { priceId = priceId
-                                                , opportunityGrantDonation = purchaseForm |> PurchaseForm.commonPurchaseData |> .grantContribution
+                                                , opportunityGrantDonation = purchaseForm.grantContribution
                                                 , sponsorship = sponsorship |> Maybe.map (.priceId >> Id.toString)
-                                                , emailAddress = PurchaseForm.billingEmail purchaseForm
+                                                , emailAddress = purchaseForm.billingEmail
                                                 , now = now
                                                 , expiresInMinutes = 30
                                                 }

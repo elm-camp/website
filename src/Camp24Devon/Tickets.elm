@@ -1,6 +1,7 @@
-module Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, viewDesktop, viewMobile)
+module Camp24Devon.Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, viewDesktop, viewMobile)
 
 import AssocList
+import Camp24Devon.Product as Product
 import Element exposing (Element)
 import Element.Background
 import Element.Border
@@ -10,7 +11,6 @@ import Env
 import Id exposing (Id)
 import MarkdownThemed
 import Money
-import Product
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -21,6 +21,7 @@ import Theme
 
 
 type alias Ticket =
+    -- @TODO change this
     { name : String
     , description : String
     , image : String
@@ -35,7 +36,7 @@ campTicket =
     , description = "Ticket for 1 Person including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product2.webp"
     , slots = 1
-    , productId = Product.ticket.camp
+    , productId = Product.ticket.attendanceTicket
     }
 
 
@@ -45,7 +46,7 @@ couplesCampTicket =
     , description = "Tickets for 2 people including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
     , image = "/product3.webp"
     , slots = 2
-    , productId = Product.ticket.couplesCamp
+    , productId = Product.ticket.campingSpot
     }
 
 
@@ -60,7 +61,7 @@ Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access 
 """
     , image = "/product1.webp"
     , slots = 1
-    , productId = Product.ticket.campFire
+    , productId = Product.ticket.singleRoom
     }
 
 

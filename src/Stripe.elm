@@ -26,7 +26,6 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
-import Product
 import Task exposing (Task)
 import Time
 import Url exposing (percentEncode)

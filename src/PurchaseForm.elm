@@ -6,19 +6,20 @@ module PurchaseForm exposing
     , PurchaseForm
     , PurchaseFormValidated
     , SubmitStatus(..)
+    , init
     , validateEmailAddress
     , validateForm
     , validateInt
     , validateName
     )
 
+import Camp24Devon.Product as Product
 import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
 import Env
 import Helpers
 import Id exposing (Id)
 import Name exposing (Name)
-import Product
 import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
@@ -41,6 +42,18 @@ type alias PurchaseForm =
     , grantContribution : String
     , grantApply : Bool
     , sponsorship : Maybe String
+    }
+
+
+init : PurchaseForm
+init =
+    { submitStatus = NotSubmitted NotPressedSubmit
+    , attendees = []
+    , accommodationBookings = []
+    , billingEmail = ""
+    , grantContribution = ""
+    , grantApply = False
+    , sponsorship = Nothing
     }
 
 

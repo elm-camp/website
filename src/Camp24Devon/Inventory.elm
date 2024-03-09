@@ -1,6 +1,7 @@
 module Camp24Devon.Inventory exposing (..)
 
 import AssocList
+import Camp24Devon.Product as Product
 import PurchaseForm exposing (..)
 import Types exposing (..)
 
@@ -83,3 +84,23 @@ extract selector assocList =
         |> AssocList.toList
         |> List.map Tuple.second
         |> List.concat
+
+
+purchaseable : String -> TicketAvailability -> Bool
+purchaseable productId availability =
+    caseof productId
+        [ ( Product.ticket.attendanceTicket, availability.attendanceTickets )
+        , ( Product.ticket.campingSpot, availability.campingSpots )
+        , ( Product.ticket.singleRoom, availability.singleRooms )
+        , ( Product.ticket.doubleRoom, availability.doubleRooms )
+        , ( Product.ticket.groupRoom, availability.groupRooms )
+        ]
+
+
+caseof v opts =
+    case List.head (List.filter (\( a, b ) -> a == v) opts) of
+        Just ( a, b ) ->
+            b
+
+        Nothing ->
+            False
