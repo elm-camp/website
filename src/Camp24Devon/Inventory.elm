@@ -13,16 +13,16 @@ maxAttendees =
 maxForAccommodationType t =
     case t of
         Campsite ->
-            30
-
-        Single ->
-            5
-
-        Double ->
             20
 
+        Single ->
+            6
+
+        Double ->
+            15
+
         Group ->
-            10
+            4
 
 
 slotsRemaining : BackendModel -> TicketAvailability
