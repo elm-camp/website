@@ -90,6 +90,7 @@ purchaseable : String -> TicketAvailability -> Bool
 purchaseable productId availability =
     caseof productId
         [ ( Product.ticket.attendanceTicket, availability.attendanceTickets )
+        , ( Product.ticket.offsite, True )
         , ( Product.ticket.campingSpot, availability.campingSpots )
         , ( Product.ticket.singleRoom, availability.singleRooms )
         , ( Product.ticket.doubleRoom, availability.doubleRooms )

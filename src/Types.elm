@@ -280,6 +280,7 @@ type FrontendMsg_
     | SetViewport
     | LoadedMusic (Result Audio.LoadError Audio.Source)
     | LiveScheduleMsg LiveSchedule.Msg
+    | Noop
 
 
 type ToBackend

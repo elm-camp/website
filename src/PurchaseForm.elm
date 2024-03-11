@@ -6,6 +6,7 @@ module PurchaseForm exposing
     , PurchaseForm
     , PurchaseFormValidated
     , SubmitStatus(..)
+    , defaultAttendee
     , init
     , validateEmailAddress
     , validateForm
@@ -72,6 +73,16 @@ type alias AttendeeForm =
     , country : String
     , originCity : String
     , primaryModeOfTravel : Maybe TravelMode
+    }
+
+
+defaultAttendee : AttendeeForm
+defaultAttendee =
+    { name = ""
+    , email = ""
+    , country = ""
+    , originCity = ""
+    , primaryModeOfTravel = Nothing
     }
 
 

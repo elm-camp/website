@@ -107,14 +107,18 @@ update msg model =
 
         OnConnected _ clientId ->
             ( model
-            , Lamdera.sendToFrontend
-                clientId
-                (InitData
-                    { prices = model.prices
-                    , slotsRemaining = Inventory.slotsRemaining model
-                    , ticketsEnabled = model.ticketsEnabled
-                    }
-                )
+            , Cmd.batch
+                [ -- @TODO debugging remove me for prod
+                  Stripe.getPrices GotPrices
+                , Lamdera.sendToFrontend
+                    clientId
+                    (InitData
+                        { prices = model.prices
+                        , slotsRemaining = Inventory.slotsRemaining model
+                        , ticketsEnabled = model.ticketsEnabled
+                        }
+                    )
+                ]
             )
 
         CreatedCheckoutSession sessionId clientId priceId purchaseForm result ->

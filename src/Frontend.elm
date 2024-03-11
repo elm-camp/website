@@ -13,7 +13,7 @@ import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
 import Dict
-import Element exposing (Element)
+import Element exposing (..)
 import Element.Background
 import Element.Border
 import Element.Font
@@ -26,6 +26,7 @@ import Html.Events
 import Id exposing (Id)
 import Json.Decode
 import Lamdera
+import List.Extra as List
 import LiveSchedule
 import MarkdownThemed
 import Ports
@@ -256,7 +257,7 @@ updateLoaded msg model =
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
 
         PressedSelectTicket productId priceId ->
-            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
+            case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
                 ( Just ticket, TicketsEnabled ) ->
                     if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
@@ -285,7 +286,7 @@ updateLoaded msg model =
                 form =
                     model.form
             in
-            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
+            case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
                 ( Just ticket, TicketsEnabled ) ->
                     if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         case ( form.submitStatus, PurchaseForm.validateForm form ) of
@@ -328,6 +329,9 @@ updateLoaded msg model =
             case liveScheduleMsg of
                 LiveSchedule.PressedAllowAudio ->
                     ( { model | pressedAudioButton = True }, Cmd.none )
+
+        Noop ->
+            ( model, Cmd.none )
 
 
 scrollToTop : Cmd FrontendMsg_
@@ -668,11 +672,19 @@ homepageView model =
                 , Element.column Theme.contentAttributes [ ticketInfo ]
                 , Element.column
                     [ Element.width Element.fill
-                    , Element.spacing 24
+                    , Element.spacing 60
                     , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
                     [ Element.el Theme.contentAttributes content2
-                    , Element.el Theme.contentAttributes content3
+                    , Element.el [ Element.Font.size 20 ] (Element.text "🎟️ Tickets")
+                    , ticketsView model
+                    , accommodationView model
+                    , formView model
+                        (Id.fromString Product.ticket.campingSpot)
+                        (Id.fromString "testing")
+                        Tickets.attendanceTicket
+
+                    -- , Element.el Theme.contentAttributes content3
                     ]
                 ]
             ]
@@ -680,13 +692,117 @@ homepageView model =
         ]
 
 
+ticketsView model =
+    column Theme.contentAttributes
+        [ row [ width fill ]
+            [ column [ width fill ]
+                [ """
+## 🎟️ Tickets - £200
 
--- slotsLeftText : { a | slotsRemaining : Int } -> String
--- slotsLeftText model =
---     String.fromInt model.slotsRemaining
---         ++ "/"
---         ++ String.fromInt totalSlotsAvailable
---         ++ " slots left"
+Attendance for Elm Camp's 4 day / 3 night event.
+
+- Full accees to the venue grounds and activities
+- All meals (Breakfast, Lunch, Dinner) included as per schedule
+                """
+                    |> MarkdownThemed.renderFull
+                ]
+            , column []
+                [ numericField
+                    "Tickets"
+                    (List.length model.form.attendees)
+                    (\_ ->
+                        -- Remove last attendee from the list
+                        model.form.attendees
+                            |> List.init
+                            |> Maybe.withDefault []
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees }
+                               )
+                    )
+                    (\_ ->
+                        -- Add a new attendee to the list
+                        model.form.attendees
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
+                               )
+                    )
+                ]
+            ]
+        , case model.form.attendees of
+            [] ->
+                Element.text "No attendance tickets selected."
+
+            _ ->
+                column [ width fill ]
+                    [ Element.el [ Element.Font.size 20 ] (Element.text "Attendees")
+                    , Element.column
+                        [ spacing 16, width fill ]
+                        (List.indexedMap (\i attendee -> attendeeView model i attendee) model.form.attendees)
+                    ]
+        ]
+
+
+attendeeView model i attendee =
+    let
+        form =
+            model.form
+
+        removeButton =
+            Element.Input.button
+                (normalButtonAttributes ++ [ width (px 100) ])
+                { onPress =
+                    Just
+                        (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
+                , label = Element.el [ Element.centerX ] (Element.text "Remove")
+                }
+    in
+    Element.column
+        [ width fill, spacing 16 ]
+        [ Element.row
+            [ width fill, spacing 16 ]
+            [ textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
+                "Name"
+                PurchaseForm.validateName
+                attendee.name
+            , textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | email = a } model.form.attendees })
+                "Email"
+                PurchaseForm.validateEmailAddress
+                attendee.email
+            , removeButton
+            ]
+        ]
+
+
+numericField title value downMsg upMsg =
+    row []
+        [ Element.Input.button
+            normalButtonAttributes
+            { onPress = Just (downMsg (value - 1))
+            , label = Element.el [ Element.centerX ] (Element.text "-")
+            }
+        , Element.Input.button
+            normalButtonAttributes
+            { onPress = Nothing
+            , label = text (String.fromInt value)
+            }
+        , Element.Input.button
+            normalButtonAttributes
+            { onPress = Just (upMsg (value + 1))
+            , label = Element.el [ Element.centerX ] (Element.text "+")
+            }
+        ]
 
 
 normalButtonAttributes =
@@ -710,25 +826,6 @@ formView model productId priceId ticket =
     let
         form =
             model.form
-
-        textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
-        textInput onChange title validator text =
-            Element.column
-                [ Element.spacing 4, Element.width Element.fill ]
-                [ Element.Input.text
-                    [ Element.Border.rounded 8 ]
-                    { text = text
-                    , onChange = onChange
-                    , placeholder = Nothing
-                    , label = Element.Input.labelAbove [ Element.Font.semiBold ] (Element.text title)
-                    }
-                , case ( form.submitStatus, validator text ) of
-                    ( NotSubmitted PressedSubmit, Err error ) ->
-                        errorText error
-
-                    _ ->
-                        Element.none
-                ]
 
         submitButton =
             Element.Input.button
@@ -764,8 +861,13 @@ formView model productId priceId ticket =
                 }
     in
     Element.column
-        [ Element.width Element.fill, Element.spacing 24 ]
-        [ Element.column
+        [ Element.width Element.fill, Element.spacing 60 ]
+        [ Element.none
+
+        -- , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
+        , opportunityGrant form
+        , sponsorships model form
+        , Element.column
             [ Element.width Element.fill
             , Element.spacing 24
             , Element.padding 16
@@ -782,15 +884,12 @@ formView model productId priceId ticket =
             --   else
             --     Element.none
             , textInput
+                model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
             ]
-
-        -- , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
-        , opportunityGrant form textInput
-        , sponsorships model form textInput
         , """
 By purchasing a ticket, you agree to the event [Code of Conduct](/code-of-conduct).
 
@@ -814,18 +913,38 @@ Please note: you have selected a ticket that ***${ticketAccom} accommodation***.
 
             SubmitBackendError err ->
                 Element.paragraph [] [ Element.text err ]
+        , """
+Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
+""" |> MarkdownThemed.renderFull
         , if model.window.width > 600 then
             Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
 
           else
             Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
-        , """
-Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
-""" |> MarkdownThemed.renderFull
         ]
 
 
-opportunityGrant form textInput =
+textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
+textInput form onChange title validator text =
+    Element.column
+        [ Element.spacing 4, Element.width Element.fill ]
+        [ Element.Input.text
+            [ Element.Border.rounded 8 ]
+            { text = text
+            , onChange = onChange
+            , placeholder = Nothing
+            , label = Element.Input.labelAbove [ Element.Font.semiBold ] (Element.text title)
+            }
+        , case ( form.submitStatus, validator text ) of
+            ( NotSubmitted PressedSubmit, Err error ) ->
+                errorText error
+
+            _ ->
+                Element.none
+        ]
+
+
+opportunityGrant form =
     Element.column [ Element.spacing 20 ]
         [ Element.el [ Element.Font.size 20 ] (Element.text "🫶 Opportunity grants")
         , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
@@ -842,7 +961,7 @@ opportunityGrant form textInput =
                     Element.column []
                         [ Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
                         , Element.row [ Element.width Element.fill, Element.spacing 30 ]
-                            [ textInput (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                            [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
                             , Element.column [ Element.width (Element.fillPortion 3) ]
                                 [ Element.row [ Element.width (Element.fillPortion 3) ]
                                     [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "0"
@@ -889,10 +1008,10 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 """
 
 
-sponsorships model form textInput =
+sponsorships model form =
     Element.column [ Element.spacing 20 ]
         [ Element.el [ Element.Font.size 20 ] (Element.text "🤝 Sponsor Elm Camp")
-        , Element.paragraph [] [ Element.text "Position your company as a leading supporter of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering." ]
+        , Element.paragraph [] [ Element.text <| "Position your company as a leading supporter of the Elm community and help Elm Camp Europe " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
             |> Theme.rowToColumnWhen 700 model [ Element.spacing 20, Element.width Element.fill ]
@@ -951,7 +1070,7 @@ backgroundColor =
     Element.rgb255 255 244 225
 
 
-carbonOffsetForm textInput showCarbonOffsetTooltip form =
+carbonOffsetForm showCarbonOffsetTooltip form =
     Element.column
         [ Element.width Element.fill
         , Element.spacing 24
@@ -1066,33 +1185,31 @@ venueImage width path =
         { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
 
 
-ticketCardsView : LoadedModel -> Element FrontendMsg_
-ticketCardsView model =
-    if model.window.width < 950 then
-        List.map
+accommodationView : LoadedModel -> Element FrontendMsg_
+accommodationView model =
+    let
+        ( wrapper, view_ ) =
+            if model.window.width < 950 then
+                ( column, Tickets.viewMobile )
+
+            else
+                ( row, Tickets.viewDesktop )
+    in
+    column [ width fill, spacing 20 ]
+        [ Element.el [ Element.Font.size 20 ] (Element.text "🏕️ Accommodation")
+        , paragraph [] [ text "You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation." ]
+        , List.map
             (\( productId, ticket ) ->
                 case AssocList.get productId model.prices of
                     Just price ->
-                        Tickets.viewMobile (Inventory.purchaseable ticket.productId model.slotsRemaining) (PressedSelectTicket productId price.priceId) price.price ticket
+                        view_ (Inventory.purchaseable ticket.productId model.slotsRemaining) (PressedSelectTicket productId price.priceId) price.price ticket
 
                     Nothing ->
                         Element.text "No ticket prices found"
             )
-            (AssocList.toList Tickets.dict)
-            |> Element.column [ Element.spacing 16 ]
-
-    else
-        List.map
-            (\( productId, ticket ) ->
-                case AssocList.get productId model.prices of
-                    Just price ->
-                        Tickets.viewDesktop (Inventory.purchaseable ticket.productId model.slotsRemaining) (PressedSelectTicket productId price.priceId) price.price ticket
-
-                    Nothing ->
-                        Element.text "No ticket prices found"
-            )
-            (AssocList.toList Tickets.dict)
-            |> Element.row (Element.spacing 16 :: Theme.contentAttributes)
+            (AssocList.toList Tickets.accommodationOptions |> List.reverse)
+            |> wrapper [ Element.spacing 16 ]
+        ]
 
 
 content1 : Element msg
@@ -1602,3 +1719,7 @@ Did you attend Elm Camp 2023? We're [open to contributions on Github](https://gi
         """
             |> MarkdownThemed.renderFull
         ]
+
+
+year =
+    "2024"

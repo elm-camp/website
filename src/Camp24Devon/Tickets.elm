@@ -1,4 +1,4 @@
-module Camp24Devon.Tickets exposing (Ticket, campTicket, campfireTicket, couplesCampTicket, dict, viewDesktop, viewMobile)
+module Camp24Devon.Tickets exposing (..)
 
 import AssocList
 import Camp24Devon.Product as Product
@@ -30,23 +30,63 @@ type alias Ticket =
     }
 
 
-campTicket : Ticket
-campTicket =
-    { name = "Camp Ticket"
-    , description = "Ticket for 1 Person including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
-    , image = "/product2.webp"
+attendanceTicket : Ticket
+attendanceTicket =
+    { name = "Campfire Ticket"
+    , description = "Attendee ticket for one person. Full access to the event 18th - 21st June, breakfast, lunch, tea & dinner included as per schedule"
+    , image = ""
     , slots = 1
     , productId = Product.ticket.attendanceTicket
     }
 
 
-couplesCampTicket : Ticket
-couplesCampTicket =
-    { name = "Couples Camp Ticket"
-    , description = "Tickets for 2 people including: on-site accommodation in one private room with ensuite for 2 nights, breakfast, lunch, tea & dinners included."
-    , image = "/product3.webp"
+offsite : Ticket
+offsite =
+    { name = "Offsite"
+    , description = "You'll be organising your own accommodation off-site and making your own way to/from the event each day. You'll still have full access to the event and all meals."
+    , image = ""
+    , slots = 2
+    , productId = Product.ticket.offsite
+    }
+
+
+campingSpot : Ticket
+campingSpot =
+    { name = "Camping Spot"
+    , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
+    , image = ""
     , slots = 2
     , productId = Product.ticket.campingSpot
+    }
+
+
+singleRoom : Ticket
+singleRoom =
+    { name = "Single Room"
+    , description = "Private room for a single attendee for 3 nights."
+    , image = ""
+    , slots = 2
+    , productId = Product.ticket.singleRoom
+    }
+
+
+doubleRoom : Ticket
+doubleRoom =
+    { name = "Double Room"
+    , description = "Suitable for a couple or twin share for 3 nights."
+    , image = ""
+    , slots = 2
+    , productId = Product.ticket.doubleRoom
+    }
+
+
+groupRoom : Ticket
+groupRoom =
+    { name = "Group Room"
+    , description = "Suitable for up to 4 people for 3 nights."
+    , image = ""
+    , slots = 2
+    , productId = Product.ticket.groupRoom
     }
 
 
@@ -65,9 +105,16 @@ Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access 
     }
 
 
+accommodationOptions : AssocList.Dict (Id ProductId) Ticket
+accommodationOptions =
+    [ offsite, campingSpot, singleRoom, doubleRoom, groupRoom ]
+        |> List.map (\t -> ( Id.fromString t.productId, t ))
+        |> AssocList.fromList
+
+
 dict : AssocList.Dict (Id ProductId) Ticket
 dict =
-    [ campfireTicket, couplesCampTicket, campTicket ]
+    [ attendanceTicket, campingSpot, singleRoom, doubleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
         |> AssocList.fromList
 
@@ -75,7 +122,9 @@ dict =
 viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
 viewDesktop ticketAvailable onPress price ticket =
     Theme.panel []
-        [ Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
+        [ Element.none
+
+        -- , Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
         , Element.el
@@ -115,9 +164,10 @@ viewMobile ticketAvailable onPress { currency, amount } ticket =
                     [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
                     (Element.text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
                 ]
-            , Element.image
-                [ Element.width (Element.px 80), Element.alignTop ]
-                { src = ticket.image, description = "Illustration of a camp" }
+
+            -- , Element.image
+            --     [ Element.width (Element.px 80), Element.alignTop ]
+            --     { src = ticket.image, description = "Illustration of a camp" }
             ]
         , Element.Input.button
             (Theme.submitButtonAttributes ticketAvailable)

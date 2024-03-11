@@ -8,18 +8,16 @@ year =
 
 
 includesAccom productId =
-    if productId == ticket.attendanceTicket then
-        False
-
-    else if productId == ticket.campingSpot then
-        False
+    if List.member productId [ ticket.singleRoom, ticket.doubleRoom, ticket.groupRoom ] then
+        True
 
     else
-        True
+        False
 
 
 ticket :
     { attendanceTicket : String
+    , offsite : String
     , campingSpot : String
     , singleRoom : String
     , doubleRoom : String
@@ -29,6 +27,7 @@ ticket =
     case Env.mode of
         Env.Production ->
             { attendanceTicket = "prod_PhhIapmx1JVmy9"
+            , offsite = "prod_PiNYzP0oSVQgSD"
             , campingSpot = "prod_PhhJG27yB8GmzH"
             , singleRoom = "prod_PhhLtqV8I5Spjo"
             , doubleRoom = "prod_PhhLZ9pJjyEDfF"
@@ -36,11 +35,12 @@ ticket =
             }
 
         Env.Development ->
-            { attendanceTicket = ""
-            , campingSpot = ""
-            , singleRoom = ""
-            , doubleRoom = ""
-            , groupRoom = ""
+            { attendanceTicket = "prod_PhhIapmx1JVmy9"
+            , offsite = "prod_PiNYzP0oSVQgSD"
+            , campingSpot = "prod_PhhJG27yB8GmzH"
+            , singleRoom = "prod_PhhLtqV8I5Spjo"
+            , doubleRoom = "prod_PhhLZ9pJjyEDfF"
+            , groupRoom = "prod_PhhLsuxKXAfjse"
             }
 
 
