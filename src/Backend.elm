@@ -280,7 +280,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         price.priceId
 
                                                     Nothing ->
-                                                        Debug.todo "price not found"
+                                                        Id.fromString "price not found"
                                             , quantity = 1
                                             }
                                     )
@@ -302,7 +302,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         price.priceId
 
                                                     Nothing ->
-                                                        Debug.todo "price not found"
+                                                        Id.fromString "price not found"
                                             , quantity = List.length accomCount + 1
                                             }
                                     )
