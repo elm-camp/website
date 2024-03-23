@@ -273,6 +273,8 @@ type FrontendMsg_
     | PressedShowTooltip
     | MouseDown
     | PressedSelectTicket (Id ProductId) (Id PriceId)
+    | AddAccom PurchaseForm.Accommodation
+    | RemoveAccom PurchaseForm.Accommodation
     | FormChanged PurchaseForm
     | PressedSubmitForm (Id ProductId) (Id PriceId)
     | PressedCancelForm

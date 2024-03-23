@@ -2,15 +2,16 @@ module Camp24Devon.Tickets exposing (..)
 
 import AssocList
 import Camp24Devon.Product as Product
-import Element exposing (Element)
-import Element.Background
-import Element.Border
-import Element.Font
-import Element.Input
+import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
+import Element.Input as Input
 import Env
 import Id exposing (Id)
 import MarkdownThemed
 import Money
+import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -105,10 +106,66 @@ Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access 
     }
 
 
-accommodationOptions : AssocList.Dict (Id ProductId) Ticket
+
+-- Campsite
+-- Single
+-- Double
+-- Group
+
+
+accomToTicket : Accommodation -> Ticket
+accomToTicket accom =
+    case accom of
+        Offsite ->
+            offsite
+
+        Campsite ->
+            campingSpot
+
+        Single ->
+            singleRoom
+
+        Double ->
+            doubleRoom
+
+        Group ->
+            groupRoom
+
+
+accomToString : Accommodation -> String
+accomToString accom =
+    case accom of
+        Offsite ->
+            "Offsite"
+
+        Campsite ->
+            "Camping Spot"
+
+        Single ->
+            "Single Room"
+
+        Double ->
+            "Double Room"
+
+        Group ->
+            "Group Room"
+
+
+allAccommodations =
+    [ Offsite, Campsite, Single, Double, Group ]
+
+
+accommodationOptions : AssocList.Dict (Id ProductId) ( Accommodation, Ticket )
 accommodationOptions =
-    [ offsite, campingSpot, singleRoom, doubleRoom, groupRoom ]
-        |> List.map (\t -> ( Id.fromString t.productId, t ))
+    allAccommodations
+        |> List.map
+            (\a ->
+                let
+                    t =
+                        accomToTicket a
+                in
+                ( Id.fromString t.productId, ( a, t ) )
+            )
         |> AssocList.fromList
 
 
@@ -119,72 +176,90 @@ dict =
         |> AssocList.fromList
 
 
-viewDesktop : Bool -> msg -> Price -> Ticket -> Element msg
-viewDesktop ticketAvailable onPress price ticket =
+viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Element msg
+viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
+    let
+        selectedCount =
+            form.accommodationBookings |> List.filter ((==) accom) |> List.length
+    in
     Theme.panel []
-        [ Element.none
+        [ none
 
-        -- , Element.image [ Element.width (Element.px 120) ] { src = ticket.image, description = "Illustration of a camp" }
-        , Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
+        -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
+        , paragraph [ Font.semiBold, Font.size 20 ] [ text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
-        , Element.el
-            [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
-            (Element.text (Theme.priceText price))
-        , Element.Input.button
-            (Theme.submitButtonAttributes ticketAvailable)
-            { onPress = Just onPress
-            , label =
-                Element.el
-                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
-                    (Element.text
-                        (if ticketAvailable then
-                            "Select"
+        , el
+            [ Font.bold, Font.size 36, alignBottom ]
+            (text (Theme.priceText price))
+        , if ticketAvailable then
+            if selectedCount > 0 then
+                Theme.numericField
+                    "Tickets"
+                    selectedCount
+                    (\_ -> removeMsg)
+                    (\_ -> addMsg)
 
-                         else if ticket.name == "Campfire Ticket" then
-                            "Waitlist"
+            else
+                let
+                    ( text_, msg ) =
+                        if ticketAvailable then
+                            ( "Select", Just addMsg )
 
-                         else
-                            "Sold out!"
-                        )
-                    )
-            }
+                        else if ticket.name == "Campfire Ticket" then
+                            ( "Waitlist", Nothing )
+
+                        else
+                            ( "Waitlist", Nothing )
+                in
+                Input.button
+                    (Theme.submitButtonAttributes ticketAvailable)
+                    { onPress = msg
+                    , label =
+                        el
+                            [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
+                            (text text_)
+                    }
+
+          else if ticket.name == "Campfire Ticket" then
+            text "Waitlist"
+
+          else
+            text "Sold out!"
         ]
 
 
-viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
-viewMobile ticketAvailable onPress { currency, amount } ticket =
-    Theme.panel []
-        [ Element.row
-            [ Element.spacing 16 ]
-            [ Element.column
-                [ Element.width Element.fill, Element.spacing 16 ]
-                [ Element.paragraph [ Element.Font.semiBold, Element.Font.size 20 ] [ Element.text ticket.name ]
-                , MarkdownThemed.renderFull ticket.description
-                , Element.el
-                    [ Element.Font.bold, Element.Font.size 36, Element.alignBottom ]
-                    (Element.text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
-                ]
 
-            -- , Element.image
-            --     [ Element.width (Element.px 80), Element.alignTop ]
-            --     { src = ticket.image, description = "Illustration of a camp" }
-            ]
-        , Element.Input.button
-            (Theme.submitButtonAttributes ticketAvailable)
-            { onPress = Just onPress
-            , label =
-                Element.el
-                    [ Element.centerX ]
-                    (Element.text
-                        (if ticketAvailable then
-                            "Select"
-
-                         else if ticket.name == "Campfire Ticket" then
-                            "Waitlist"
-
-                         else
-                            "Sold out!"
-                        )
-                    )
-            }
-        ]
+-- viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
+-- viewMobile ticketAvailable onPress { currency, amount } ticket =
+--     Theme.panel []
+--         [ row
+--             [ spacing 16 ]
+--             [ column
+--                 [ width fill, spacing 16 ]
+--                 [ paragraph [ Font.semiBold, Font.size 20 ] [ text ticket.name ]
+--                 , MarkdownThemed.renderFull ticket.description
+--                 , el
+--                     [ Font.bold, Font.size 36, alignBottom ]
+--                     (text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
+--                 ]
+--             -- , image
+--             --     [ width (px 80), alignTop ]
+--             --     { src = ticket.image, description = "Illustration of a camp" }
+--             ]
+--         , Input.button
+--             (Theme.submitButtonAttributes ticketAvailable)
+--             { onPress = Just onPress
+--             , label =
+--                 el
+--                     [ centerX ]
+--                     (text
+--                         (if ticketAvailable then
+--                             "Select"
+--                          else if ticket.name == "Campfire Ticket" then
+--                             "Waitlist"
+--                          else
+--                             "Sold out!"
+--                         )
+--                     )
+--             }
+--         ]

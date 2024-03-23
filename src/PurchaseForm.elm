@@ -29,7 +29,8 @@ import TravelMode exposing (TravelMode)
 
 
 type Accommodation
-    = Campsite
+    = Offsite
+    | Campsite
     | Single
     | Double
     | Group

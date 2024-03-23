@@ -66,7 +66,7 @@ type alias Sponsorship =
 
 sponsorshipItems =
     [ { name = "Silver"
-      , price = 1000
+      , price = 750
       , productId = sponsorship.silver
       , description = "You will be a major supporter of Elm Camp Europe " ++ year ++ "."
       , features =
@@ -76,7 +76,7 @@ sponsorshipItems =
             ]
       }
     , { name = "Gold"
-      , price = 2500
+      , price = 1500
       , productId = sponsorship.gold
       , description = "You will be a pivotal supporter of Elm Camp Europe " ++ year ++ "."
       , features =
@@ -88,7 +88,7 @@ sponsorshipItems =
             ]
       }
     , { name = "Platinum"
-      , price = 5000
+      , price = 3000
       , productId = sponsorship.platinum
       , description = "You will be principal sponsor and guarantee that Elm Camp Europe " ++ year ++ " is a success."
       , features =

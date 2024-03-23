@@ -12,6 +12,10 @@ maxAttendees =
 
 maxForAccommodationType t =
     case t of
+        Offsite ->
+            -- Effectively no limit, the attendee limit shoudl hit first
+            100
+
         Campsite ->
             20
 
