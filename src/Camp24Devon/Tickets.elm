@@ -106,13 +106,6 @@ Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access 
     }
 
 
-
--- Campsite
--- Single
--- Double
--- Group
-
-
 accomToTicket : Accommodation -> Ticket
 accomToTicket accom =
     case accom of
@@ -153,6 +146,23 @@ accomToString accom =
 
 allAccommodations =
     [ Offsite, Campsite, Single, Double, Group ]
+
+
+formIncludesAccom : PurchaseForm -> Bool
+formIncludesAccom form =
+    form.accommodationBookings |> List.filter includesAccom |> List.length |> (\c -> c > 0)
+
+
+includesAccom accom =
+    case accom of
+        Offsite ->
+            False
+
+        Campsite ->
+            False
+
+        _ ->
+            True
 
 
 accommodationOptions : AssocList.Dict (Id ProductId) ( Accommodation, Ticket )
@@ -226,40 +236,3 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
           else
             text "Sold out!"
         ]
-
-
-
--- viewMobile : Bool -> msg -> Price -> Ticket -> Element msg
--- viewMobile ticketAvailable onPress { currency, amount } ticket =
---     Theme.panel []
---         [ row
---             [ spacing 16 ]
---             [ column
---                 [ width fill, spacing 16 ]
---                 [ paragraph [ Font.semiBold, Font.size 20 ] [ text ticket.name ]
---                 , MarkdownThemed.renderFull ticket.description
---                 , el
---                     [ Font.bold, Font.size 36, alignBottom ]
---                     (text (Money.toNativeSymbol currency ++ String.fromInt (amount // 100)))
---                 ]
---             -- , image
---             --     [ width (px 80), alignTop ]
---             --     { src = ticket.image, description = "Illustration of a camp" }
---             ]
---         , Input.button
---             (Theme.submitButtonAttributes ticketAvailable)
---             { onPress = Just onPress
---             , label =
---                 el
---                     [ centerX ]
---                     (text
---                         (if ticketAvailable then
---                             "Select"
---                          else if ticket.name == "Campfire Ticket" then
---                             "Waitlist"
---                          else
---                             "Sold out!"
---                         )
---                     )
---             }
---         ]

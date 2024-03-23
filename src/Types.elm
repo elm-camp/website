@@ -142,16 +142,14 @@ type alias Price2 =
 
 
 type alias PendingOrder =
-    { priceId : Id PriceId
-    , submitTime : Time.Posix
+    { submitTime : Time.Posix
     , form : PurchaseFormValidated
     , sessionId : SessionId
     }
 
 
 type alias Order =
-    { priceId : Id PriceId
-    , submitTime : Time.Posix
+    { submitTime : Time.Posix
     , form : PurchaseFormValidated
     , emailResult : EmailResult
 
@@ -276,7 +274,7 @@ type FrontendMsg_
     | AddAccom PurchaseForm.Accommodation
     | RemoveAccom PurchaseForm.Accommodation
     | FormChanged PurchaseForm
-    | PressedSubmitForm (Id ProductId) (Id PriceId)
+    | PressedSubmitForm
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
     | SetViewport
@@ -286,7 +284,7 @@ type FrontendMsg_
 
 
 type ToBackend
-    = SubmitFormRequest (Id PriceId) (Untrusted PurchaseFormValidated)
+    = SubmitFormRequest (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
     | AdminInspect String
 
@@ -295,7 +293,7 @@ type BackendMsg
     = GotTime Time.Posix
     | GotPrices (Result Http.Error (List PriceData))
     | OnConnected SessionId ClientId
-    | CreatedCheckoutSession SessionId ClientId (Id PriceId) PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
+    | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
     | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error PostmarkSendResponse)
     | ErrorEmailSent (Result Http.Error PostmarkSendResponse)

@@ -7,14 +7,6 @@ year =
     "2024"
 
 
-includesAccom productId =
-    if List.member productId [ ticket.singleRoom, ticket.doubleRoom, ticket.groupRoom ] then
-        True
-
-    else
-        False
-
-
 ticket :
     { attendanceTicket : String
     , offsite : String
@@ -48,15 +40,15 @@ sponsorship : { silver : String, gold : String, platinum : String }
 sponsorship =
     case Env.mode of
         Env.Production ->
-            { silver = ""
-            , gold = ""
-            , platinum = ""
+            { silver = "prod_PmxuGnMiIu7Lb7"
+            , gold = "prod_PmxuoGoPc9guET"
+            , platinum = "prod_Pmxv076S7IM05N"
             }
 
         Env.Development ->
-            { silver = ""
-            , gold = ""
-            , platinum = ""
+            { silver = "prod_PmxuGnMiIu7Lb7"
+            , gold = "prod_PmxuoGoPc9guET"
+            , platinum = "prod_Pmxv076S7IM05N"
             }
 
 

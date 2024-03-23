@@ -53,7 +53,7 @@ init =
     , attendees = []
     , accommodationBookings = []
     , billingEmail = ""
-    , grantContribution = ""
+    , grantContribution = "0"
     , grantApply = False
     , sponsorship = Nothing
     }
@@ -64,6 +64,7 @@ type alias PurchaseFormValidated =
     , accommodationBookings : List Accommodation
     , billingEmail : EmailAddress
     , grantContribution : Int
+    , grantApply : Bool
     , sponsorship : Maybe String
     }
 
@@ -177,6 +178,7 @@ validateForm form =
                 , accommodationBookings = form.accommodationBookings
                 , billingEmail = billingEmailOk
                 , grantContribution = grantContributionOk
+                , grantApply = form.grantApply
                 , sponsorship = sponsorshipOk
                 }
 

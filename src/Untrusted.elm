@@ -47,6 +47,7 @@ purchaseForm (Untrusted a) =
                 , accommodationBookings = a.accommodationBookings
                 , billingEmail = billingEmail
                 , grantContribution = a.grantContribution
+                , grantApply = a.grantApply
                 , sponsorship = a.sponsorship
                 }
 

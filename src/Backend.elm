@@ -3,6 +3,7 @@ module Backend exposing (..)
 import AssocList
 import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
+import Camp24Devon.Tickets as Tickets
 import Duration
 import EmailAddress exposing (EmailAddress)
 import Env
@@ -11,6 +12,7 @@ import Id exposing (Id)
 import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
+import Name
 import Postmark exposing (PostmarkEmailBody(..))
 import PurchaseForm exposing (PurchaseFormValidated)
 import Quantity
@@ -121,7 +123,7 @@ update msg model =
                 ]
             )
 
-        CreatedCheckoutSession sessionId clientId priceId purchaseForm result ->
+        CreatedCheckoutSession sessionId clientId purchaseForm result ->
             case result of
                 Ok ( stripeSessionId, submitTime ) ->
                     let
@@ -135,8 +137,7 @@ update msg model =
                         | pendingOrder =
                             AssocList.insert
                                 stripeSessionId
-                                { priceId = priceId
-                                , submitTime = submitTime
+                                { submitTime = submitTime
                                 , form = purchaseForm
                                 , sessionId = sessionId
                                 }
@@ -234,62 +235,108 @@ update msg model =
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
-        SubmitFormRequest priceId a ->
+        SubmitFormRequest a ->
             case ( Untrusted.purchaseForm a, model.ticketsEnabled ) of
                 ( Just purchaseForm, TicketsEnabled ) ->
-                    case priceIdToProductId model priceId of
-                        Just productId ->
-                            let
-                                availability =
-                                    Inventory.slotsRemaining model
+                    let
+                        availability =
+                            Inventory.slotsRemaining model
 
-                                validProductAndForm =
-                                    -- @TODO FIXME!
-                                    True
+                        validProductAndForm =
+                            -- @TODO FIXME!
+                            True
 
-                                -- case ( productId == Id.fromString Product.ticket.couplesCamp, purchaseForm ) of
-                                --     ( True, CouplesCampTicketPurchase _ ) ->
-                                --         True && availability.couplesCampTicket
-                                --     ( False, CampTicketPurchase _ ) ->
-                                --         True && availability.campTicket
-                                --     ( False, CampfireTicketPurchase _ ) ->
-                                --         True && availability.campfireTicket
-                                --     _ ->
-                                --         False
-                                sponsorshipIdM =
-                                    purchaseForm.sponsorship
-
-                                sponsorship =
-                                    case sponsorshipIdM of
-                                        Just sponsorshipId ->
-                                            AssocList.get (Id.fromString sponsorshipId) model.prices
+                        sponsorshipItems =
+                            case purchaseForm.sponsorship of
+                                Just sponsorshipId ->
+                                    case AssocList.get (Id.fromString sponsorshipId) model.prices of
+                                        Just price ->
+                                            [ Stripe.Priced
+                                                { name = "Sponsorship"
+                                                , priceId = price.priceId
+                                                , quantity = 1
+                                                }
+                                            ]
 
                                         Nothing ->
-                                            Nothing
-                            in
-                            if validProductAndForm then
-                                ( model
-                                , Time.now
-                                    |> Task.andThen
-                                        (\now ->
-                                            Stripe.createCheckoutSession
-                                                { priceId = priceId
-                                                , opportunityGrantDonation = purchaseForm.grantContribution
-                                                , sponsorship = sponsorship |> Maybe.map (.priceId >> Id.toString)
-                                                , emailAddress = purchaseForm.billingEmail
-                                                , now = now
-                                                , expiresInMinutes = 30
-                                                }
-                                                |> Task.andThen (\res -> Task.succeed ( res, now ))
-                                        )
-                                    |> Task.attempt (CreatedCheckoutSession sessionId clientId priceId purchaseForm)
-                                )
+                                            []
+
+                                Nothing ->
+                                    []
+
+                        ticketItems =
+                            purchaseForm.attendees
+                                |> List.map
+                                    (\attendee ->
+                                        Stripe.Priced
+                                            { name = Tickets.attendanceTicket.name ++ " for " ++ Name.toString attendee.name
+                                            , priceId =
+                                                let
+                                                    productId =
+                                                        Id.fromString Tickets.attendanceTicket.productId
+                                                in
+                                                case AssocList.get productId model.prices of
+                                                    Just price ->
+                                                        price.priceId
+
+                                                    Nothing ->
+                                                        Debug.todo "price not found"
+                                            , quantity = 1
+                                            }
+                                    )
+
+                        accommodationItems =
+                            purchaseForm.accommodationBookings
+                                |> List.group
+                                |> List.map
+                                    (\( accom, accomCount ) ->
+                                        Stripe.Priced
+                                            { name = Tickets.accomToString accom
+                                            , priceId =
+                                                let
+                                                    productId =
+                                                        Id.fromString (Tickets.accomToTicket accom).productId
+                                                in
+                                                case AssocList.get productId model.prices of
+                                                    Just price ->
+                                                        price.priceId
+
+                                                    Nothing ->
+                                                        Debug.todo "price not found"
+                                            , quantity = List.length accomCount + 1
+                                            }
+                                    )
+
+                        opportunityGrantItems =
+                            if purchaseForm.grantContribution > 0 then
+                                [ Stripe.Unpriced
+                                    { name = "Opportunity Grant"
+                                    , quantity = 1
+                                    , currency = "gbp"
+                                    , amountDecimal = purchaseForm.grantContribution * 100
+                                    }
+                                ]
 
                             else
-                                ( model, SubmitFormResponse (Err "Form was invalid, please fix the issues & try again.") |> Lamdera.sendToFrontend clientId )
+                                []
 
-                        _ ->
-                            ( model, SubmitFormResponse (Err "Invalid product item, please refresh & try again.") |> Lamdera.sendToFrontend clientId )
+                        items =
+                            ticketItems ++ accommodationItems ++ opportunityGrantItems ++ sponsorshipItems
+                    in
+                    ( model
+                    , Time.now
+                        |> Task.andThen
+                            (\now ->
+                                Stripe.createCheckoutSession
+                                    { items = items
+                                    , emailAddress = purchaseForm.billingEmail
+                                    , now = now
+                                    , expiresInMinutes = 30
+                                    }
+                                    |> Task.andThen (\res -> Task.succeed ( res, now ))
+                            )
+                        |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
+                    )
 
                 _ ->
                     ( model, Cmd.none )

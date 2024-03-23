@@ -64,61 +64,60 @@ purchaseCompletedEndpoint _ model request =
                 StripeSessionCompleted stripeSessionId ->
                     case AssocList.get stripeSessionId model.pendingOrder of
                         Just order ->
-                            let
-                                maybeTicket : Maybe Tickets.Ticket
-                                maybeTicket =
-                                    case Backend.priceIdToProductId model order.priceId of
-                                        Just productId ->
-                                            AssocList.get productId Tickets.dict
+                            -- let
+                            --     maybeTicket : Maybe Tickets.Ticket
+                            --     maybeTicket =
+                            --         case Backend.priceIdToProductId model order.priceId of
+                            --             Just productId ->
+                            --                 AssocList.get productId Tickets.dict
+                            --             Nothing ->
+                            --                 Nothing
+                            -- in
+                            -- case maybeTicket of
+                            --     Just ticket ->
+                            -- let
+                            --     { subject, textBody, htmlBody } =
+                            --         confirmationEmail ticket
+                            -- in
+                            ( response, model, Cmd.none )
 
-                                        Nothing ->
-                                            Nothing
-                            in
-                            case maybeTicket of
-                                Just ticket ->
-                                    let
-                                        { subject, textBody, htmlBody } =
-                                            confirmationEmail ticket
-                                    in
-                                    ( response
-                                    , { model
-                                        | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
-                                        , orders =
-                                            AssocList.insert
-                                                stripeSessionId
-                                                { priceId = order.priceId
-                                                , submitTime = order.submitTime
-                                                , form = order.form
-                                                , emailResult = SendingEmail
-                                                }
-                                                model.orders
-                                      }
-                                    , Postmark.sendEmail
-                                        (ConfirmationEmailSent stripeSessionId)
-                                        Env.postmarkApiKey
-                                        { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
-                                        , to =
-                                            Nonempty
-                                                { name = order.form.attendees |> List.head |> Maybe.map (.name >> Name.toString) |> Maybe.withDefault "Attendee"
-                                                , email = order.form.billingEmail
-                                                }
-                                                []
-                                        , subject = subject
-                                        , body = Postmark.BodyBoth htmlBody textBody
-                                        , messageStream = "outbound"
-                                        }
-                                    )
-
-                                Nothing ->
-                                    let
-                                        error =
-                                            "Ticket not found: priceId"
-                                                ++ Id.toString order.priceId
-                                                ++ ", stripeSessionId: "
-                                                ++ Id.toString stripeSessionId
-                                    in
-                                    ( Err (Http.BadBody error), model, Backend.errorEmail error )
-
+                        -- ( response
+                        -- , { model
+                        --     | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
+                        --     , orders =
+                        --         AssocList.insert
+                        --             stripeSessionId
+                        --             { priceId = order.priceId
+                        --             , submitTime = order.submitTime
+                        --             , form = order.form
+                        --             , emailResult = SendingEmail
+                        --             }
+                        --             model.orders
+                        --   }
+                        -- , Postmark.sendEmail
+                        --     (ConfirmationEmailSent stripeSessionId)
+                        --     Env.postmarkApiKey
+                        --     { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
+                        --     , to =
+                        --         Nonempty
+                        --             { name = order.form.attendees |> List.head |> Maybe.map (.name >> Name.toString) |> Maybe.withDefault "Attendee"
+                        --             , email = order.form.billingEmail
+                        --             }
+                        --             []
+                        --     , subject = subject
+                        --     , body = Postmark.BodyBoth htmlBody textBody
+                        --     , messageStream = "outbound"
+                        --     }
+                        -- )
+                        -- Nothing ->
+                        --     let
+                        --         error =
+                        --             "Ticket not found: priceId"
+                        --                 ++ Id.toString order.priceId
+                        --                 ++ ", stripeSessionId: "
+                        --                 ++ Id.toString stripeSessionId
+                        --     in
+                        --     ( Err (Http.BadBody error), model, Backend.errorEmail error )
                         Nothing ->
                             let
                                 error =
