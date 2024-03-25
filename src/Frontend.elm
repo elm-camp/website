@@ -472,6 +472,7 @@ header config =
                 [ spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
+                , Element.el [ Element.paddingXY 0 12, Font.size 22 ] goToTicketSales
                 ]
             ]
 
@@ -768,6 +769,16 @@ Attendance for Elm Camp's 4 day / 3 night event.
         ]
 
 
+htmlId : String -> Element.Attribute msg
+htmlId str =
+    Element.htmlAttribute (Html.Attributes.id str)
+
+
+goToTicketSales =
+    Html.a [ Html.Attributes.href "#ticket-sales" ] [ Html.text "Tickets on sale now!" ]
+        |> Element.html
+
+
 attendeeForm model i attendee =
     let
         form =
@@ -954,7 +965,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "🫶 Opportunity grants")
+        [ el [ Font.size 20 ] (text "\u{1FAF6} Opportunity grants")
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ row [ width fill, spacing 15 ]
@@ -1108,7 +1119,7 @@ summary model =
             accomTotal + grantTotal + sponsorshipTotal
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
-        [ text "Summary"
+        [ Element.el [ htmlId "ticket-sales" ] (text "Summary")
         , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat accomTotal)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
