@@ -7,10 +7,30 @@ import Element.Font as Font
 import Element.Input as Input
 import Html exposing (Html)
 import Html.Attributes
-import MarkdownThemed
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
+
+
+type alias Theme =
+    { defaultText : Element.Color
+    , mutedText : Element.Color
+    , grey : Element.Color
+    , lightGrey : Element.Color
+    , link : Element.Color
+    , elmText : Element.Color
+    }
+
+
+lightTheme : Theme
+lightTheme =
+    { defaultText = Element.rgb255 30 50 46
+    , mutedText = Element.rgb255 74 94 122
+    , link = Element.rgb255 12 109 82
+    , lightGrey = Element.rgb255 220 240 255
+    , grey = Element.rgb255 200 220 240
+    , elmText = Element.rgb255 92 176 126
+    }
 
 
 contentAttributes : List (Element.Attribute msg)
@@ -181,7 +201,7 @@ attr name value =
 
 
 glow =
-    Font.glow (colorWithAlpha 0.25 MarkdownThemed.lightTheme.defaultText) 4
+    Font.glow (colorWithAlpha 0.25 lightTheme.defaultText) 4
 
 
 footer : Element msg
@@ -243,4 +263,57 @@ normalButtonAttributes =
     , Element.alignBottom
     , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
     , Font.semiBold
+    ]
+
+
+h1 t =
+    el (heading1Attrs lightTheme) (text t)
+
+
+h2 t =
+    el (heading2Attrs lightTheme) (text t)
+
+
+h3 t =
+    el (heading3Attrs lightTheme) (text t)
+
+
+h4 t =
+    el (heading4Attrs lightTheme) (text t)
+
+
+heading1Attrs : Theme -> List (Element.Attr () msg)
+heading1Attrs theme =
+    [ Font.size 36
+    , Font.semiBold
+    , Font.color lightTheme.defaultText
+    , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }
+    ]
+
+
+heading2Attrs : Theme -> List (Element.Attr () msg)
+heading2Attrs theme =
+    [ Font.color theme.elmText
+    , Font.size 24
+    , Font.extraBold
+    , Element.paddingEach { top = 0, right = 0, bottom = 20, left = 0 }
+    ]
+
+
+heading3Attrs : Theme -> List (Element.Attr () msg)
+heading3Attrs theme =
+    [ Font.color theme.defaultText
+    , Font.size 18
+    , Font.medium
+    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
+    , Font.bold
+    ]
+
+
+heading4Attrs : Theme -> List (Element.Attr () msg)
+heading4Attrs theme =
+    [ Font.color theme.defaultText
+    , Font.size 16
+    , Font.medium
+    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
     ]

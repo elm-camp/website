@@ -44,11 +44,11 @@ type alias LoadedModel =
     { key : Key
     , now : Time.Posix
     , window : { width : Int, height : Int }
-    , showTooltip : Bool
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
+    , showTooltip : Bool
     , showCarbonOffsetTooltip : Bool
     , slotsRemaining : TicketAvailability
     , isOrganiser : Bool

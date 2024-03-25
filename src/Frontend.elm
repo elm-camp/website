@@ -43,6 +43,7 @@ import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
+import View.Countdown
 
 
 app =
@@ -129,6 +130,7 @@ init url key =
     , Cmd.batch
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , Time.now |> Task.perform Tick
         , case route of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
@@ -163,6 +165,9 @@ update msg model =
 
                 LoadedMusic result ->
                     tryLoading { loading | audio = Just result }
+
+                Tick now ->
+                    ( Loading { loading | now = now }, Cmd.none )
 
                 _ ->
                     ( model, Cmd.none )
@@ -434,14 +439,14 @@ header config =
                         [ column
                             [ spacing 2, Font.size 24, moveUp 1 ]
                             [ el [ Theme.glow ] (text "Unconference")
-                            , el [ Font.extraBold, Font.color MarkdownThemed.lightTheme.elmText ] (text "UK 2024")
+                            , el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (text "UK 2024")
                             ]
                         ]
                     ]
                 , column
                     [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
-                    [ el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
-                    , el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
+                    [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
                     ]
                 ]
     in
@@ -486,7 +491,7 @@ view model =
         -- , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
-            , Font.color MarkdownThemed.lightTheme.defaultText
+            , Font.color Theme.lightTheme.defaultText
             , Font.size 16
             , Font.medium
             , Background.color backgroundColor
@@ -665,7 +670,8 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ column Theme.contentAttributes [ content1 ]
+                [ View.Countdown.detailedCountdown "2024-03-31T19:00" "until ticket sales open" model
+                , column Theme.contentAttributes [ content1 ]
                 , let
                     prefix =
                         "24-colehayes/colehayes-"
@@ -756,7 +762,7 @@ Attendance for Elm Camp's 4 day / 3 night event.
             ]
         , case model.form.attendees of
             [] ->
-                text "No attendance tickets selected."
+                none
 
             _ ->
                 column [ width fill, spacing 20 ]
@@ -872,6 +878,18 @@ formView model productId priceId ticket =
                 { onPress = Just PressedCancelForm
                 , label = el [ centerX ] (text "Cancel")
                 }
+
+        includedAccommodationNote =
+            """
+Please note: your selected options ***${accommodationStatus} accommodation***.
+"""
+                |> String.replace "${accommodationStatus}"
+                    (if Tickets.formIncludesAccom form then
+                        "include"
+
+                     else
+                        "do not include"
+                    )
     in
     column
         [ width fill, spacing 60 ]
@@ -889,25 +907,13 @@ formView model productId priceId ticket =
                    ]
             )
             [ none
+            , MarkdownThemed.renderFull includedAccommodationNote
             , textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
-            , """
-By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
-
-Please note: your selected options ***${accommodationStatus} accommodation***.
-"""
-                |> String.replace "${accommodationStatus}"
-                    (if Tickets.formIncludesAccom form then
-                        "include"
-
-                     else
-                        "do not include"
-                    )
-                |> MarkdownThemed.renderFull
             , case form.submitStatus of
                 NotSubmitted pressedSubmit ->
                     none
@@ -920,6 +926,8 @@ Please note: your selected options ***${accommodationStatus} accommodation***.
                     paragraph [] [ text err ]
             , """
 Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
+
+By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
                 row [ width fill, spacing 16 ] [ cancelButton, submitButton ]
@@ -953,8 +961,8 @@ textInput form onChange title validator text =
 
 
 opportunityGrant form =
-    column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "🫶 Opportunity grants")
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "🫶 Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ row [ width fill, spacing 15 ]
@@ -967,7 +975,7 @@ opportunityGrant form =
 
                 False ->
                     column []
-                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
+                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees!" ]
                         , row [ width fill, spacing 30 ]
                             [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
                             , column [ width (fillPortion 3) ]
@@ -1017,8 +1025,8 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 
 
 sponsorships model form =
-    column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "🤝 Sponsor Elm Camp")
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "🤝 Sponsor Elm Camp"
         , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp Europe " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
@@ -1108,7 +1116,7 @@ summary model =
             accomTotal + grantTotal + sponsorshipTotal
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
-        [ text "Summary"
+        [ Theme.h2 "Summary"
         , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat accomTotal)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
@@ -1127,7 +1135,7 @@ summary model =
             text <|
                 "Sponsorship: £"
                     ++ String.fromFloat sponsorshipTotal
-        , text <| "Total: £" ++ String.fromFloat total
+        , Theme.h3 <| "Total: £" ++ String.fromFloat total
         ]
 
 
@@ -1249,8 +1257,15 @@ venueImage width path =
 accommodationView : LoadedModel -> Element FrontendMsg_
 accommodationView model =
     column [ width fill, spacing 20 ]
-        [ el [ Font.size 20 ] (text "🏕️ Accommodation")
-        , paragraph [] [ text "You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation." ]
+        [ column Theme.contentAttributes
+            [ Theme.h2 "🏕️ Accommodation"
+            , """
+You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+
+The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
+"""
+                |> MarkdownThemed.renderFull
+            ]
         , AssocList.toList Tickets.accommodationOptions
             |> List.reverse
             |> List.map
@@ -1282,12 +1297,10 @@ Elm Camp is an event geared towards reconnecting in-person and collaborating on 
 
 Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
 
-There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
+We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals.
 
 Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
 
-**Note.** Tickets will go on sale in early March. When that happens we will post a notice here,
-in Slack, Discourse, etc.
 
 # Unconference
 
