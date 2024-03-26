@@ -46,7 +46,7 @@ elmCampDenmarkTopLine =
         , Element.column
             [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
             [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "Europe 2023")
+            , Element.el [ Element.Font.extraBold, Element.Font.color Theme.lightTheme.elmText ] (Element.text "Europe 2023")
             ]
         ]
 

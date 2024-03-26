@@ -1,92 +1,100 @@
 module PurchaseForm exposing
-    ( CouplePurchaseData
+    ( Accommodation(..)
+    , AttendeeForm
+    , AttendeeFormValidated
     , PressedSubmit(..)
     , PurchaseForm
-    , PurchaseFormValidated(..)
-    , SinglePurchaseData
+    , PurchaseFormValidated
     , SubmitStatus(..)
-    , attendeeName
-    , billingEmail
-    , codec
-    , commonPurchaseData
+    , defaultAttendee
+    , init
     , validateEmailAddress
     , validateForm
     , validateInt
     , validateName
     )
 
+import Camp24Devon.Product as Product
 import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
 import Env
+import Helpers
 import Id exposing (Id)
 import Name exposing (Name)
-import Product
+import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
 import TravelMode exposing (TravelMode)
 
 
+type Accommodation
+    = Offsite
+    | Campsite
+    | Single
+    | Double
+    | Group
+
+
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
-    , attendee1Name : String
-    , attendee2Name : String
+    , attendees : List AttendeeForm
+    , accommodationBookings : List Accommodation
     , billingEmail : String
-    , country : String
-    , originCity : String
-    , primaryModeOfTravel : Maybe TravelMode
     , grantContribution : String
     , grantApply : Bool
     , sponsorship : Maybe String
     }
 
 
-type PurchaseFormValidated
-    = CampfireTicketPurchase SinglePurchaseData
-    | CampTicketPurchase SinglePurchaseData
-    | CouplesCampTicketPurchase CouplePurchaseData
+init : PurchaseForm
+init =
+    { submitStatus = NotSubmitted NotPressedSubmit
+    , attendees = []
+    , accommodationBookings = []
+    , billingEmail = ""
+    , grantContribution = "0"
+    , grantApply = False
+    , sponsorship = Nothing
+    }
 
 
-type alias SinglePurchaseData =
-    { attendeeName : Name
+type alias PurchaseFormValidated =
+    { attendees : List AttendeeFormValidated
+    , accommodationBookings : List Accommodation
     , billingEmail : EmailAddress
-    , country : NonemptyString
-    , originCity : NonemptyString
-    , primaryModeOfTravel : TravelMode
     , grantContribution : Int
+    , grantApply : Bool
     , sponsorship : Maybe String
     }
 
 
-type alias CouplePurchaseData =
-    { attendee1Name : Name
-    , attendee2Name : Name
-    , billingEmail : EmailAddress
-    , country : NonemptyString
-    , originCity : NonemptyString
-    , primaryModeOfTravel : TravelMode
-    , grantContribution : Int
-    , sponsorship : Maybe String
+type alias AttendeeForm =
+    { name : String
+    , email : String
+    , country : String
+    , originCity : String
+    , primaryModeOfTravel : Maybe TravelMode
     }
 
 
-commonPurchaseData purchaseFormValidated =
-    case purchaseFormValidated of
-        CampfireTicketPurchase a ->
-            a
+defaultAttendee : AttendeeForm
+defaultAttendee =
+    { name = ""
+    , email = ""
+    , country = ""
+    , originCity = ""
+    , primaryModeOfTravel = Nothing
+    }
 
-        CampTicketPurchase a ->
-            a
 
-        CouplesCampTicketPurchase a ->
-            { attendeeName = a.attendee1Name
-            , billingEmail = a.billingEmail
-            , country = a.country
-            , originCity = a.originCity
-            , primaryModeOfTravel = a.primaryModeOfTravel
-            , grantContribution = a.grantContribution
-            , sponsorship = a.sponsorship
-            }
+type alias AttendeeFormValidated =
+    { name : Name
+    , email : EmailAddress
+    , country : NonemptyString
+    , originCity : NonemptyString
+    , primaryModeOfTravel : Maybe TravelMode
+    }
 
 
 type SubmitStatus
@@ -100,30 +108,10 @@ type PressedSubmit
     | NotPressedSubmit
 
 
-billingEmail : PurchaseFormValidated -> EmailAddress
-billingEmail paymentForm =
-    case paymentForm of
-        CampfireTicketPurchase a ->
-            a.billingEmail
 
-        CampTicketPurchase a ->
-            a.billingEmail
-
-        CouplesCampTicketPurchase a ->
-            a.billingEmail
-
-
-attendeeName : PurchaseFormValidated -> Name
-attendeeName paymentForm =
-    case paymentForm of
-        CampfireTicketPurchase a ->
-            a.attendeeName
-
-        CampTicketPurchase a ->
-            a.attendeeName
-
-        CouplesCampTicketPurchase a ->
-            a.attendee1Name
+-- billingEmail : PurchaseFormValidated -> EmailAddress
+-- billingEmail paymentForm =
+--     paymentForm.billingEmail
 
 
 validateInt : String -> Result String Int
@@ -155,23 +143,11 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateForm : Id ProductId -> PurchaseForm -> Maybe PurchaseFormValidated
-validateForm productId form =
+validateForm : PurchaseForm -> Maybe PurchaseFormValidated
+validateForm form =
     let
-        name1 =
-            validateName form.attendee1Name
-
-        name2 =
-            validateName form.attendee2Name
-
-        emailAddress =
+        billingEmail =
             validateEmailAddress form.billingEmail
-
-        country =
-            String.Nonempty.fromString form.country
-
-        originCity =
-            String.Nonempty.fromString form.originCity
 
         grantContribution =
             validateInt form.grantContribution
@@ -183,122 +159,122 @@ validateForm productId form =
 
                 Nothing ->
                     Ok Nothing
+
+        attendees =
+            let
+                attendeesValidated =
+                    form.attendees |> List.map validateAttendee
+            in
+            if attendeesValidated |> List.all Helpers.isJust then
+                attendeesValidated |> Helpers.justs |> Ok
+
+            else
+                Err "Invalid attendees"
     in
-    if productId == Id.fromString Product.ticket.couplesCamp then
-        case T8 name1 name2 emailAddress form.primaryModeOfTravel country originCity grantContribution sponsorship of
-            T8 (Ok name1Ok) (Ok name2Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) (Ok sponsorshipOk) ->
-                CouplesCampTicketPurchase
-                    { attendee1Name = name1Ok
-                    , attendee2Name = name2Ok
-                    , billingEmail = emailAddressOk
-                    , country = countryOk
-                    , originCity = originCityOk
-                    , primaryModeOfTravel = primaryModeOfTravel
-                    , grantContribution = grantContributionOk
-                    , sponsorship = sponsorshipOk
-                    }
-                    |> Just
+    case T4 billingEmail grantContribution sponsorship attendees of
+        T4 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) ->
+            Just
+                { attendees = attendeesOk
+                , accommodationBookings = form.accommodationBookings
+                , billingEmail = billingEmailOk
+                , grantContribution = grantContributionOk
+                , grantApply = form.grantApply
+                , sponsorship = sponsorshipOk
+                }
 
-            _ ->
-                Nothing
-
-    else
-        let
-            product =
-                if productId == Id.fromString Product.ticket.camp then
-                    CampTicketPurchase
-
-                else
-                    CampfireTicketPurchase
-        in
-        case T7 name1 emailAddress form.primaryModeOfTravel country originCity grantContribution sponsorship of
-            T7 (Ok name1Ok) (Ok emailAddressOk) (Just primaryModeOfTravel) (Just countryOk) (Just originCityOk) (Ok grantContributionOk) (Ok sponsorshipOk) ->
-                product
-                    { attendeeName = name1Ok
-                    , billingEmail = emailAddressOk
-                    , country = countryOk
-                    , originCity = originCityOk
-                    , primaryModeOfTravel = primaryModeOfTravel
-                    , grantContribution = grantContributionOk
-                    , sponsorship = sponsorshipOk
-                    }
-                    |> Just
-
-            _ ->
-                Nothing
+        _ ->
+            Nothing
 
 
-codec : Codec PurchaseFormValidated
-codec =
-    Codec.custom
-        (\a b c value ->
-            case value of
-                CampfireTicketPurchase data0 ->
-                    a data0
+validateAttendee : AttendeeForm -> Maybe AttendeeFormValidated
+validateAttendee form =
+    let
+        name =
+            validateName form.name
 
-                CampTicketPurchase data0 ->
-                    b data0
+        emailAddress =
+            validateEmailAddress form.email
 
-                CouplesCampTicketPurchase data0 ->
-                    c data0
-        )
-        |> Codec.variant1 "CampfireTicketPurchase" CampfireTicketPurchase singlePurchaseDataCodec
-        |> Codec.variant1 "CampTicketPurchase" CampTicketPurchase singlePurchaseDataCodec
-        |> Codec.variant1 "CouplesCampTicketPurchase" CouplesCampTicketPurchase couplePurchaseDataCodec
-        |> Codec.buildCustom
+        country =
+            String.Nonempty.fromString form.country
 
+        originCity =
+            String.Nonempty.fromString form.originCity
+    in
+    case T4 name emailAddress country originCity of
+        T4 (Ok nameOk) (Ok emailAddressOk) (Just countryOk) (Just originCityOk) ->
+            Just
+                { name = nameOk
+                , email = emailAddressOk
+                , country = countryOk
+                , originCity = originCityOk
+                , primaryModeOfTravel = form.primaryModeOfTravel
+                }
 
-singlePurchaseDataCodec : Codec SinglePurchaseData
-singlePurchaseDataCodec =
-    Codec.object SinglePurchaseData
-        |> Codec.field "attendeeName" .attendeeName Name.codec
-        |> Codec.field "billingEmail" .billingEmail emailAddressCodec
-        |> Codec.field "country" .country nonemptyStringCodec
-        |> Codec.field "originCity" .originCity nonemptyStringCodec
-        |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
-        |> Codec.field "grantContribution" .grantContribution Codec.int
-        |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
-        |> Codec.buildObject
+        _ ->
+            Nothing
 
 
-couplePurchaseDataCodec : Codec CouplePurchaseData
-couplePurchaseDataCodec =
-    Codec.object CouplePurchaseData
-        |> Codec.field "attendee1Name" .attendee1Name Name.codec
-        |> Codec.field "attendee2Name" .attendee2Name Name.codec
-        |> Codec.field "billingEmail" .billingEmail emailAddressCodec
-        |> Codec.field "country" .country nonemptyStringCodec
-        |> Codec.field "originCity" .originCity nonemptyStringCodec
-        |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
-        |> Codec.field "grantContribution" .grantContribution Codec.int
-        |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
-        |> Codec.buildObject
 
-
-nonemptyStringCodec =
-    Codec.andThen
-        (\text ->
-            case String.Nonempty.fromString text of
-                Just nonempty ->
-                    Codec.succeed nonempty
-
-                Nothing ->
-                    Codec.fail ("Invalid nonempty string: " ++ text)
-        )
-        String.Nonempty.toString
-        Codec.string
-
-
-emailAddressCodec : Codec EmailAddress
-emailAddressCodec =
-    Codec.andThen
-        (\text ->
-            case EmailAddress.fromString text of
-                Just email ->
-                    Codec.succeed email
-
-                Nothing ->
-                    Codec.fail ("Invalid email: " ++ text)
-        )
-        EmailAddress.toString
-        Codec.string
+-- codec : Codec PurchaseFormValidated
+-- codec =
+--     Codec.custom
+--         (\a b c value ->
+--             case value of
+--                 CampfireTicketPurchase data0 ->
+--                     a data0
+--                 CampTicketPurchase data0 ->
+--                     b data0
+--                 CouplesCampTicketPurchase data0 ->
+--                     c data0
+--         )
+--         |> Codec.variant1 "CampfireTicketPurchase" CampfireTicketPurchase singlePurchaseDataCodec
+--         |> Codec.variant1 "CampTicketPurchase" CampTicketPurchase singlePurchaseDataCodec
+--         |> Codec.variant1 "CouplesCampTicketPurchase" CouplesCampTicketPurchase couplePurchaseDataCodec
+--         |> Codec.buildCustom
+-- singlePurchaseDataCodec : Codec SinglePurchaseData
+-- singlePurchaseDataCodec =
+--     Codec.object SinglePurchaseData
+--         |> Codec.field "attendeeName" .attendeeName Name.codec
+--         |> Codec.field "billingEmail" .billingEmail emailAddressCodec
+--         |> Codec.field "country" .country nonemptyStringCodec
+--         |> Codec.field "originCity" .originCity nonemptyStringCodec
+--         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+--         |> Codec.field "grantContribution" .grantContribution Codec.int
+--         |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
+--         |> Codec.buildObject
+-- couplePurchaseDataCodec : Codec CouplePurchaseData
+-- couplePurchaseDataCodec =
+--     Codec.object CouplePurchaseData
+--         |> Codec.field "attendee1Name" .attendee1Name Name.codec
+--         |> Codec.field "attendee2Name" .attendee2Name Name.codec
+--         |> Codec.field "billingEmail" .billingEmail emailAddressCodec
+--         |> Codec.field "country" .country nonemptyStringCodec
+--         |> Codec.field "originCity" .originCity nonemptyStringCodec
+--         |> Codec.field "primaryModeOfTravel" .primaryModeOfTravel TravelMode.codec
+--         |> Codec.field "grantContribution" .grantContribution Codec.int
+--         |> Codec.field "sponsorship" .sponsorship (Codec.maybe Codec.string)
+--         |> Codec.buildObject
+-- nonemptyStringCodec =
+--     Codec.andThen
+--         (\text ->
+--             case String.Nonempty.fromString text of
+--                 Just nonempty ->
+--                     Codec.succeed nonempty
+--                 Nothing ->
+--                     Codec.fail ("Invalid nonempty string: " ++ text)
+--         )
+--         String.Nonempty.toString
+--         Codec.string
+-- emailAddressCodec : Codec EmailAddress
+-- emailAddressCodec =
+--     Codec.andThen
+--         (\text ->
+--             case EmailAddress.fromString text of
+--                 Just email ->
+--                     Codec.succeed email
+--                 Nothing ->
+--                     Codec.fail ("Invalid email: " ++ text)
+--         )
+--         EmailAddress.toString
+--         Codec.string
