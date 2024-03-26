@@ -13,8 +13,8 @@ maxAttendees =
 maxForAccommodationType t =
     case t of
         Offsite ->
-            -- Effectively no limit, the attendee limit shoudl hit first
-            100
+            -- Effectively no limit, the attendee limit should hit first
+            80
 
         Campsite ->
             20
@@ -94,7 +94,7 @@ purchaseable : String -> TicketAvailability -> Bool
 purchaseable productId availability =
     caseof productId
         [ ( Product.ticket.attendanceTicket, availability.attendanceTickets )
-        , ( Product.ticket.offsite, True )
+        , ( Product.ticket.offsite, availability.campingSpots )
         , ( Product.ticket.campingSpot, availability.campingSpots )
         , ( Product.ticket.singleRoom, availability.singleRooms )
         , ( Product.ticket.doubleRoom, availability.doubleRooms )

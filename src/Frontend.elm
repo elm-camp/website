@@ -975,7 +975,7 @@ opportunityGrant form =
 
                 False ->
                     column []
-                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees!" ]
+                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
                         , row [ width fill, spacing 30 ]
                             [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
                             , column [ width (fillPortion 3) ]
@@ -1016,9 +1016,9 @@ opportunityGrant form =
 
 grantApplicationCopy =
     """
-If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
+If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
-Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
+Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 7th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
 
 All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
 """
@@ -1027,7 +1027,7 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 sponsorships model form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp Europe " ++ year ++ " achieve a reasonable ticket offering." ]
+        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
             |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
