@@ -37,17 +37,17 @@ detailedCountdown t description model =
             model.now
                 |> Time.posixToMillis
 
-        totalSeconds =
+        secondsRemaining =
             (target - now) // 1000
 
         days =
-            totalSeconds // (60 * 60 * 24)
+            secondsRemaining // (60 * 60 * 24)
 
         hours =
-            modBy totalSeconds (60 * 60 * 24) // (60 * 60)
+            modBy 24 (secondsRemaining // (60 * 60))
 
         minutes =
-            modBy totalSeconds (60 * 60) // 60
+            modBy 60 (secondsRemaining // 60)
 
         formatDays =
             if days > 1 then
@@ -77,7 +77,7 @@ detailedCountdown t description model =
             String.join " "
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
-    if Time.posixToMillis model.now == 0 then
+    if (Time.posixToMillis model.now == 0) || secondsRemaining == 0 then
         none
 
     else
