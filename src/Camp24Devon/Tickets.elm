@@ -78,7 +78,7 @@ doubleRoom =
 groupRoom : Ticket
 groupRoom =
     { name = "Group Room"
-    , description = "Suitable for up to 4 people for 3 nights."
+    , description = "Suitable for up to 4 people for 3 nights. Can be stretched up to 7 people –\u{00A0}contact us!"
     , image = ""
     , productId = Product.ticket.groupRoom
     }

@@ -755,6 +755,7 @@ homepageView model =
                                     (List.map (\image -> venueImage fill (prefix ++ image)) paths)
                             )
                         |> column [ spacing 10, width fill ]
+                , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
                 , column Theme.contentAttributes [ ticketInfo ]
                 , column
                     [ width fill
@@ -762,6 +763,10 @@ homepageView model =
                     , htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
                     [ el Theme.contentAttributes content2
+                    , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
+                    , grantApplicationCopy
+                        |> MarkdownThemed.renderFull
+                        |> el Theme.contentAttributes
                     , ticketsView model
                     , accommodationView model
                     , formView model
@@ -1026,57 +1031,51 @@ opportunityGrant form =
         [ Theme.h2 "🫶 Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
-            [ row [ width fill, spacing 15 ]
-                [ Theme.toggleButton "Contribute" (form.grantApply == False) (Just <| FormChanged { form | grantApply = False })
-                , Theme.toggleButton "Apply" (form.grantApply == True) (Just <| FormChanged { form | grantApply = True })
-                ]
-            , case form.grantApply of
-                True ->
-                    grantApplicationCopy |> MarkdownThemed.renderFull
-
-                False ->
-                    column []
-                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
-                        , row [ width fill, spacing 30 ]
-                            [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
-                            , column [ width (fillPortion 3) ]
-                                [ row [ width (fillPortion 3) ]
-                                    [ el [ paddingXY 0 10 ] <| text "0"
-                                    , el [ paddingXY 0 10, alignRight ] <| text "500"
+            [ column []
+                [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                , row [ width fill, spacing 30 ]
+                    [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                    , column [ width (fillPortion 3) ]
+                        [ row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "0"
+                            , el [ paddingXY 0 10, alignRight ] <| text "600"
+                            ]
+                        , Input.slider
+                            [ behindContent
+                                (el
+                                    [ width fill
+                                    , height (px 5)
+                                    , centerY
+                                    , Background.color (rgb255 94 176 125)
+                                    , Border.rounded 2
                                     ]
-                                , Input.slider
-                                    [ behindContent
-                                        (el
-                                            [ width fill
-                                            , height (px 5)
-                                            , centerY
-                                            , Background.color (rgb255 94 176 125)
-                                            , Border.rounded 2
-                                            ]
-                                            none
-                                        )
-                                    ]
-                                    { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
-                                    , label = Input.labelHidden "Opportunity grant contribution value selection slider"
-                                    , min = 0
-                                    , max = 550
-                                    , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
-                                    , thumb = Input.defaultThumb
-                                    , step = Just 10
-                                    }
-                                , row [ width (fillPortion 3) ]
-                                    [ el [ paddingXY 0 10 ] <| text "No contribution"
-                                    , el [ paddingXY 0 10, alignRight ] <| text "Donate full ticket"
-                                    ]
-                                ]
+                                    none
+                                )
+                            ]
+                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                            , label = Input.labelHidden "Opportunity grant contribution value selection slider"
+                            , min = 0
+                            , max = 600
+                            , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                            , thumb = Input.defaultThumb
+                            , step = Just 10
+                            }
+                        , row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "No contribution"
+                            , el [ paddingXY 0 10, alignRight ] <| text "Donate full attendance"
                             ]
                         ]
+                    ]
+                ]
             ]
         ]
 
 
 grantApplicationCopy =
     """
+
+## 🤗 Opportunity grant applications
+
 If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
 Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 7th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
@@ -1449,9 +1448,9 @@ content2 : Element msg
 content2 =
     """
 
-# Opportunity grants
+# 🫶 Opportunity grant
 
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for this year's event, but we hope to be able to offer the same opportunity again.
+Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
@@ -1460,7 +1459,7 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
 """
-        ++ organisers2024
+        -- ++ organisers2024
         |> MarkdownThemed.renderFull
 
 
