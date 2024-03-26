@@ -12,6 +12,7 @@ import Camp23Denmark.Artifacts
 import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
+import DateFormat
 import Dict
 import Element exposing (..)
 import Element.Background as Background
@@ -23,6 +24,7 @@ import Env
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import ICalendar exposing (IcsFile)
 import Id exposing (Id)
 import Json.Decode
 import Lamdera
@@ -37,6 +39,7 @@ import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Theme exposing (normalButtonAttributes)
 import Time
+import TimeFormat
 import TravelMode
 import Types exposing (..)
 import Untrusted
@@ -121,6 +124,7 @@ init url key =
     ( Loading
         { key = key
         , now = Time.millisToPosix 0
+        , zone = Nothing
         , window = Nothing
         , initData = Nothing
         , route = route
@@ -131,6 +135,7 @@ init url key =
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , Time.now |> Task.perform Tick
+        , Time.here |> Task.perform GotZone
         , case route of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
@@ -169,6 +174,9 @@ update msg model =
                 Tick now ->
                     ( Loading { loading | now = now }, Cmd.none )
 
+                GotZone zone ->
+                    ( Loading { loading | zone = Just zone }, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -185,6 +193,7 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
@@ -209,6 +218,7 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
@@ -252,6 +262,9 @@ updateLoaded msg model =
         Tick now ->
             ( { model | now = now }, Cmd.none )
 
+        GotZone zone ->
+            ( { model | zone = Just zone }, Cmd.none )
+
         GotWindowSize width height ->
             ( { model | window = { width = width, height = height } }, Cmd.none )
 
@@ -260,6 +273,9 @@ updateLoaded msg model =
 
         MouseDown ->
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
+
+        DownloadTicketSalesReminder ->
+            ( model, downloadTicketSalesReminder )
 
         PressedSelectTicket productId priceId ->
             case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
@@ -650,6 +666,24 @@ ticketsHtmlId =
     "tickets"
 
 
+ticketSalesOpen =
+    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
+
+
+downloadTicketSalesReminder =
+    ICalendar.download
+        { name = "elm-camp-ticket-sale-starts"
+        , prodid = { company = "elm-camp", product = "website" }
+        , events =
+            [ { uid = "elm-camp-ticket-sale-starts"
+              , start = ticketSalesOpen
+              , summary = "Elm Camp Ticket Sale Starts"
+              , description = "Can't wait to see you there!"
+              }
+            ]
+        }
+
+
 homepageView : LoadedModel -> Element FrontendMsg_
 homepageView model =
     let
@@ -670,7 +704,34 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ View.Countdown.detailedCountdown "2024-03-31T19:00" "until ticket sales open" model
+                [ column Theme.contentAttributes
+                    [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
+                    , Input.button
+                        (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                        { onPress = Just DownloadTicketSalesReminder
+                        , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                        }
+                    , text " "
+                    , case model.zone of
+                        Just zone ->
+                            DateFormat.format
+                                [ DateFormat.yearNumber
+                                , DateFormat.text "-"
+                                , DateFormat.monthFixed
+                                , DateFormat.text "-"
+                                , DateFormat.dayOfMonthFixed
+                                , DateFormat.text " "
+                                , DateFormat.hourFixed
+                                , DateFormat.text ":"
+                                , DateFormat.minuteFixed
+                                ]
+                                zone
+                                ticketSalesOpen
+                                |> (\t -> el [ centerX ] <| text t)
+
+                        _ ->
+                            el [ centerX ] <| text "nozone"
+                    ]
                 , column Theme.contentAttributes [ content1 ]
                 , let
                     prefix =

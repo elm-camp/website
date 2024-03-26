@@ -25,13 +25,11 @@ ui t description model =
                 asTimeToGo target model.now
 
 
-detailedCountdown : String -> String -> { model | now : Time.Posix } -> Element msg
+detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg
 detailedCountdown t description model =
     let
         target =
-            TimeFormat.certain t Time.utc
-                |> .time
-                |> Time.posixToMillis
+            t |> Time.posixToMillis
 
         now =
             model.now
