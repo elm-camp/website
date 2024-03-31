@@ -60,7 +60,7 @@ sponsorshipItems =
     [ { name = "Silver"
       , price = 750
       , productId = sponsorship.silver
-      , description = "You will be a major supporter of Elm Camp Europe " ++ year ++ "."
+      , description = "You will be a major supporter of Elm Camp " ++ year ++ "."
       , features =
             [ "Thank you tweet"
             , "Logo on webpage"
@@ -70,7 +70,7 @@ sponsorshipItems =
     , { name = "Gold"
       , price = 1500
       , productId = sponsorship.gold
-      , description = "You will be a pivotal supporter of Elm Camp Europe " ++ year ++ "."
+      , description = "You will be a pivotal supporter of Elm Camp " ++ year ++ "."
       , features =
             [ "Thank you tweet"
             , "Rollup or poster inside the venue (provided by you)"
@@ -82,13 +82,13 @@ sponsorshipItems =
     , { name = "Platinum"
       , price = 3000
       , productId = sponsorship.platinum
-      , description = "You will be principal sponsor and guarantee that Elm Camp Europe " ++ year ++ " is a success."
+      , description = "You will be principal sponsor and guarantee that Elm Camp " ++ year ++ " is a success."
       , features =
             [ "Thank you tweet"
             , "Rollup or poster inside the venue (provided by you)"
             , "Self-written snippet on shared web page about use of Elm at your company"
             , "Logo on webpage"
-            , "2 free campfire tickets or 1 free camp ticket"
+            , "2 free campfire tickets or 1 free ticket with accommodation"
             , "Big logo on shared slide, displayed during breaks"
             , "Honorary mention in opening and closing talks"
             ]

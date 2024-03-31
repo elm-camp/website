@@ -12,6 +12,7 @@ import Camp23Denmark.Artifacts
 import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
+import DateFormat
 import Dict
 import Element exposing (..)
 import Element.Background as Background
@@ -23,6 +24,7 @@ import Env
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import ICalendar exposing (IcsFile)
 import Id exposing (Id)
 import Json.Decode
 import Lamdera
@@ -37,12 +39,14 @@ import Stripe exposing (PriceId, ProductId(..))
 import Task
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
 import Time
+import TimeFormat
 import TravelMode
 import Types exposing (..)
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
+import View.Countdown
 
 
 app =
@@ -120,6 +124,7 @@ init url key =
     ( Loading
         { key = key
         , now = Time.millisToPosix 0
+        , zone = Nothing
         , window = Nothing
         , initData = Nothing
         , route = route
@@ -129,6 +134,8 @@ init url key =
     , Cmd.batch
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , Time.now |> Task.perform Tick
+        , Time.here |> Task.perform GotZone
         , case route of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
@@ -164,6 +171,12 @@ update msg model =
                 LoadedMusic result ->
                     tryLoading { loading | audio = Just result }
 
+                Tick now ->
+                    ( Loading { loading | now = now }, Cmd.none )
+
+                GotZone zone ->
+                    ( Loading { loading | zone = Just zone }, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -180,6 +193,7 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
@@ -204,6 +218,7 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
@@ -247,6 +262,9 @@ updateLoaded msg model =
         Tick now ->
             ( { model | now = now }, Cmd.none )
 
+        GotZone zone ->
+            ( { model | zone = Just zone }, Cmd.none )
+
         GotWindowSize width height ->
             ( { model | window = { width = width, height = height } }, Cmd.none )
 
@@ -255,6 +273,9 @@ updateLoaded msg model =
 
         MouseDown ->
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
+
+        DownloadTicketSalesReminder ->
+            ( model, downloadTicketSalesReminder )
 
         PressedSelectTicket productId priceId ->
             case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
@@ -437,14 +458,14 @@ header config =
                         [ column
                             [ spacing 2, Font.size 24, moveUp 1 ]
                             [ el [ Theme.glow ] (text "Unconference")
-                            , el [ Font.extraBold, Font.color MarkdownThemed.lightTheme.elmText ] (text "UK 2024")
+                            , el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (text "UK 2024")
                             ]
                         ]
                     ]
                 , column
                     [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
-                    [ el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
-                    , el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
+                    [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
                     ]
 
                 -- vvv ADDED BY JC vvv
@@ -492,7 +513,7 @@ view model =
         -- , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
-            , Font.color MarkdownThemed.lightTheme.defaultText
+            , Font.color Theme.lightTheme.defaultText
             , Font.size 16
             , Font.medium
             , Background.color backgroundColor
@@ -651,6 +672,24 @@ ticketsHtmlId =
     "tickets"
 
 
+ticketSalesOpen =
+    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
+
+
+downloadTicketSalesReminder =
+    ICalendar.download
+        { name = "elm-camp-ticket-sale-starts"
+        , prodid = { company = "elm-camp", product = "website" }
+        , events =
+            [ { uid = "elm-camp-ticket-sale-starts"
+              , start = ticketSalesOpen
+              , summary = "Elm Camp Ticket Sale Starts"
+              , description = "Can't wait to see you there!"
+              }
+            ]
+        }
+
+
 homepageView : LoadedModel -> Element FrontendMsg_
 homepageView model =
     let
@@ -671,7 +710,35 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ column Theme.contentAttributes [ content1 ]
+                [ column Theme.contentAttributes
+                    [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
+                    , Input.button
+                        (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                        { onPress = Just DownloadTicketSalesReminder
+                        , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                        }
+                    , text " "
+                    , case model.zone of
+                        Just zone ->
+                            DateFormat.format
+                                [ DateFormat.yearNumber
+                                , DateFormat.text "-"
+                                , DateFormat.monthFixed
+                                , DateFormat.text "-"
+                                , DateFormat.dayOfMonthFixed
+                                , DateFormat.text " "
+                                , DateFormat.hourFixed
+                                , DateFormat.text ":"
+                                , DateFormat.minuteFixed
+                                ]
+                                zone
+                                ticketSalesOpen
+                                |> (\t -> el [ centerX ] <| text t)
+
+                        _ ->
+                            el [ centerX ] <| text "nozone"
+                    ]
+                , column Theme.contentAttributes [ content1 ]
                 , let
                     prefix =
                         "24-colehayes/colehayes-"
@@ -694,6 +761,7 @@ homepageView model =
                                     (List.map (\image -> venueImage fill (prefix ++ image)) paths)
                             )
                         |> column [ spacing 10, width fill ]
+                , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
                 , column Theme.contentAttributes [ ticketInfo ]
                 , column
                     [ width fill
@@ -701,6 +769,10 @@ homepageView model =
                     , htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
                     [ el Theme.contentAttributes content2
+                    , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
+                    , grantApplicationCopy
+                        |> MarkdownThemed.renderFull
+                        |> el Theme.contentAttributes
                     , ticketsView model
                     , accommodationView model
                     , formView model
@@ -762,7 +834,7 @@ Attendance for Elm Camp's 4 day / 3 night event.
             ]
         , case model.form.attendees of
             [] ->
-                text "No attendance tickets selected."
+                none
 
             _ ->
                 column [ width fill, spacing 20 ]
@@ -878,6 +950,18 @@ formView model productId priceId ticket =
                 { onPress = Just PressedCancelForm
                 , label = el [ centerX ] (text "Cancel")
                 }
+
+        includedAccommodationNote =
+            """
+Please note: your selected options ***${accommodationStatus} accommodation***.
+"""
+                |> String.replace "${accommodationStatus}"
+                    (if Tickets.formIncludesAccom form then
+                        "include"
+
+                     else
+                        "do not include"
+                    )
     in
     column
         [ width fill, spacing 60 ]
@@ -895,25 +979,13 @@ formView model productId priceId ticket =
                    ]
             )
             [ none
+            , MarkdownThemed.renderFull includedAccommodationNote
             , textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
-            , """
-By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
-
-Please note: your selected options ***${accommodationStatus} accommodation***.
-"""
-                |> String.replace "${accommodationStatus}"
-                    (if Tickets.formIncludesAccom form then
-                        "include"
-
-                     else
-                        "do not include"
-                    )
-                |> MarkdownThemed.renderFull
             , case form.submitStatus of
                 NotSubmitted pressedSubmit ->
                     none
@@ -926,6 +998,8 @@ Please note: your selected options ***${accommodationStatus} accommodation***.
                     paragraph [] [ text err ]
             , """
 Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
+
+By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
                 row [ width fill, spacing 16 ] [ cancelButton, submitButton ]
@@ -959,73 +1033,67 @@ textInput form onChange title validator text =
 
 
 opportunityGrant form =
-    column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "\u{1FAF6} Opportunity grants")
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "\u{1FAF6} Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
-            [ row [ width fill, spacing 15 ]
-                [ Theme.toggleButton "Contribute" (form.grantApply == False) (Just <| FormChanged { form | grantApply = False })
-                , Theme.toggleButton "Apply" (form.grantApply == True) (Just <| FormChanged { form | grantApply = True })
-                ]
-            , case form.grantApply of
-                True ->
-                    grantApplicationCopy |> MarkdownThemed.renderFull
-
-                False ->
-                    column []
-                        [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
-                        , row [ width fill, spacing 30 ]
-                            [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
-                            , column [ width (fillPortion 3) ]
-                                [ row [ width (fillPortion 3) ]
-                                    [ el [ paddingXY 0 10 ] <| text "0"
-                                    , el [ paddingXY 0 10, alignRight ] <| text "500"
+            [ column []
+                [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                , row [ width fill, spacing 30 ]
+                    [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                    , column [ width (fillPortion 3) ]
+                        [ row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "0"
+                            , el [ paddingXY 0 10, alignRight ] <| text "600"
+                            ]
+                        , Input.slider
+                            [ behindContent
+                                (el
+                                    [ width fill
+                                    , height (px 5)
+                                    , centerY
+                                    , Background.color (rgb255 94 176 125)
+                                    , Border.rounded 2
                                     ]
-                                , Input.slider
-                                    [ behindContent
-                                        (el
-                                            [ width fill
-                                            , height (px 5)
-                                            , centerY
-                                            , Background.color (rgb255 94 176 125)
-                                            , Border.rounded 2
-                                            ]
-                                            none
-                                        )
-                                    ]
-                                    { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
-                                    , label = Input.labelHidden "Opportunity grant contribution value selection slider"
-                                    , min = 0
-                                    , max = 550
-                                    , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
-                                    , thumb = Input.defaultThumb
-                                    , step = Just 10
-                                    }
-                                , row [ width (fillPortion 3) ]
-                                    [ el [ paddingXY 0 10 ] <| text "No contribution"
-                                    , el [ paddingXY 0 10, alignRight ] <| text "Donate full ticket"
-                                    ]
-                                ]
+                                    none
+                                )
+                            ]
+                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                            , label = Input.labelHidden "Opportunity grant contribution value selection slider"
+                            , min = 0
+                            , max = 600
+                            , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                            , thumb = Input.defaultThumb
+                            , step = Just 10
+                            }
+                        , row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "No contribution"
+                            , el [ paddingXY 0 10, alignRight ] <| text "Donate full attendance"
                             ]
                         ]
+                    ]
+                ]
             ]
         ]
 
 
 grantApplicationCopy =
     """
-If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
-Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
+## 🤗 Opportunity grant applications
+
+If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
+
+Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 7th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
 
 All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
 """
 
 
 sponsorships model form =
-    column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "🤝 Sponsor Elm Camp")
-        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp Europe " ++ year ++ " achieve a reasonable ticket offering." ]
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "🤝 Sponsor Elm Camp"
+        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
             |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
@@ -1114,7 +1182,7 @@ summary model =
             accomTotal + grantTotal + sponsorshipTotal
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
-        [ text "Summary"
+        [ Theme.h2 "Summary"
         , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat accomTotal)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
@@ -1133,7 +1201,7 @@ summary model =
             text <|
                 "Sponsorship: £"
                     ++ String.fromFloat sponsorshipTotal
-        , text <| "Total: £" ++ String.fromFloat total
+        , Theme.h3 <| "Total: £" ++ String.fromFloat total
         ]
 
 
@@ -1255,8 +1323,15 @@ venueImage width path =
 accommodationView : LoadedModel -> Element FrontendMsg_
 accommodationView model =
     column [ width fill, spacing 20 ]
-        [ el [ Font.size 20 ] (text "🏕️ Accommodation")
-        , paragraph [] [ text "You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation." ]
+        [ column Theme.contentAttributes
+            [ Theme.h2 "🏕️ Accommodation"
+            , """
+You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+
+The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
+"""
+                |> MarkdownThemed.renderFull
+            ]
         , AssocList.toList Tickets.accommodationOptions
             |> List.reverse
             |> List.map
@@ -1313,12 +1388,10 @@ Elm Camp is an event geared towards reconnecting in-person and collaborating on 
 
 Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
 
-There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
+We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals.
 
 Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
 
-**Note.** Tickets will go on sale in early March. When that happens we will post a notice here,
-in Slack, Discourse, etc.
 
 # Unconference
 
@@ -1406,9 +1479,9 @@ content2 : Element msg
 content2 =
     """
 
-# Opportunity grants
+# \u{1FAF6} Opportunity grant
 
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for this year's event, but we hope to be able to offer the same opportunity again.
+Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 
@@ -1417,7 +1490,7 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
 """
-        ++ organisers2024
+        -- ++ organisers2024
         |> MarkdownThemed.renderFull
 
 

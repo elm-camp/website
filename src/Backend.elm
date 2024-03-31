@@ -110,9 +110,7 @@ update msg model =
         OnConnected _ clientId ->
             ( model
             , Cmd.batch
-                [ -- @TODO debugging remove me for prod
-                  Stripe.getPrices GotPrices
-                , Lamdera.sendToFrontend
+                [ Lamdera.sendToFrontend
                     clientId
                     (InitData
                         { prices = model.prices
@@ -243,7 +241,13 @@ updateFromFrontend sessionId clientId msg model =
                             Inventory.slotsRemaining model
 
                         validProductAndForm =
-                            -- @TODO FIXME!
+                            {-
+                               I'm going to leave this for now, it's supposed to protect from people hand-crafting payloads
+                               from the frontend to skip form validation, but given the Lamdera wire format is opaque and
+                               undocumented, and there isn't really much to gain from someone going to the pains to reverse
+                               engineer it just to avoid filling in their full name or valid email, I don't think this is a
+                               realistic concern for our small event :)
+                            -}
                             True
 
                         sponsorshipItems =
@@ -280,7 +284,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         price.priceId
 
                                                     Nothing ->
-                                                        Debug.todo "price not found"
+                                                        Id.fromString "price not found"
                                             , quantity = 1
                                             }
                                     )
@@ -302,7 +306,7 @@ updateFromFrontend sessionId clientId msg model =
                                                         price.priceId
 
                                                     Nothing ->
-                                                        Debug.todo "price not found"
+                                                        Id.fromString "price not found"
                                             , quantity = List.length accomCount + 1
                                             }
                                     )

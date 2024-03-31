@@ -79,56 +79,6 @@ attendeeForm (Untrusted a) =
             Nothing
 
 
-
--- case a of
---     CampfireTicketPurchase b ->
---         case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
---             T2 (Just attendeeName) (Just billingEmail) ->
---                 { attendeeName = attendeeName
---                 , billingEmail = billingEmail
---                 , country = b.country
---                 , originCity = b.originCity
---                 , primaryModeOfTravel = b.primaryModeOfTravel
---                 , grantContribution = b.grantContribution
---                 , sponsorship = b.sponsorship
---                 }
---                     |> CampfireTicketPurchase
---                     |> Just
---             _ ->
---                 Nothing
---     CampTicketPurchase b ->
---         case T2 (untrust b.attendeeName |> name) (untrust b.billingEmail |> emailAddress) of
---             T2 (Just attendeeName) (Just billingEmail) ->
---                 { attendeeName = attendeeName
---                 , billingEmail = billingEmail
---                 , country = b.country
---                 , originCity = b.originCity
---                 , primaryModeOfTravel = b.primaryModeOfTravel
---                 , grantContribution = b.grantContribution
---                 , sponsorship = b.sponsorship
---                 }
---                     |> CampTicketPurchase
---                     |> Just
---             _ ->
---                 Nothing
---     CouplesCampTicketPurchase b ->
---         case T3 (untrust b.attendee1Name |> name) (untrust b.attendee2Name |> name) (untrust b.billingEmail |> emailAddress) of
---             T3 (Just attendee1Name) (Just attendee2Name) (Just billingEmail) ->
---                 { attendee1Name = attendee1Name
---                 , attendee2Name = attendee2Name
---                 , billingEmail = billingEmail
---                 , country = b.country
---                 , originCity = b.originCity
---                 , primaryModeOfTravel = b.primaryModeOfTravel
---                 , grantContribution = b.grantContribution
---                 , sponsorship = b.sponsorship
---                 }
---                     |> CouplesCampTicketPurchase
---                     |> Just
---             _ ->
---                 Nothing
-
-
 untrust : a -> Untrusted a
 untrust =
     Untrusted

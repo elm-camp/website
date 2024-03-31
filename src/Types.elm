@@ -33,6 +33,7 @@ type FrontendModel_
 type alias LoadingModel =
     { key : Key
     , now : Time.Posix
+    , zone : Maybe Time.Zone
     , window : Maybe { width : Int, height : Int }
     , route : Route
     , isOrganiser : Bool
@@ -44,12 +45,13 @@ type alias LoadingModel =
 type alias LoadedModel =
     { key : Key
     , now : Time.Posix
+    , zone : Maybe Time.Zone
     , window : { width : Int, height : Int }
-    , showTooltip : Bool
     , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
+    , showTooltip : Bool
     , showCarbonOffsetTooltip : Bool
     , slotsRemaining : TicketAvailability
     , isOrganiser : Bool
@@ -268,9 +270,11 @@ type FrontendMsg_
     = UrlClicked UrlRequest
     | UrlChanged Url
     | Tick Time.Posix
+    | GotZone Time.Zone
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
+    | DownloadTicketSalesReminder
     | PressedSelectTicket (Id ProductId) (Id PriceId)
     | AddAccom PurchaseForm.Accommodation
     | RemoveAccom PurchaseForm.Accommodation

@@ -26,7 +26,6 @@ type alias Ticket =
     { name : String
     , description : String
     , image : String
-    , slots : Int
     , productId : String
     }
 
@@ -36,7 +35,6 @@ attendanceTicket =
     { name = "Campfire Ticket"
     , description = "Attendee ticket for one person. Full access to the event 18th - 21st June, breakfast, lunch, tea & dinner included as per schedule"
     , image = ""
-    , slots = 1
     , productId = Product.ticket.attendanceTicket
     }
 
@@ -44,9 +42,8 @@ attendanceTicket =
 offsite : Ticket
 offsite =
     { name = "Offsite"
-    , description = "You'll be organising your own accommodation off-site and making your own way to/from the event each day. You'll still have full access to the event and all meals."
+    , description = "You'll be organising your own accommodation off-site and making your own way to/from the event each day. You'll have full access to the event and all meals."
     , image = ""
-    , slots = 2
     , productId = Product.ticket.offsite
     }
 
@@ -56,7 +53,6 @@ campingSpot =
     { name = "Camping Spot"
     , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
     , image = ""
-    , slots = 2
     , productId = Product.ticket.campingSpot
     }
 
@@ -66,7 +62,6 @@ singleRoom =
     { name = "Single Room"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
-    , slots = 2
     , productId = Product.ticket.singleRoom
     }
 
@@ -76,7 +71,6 @@ doubleRoom =
     { name = "Double Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
-    , slots = 2
     , productId = Product.ticket.doubleRoom
     }
 
@@ -84,9 +78,8 @@ doubleRoom =
 groupRoom : Ticket
 groupRoom =
     { name = "Group Room"
-    , description = "Suitable for up to 4 people for 3 nights."
+    , description = "Suitable for up to 4 people for 3 nights. Can be stretched up to 7 people –\u{00A0}contact us!"
     , image = ""
-    , slots = 2
     , productId = Product.ticket.groupRoom
     }
 
@@ -95,13 +88,12 @@ campfireTicket : Ticket
 campfireTicket =
     { name = "Campfire Ticket"
     , description = """
-Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to castle grounds. No accommodation included.
+Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to park grounds & activities. No accommodation included.
 
 • [Nearby accommodation options](/venue-and-access)
 • [Coordinate with other attendees](https://discord.gg/QeZDXJrN78)
 """
     , image = "/product1.webp"
-    , slots = 1
     , productId = Product.ticket.singleRoom
     }
 
