@@ -3,6 +3,7 @@ module Types exposing (..)
 import AssocList
 import Audio
 import Browser exposing (UrlRequest)
+import Browser.Dom
 import Browser.Navigation exposing (Key)
 import Codec exposing (Codec)
 import Dict
@@ -280,6 +281,7 @@ type FrontendMsg_
     | SetViewport
     | LoadedMusic (Result Audio.LoadError Audio.Source)
     | LiveScheduleMsg LiveSchedule.Msg
+    | SetViewPortForElement String
     | Noop
 
 

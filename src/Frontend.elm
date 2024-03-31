@@ -35,7 +35,7 @@ import Route exposing (Route(..), SubPage(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
-import Theme exposing (normalButtonAttributes)
+import Theme exposing (normalButtonAttributes, showyButtonAttributes)
 import Time
 import TravelMode
 import Types exposing (..)
@@ -349,6 +349,9 @@ updateLoaded msg model =
                 LiveSchedule.PressedAllowAudio ->
                     ( { model | pressedAudioButton = True }, Cmd.none )
 
+        SetViewPortForElement elmentId ->
+            ( model, jumpToId elmentId )
+
         Noop ->
             ( model, Cmd.none )
 
@@ -403,7 +406,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Cmd.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element msg
+header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg_
 header config =
     let
         illustrationAltText =
@@ -443,6 +446,9 @@ header config =
                     [ el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
                     , el [ Font.bold, Font.color MarkdownThemed.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
                     ]
+
+                -- vvv ADDED BY JC vvv
+                , el [ Font.size 20 ] goToTicketSales
                 ]
     in
     if config.window.width < 1000 || config.isCompact then
@@ -712,7 +718,7 @@ homepageView model =
 
 ticketsView model =
     column Theme.contentAttributes
-        [ row [ width fill ]
+        [ row [ width fill, htmlId "ticket-sales" ]
             [ column [ width fill ]
                 [ """
 ## 🎟️ Attendance Ticket - £200
@@ -954,7 +960,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column [ spacing 20 ]
-        [ el [ Font.size 20 ] (text "🫶 Opportunity grants")
+        [ el [ Font.size 20 ] (text "\u{1FAF6} Opportunity grants")
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ row [ width fill, spacing 15 ]
@@ -1271,6 +1277,31 @@ accommodationView model =
                 )
             |> Theme.rowToColumnWhen 1200 model [ spacing 16 ]
         ]
+
+
+
+-- ADDED BY JC
+
+
+goToTicketSales =
+    Input.button showyButtonAttributes { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200"), label = text "Tickets on sale now!" }
+
+
+jumpToId : String -> Cmd FrontendMsg_
+jumpToId id =
+    Browser.Dom.getElement id
+        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - 40))
+        |> Task.attempt
+            (\_ -> Noop)
+
+
+htmlId : String -> Element.Attribute msg
+htmlId str =
+    Element.htmlAttribute (Html.Attributes.id str)
+
+
+
+-- END OF ADDED BY JC
 
 
 content1 : Element msg

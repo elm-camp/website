@@ -244,3 +244,16 @@ normalButtonAttributes =
     , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
     , Font.semiBold
     ]
+
+
+showyButtonAttributes =
+    -- ADDED BY JC
+    [ Element.width Element.fill
+    , Background.color (Element.rgb255 255 120 0)
+    , Element.padding 16
+    , Border.rounded 8
+    , Font.color (Element.rgb 0 0 0)
+    , Element.alignBottom
+    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Font.semiBold
+    ]
