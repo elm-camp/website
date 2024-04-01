@@ -230,6 +230,9 @@ footer =
                 { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
             , Element.link
                 []
+                { url = Route.encode OrganisersRoute, label = Element.text "Organisers" }
+            , Element.link
+                []
                 { url = Route.encode ElmCampArchiveRoute, label = Element.text "Elm Camp Archive" }
             ]
         )

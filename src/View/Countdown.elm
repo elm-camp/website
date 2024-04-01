@@ -75,7 +75,7 @@ detailedCountdown t description model =
             String.join " "
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining == 0 then
+    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
         none
 
     else

@@ -610,6 +610,18 @@ loadedView model =
                 , Theme.footer
                 ]
 
+        OrganisersRoute ->
+            column
+                [ width fill, height fill ]
+                [ header { window = model.window, isCompact = True }
+                , column
+                    (padding 20 :: Theme.contentAttributes)
+                    [ organisersInfo
+                    , organisers2024 |> MarkdownThemed.renderFull
+                    ]
+                , Theme.footer
+                ]
+
         ElmCampArchiveRoute ->
             column
                 [ width fill, height fill ]
@@ -712,12 +724,6 @@ homepageView model =
                 [ width fill, spacing 40 ]
                 [ column Theme.contentAttributes
                     [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
-                    , Input.button
-                        (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
-                        { onPress = Just DownloadTicketSalesReminder
-                        , label = el [ Font.center, centerX ] <| text "Add to calendar"
-                        }
-                    , text " "
                     , case model.zone of
                         Just zone ->
                             DateFormat.format
@@ -733,10 +739,23 @@ homepageView model =
                                 ]
                                 zone
                                 ticketSalesOpen
-                                |> (\t -> el [ centerX ] <| text t)
+                                |> (\t ->
+                                        el
+                                            [ centerX
+                                            , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
+                                            ]
+                                        <|
+                                            text t
+                                   )
 
                         _ ->
                             el [ centerX ] <| text "nozone"
+                    , Input.button
+                        (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                        { onPress = Just DownloadTicketSalesReminder
+                        , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                        }
+                    , text " "
                     ]
                 , column Theme.contentAttributes [ content1 ]
                 , let
@@ -763,13 +782,16 @@ homepageView model =
                         |> column [ spacing 10, width fill ]
                 , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
                 , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
-                , column Theme.contentAttributes [ ticketInfo ]
+                , column Theme.contentAttributes
+                    [ ticketInfo
+                    ]
                 , column
                     [ width fill
                     , spacing 60
                     , htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
-                    [ el Theme.contentAttributes content2
+                    [ el Theme.contentAttributes opportunityGrantInfo
+                    , el Theme.contentAttributes organisersInfo
                     , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
                     , grantApplicationCopy
                         |> MarkdownThemed.renderFull
@@ -804,33 +826,48 @@ Attendance for Elm Camp's 4 day / 3 night event.
                     |> MarkdownThemed.renderFull
                 ]
             , column []
-                [ Theme.numericField
-                    "Tickets"
-                    (List.length model.form.attendees)
-                    (\_ ->
-                        -- Remove last attendee from the list
-                        model.form.attendees
-                            |> List.init
-                            |> Maybe.withDefault []
-                            |> (\attendees ->
-                                    let
-                                        form =
-                                            model.form
-                                    in
-                                    FormChanged { form | attendees = attendees }
-                               )
-                    )
-                    (\_ ->
-                        -- Add a new attendee to the list
-                        model.form.attendees
-                            |> (\attendees ->
-                                    let
-                                        form =
-                                            model.form
-                                    in
-                                    FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
-                               )
-                    )
+                [ if List.length model.form.attendees == 0 then
+                    let
+                        form =
+                            model.form
+                    in
+                    Input.button
+                        (Theme.submitButtonAttributes True)
+                        { onPress = Just <| FormChanged { form | attendees = model.form.attendees ++ [ PurchaseForm.defaultAttendee ] }
+                        , label =
+                            el
+                                [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
+                                (text "Select")
+                        }
+
+                  else
+                    Theme.numericField
+                        "Tickets"
+                        (List.length model.form.attendees)
+                        (\_ ->
+                            -- Remove last attendee from the list
+                            model.form.attendees
+                                |> List.init
+                                |> Maybe.withDefault []
+                                |> (\attendees ->
+                                        let
+                                            form =
+                                                model.form
+                                        in
+                                        FormChanged { form | attendees = attendees }
+                                   )
+                        )
+                        (\_ ->
+                            -- Add a new attendee to the list
+                            model.form.attendees
+                                |> (\attendees ->
+                                        let
+                                            form =
+                                                model.form
+                                        in
+                                        FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
+                                   )
+                        )
                 ]
             ]
         , case model.form.attendees of
@@ -843,6 +880,8 @@ Attendance for Elm Camp's 4 day / 3 night event.
                     , column
                         [ spacing 16, width fill ]
                         (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
+
+                    -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
                     ]
         ]
 
@@ -893,7 +932,7 @@ attendeeForm model i attendee =
             , textInput
                 model.form
                 (\a -> FormChanged { form | attendees = List.setAt i { attendee | originCity = a } model.form.attendees })
-                "City you live in (or nearest city to you)"
+                "City/town"
                 (\text ->
                     case String.Nonempty.fromString text of
                         Just nonempty ->
@@ -968,7 +1007,7 @@ Please note: your selected options ***${accommodationStatus} accommodation***.
         [ width fill, spacing 60 ]
         [ none
 
-        -- , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
+        -- , carbonOffsetForm model.showCarbonOffsetTooltip form
         , opportunityGrant form
         , sponsorships model form
         , summary model
@@ -1035,7 +1074,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "\u{1FAF6} Opportunity grants"
+        [ Theme.h2 "🫶 Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
@@ -1229,6 +1268,7 @@ backgroundColor =
     rgb255 255 244 225
 
 
+carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg_
 carbonOffsetForm showCarbonOffsetTooltip form =
     column
         [ width fill
@@ -1282,12 +1322,11 @@ carbonOffsetForm showCarbonOffsetTooltip form =
             --                     )
             --         )
             --     |> column []
-            , case ( form.submitStatus, form.primaryModeOfTravel ) of
-                ( NotSubmitted PressedSubmit, Nothing ) ->
-                    errorText "Please select one of the above"
-
-                _ ->
-                    none
+            -- , case ( form.submitStatus, form.primaryModeOfTravel ) of
+            --     ( NotSubmitted PressedSubmit, Nothing ) ->
+            --         errorText "Please select one of the above"
+            --     _ ->
+            --         none
             ]
         ]
 
@@ -1476,15 +1515,20 @@ tooltip text =
         [ Element.text text ]
 
 
-content2 : Element msg
-content2 =
+opportunityGrantInfo =
     """
-
-# \u{1FAF6} Opportunity grant
+# 🫶 Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
+"""
+        |> MarkdownThemed.renderFull
+
+
+organisersInfo : Element msg
+organisersInfo =
+    """
 
 # Organisers
 
