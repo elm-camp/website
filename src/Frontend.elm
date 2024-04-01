@@ -761,6 +761,7 @@ homepageView model =
                                     (List.map (\image -> venueImage fill (prefix ++ image)) paths)
                             )
                         |> column [ spacing 10, width fill ]
+                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
                 , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
                 , column Theme.contentAttributes [ ticketInfo ]
                 , column
@@ -1577,36 +1578,44 @@ sponsors window =
                         { src = "/sponsors/" ++ image, description = url }
                 }
     in
-    [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
-    , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
-    , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
-    , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
-    , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
-    , asImg { image = "bekk.svg", url = "https://www.bekk.no/", width = 200 }
-    , newTabLink
-        [ width fill ]
-        { url = "https://www.elmweekly.nl"
-        , label =
-            row [ spacing 10, width (px 200) ]
-                [ image
-                    [ width
-                        (px
-                            (if window.width < 800 then
-                                toFloat 60 * 0.7 |> round
+    column [ centerX, spacing 32 ]
+        [ [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 350 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "ambue-logo.png", url = "https://www.ambue.com/", width = 220 }
+          , asImg { image = "nlx_logo.png", url = "https://nlx.ai", width = 150 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 200 }
+          , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 160 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 100 }
+          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 100 }
+          , newTabLink
+                [ width fill ]
+                { url = "https://www.elmweekly.nl"
+                , label =
+                    row [ spacing 10, width (px 180) ]
+                        [ image
+                            [ width
+                                (px
+                                    (if window.width < 800 then
+                                        toFloat 50 * 0.7 |> round
 
-                             else
-                                60
-                            )
-                        )
-                    ]
-                    { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                , el [ Font.size 24 ] <| text "Elm Weekly"
-                ]
-        }
-    , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
-    ]
-        -- |> List.map asImg
-        |> wrappedRow [ spacing 32 ]
+                                     else
+                                        50
+                                    )
+                                )
+                            ]
+                            { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
+                        , el [ Font.size 24 ] <| text "Elm Weekly"
+                        ]
+                }
+          , asImg { image = "cookiewolf-logo.png", url = "", width = 120 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        ]
 
 
 unconferenceFormatContent : Element msg
