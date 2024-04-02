@@ -2,6 +2,7 @@ module RPC exposing (..)
 
 import AssocList
 import Backend
+import Camp24Devon.Tickets as Tickets
 import Codec
 import Email.Html as Html
 import Email.Html.Attributes as Attributes
@@ -21,7 +22,6 @@ import PurchaseForm
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
-import Tickets exposing (Ticket)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
 
 
@@ -34,7 +34,8 @@ backendModelEndpoint _ model request =
     case Json.Decode.decodeValue Json.Decode.string request of
         Ok ok ->
             if ok == Env.adminPassword then
-                ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
+                ( Http.BadBody "todo implement backendModelEndpoint" |> Err, model, Cmd.none )
+                -- ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
 
             else
                 ( Http.BadBody "Invalid admin password" |> Err, model, Cmd.none )
@@ -63,61 +64,60 @@ purchaseCompletedEndpoint _ model request =
                 StripeSessionCompleted stripeSessionId ->
                     case AssocList.get stripeSessionId model.pendingOrder of
                         Just order ->
-                            let
-                                maybeTicket : Maybe Ticket
-                                maybeTicket =
-                                    case Backend.priceIdToProductId model order.priceId of
-                                        Just productId ->
-                                            AssocList.get productId Tickets.dict
+                            -- let
+                            --     maybeTicket : Maybe Tickets.Ticket
+                            --     maybeTicket =
+                            --         case Backend.priceIdToProductId model order.priceId of
+                            --             Just productId ->
+                            --                 AssocList.get productId Tickets.dict
+                            --             Nothing ->
+                            --                 Nothing
+                            -- in
+                            -- case maybeTicket of
+                            --     Just ticket ->
+                            -- let
+                            --     { subject, textBody, htmlBody } =
+                            --         confirmationEmail ticket
+                            -- in
+                            ( response, model, Cmd.none )
 
-                                        Nothing ->
-                                            Nothing
-                            in
-                            case maybeTicket of
-                                Just ticket ->
-                                    let
-                                        { subject, textBody, htmlBody } =
-                                            confirmationEmail ticket
-                                    in
-                                    ( response
-                                    , { model
-                                        | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
-                                        , orders =
-                                            AssocList.insert
-                                                stripeSessionId
-                                                { priceId = order.priceId
-                                                , submitTime = order.submitTime
-                                                , form = order.form
-                                                , emailResult = SendingEmail
-                                                }
-                                                model.orders
-                                      }
-                                    , Postmark.sendEmail
-                                        (ConfirmationEmailSent stripeSessionId)
-                                        Env.postmarkApiKey
-                                        { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
-                                        , to =
-                                            Nonempty
-                                                { name = PurchaseForm.attendeeName order.form |> Name.toString
-                                                , email = PurchaseForm.billingEmail order.form
-                                                }
-                                                []
-                                        , subject = subject
-                                        , body = Postmark.BodyBoth htmlBody textBody
-                                        , messageStream = "outbound"
-                                        }
-                                    )
-
-                                Nothing ->
-                                    let
-                                        error =
-                                            "Ticket not found: priceId"
-                                                ++ Id.toString order.priceId
-                                                ++ ", stripeSessionId: "
-                                                ++ Id.toString stripeSessionId
-                                    in
-                                    ( Err (Http.BadBody error), model, Backend.errorEmail error )
-
+                        -- ( response
+                        -- , { model
+                        --     | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
+                        --     , orders =
+                        --         AssocList.insert
+                        --             stripeSessionId
+                        --             { priceId = order.priceId
+                        --             , submitTime = order.submitTime
+                        --             , form = order.form
+                        --             , emailResult = SendingEmail
+                        --             }
+                        --             model.orders
+                        --   }
+                        -- , Postmark.sendEmail
+                        --     (ConfirmationEmailSent stripeSessionId)
+                        --     Env.postmarkApiKey
+                        --     { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
+                        --     , to =
+                        --         Nonempty
+                        --             { name = order.form.attendees |> List.head |> Maybe.map (.name >> Name.toString) |> Maybe.withDefault "Attendee"
+                        --             , email = order.form.billingEmail
+                        --             }
+                        --             []
+                        --     , subject = subject
+                        --     , body = Postmark.BodyBoth htmlBody textBody
+                        --     , messageStream = "outbound"
+                        --     }
+                        -- )
+                        -- Nothing ->
+                        --     let
+                        --         error =
+                        --             "Ticket not found: priceId"
+                        --                 ++ Id.toString order.priceId
+                        --                 ++ ", stripeSessionId: "
+                        --                 ++ Id.toString stripeSessionId
+                        --     in
+                        --     ( Err (Http.BadBody error), model, Backend.errorEmail error )
                         Nothing ->
                             let
                                 error =
@@ -135,7 +135,7 @@ purchaseCompletedEndpoint _ model request =
             ( Err (Http.BadBody errorText), model, Backend.errorEmail errorText )
 
 
-confirmationEmail : Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail : Tickets.Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
 confirmationEmail ticket =
     { subject =
         String.Nonempty.append

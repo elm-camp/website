@@ -1,4 +1,4 @@
-module Product exposing (..)
+module Camp23Denmark.Product exposing (..)
 
 import Env
 

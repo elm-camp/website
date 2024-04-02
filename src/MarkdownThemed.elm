@@ -1,42 +1,23 @@
-module MarkdownThemed exposing (bulletPoint, heading1, lightTheme, renderFull)
+module MarkdownThemed exposing (bulletPoint, renderFull)
 
 import Element exposing (..)
 import Element.Background
 import Element.Border
-import Element.Font
+import Element.Font as Font
 import Element.Region
+import Helpers exposing (justs)
 import Html
 import Html.Attributes
 import Markdown.Block exposing (HeadingLevel, ListItem(..))
 import Markdown.Html
 import Markdown.Parser
 import Markdown.Renderer
-
-
-type alias Theme =
-    { defaultText : Element.Color
-    , mutedText : Element.Color
-    , grey : Element.Color
-    , lightGrey : Element.Color
-    , link : Element.Color
-    , elmText : Element.Color
-    }
-
-
-lightTheme : Theme
-lightTheme =
-    { defaultText = Element.rgb255 30 50 46
-    , mutedText = Element.rgb255 74 94 122
-    , link = Element.rgb255 12 109 82
-    , lightGrey = Element.rgb255 220 240 255
-    , grey = Element.rgb255 200 220 240
-    , elmText = Element.rgb255 92 176 126
-    }
+import Theme
 
 
 renderFull : String -> Element msg
 renderFull markdownBody =
-    render (renderer lightTheme) markdownBody
+    render (renderer Theme.lightTheme) markdownBody
 
 
 render : Markdown.Renderer.Renderer (Element msg) -> String -> Element msg
@@ -76,18 +57,18 @@ bulletPoint children =
         ]
 
 
-renderer : Theme -> Markdown.Renderer.Renderer (Element msg)
+renderer : Theme.Theme -> Markdown.Renderer.Renderer (Element msg)
 renderer theme =
     { heading = \data -> Element.row [] [ heading theme data ]
     , paragraph = Element.paragraph [ Element.paddingEach { left = 0, right = 0, top = 0, bottom = 20 } ]
     , blockQuote =
         \children ->
             Element.column
-                [ Element.Font.size 20
-                , Element.Font.italic
+                [ Font.size 20
+                , Font.italic
                 , Element.Border.widthEach { bottom = 0, left = 4, right = 0, top = 0 }
                 , Element.Border.color theme.grey
-                , Element.Font.color theme.mutedText
+                , Font.color theme.mutedText
                 , Element.padding 10
                 ]
                 children
@@ -129,14 +110,14 @@ renderer theme =
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
         \content -> Element.html (Html.code [] [ Html.text content ])
-    , strong = \list -> Element.paragraph [ Element.Font.bold ] list
-    , emphasis = \list -> Element.paragraph [ Element.Font.italic ] list
+    , strong = \list -> Element.paragraph [ Font.bold ] list
+    , emphasis = \list -> Element.paragraph [ Font.italic ] list
     , hardLineBreak = Element.html (Html.br [] [])
     , link =
         \{ title, destination } list ->
             Element.link
-                [ Element.Font.underline
-                , Element.Font.color theme.link
+                [ Font.underline
+                , Font.color theme.link
                 ]
                 { url = destination
                 , label =
@@ -202,7 +183,7 @@ renderer theme =
     , codeBlock =
         \{ body } ->
             Element.column
-                [ Element.Font.family [ Element.Font.monospace ]
+                [ Font.family [ Font.monospace ]
                 , Element.Background.color theme.lightGrey
                 , Element.Border.rounded 5
                 , Element.padding 10
@@ -219,51 +200,30 @@ renderer theme =
     , tableRow = \children -> Element.row [ Element.width Element.fill ] children
     , tableCell = \_ children -> Element.column [ Element.width Element.fill ] children
     , tableHeaderCell = \_ children -> Element.column [ Element.width Element.fill ] children
-    , strikethrough = \children -> Element.paragraph [ Element.Font.strike ] children
+    , strikethrough = \children -> Element.paragraph [ Font.strike ] children
     }
 
 
-heading1 : List (Element.Attr () msg)
-heading1 =
-    [ Element.Font.size 36
-    , Element.Font.semiBold
-    , Element.Font.color lightTheme.defaultText
-    , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }
-    ]
-
-
-heading : Theme -> { level : HeadingLevel, rawText : String, children : List (Element msg) } -> Element msg
+heading : Theme.Theme -> { level : HeadingLevel, rawText : String, children : List (Element msg) } -> Element msg
 heading theme { level, rawText, children } =
     Element.paragraph
         ((case Markdown.Block.headingLevelToInt level of
             1 ->
-                heading1
+                Theme.heading1Attrs theme
 
             2 ->
-                [ Element.Font.color theme.elmText
-                , Element.Font.size 24
-                , Element.Font.extraBold
-                , Element.paddingEach { top = 0, right = 0, bottom = 20, left = 0 }
-                ]
+                Theme.heading2Attrs theme
 
             3 ->
-                [ Element.Font.color theme.defaultText
-                , Element.Font.size 18
-                , Element.Font.medium
-                , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
-                ]
+                Theme.heading3Attrs theme
 
             4 ->
-                [ Element.Font.color theme.defaultText
-                , Element.Font.size 16
-                , Element.Font.medium
-                , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
-                ]
+                Theme.heading4Attrs theme
 
             _ ->
-                [ Element.Font.size 12
-                , Element.Font.medium
-                , Element.Font.center
+                [ Font.size 12
+                , Font.medium
+                , Font.center
                 , Element.paddingXY 0 20
                 ]
          )
@@ -283,17 +243,3 @@ rawTextToId rawText =
         |> String.toLower
         |> String.replace " " "-"
         |> String.replace "." ""
-
-
-justs : List (Maybe a) -> List a
-justs =
-    List.foldl
-        (\v acc ->
-            case v of
-                Just el ->
-                    el :: acc
-
-                Nothing ->
-                    acc
-        )
-        []

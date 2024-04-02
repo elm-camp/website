@@ -7,7 +7,7 @@ import Element.Border
 import Element.Font
 import Element.Input
 import MarkdownThemed
-import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated(..), SubmitStatus(..))
+import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
 import Stripe exposing (ProductId(..))
 import Theme
@@ -57,7 +57,7 @@ dallundCastleImage : Element.Length -> String -> Element msg
 dallundCastleImage width path =
     Element.image
         [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of the Dallund Castle" }
+        { src = "/23-denmark/" ++ path, description = "Photo of part of the Dallund Castle" }
 
 
 content1 : Element msg

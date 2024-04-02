@@ -1,16 +1,36 @@
 module Theme exposing (..)
 
 import Element exposing (..)
-import Element.Background
-import Element.Border
-import Element.Font
-import Element.Input
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
+import Element.Input as Input
 import Html exposing (Html)
 import Html.Attributes
-import MarkdownThemed
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
+
+
+type alias Theme =
+    { defaultText : Element.Color
+    , mutedText : Element.Color
+    , grey : Element.Color
+    , lightGrey : Element.Color
+    , link : Element.Color
+    , elmText : Element.Color
+    }
+
+
+lightTheme : Theme
+lightTheme =
+    { defaultText = Element.rgb255 30 50 46
+    , mutedText = Element.rgb255 74 94 122
+    , link = Element.rgb255 12 109 82
+    , lightGrey = Element.rgb255 220 240 255
+    , grey = Element.rgb255 200 220 240
+    , elmText = Element.rgb255 92 176 126
+    }
 
 
 contentAttributes : List (Element.Attribute msg)
@@ -50,6 +70,7 @@ css =
 colors =
     { green = Element.rgb255 92 176 126
     , lightGrey = Element.rgb255 200 200 200
+    , white = Element.rgb255 255 255 255
     }
 
 
@@ -89,15 +110,20 @@ priceText { currency, amount } =
     Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
 
 
+priceAmount : Price -> Float
+priceAmount { amount } =
+    toFloat (amount // 100)
+
+
 panel attrs x =
     Element.column
         ([ Element.width Element.fill
          , Element.alignTop
          , Element.spacing 16
-         , Element.Background.color (Element.rgb 1 1 1)
-         , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
+         , Background.color (Element.rgb 1 1 1)
+         , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
          , Element.height Element.fill
-         , Element.Border.rounded 16
+         , Border.rounded 16
          , Element.padding 16
          ]
             ++ attrs
@@ -108,7 +134,7 @@ panel attrs x =
 submitButtonAttributes : Bool -> List (Element.Attribute msg)
 submitButtonAttributes isEnabled =
     [ Element.width Element.fill
-    , Element.Background.color
+    , Background.color
         (if isEnabled then
             Element.rgb255 92 176 126
 
@@ -116,16 +142,16 @@ submitButtonAttributes isEnabled =
             Element.rgb255 137 141 137
         )
     , Element.padding 16
-    , Element.Border.rounded 8
+    , Border.rounded 8
     , Element.alignBottom
-    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Element.Font.semiBold
-    , Element.Font.color (Element.rgb 1 1 1)
+    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Font.semiBold
+    , Font.color (Element.rgb 1 1 1)
     ]
 
 
 toggleButton label isActive onPress =
-    Element.Input.button
+    Input.button
         (toggleButtonAttributes isActive)
         { onPress = onPress
         , label = Element.el [ Element.centerX ] (Element.text label)
@@ -134,7 +160,7 @@ toggleButton label isActive onPress =
 
 toggleButtonAttributes : Bool -> List (Element.Attribute msg)
 toggleButtonAttributes isActive =
-    [ Element.Background.color
+    [ Background.color
         (if isActive then
             colors.green
 
@@ -142,11 +168,11 @@ toggleButtonAttributes isActive =
             colors.lightGrey
         )
     , Element.padding 16
-    , Element.Border.rounded 8
+    , Border.rounded 8
     , Element.alignBottom
-    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Element.Font.semiBold
-    , Element.Font.color (Element.rgb 1 1 1)
+    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Font.semiBold
+    , Font.color (Element.rgb 1 1 1)
     ]
 
 
@@ -175,21 +201,21 @@ attr name value =
 
 
 glow =
-    Element.Font.glow (colorWithAlpha 0.25 MarkdownThemed.lightTheme.defaultText) 4
+    Font.glow (colorWithAlpha 0.25 lightTheme.defaultText) 4
 
 
 footer : Element msg
 footer =
     Element.el
-        [ Element.Background.color (Element.rgb255 12 109 82)
+        [ Background.color (Element.rgb255 12 109 82)
         , Element.paddingXY 24 16
         , Element.width Element.fill
         , Element.alignBottom
         ]
         (Element.wrappedRow
             ([ Element.spacing 32
-             , Element.Background.color (Element.rgb255 12 109 82)
-             , Element.Font.color (Element.rgb 1 1 1)
+             , Background.color (Element.rgb255 12 109 82)
+             , Font.color (Element.rgb 1 1 1)
              ]
                 ++ contentAttributes
             )
@@ -204,6 +230,105 @@ footer =
                 { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
             , Element.link
                 []
+                { url = Route.encode OrganisersRoute, label = Element.text "Organisers" }
+            , Element.link
+                []
                 { url = Route.encode ElmCampArchiveRoute, label = Element.text "Elm Camp Archive" }
             ]
         )
+
+
+numericField title value downMsg upMsg =
+    row [ spacing 5, width fill ]
+        [ Input.button
+            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            { onPress = Just (downMsg (value - 1))
+            , label = Element.el [ Element.centerX ] (Element.text "-")
+            }
+        , Input.button
+            normalButtonAttributes
+            { onPress = Nothing
+            , label = text (String.fromInt value)
+            }
+        , Input.button
+            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            { onPress = Just (upMsg (value + 1))
+            , label = Element.el [ Element.centerX ] (Element.text "+")
+            }
+        ]
+
+
+normalButtonAttributes =
+    [ Element.width Element.fill
+    , Background.color (Element.rgb255 255 255 255)
+    , Element.padding 16
+    , Border.rounded 8
+    , Element.alignBottom
+    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Font.semiBold
+    ]
+
+
+showyButtonAttributes =
+    [ Element.width Element.fill
+    , Background.color (Element.rgb255 255 172 98)
+    , Element.padding 16
+    , Border.rounded 8
+    , Font.color (Element.rgb 0 0 0)
+    , Element.alignBottom
+    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
+    , Font.semiBold
+    ]
+
+
+h1 t =
+    el (heading1Attrs lightTheme) (text t)
+
+
+h2 t =
+    el (heading2Attrs lightTheme) (text t)
+
+
+h3 t =
+    el (heading3Attrs lightTheme) (text t)
+
+
+h4 t =
+    el (heading4Attrs lightTheme) (text t)
+
+
+heading1Attrs : Theme -> List (Element.Attr () msg)
+heading1Attrs theme =
+    [ Font.size 36
+    , Font.semiBold
+    , Font.color lightTheme.defaultText
+    , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }
+    ]
+
+
+heading2Attrs : Theme -> List (Element.Attr () msg)
+heading2Attrs theme =
+    [ Font.color theme.elmText
+    , Font.size 24
+    , Font.extraBold
+    , Element.paddingEach { top = 0, right = 0, bottom = 20, left = 0 }
+    ]
+
+
+heading3Attrs : Theme -> List (Element.Attr () msg)
+heading3Attrs theme =
+    [ Font.color theme.defaultText
+    , Font.size 18
+    , Font.medium
+    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
+    , Font.bold
+    ]
+
+
+heading4Attrs : Theme -> List (Element.Attr () msg)
+heading4Attrs theme =
+    [ Font.color theme.defaultText
+    , Font.size 16
+    , Font.medium
+    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
+    ]

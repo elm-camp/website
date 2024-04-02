@@ -1,5 +1,6 @@
 module Stripe exposing
-    ( Price
+    ( CheckoutItem(..)
+    , Price
     , PriceData
     , PriceId(..)
     , ProductId(..)
@@ -26,7 +27,6 @@ import Json.Decode.Pipeline exposing (..)
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
-import Product
 import Task exposing (Task)
 import Time
 import Url exposing (percentEncode)
@@ -121,52 +121,46 @@ decodeCurrency =
         D.string
 
 
+type CheckoutItem
+    = Priced
+        { priceId : Id PriceId
+        , name : String
+        , quantity : Int
+        }
+    | Unpriced
+        { name : String
+        , quantity : Int
+        , currency : String
+        , amountDecimal : Int
+        }
+
+
 createCheckoutSession :
-    { priceId : Id PriceId
-    , opportunityGrantDonation : Int
+    { items : List CheckoutItem
     , emailAddress : EmailAddress
-    , sponsorship : Maybe String
     , now : Time.Posix
     , expiresInMinutes : Int
     }
     -> Task Http.Error (Id StripeSessionId)
-createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsorship, now, expiresInMinutes } =
-    -- @TODO support multiple prices, see Data.Tickets
+createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
     let
-        opportunityGrantAttrs =
-            if opportunityGrantDonation > 0 then
-                [ ( "line_items[1][price_data][currency]", "eur" )
-                , ( "line_items[1][price_data][product_data][name]", "Elm Camp Denmark 23 - Opportunity Grant Sponsorship" )
-                , ( "line_items[1][price_data][product_data][description]", "Thank you for your generous donation!" )
-                , ( "line_items[1][price_data][unit_amount_decimal]", String.fromInt (opportunityGrantDonation * 100) )
-                , ( "line_items[1][quantity]", "1" )
-                ]
-
-            else
-                []
-
-        sponsorIndex =
-            if opportunityGrantAttrs == [] then
-                "1"
-
-            else
-                "2"
-
-        sponsorshipAttrs =
-            case sponsorship of
-                Just s ->
-                    [ ( "line_items[" ++ sponsorIndex ++ "][price]", s )
-                    , ( "line_items[" ++ sponsorIndex ++ "][quantity]", "1" )
+        itemToStripeAttrs i item =
+            case item of
+                Priced { priceId, quantity } ->
+                    [ ( "line_items[" ++ String.fromInt i ++ "][price]", Id.toString priceId )
+                    , ( "line_items[" ++ String.fromInt i ++ "][quantity]", String.fromInt quantity )
                     ]
 
-                Nothing ->
-                    []
+                Unpriced { name, quantity, currency, amountDecimal } ->
+                    [ ( "line_items[" ++ String.fromInt i ++ "][price_data][currency]", currency )
+                    , ( "line_items[" ++ String.fromInt i ++ "][price_data][product_data][name]", name )
+                    , ( "line_items[" ++ String.fromInt i ++ "][price_data][unit_amount_decimal]", String.fromInt amountDecimal )
+                    , ( "line_items[" ++ String.fromInt i ++ "][quantity]", String.fromInt quantity )
+                    ]
 
         body =
             formBody <|
-                [ ( "line_items[0][price]", Id.toString priceId )
-                , ( "line_items[0][quantity]", "1" )
-                , ( "mode", "payment" )
+                [ ( "mode", "payment" )
                 , ( "allow_promotion_codes", "true" )
 
                 -- Stripe expects seconds since epoch
@@ -182,8 +176,7 @@ createCheckoutSession { priceId, opportunityGrantDonation, emailAddress, sponsor
                   )
                 , ( "customer_email", EmailAddress.toString emailAddress )
                 ]
-                    ++ opportunityGrantAttrs
-                    ++ sponsorshipAttrs
+                    ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
     in
     Http.task
         { method = "POST"

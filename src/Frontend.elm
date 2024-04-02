@@ -9,39 +9,48 @@ import Browser.Events
 import Browser.Navigation
 import Camp23Denmark
 import Camp23Denmark.Artifacts
+import Camp24Devon.Inventory as Inventory
+import Camp24Devon.Product as Product
+import Camp24Devon.Tickets as Tickets
+import DateFormat
 import Dict
-import Element exposing (Element)
-import Element.Background
-import Element.Border
-import Element.Font
-import Element.Input
+import Element exposing (..)
+import Element.Background as Background
+import Element.Border as Border
+import Element.Font as Font
+import Element.Input as Input
 import EmailAddress exposing (EmailAddress)
 import Env
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import ICalendar exposing (IcsFile)
 import Id exposing (Id)
-import Inventory
 import Json.Decode
 import Lamdera
+import List.Extra as List
 import LiveSchedule
 import MarkdownThemed
 import Ports
-import Product
-import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated(..), SubmitStatus(..))
+import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Task
-import Theme
-import Tickets exposing (Ticket)
+import Theme exposing (normalButtonAttributes, showyButtonAttributes)
 import Time
+import TimeFormat
 import TravelMode
 import Types exposing (..)
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
+import View.Countdown
+
+
+ticketSalesOpen =
+    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
 
 
 app =
@@ -119,6 +128,7 @@ init url key =
     ( Loading
         { key = key
         , now = Time.millisToPosix 0
+        , zone = Nothing
         , window = Nothing
         , initData = Nothing
         , route = route
@@ -128,6 +138,8 @@ init url key =
     , Cmd.batch
         [ Browser.Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , Time.now |> Task.perform Tick
+        , Time.here |> Task.perform GotZone
         , case route of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
@@ -163,6 +175,12 @@ update msg model =
                 LoadedMusic result ->
                     tryLoading { loading | audio = Just result }
 
+                Tick now ->
+                    ( Loading { loading | now = now }, Cmd.none )
+
+                GotZone zone ->
+                    ( Loading { loading | zone = Just zone }, Cmd.none )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -179,22 +197,12 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
                         , selectedTicket = Nothing
-                        , form =
-                            { submitStatus = NotSubmitted NotPressedSubmit
-                            , attendee1Name = ""
-                            , attendee2Name = ""
-                            , billingEmail = ""
-                            , country = ""
-                            , originCity = ""
-                            , primaryModeOfTravel = Nothing
-                            , grantContribution = "0"
-                            , grantApply = False
-                            , sponsorship = Nothing
-                            }
+                        , form = PurchaseForm.init
                         , route = loadingModel.route
                         , showCarbonOffsetTooltip = False
                         , slotsRemaining = slotsRemaining
@@ -214,22 +222,12 @@ tryLoading loadingModel =
                     ( Loaded
                         { key = loadingModel.key
                         , now = loadingModel.now
+                        , zone = loadingModel.zone
                         , window = window
                         , showTooltip = False
                         , prices = prices
                         , selectedTicket = Nothing
-                        , form =
-                            { submitStatus = NotSubmitted NotPressedSubmit
-                            , attendee1Name = ""
-                            , attendee2Name = ""
-                            , billingEmail = ""
-                            , country = ""
-                            , originCity = ""
-                            , primaryModeOfTravel = Nothing
-                            , grantContribution = "0"
-                            , grantApply = False
-                            , sponsorship = Nothing
-                            }
+                        , form = PurchaseForm.init
                         , route = loadingModel.route
                         , showCarbonOffsetTooltip = False
                         , slotsRemaining = slotsRemaining
@@ -268,6 +266,9 @@ updateLoaded msg model =
         Tick now ->
             ( { model | now = now }, Cmd.none )
 
+        GotZone zone ->
+            ( { model | zone = Just zone }, Cmd.none )
+
         GotWindowSize width height ->
             ( { model | window = { width = width, height = height } }, Cmd.none )
 
@@ -277,10 +278,13 @@ updateLoaded msg model =
         MouseDown ->
             ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
 
+        DownloadTicketSalesReminder ->
+            ( model, downloadTicketSalesReminder )
+
         PressedSelectTicket productId priceId ->
-            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
-                ( Just ticket, TicketsEnabled ) ->
-                    if purchaseable ticket.productId model then
+            case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
+                ( Just ( accom, ticket ), TicketsEnabled ) ->
+                    if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , scrollToTop
                         )
@@ -290,6 +294,26 @@ updateLoaded msg model =
 
                 _ ->
                     ( model, Cmd.none )
+
+        AddAccom accom ->
+            let
+                form =
+                    model.form
+
+                newForm =
+                    { form | accommodationBookings = model.form.accommodationBookings ++ [ accom ] }
+            in
+            ( { model | form = newForm }, Cmd.none )
+
+        RemoveAccom accom ->
+            let
+                form =
+                    model.form
+
+                newForm =
+                    { form | accommodationBookings = List.remove accom model.form.accommodationBookings }
+            in
+            ( { model | form = newForm }, Cmd.none )
 
         FormChanged form ->
             case model.form.submitStatus of
@@ -302,32 +326,31 @@ updateLoaded msg model =
                 SubmitBackendError str ->
                     ( { model | form = form }, Cmd.none )
 
-        PressedSubmitForm productId priceId ->
+        PressedSubmitForm ->
             let
                 form =
                     model.form
             in
-            case ( AssocList.get productId Tickets.dict, model.ticketsEnabled ) of
-                ( Just ticket, TicketsEnabled ) ->
-                    if purchaseable ticket.productId model then
-                        case ( form.submitStatus, PurchaseForm.validateForm productId form ) of
-                            ( NotSubmitted _, Just validated ) ->
-                                ( { model | form = { form | submitStatus = Submitting } }
-                                , Lamdera.sendToBackend (SubmitFormRequest priceId (Untrusted.untrust validated))
-                                )
+            case ( form.submitStatus, PurchaseForm.validateForm form ) of
+                ( NotSubmitted _, Just purchaseFormValidated ) ->
+                    ( { model | form = { form | submitStatus = Submitting } }
+                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                    )
 
-                            ( NotSubmitted _, Nothing ) ->
-                                ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                                , Cmd.none
-                                )
-
-                            _ ->
-                                ( model, Cmd.none )
-
-                    else
-                        ( model, Cmd.none )
+                ( NotSubmitted _, Nothing ) ->
+                    let
+                        _ =
+                            Debug.log "form invalid" ()
+                    in
+                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
+                    , Cmd.none
+                    )
 
                 _ ->
+                    let
+                        _ =
+                            Debug.log "Form already submitted" "Form already submitted"
+                    in
                     ( model, Cmd.none )
 
         PressedCancelForm ->
@@ -350,6 +373,12 @@ updateLoaded msg model =
             case liveScheduleMsg of
                 LiveSchedule.PressedAllowAudio ->
                     ( { model | pressedAudioButton = True }, Cmd.none )
+
+        SetViewPortForElement elmentId ->
+            ( model, jumpToId elmentId )
+
+        Noop ->
+            ( model, Cmd.none )
 
 
 scrollToTop : Cmd FrontendMsg_
@@ -402,27 +431,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Cmd.none )
 
 
-purchaseable : String -> { a | slotsRemaining : { b | campfireTicket : Bool, campTicket : Bool, couplesCampTicket : Bool } } -> Bool
-purchaseable productId model =
-    if productId == Product.ticket.campFire then
-        model.slotsRemaining.campfireTicket
-
-    else if productId == Product.ticket.camp then
-        model.slotsRemaining.campTicket
-
-    else
-        model.slotsRemaining.couplesCampTicket
-
-
-includesAccom productId =
-    if productId == Product.ticket.campFire then
-        False
-
-    else
-        True
-
-
-header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element msg
+header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg_
 header config =
     let
         illustrationAltText =
@@ -436,59 +445,59 @@ header config =
                 80
 
         elmCampTitle =
-            Element.link
+            link
                 []
                 { url = Route.encode HomepageRoute
-                , label = Element.el [ Element.Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
+                , label = el [ Font.size titleSize, Theme.glow, paddingXY 0 8 ] (text "Elm Camp")
                 }
 
         elmCampNextTopLine =
-            Element.column [ Element.spacing 30 ]
-                [ Element.row
-                    [ Element.centerX, Element.spacing 13 ]
-                    [ Element.image
-                        [ Element.width (Element.px 49) ]
+            column [ spacing 30 ]
+                [ row
+                    [ centerX, spacing 13 ]
+                    [ image
+                        [ width (px 49) ]
                         { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-                    , Element.column []
-                        [ Element.column
-                            [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-                            , Element.el [ Element.Font.extraBold, Element.Font.color MarkdownThemed.lightTheme.elmText ] (Element.text "UK 2024")
+                    , column []
+                        [ column
+                            [ spacing 2, Font.size 24, moveUp 1 ]
+                            [ el [ Theme.glow ] (text "Unconference")
+                            , el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (text "UK 2024")
                             ]
                         ]
                     ]
-                , Element.column
-                    [ Element.moveRight 0, Element.spacing 2, Element.Font.size 18, Element.moveUp 1 ]
-                    [ Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "Tues 18th — Fri 21st June")
-                    , Element.el [ Element.Font.bold, Element.Font.color MarkdownThemed.lightTheme.defaultText ] (Element.text "🇬🇧 Colehayes Park, Devon")
+                , column
+                    [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
+                    [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
                     ]
                 ]
     in
     if config.window.width < 1000 || config.isCompact then
-        Element.column
-            [ Element.padding 30, Element.spacing 20, Element.centerX ]
+        column
+            [ padding 30, spacing 20, centerX ]
             [ if config.isCompact then
-                Element.none
+                none
 
               else
-                Element.image
-                    [ Element.width (Element.maximum 523 Element.fill), Theme.attr "fetchpriority" "high" ]
+                image
+                    [ width (maximum 523 fill), Theme.attr "fetchpriority" "high" ]
                     { src = "/logo-24.webp", description = illustrationAltText }
-            , Element.column
-                [ Element.spacing 24, Element.centerX ]
+            , column
+                [ spacing 24, centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
             ]
 
     else
-        Element.row
-            [ Element.padding 30, Element.spacing 40, Element.centerX ]
-            [ Element.image
-                [ Element.width (Element.px 523), Theme.attr "fetchpriority" "high" ]
+        row
+            [ padding 30, spacing 40, centerX ]
+            [ image
+                [ width (px 523), Theme.attr "fetchpriority" "high" ]
                 { src = "/logo-24.webp", description = illustrationAltText }
-            , Element.column
-                [ Element.spacing 24 ]
+            , column
+                [ spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
@@ -505,10 +514,10 @@ view model =
         -- , W.Styles.baseTheme
         , Element.layout
             [ Element.width Element.fill
-            , Element.Font.color MarkdownThemed.lightTheme.defaultText
-            , Element.Font.size 16
-            , Element.Font.medium
-            , Element.Background.color backgroundColor
+            , Font.color Theme.lightTheme.defaultText
+            , Font.size 16
+            , Font.medium
+            , Background.color backgroundColor
             , (case model of
                 Loading _ ->
                     Element.none
@@ -520,10 +529,10 @@ view model =
 
                         TicketsDisabled { adminMessage } ->
                             Element.paragraph
-                                [ Element.Font.color (Element.rgb 1 1 1)
-                                , Element.Font.medium
-                                , Element.Font.size 20
-                                , Element.Background.color (Element.rgb 0.5 0 0)
+                                [ Font.color (Element.rgb 1 1 1)
+                                , Font.medium
+                                , Font.size 20
+                                , Background.color (Element.rgb 0.5 0 0)
                                 , Element.padding 8
                                 , Element.width Element.fill
                                 ]
@@ -570,44 +579,56 @@ loadedView model =
             homepageView model
 
         UnconferenceFormatRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            column
+                [ width fill, height fill ]
                 [ header { window = model.window, isCompact = True }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , column
+                    (padding 20 :: Theme.contentAttributes)
                     [ unconferenceFormatContent
                     ]
                 , Theme.footer
                 ]
 
         VenueAndAccessRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            column
+                [ width fill, height fill ]
                 [ header { window = model.window, isCompact = True }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , column
+                    (padding 20 :: Theme.contentAttributes)
                     [ venueAccessContent
                     ]
                 , Theme.footer
                 ]
 
         CodeOfConductRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            column
+                [ width fill, height fill ]
                 [ header { window = model.window, isCompact = True }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , column
+                    (padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
                     ]
                 , Theme.footer
                 ]
 
-        ElmCampArchiveRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+        OrganisersRoute ->
+            column
+                [ width fill, height fill ]
                 [ header { window = model.window, isCompact = True }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , column
+                    (padding 20 :: Theme.contentAttributes)
+                    [ organisersInfo
+                    , organisers2024 |> MarkdownThemed.renderFull
+                    ]
+                , Theme.footer
+                ]
+
+        ElmCampArchiveRoute ->
+            column
+                [ width fill, height fill ]
+                [ header { window = model.window, isCompact = True }
+                , column
+                    (padding 20 :: Theme.contentAttributes)
                     [ elmCampArchiveContent model
                     ]
                 , Theme.footer
@@ -617,44 +638,44 @@ loadedView model =
             Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->
-            Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
-                [ Element.paragraph [ Element.Font.size 20, Element.Font.center ] [ Element.text "Your ticket purchase was successful!" ]
-                , Element.paragraph
-                    [ Element.width (Element.px 420) ]
-                    [ Element.text "An email has been sent to "
+            column
+                [ centerX, centerY, padding 24, spacing 16 ]
+                [ paragraph [ Font.size 20, Font.center ] [ text "Your ticket purchase was successful!" ]
+                , paragraph
+                    [ width (px 420) ]
+                    [ text "An email has been sent to "
                     , case maybeEmailAddress of
                         Just emailAddress ->
                             EmailAddress.toString emailAddress
-                                |> Element.text
-                                |> Element.el [ Element.Font.semiBold ]
+                                |> text
+                                |> el [ Font.semiBold ]
 
                         Nothing ->
-                            Element.text "your email address"
-                    , Element.text " with additional information."
+                            text "your email address"
+                    , text " with additional information."
                     ]
-                , Element.link
+                , link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
+                    , label = el [ centerX ] (text "Return to homepage")
                     }
                 ]
 
         PaymentCancelRoute ->
-            Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
-                [ Element.paragraph
-                    [ Element.Font.size 20 ]
-                    [ Element.text "You cancelled your ticket purchase" ]
-                , Element.link
+            column
+                [ centerX, centerY, padding 24, spacing 16 ]
+                [ paragraph
+                    [ Font.size 20 ]
+                    [ text "You cancelled your ticket purchase" ]
+                , link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
+                    , label = el [ centerX ] (text "Return to homepage")
                     }
                 ]
 
         LiveScheduleRoute ->
-            LiveSchedule.view model |> Element.map LiveScheduleMsg
+            LiveSchedule.view model |> map LiveScheduleMsg
 
         Camp23Denmark subpage ->
             Camp23Denmark.view model subpage
@@ -662,6 +683,20 @@ loadedView model =
 
 ticketsHtmlId =
     "tickets"
+
+
+downloadTicketSalesReminder =
+    ICalendar.download
+        { name = "elm-camp-ticket-sale-starts"
+        , prodid = { company = "elm-camp", product = "website" }
+        , events =
+            [ { uid = "elm-camp-ticket-sale-starts"
+              , start = ticketSalesOpen
+              , summary = "Elm Camp Ticket Sale Starts"
+              , description = "Can't wait to see you there!"
+              }
+            ]
+        }
 
 
 homepageView : LoadedModel -> Element FrontendMsg_
@@ -673,27 +708,83 @@ homepageView model =
 
             else
                 60
+
+        ticketsAreLive =
+            View.Countdown.ticketSalesLive ticketSalesOpen model
+
+        afterTicketsAreLive v =
+            if ticketsAreLive then
+                v
+
+            else
+                none
+
+        beforeTicketsAreLive v =
+            if ticketsAreLive then
+                none
+
+            else
+                v
     in
-    Element.column
-        [ Element.width Element.fill ]
-        [ Element.column
-            [ Element.spacing 50
-            , Element.width Element.fill
-            , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+    column
+        [ width fill ]
+        [ column
+            [ spacing 50
+            , width fill
+            , paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
             ]
             [ header { window = model.window, isCompact = False }
-            , Element.column
-                [ Element.width Element.fill, Element.spacing 40 ]
-                [ Element.column Theme.contentAttributes [ content1 ]
+            , column
+                [ width fill, spacing 40 ]
+                [ column (Theme.contentAttributes ++ [ spacing 20 ]) <|
+                    if ticketsAreLive then
+                        [ el [ Font.size 20, centerX ] goToTicketSales ]
+
+                    else
+                        [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
+                        , case model.zone of
+                            Just zone ->
+                                DateFormat.format
+                                    [ DateFormat.yearNumber
+                                    , DateFormat.text "-"
+                                    , DateFormat.monthFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.dayOfMonthFixed
+                                    , DateFormat.text " "
+                                    , DateFormat.hourFixed
+                                    , DateFormat.text ":"
+                                    , DateFormat.minuteFixed
+                                    ]
+                                    zone
+                                    ticketSalesOpen
+                                    |> (\t ->
+                                            el
+                                                [ centerX
+                                                , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
+                                                ]
+                                            <|
+                                                text t
+                                       )
+
+                            _ ->
+                                el [ centerX ] <| text "nozone"
+                        , Input.button
+                            (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                            { onPress = Just DownloadTicketSalesReminder
+                            , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                            }
+                        , text " "
+                        ]
+                , column Theme.contentAttributes [ content1 ]
                 , let
                     prefix =
                         "24-colehayes/colehayes-"
                   in
                   if model.window.width > 950 then
                     [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-                        |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-                        |> Element.wrappedRow
-                            [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+                        |> List.map (\image -> venueImage (px 288) (prefix ++ image))
+                        |> wrappedRow
+                            [ spacing 10, width (px 900), centerX ]
 
                   else
                     [ [ "image1.webp", "image2.webp" ]
@@ -702,19 +793,40 @@ homepageView model =
                     ]
                         |> List.map
                             (\paths ->
-                                Element.row
-                                    [ Element.spacing 10, Element.width Element.fill ]
-                                    (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
+                                row
+                                    [ spacing 10, width fill ]
+                                    (List.map (\image -> venueImage fill (prefix ++ image)) paths)
                             )
-                        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
-                , Element.column Theme.contentAttributes [ ticketInfo ]
-                , Element.column
-                    [ Element.width Element.fill
-                    , Element.spacing 24
-                    , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
+                        |> column [ spacing 10, width fill ]
+                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
+
+                -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
+                , beforeTicketsAreLive <|
+                    column Theme.contentAttributes
+                        [ ticketInfo
+                        ]
+                , column
+                    [ width fill
+                    , spacing 60
+                    , htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
-                    [ Element.el Theme.contentAttributes content2
-                    , Element.el Theme.contentAttributes content3
+                    [ el Theme.contentAttributes opportunityGrantInfo
+                    , grantApplicationCopy
+                        |> MarkdownThemed.renderFull
+                        |> el Theme.contentAttributes
+                    , el Theme.contentAttributes organisersInfo
+
+                    -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
+                    , afterTicketsAreLive <| el Theme.contentAttributes <| MarkdownThemed.renderFull "# Attend Elm Camp"
+                    , afterTicketsAreLive <| ticketsView model
+                    , afterTicketsAreLive <| accommodationView model
+                    , afterTicketsAreLive <|
+                        formView model
+                            (Id.fromString Product.ticket.campingSpot)
+                            (Id.fromString "testing")
+                            Tickets.attendanceTicket
+
+                    -- , Element.el Theme.contentAttributes content3
                     ]
                 ]
             ]
@@ -722,65 +834,163 @@ homepageView model =
         ]
 
 
+ticketsView model =
+    column Theme.contentAttributes
+        [ row [ width fill, htmlId "ticket-sales" ]
+            [ column [ width fill ]
+                [ """
+## 🎟️ Attendance Ticket - £200
 
--- slotsLeftText : { a | slotsRemaining : Int } -> String
--- slotsLeftText model =
---     String.fromInt model.slotsRemaining
---         ++ "/"
---         ++ String.fromInt totalSlotsAvailable
---         ++ " slots left"
+Attendance for Elm Camp's 4 day / 3 night event.
+
+- Full accees to the venue grounds and activities
+- All meals (Breakfast, Lunch, Dinner) included as per schedule
+                """
+                    |> MarkdownThemed.renderFull
+                ]
+            , column []
+                [ if List.length model.form.attendees == 0 then
+                    let
+                        form =
+                            model.form
+                    in
+                    Input.button
+                        (Theme.submitButtonAttributes True)
+                        { onPress = Just <| FormChanged { form | attendees = model.form.attendees ++ [ PurchaseForm.defaultAttendee ] }
+                        , label =
+                            el
+                                [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
+                                (text "Select")
+                        }
+
+                  else
+                    Theme.numericField
+                        "Tickets"
+                        (List.length model.form.attendees)
+                        (\_ ->
+                            -- Remove last attendee from the list
+                            model.form.attendees
+                                |> List.init
+                                |> Maybe.withDefault []
+                                |> (\attendees ->
+                                        let
+                                            form =
+                                                model.form
+                                        in
+                                        FormChanged { form | attendees = attendees }
+                                   )
+                        )
+                        (\_ ->
+                            -- Add a new attendee to the list
+                            model.form.attendees
+                                |> (\attendees ->
+                                        let
+                                            form =
+                                                model.form
+                                        in
+                                        FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
+                                   )
+                        )
+                ]
+            ]
+        , case model.form.attendees of
+            [] ->
+                none
+
+            _ ->
+                column [ width fill, spacing 20 ]
+                    [ el [ Font.size 20 ] (text "Attendees")
+                    , column
+                        [ spacing 16, width fill ]
+                        (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
+                    , paragraph [] [ text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
+
+                    -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
+                    ]
+        ]
 
 
-normalButtonAttributes =
-    [ Element.width Element.fill
-    , Element.Background.color (Element.rgb255 255 255 255)
-    , Element.padding 16
-    , Element.Border.rounded 8
-    , Element.alignBottom
-    , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Element.Font.semiBold
-    ]
+attendeeForm model i attendee =
+    let
+        form =
+            model.form
+
+        removeButton =
+            Input.button
+                (normalButtonAttributes ++ [ width (px 100) ])
+                { onPress =
+                    Just
+                        (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
+                , label = el [ centerX ] (text "Remove")
+                }
+    in
+    column
+        [ width fill, spacing 16 ]
+        [ row
+            [ width fill, spacing 16 ]
+            [ textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
+                "Name"
+                PurchaseForm.validateName
+                attendee.name
+            , textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | email = a } model.form.attendees })
+                "Email"
+                PurchaseForm.validateEmailAddress
+                attendee.email
+            , textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | country = a } model.form.attendees })
+                "Country you live in"
+                (\text ->
+                    case String.Nonempty.fromString text of
+                        Just nonempty ->
+                            Ok nonempty
+
+                        Nothing ->
+                            Err "Please type in the name of the country you live in"
+                )
+                attendee.country
+            , textInput
+                model.form
+                (\a -> FormChanged { form | attendees = List.setAt i { attendee | originCity = a } model.form.attendees })
+                "City/town"
+                (\text ->
+                    case String.Nonempty.fromString text of
+                        Just nonempty ->
+                            Ok nonempty
+
+                        Nothing ->
+                            Err "Please type in the name of city nearest to you"
+                )
+                attendee.originCity
+            , removeButton
+            ]
+        ]
 
 
 errorText : String -> Element msg
 errorText error =
-    Element.paragraph [ Element.Font.color (Element.rgb255 150 0 0) ] [ Element.text error ]
+    paragraph [ Font.color (rgb255 150 0 0) ] [ text error ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Ticket -> Element FrontendMsg_
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
 formView model productId priceId ticket =
     let
         form =
             model.form
 
-        textInput : (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
-        textInput onChange title validator text =
-            Element.column
-                [ Element.spacing 4, Element.width Element.fill ]
-                [ Element.Input.text
-                    [ Element.Border.rounded 8 ]
-                    { text = text
-                    , onChange = onChange
-                    , placeholder = Nothing
-                    , label = Element.Input.labelAbove [ Element.Font.semiBold ] (Element.text title)
-                    }
-                , case ( form.submitStatus, validator text ) of
-                    ( NotSubmitted PressedSubmit, Err error ) ->
-                        errorText error
-
-                    _ ->
-                        Element.none
-                ]
-
         submitButton =
-            Element.Input.button
-                (Theme.submitButtonAttributes (purchaseable ticket.productId model))
-                { onPress = Just (PressedSubmitForm productId priceId)
+            Input.button
+                (Theme.submitButtonAttributes (Inventory.purchaseable ticket.productId model.slotsRemaining))
+                { onPress = Just PressedSubmitForm
                 , label =
-                    Element.paragraph
-                        [ Element.Font.center ]
-                        [ Element.text
-                            (if purchaseable ticket.productId model then
+                    paragraph
+                        [ Font.center ]
+                        [ text
+                            (if Inventory.purchaseable ticket.productId model.slotsRemaining then
                                 "Purchase "
 
                              else
@@ -788,154 +998,169 @@ formView model productId priceId ticket =
                             )
                         , case form.submitStatus of
                             NotSubmitted pressedSubmit ->
-                                Element.none
+                                none
 
                             Submitting ->
-                                Element.el [ Element.moveDown 5 ] Theme.spinnerWhite
+                                el [ moveDown 5 ] Theme.spinnerWhite
 
                             SubmitBackendError err ->
-                                Element.none
+                                none
                         ]
                 }
 
         cancelButton =
-            Element.Input.button
+            Input.button
                 normalButtonAttributes
                 { onPress = Just PressedCancelForm
-                , label = Element.el [ Element.centerX ] (Element.text "Cancel")
+                , label = el [ centerX ] (text "Cancel")
                 }
-    in
-    Element.column
-        [ Element.width Element.fill, Element.spacing 24 ]
-        [ Element.column
-            [ Element.width Element.fill
-            , Element.spacing 24
-            , Element.padding 16
-            ]
-            [ textInput (\a -> FormChanged { form | attendee1Name = a }) "Your name" PurchaseForm.validateName form.attendee1Name
-            , if productId == Id.fromString Product.ticket.couplesCamp then
-                textInput
-                    (\a -> FormChanged { form | attendee2Name = a })
-                    "Person you're sharing a room with"
-                    PurchaseForm.validateName
-                    form.attendee2Name
 
-              else
-                Element.none
+        includedAccommodationNote =
+            """
+Please note: your selected options ***${accommodationStatus} accommodation***.
+"""
+                |> String.replace "${accommodationStatus}"
+                    (if Tickets.formIncludesAccom form then
+                        "include"
+
+                     else
+                        "do not include"
+                    )
+    in
+    column
+        [ width fill, spacing 60 ]
+        [ none
+
+        -- , carbonOffsetForm model.showCarbonOffsetTooltip form
+        , opportunityGrant form
+        , sponsorships model form
+        , summary model
+        , column
+            (Theme.contentAttributes
+                ++ [ spacing 24
+
+                   --    , padding 16
+                   ]
+            )
+            [ none
+            , MarkdownThemed.renderFull includedAccommodationNote
             , textInput
+                model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
-            ]
-        , carbonOffsetForm textInput model.showCarbonOffsetTooltip form
-        , opportunityGrant form textInput
-        , sponsorships model form textInput
-        , """
-By purchasing a ticket, you agree to the event [Code of Conduct](/code-of-conduct).
+            , case form.submitStatus of
+                NotSubmitted pressedSubmit ->
+                    none
 
-Please note: you have selected a ticket that ***${ticketAccom} accommodation***.
-"""
-            |> String.replace "${ticketAccom}"
-                (if includesAccom ticket.productId then
-                    "includes"
+                Submitting ->
+                    -- @TODO spinner
+                    none
 
-                 else
-                    "does not include"
-                )
-            |> MarkdownThemed.renderFull
-        , case form.submitStatus of
-            NotSubmitted pressedSubmit ->
-                Element.none
-
-            Submitting ->
-                -- @TODO spinner
-                Element.none
-
-            SubmitBackendError err ->
-                Element.paragraph [] [ Element.text err ]
-        , if model.window.width > 600 then
-            Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton ]
-
-          else
-            Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton, cancelButton ]
-        , """
+                SubmitBackendError err ->
+                    paragraph [] [ text err ]
+            , """
 Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
+
+By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
+            , if model.window.width > 600 then
+                row [ width fill, spacing 16 ] [ cancelButton, submitButton ]
+
+              else
+                column [ width fill, spacing 16 ] [ submitButton, cancelButton ]
+            , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
+                |> MarkdownThemed.renderFull
+            ]
         ]
 
 
-opportunityGrant form textInput =
-    Element.column [ Element.spacing 20 ]
-        [ Element.el [ Element.Font.size 20 ] (Element.text "🫶 Opportunity grants")
-        , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
-        , Theme.panel []
-            [ Element.row [ Element.width Element.fill, Element.spacing 15 ]
-                [ Theme.toggleButton "Contribute" (form.grantApply == False) (Just <| FormChanged { form | grantApply = False })
-                , Theme.toggleButton "Apply" (form.grantApply == True) (Just <| FormChanged { form | grantApply = True })
-                ]
-            , case form.grantApply of
-                True ->
-                    grantApplicationCopy |> MarkdownThemed.renderFull
+textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
+textInput form onChange title validator text =
+    column
+        [ spacing 4, width fill ]
+        [ Input.text
+            [ Border.rounded 8 ]
+            { text = text
+            , onChange = onChange
+            , placeholder = Nothing
+            , label = Input.labelAbove [ Font.semiBold ] (Element.text title)
+            }
+        , case ( form.submitStatus, validator text ) of
+            ( NotSubmitted PressedSubmit, Err error ) ->
+                errorText error
 
-                False ->
-                    Element.column []
-                        [ Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting travel for our grantees! At the end of purchase, you will be asked whether you wish your donation to be public or anonymous." ]
-                        , Element.row [ Element.width Element.fill, Element.spacing 30 ]
-                            [ textInput (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
-                            , Element.column [ Element.width (Element.fillPortion 3) ]
-                                [ Element.row [ Element.width (Element.fillPortion 3) ]
-                                    [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "0"
-                                    , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "500"
+            _ ->
+                none
+        ]
+
+
+opportunityGrant form =
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "🫶 Opportunity grants"
+        , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+        , Theme.panel []
+            [ column []
+                [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                , row [ width fill, spacing 30 ]
+                    [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                    , column [ width (fillPortion 3) ]
+                        [ row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "0"
+                            , el [ paddingXY 0 10, alignRight ] <| text "600"
+                            ]
+                        , Input.slider
+                            [ behindContent
+                                (el
+                                    [ width fill
+                                    , height (px 5)
+                                    , centerY
+                                    , Background.color (rgb255 94 176 125)
+                                    , Border.rounded 2
                                     ]
-                                , Element.Input.slider
-                                    [ Element.behindContent
-                                        (Element.el
-                                            [ Element.width Element.fill
-                                            , Element.height (Element.px 5)
-                                            , Element.centerY
-                                            , Element.Background.color (Element.rgb255 94 176 125)
-                                            , Element.Border.rounded 2
-                                            ]
-                                            Element.none
-                                        )
-                                    ]
-                                    { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
-                                    , label = Element.Input.labelHidden "Opportunity grant contribution value selection slider"
-                                    , min = 0
-                                    , max = 550
-                                    , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
-                                    , thumb = Element.Input.defaultThumb
-                                    , step = Just 10
-                                    }
-                                , Element.row [ Element.width (Element.fillPortion 3) ]
-                                    [ Element.el [ Element.paddingXY 0 10 ] <| Element.text "No contribution"
-                                    , Element.el [ Element.paddingXY 0 10, Element.alignRight ] <| Element.text "Donate full ticket"
-                                    ]
-                                ]
+                                    none
+                                )
+                            ]
+                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                            , label = Input.labelHidden "Opportunity grant contribution value selection slider"
+                            , min = 0
+                            , max = 600
+                            , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                            , thumb = Input.defaultThumb
+                            , step = Just 10
+                            }
+                        , row [ width (fillPortion 3) ]
+                            [ el [ paddingXY 0 10 ] <| text "No contribution"
+                            , el [ paddingXY 0 10, alignRight ] <| text "Donate full attendance"
                             ]
                         ]
+                    ]
+                ]
             ]
         ]
 
 
 grantApplicationCopy =
     """
-If you would like to attend but are unsure about how to cover the combination of ticket and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
 
-Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 5th of May. For this first edition of Elm Camp grant decisions will be made by Elm Camp organizers.
+## 🤗 Opportunity grant applications
+
+If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
+
+Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 1st of May. Decisions will be communicated directly to each applicant by 7th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
 
 All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
 """
 
 
-sponsorships model form textInput =
-    Element.column [ Element.spacing 20 ]
-        [ Element.el [ Element.Font.size 20 ] (Element.text "🤝 Sponsor Elm Camp")
-        , Element.paragraph [] [ Element.text "Position your company as a leading supporter of the Elm community and help Elm Camp Europe 2023 achieve a reasonable ticket offering." ]
+sponsorships model form =
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        [ Theme.h2 "🤝 Sponsor Elm Camp"
+        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption form)
-            |> Theme.rowToColumnWhen 700 model [ Element.spacing 20, Element.width Element.fill ]
+            |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
         ]
 
 
@@ -946,19 +1171,19 @@ sponsorshipOption form s =
 
         attrs =
             if selected then
-                [ Element.Border.color (Element.rgb255 94 176 125), Element.Border.width 3 ]
+                [ Border.color (rgb255 94 176 125), Border.width 3 ]
 
             else
-                [ Element.Border.color (Element.rgba255 0 0 0 0), Element.Border.width 3 ]
+                [ Border.color (rgba255 0 0 0 0), Border.width 3 ]
     in
     Theme.panel attrs
-        [ Element.el [ Element.Font.size 20, Element.Font.bold ] (Element.text s.name)
-        , Element.el [ Element.Font.size 30, Element.Font.bold ] (Element.text <| "€" ++ String.fromInt s.price)
-        , Element.paragraph [] [ Element.text s.description ]
+        [ el [ Font.size 20, Font.bold ] (text s.name)
+        , el [ Font.size 30, Font.bold ] (text <| "£" ++ String.fromInt s.price)
+        , paragraph [] [ text s.description ]
         , s.features
-            |> List.map (\point -> Element.paragraph [ Element.Font.size 12 ] [ Element.text <| "• " ++ point ])
-            |> Element.column [ Element.spacing 5 ]
-        , Element.Input.button
+            |> List.map (\point -> paragraph [ Font.size 12 ] [ text <| "• " ++ point ])
+            |> column [ spacing 5 ]
+        , Input.button
             (Theme.submitButtonAttributes True)
             { onPress =
                 Just <|
@@ -972,9 +1197,9 @@ sponsorshipOption form s =
                                     Just s.productId
                         }
             , label =
-                Element.el
-                    [ Element.centerX, Element.Font.semiBold, Element.Font.color (Element.rgb 1 1 1) ]
-                    (Element.text
+                el
+                    [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
+                    (text
                         (if selected then
                             "Un-select"
 
@@ -986,93 +1211,146 @@ sponsorshipOption form s =
         ]
 
 
-backgroundColor : Element.Color
+summary : LoadedModel -> Element msg
+summary model =
+    let
+        grantTotal =
+            model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0
+
+        accomTotal =
+            model.form.accommodationBookings
+                |> List.map
+                    (\accom ->
+                        let
+                            t =
+                                Tickets.accomToTicket accom
+                        in
+                        model.prices
+                            |> AssocList.get (Id.fromString t.productId)
+                            |> Maybe.map (\price -> Theme.priceAmount price.price)
+                            |> Maybe.withDefault 0
+                    )
+                |> List.sum
+
+        sponsorshipTotal =
+            model.form.sponsorship
+                |> Maybe.andThen
+                    (\productId ->
+                        model.prices
+                            |> AssocList.get (Id.fromString productId)
+                            |> Maybe.map (\price -> Theme.priceAmount price.price)
+                    )
+                |> Maybe.withDefault 0
+
+        total =
+            accomTotal + grantTotal + sponsorshipTotal
+    in
+    column (Theme.contentAttributes ++ [ spacing 10 ])
+        [ Theme.h2 "Summary"
+        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat accomTotal)
+        , if List.length model.form.accommodationBookings == 0 then
+            text "No accommodation bookings"
+
+          else
+            model.form.accommodationBookings
+                |> List.group
+                |> List.map
+                    (\group -> summaryAccommodation model group)
+                |> column []
+        , Theme.viewIf (model.form.grantContribution /= "0") <|
+            text <|
+                "Opportunity grant: £"
+                    ++ model.form.grantContribution
+        , Theme.viewIf (sponsorshipTotal > 0) <|
+            text <|
+                "Sponsorship: £"
+                    ++ String.fromFloat sponsorshipTotal
+        , Theme.h3 <| "Total: £" ++ String.fromFloat total
+        ]
+
+
+summaryAccommodation model ( accom, items ) =
+    model.form.accommodationBookings
+        |> List.filter ((==) accom)
+        |> List.length
+        |> (\num ->
+                let
+                    total =
+                        model.prices
+                            |> AssocList.get (Id.fromString (Tickets.accomToTicket accom).productId)
+                            |> Maybe.map (\price -> Theme.priceAmount price.price)
+                            |> Maybe.withDefault 0
+                            |> (\price -> price * toFloat num)
+                in
+                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – £" ++ String.fromFloat total
+           )
+        |> text
+
+
+backgroundColor : Color
 backgroundColor =
-    Element.rgb255 255 244 225
+    rgb255 255 244 225
 
 
-carbonOffsetForm textInput showCarbonOffsetTooltip form =
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacing 24
-        , Element.paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
-        , Element.Border.width 2
-        , Element.Border.color (Element.rgb255 94 176 125)
-        , Element.Border.rounded 12
-        , Element.el
+carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg_
+carbonOffsetForm showCarbonOffsetTooltip form =
+    column
+        [ width fill
+        , spacing 24
+        , paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
+        , Border.width 2
+        , Border.color (rgb255 94 176 125)
+        , Border.rounded 12
+        , el
             [ (if showCarbonOffsetTooltip then
                 tooltip "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)"
 
                else
-                Element.none
+                none
               )
-                |> Element.below
-            , Element.moveUp 20
-            , Element.moveRight 8
-            , Element.Background.color backgroundColor
+                |> below
+            , moveUp 20
+            , moveRight 8
+            , Background.color backgroundColor
             ]
-            (Element.Input.button
-                [ Element.padding 8 ]
+            (Input.button
+                [ padding 8 ]
                 { onPress = Just PressedShowCarbonOffsetTooltip
                 , label =
-                    Element.row
+                    row
                         []
-                        [ Element.el [ Element.Font.size 20 ] (Element.text "🌲 Carbon offsetting ")
-                        , Element.el [ Element.Font.size 12 ] (Element.text "ℹ️")
+                        [ el [ Font.size 20 ] (text "🌲 Carbon offsetting ")
+                        , el [ Font.size 12 ] (text "ℹ️")
                         ]
                 }
             )
-            |> Element.inFront
+            |> inFront
         ]
-        [ textInput
-            (\a -> FormChanged { form | country = a })
-            "Country you live in"
-            (\text ->
-                case String.Nonempty.fromString text of
-                    Just nonempty ->
-                        Ok nonempty
+        [ none
+        , column
+            [ spacing 8 ]
+            [ paragraph
+                [ Font.semiBold ]
+                [ text "What will be your primary method of travelling to the event?" ]
 
-                    Nothing ->
-                        Err "Please type in the name of the country you live in"
-            )
-            form.country
-        , textInput
-            (\a -> FormChanged { form | originCity = a })
-            "City you live in (or nearest city to you)"
-            (\text ->
-                case String.Nonempty.fromString text of
-                    Just nonempty ->
-                        Ok nonempty
-
-                    Nothing ->
-                        Err "Please type in the name of city nearest to you"
-            )
-            form.originCity
-        , Element.column
-            [ Element.spacing 8 ]
-            [ Element.paragraph
-                [ Element.Font.semiBold ]
-                [ Element.text "What will be your primary method of travelling to the event?" ]
-            , TravelMode.all
-                |> List.map
-                    (\choice ->
-                        radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
-                            |> Element.map
-                                (\() ->
-                                    if Just choice == form.primaryModeOfTravel then
-                                        FormChanged { form | primaryModeOfTravel = Nothing }
-
-                                    else
-                                        FormChanged { form | primaryModeOfTravel = Just choice }
-                                )
-                    )
-                |> Element.column []
-            , case ( form.submitStatus, form.primaryModeOfTravel ) of
-                ( NotSubmitted PressedSubmit, Nothing ) ->
-                    errorText "Please select one of the above"
-
-                _ ->
-                    Element.none
+            -- , TravelMode.all
+            --     |> List.map
+            --         (\choice ->
+            --             radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
+            --                 |> map
+            --                     (\() ->
+            --                         if Just choice == form.primaryModeOfTravel then
+            --                             FormChanged { form | primaryModeOfTravel = Nothing }
+            --                         else
+            --                             FormChanged { form | primaryModeOfTravel = Just choice }
+            --                     )
+            --         )
+            --     |> column []
+            -- , case ( form.submitStatus, form.primaryModeOfTravel ) of
+            --     ( NotSubmitted PressedSubmit, Nothing ) ->
+            --         errorText "Please select one of the above"
+            --     _ ->
+            --         none
             ]
         ]
 
@@ -1095,44 +1373,77 @@ radioButton groupName text isChecked =
             []
         , Html.text text
         ]
-        |> Element.html
-        |> Element.el []
+        |> html
+        |> el []
 
 
-venueImage : Element.Length -> String -> Element msg
+venueImage : Length -> String -> Element msg
 venueImage width path =
-    Element.image
+    image
         [ Element.width width ]
         { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
 
 
-ticketCardsView : LoadedModel -> Element FrontendMsg_
-ticketCardsView model =
-    if model.window.width < 950 then
-        List.map
-            (\( productId, ticket ) ->
-                case AssocList.get productId model.prices of
-                    Just price ->
-                        Tickets.viewMobile (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+accommodationView : LoadedModel -> Element FrontendMsg_
+accommodationView model =
+    column [ width fill, spacing 20 ]
+        [ column Theme.contentAttributes
+            [ Theme.h2 "🏕️ Accommodation"
+            , """
+You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
 
-                    Nothing ->
-                        Element.text "No ticket prices found"
-            )
-            (AssocList.toList Tickets.dict)
-            |> Element.column [ Element.spacing 16 ]
+The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
+"""
+                |> MarkdownThemed.renderFull
+            ]
+        , AssocList.toList Tickets.accommodationOptions
+            |> List.reverse
+            |> List.map
+                (\( productId, ( accom, ticket ) ) ->
+                    case AssocList.get productId model.prices of
+                        Just price ->
+                            Tickets.viewAccom model.form
+                                accom
+                                (Inventory.purchaseable ticket.productId model.slotsRemaining)
+                                (PressedSelectTicket productId price.priceId)
+                                (RemoveAccom accom)
+                                (AddAccom accom)
+                                price.price
+                                ticket
 
-    else
-        List.map
-            (\( productId, ticket ) ->
-                case AssocList.get productId model.prices of
-                    Just price ->
-                        Tickets.viewDesktop (purchaseable ticket.productId model) (PressedSelectTicket productId price.priceId) price.price ticket
+                        Nothing ->
+                            text "No ticket prices found"
+                )
+            |> Theme.rowToColumnWhen 1200 model [ spacing 16 ]
+        ]
 
-                    Nothing ->
-                        Element.text "No ticket prices found"
-            )
-            (AssocList.toList Tickets.dict)
-            |> Element.row (Element.spacing 16 :: Theme.contentAttributes)
+
+
+-- ADDED BY JC
+
+
+goToTicketSales =
+    Input.button showyButtonAttributes
+        { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200")
+        , label = text "Tickets on sale now! ⬇️"
+        }
+
+
+jumpToId : String -> Cmd FrontendMsg_
+jumpToId id =
+    Browser.Dom.getElement id
+        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - 40))
+        |> Task.attempt
+            (\_ -> Noop)
+
+
+htmlId : String -> Element.Attribute msg
+htmlId str =
+    Element.htmlAttribute (Html.Attributes.id str)
+
+
+
+-- END OF ADDED BY JC
 
 
 content1 : Element msg
@@ -1144,12 +1455,10 @@ Elm Camp is an event geared towards reconnecting in-person and collaborating on 
 
 Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
 
-There is great potential for progress and innovation in a creative, focused, in-person gathering. It’s been a long while since we’ve had this opportunity for folks who are investing in the future of Elm. We expect the wider community and practitioners to benefit from this collaborative exploration of our problems and goals.
+We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals.
 
 Elm Camp is now in its second year! Following last year’s delightful debut in Denmark, we’re heading to the UK. Our plan is to keep it small, casual and low-stress but we’ve added a day and found a venue that will accommodate more people. This time we’re serious about the camping too!
 
-**Note.** Tickets will go on sale in early March. When that happens we will post a notice here,
-in Slack, Discourse, etc.
 
 # Unconference
 
@@ -1180,9 +1489,9 @@ ticketInfo =
 # Tickets
 
 There is a mix of room types — singles, doubles, dorm style rooms
-suitable for up to four people. We will have to self-organize
-to distribute ourselves among the rooms and share bathrooms.
-The facilities for those who wish to bring a tent and camp
+suitable for up to four people. Attendees will self-organize
+to distribute among the rooms and share bathrooms.
+The facilities for those who wish to bring a tent or campervan and camp
 are excellent. The surrounding grounds and countryside are
 beautiful and include woodland, a swimming lake and a firepit.
 
@@ -1224,31 +1533,36 @@ This year’s venue has capacity for 75 attendees. Our plan is to maximise oppor
 
 tooltip : String -> Element msg
 tooltip text =
-    Element.paragraph
-        [ Element.paddingXY 12 8
-        , Element.Background.color (Element.rgb 1 1 1)
-        , Element.width (Element.px 300)
-        , Element.Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
+    paragraph
+        [ paddingXY 12 8
+        , Background.color (rgb 1 1 1)
+        , width (px 300)
+        , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = rgba 0 0 0 0.25 }
         ]
         [ Element.text text ]
 
 
-content2 : Element msg
-content2 =
+opportunityGrantInfo =
     """
+# 🫶 Opportunity grant
 
-# Opportunity grants
-
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. We're still working out the details for this year's event, but we hope to be able to offer the same opportunity again.
+Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
 **Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
+"""
+        |> MarkdownThemed.renderFull
+
+
+organisersInfo : Element msg
+organisersInfo =
+    """
 
 # Organisers
 
-Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
+Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic members of the Elm community](/organisers).
 
 """
-        ++ organisers2024
+        -- ++ organisers2024
         |> MarkdownThemed.renderFull
 
 
@@ -1317,13 +1631,13 @@ sponsors : { window | width : Int } -> Element msg
 sponsors window =
     let
         asImg { image, url, width } =
-            Element.newTabLink
-                [ Element.width Element.fill ]
+            newTabLink
+                [ Element.width fill ]
                 { url = url
                 , label =
                     Element.image
                         [ Element.width
-                            (Element.px
+                            (px
                                 (if window.width < 800 then
                                     toFloat width * 0.7 |> round
 
@@ -1335,36 +1649,44 @@ sponsors window =
                         { src = "/sponsors/" ++ image, description = url }
                 }
     in
-    [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
-    , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
-    , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
-    , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
-    , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
-    , asImg { image = "bekk.svg", url = "https://www.bekk.no/", width = 200 }
-    , Element.newTabLink
-        [ Element.width Element.fill ]
-        { url = "https://www.elmweekly.nl"
-        , label =
-            Element.row [ Element.spacing 10, Element.width (Element.px 200) ]
-                [ Element.image
-                    [ Element.width
-                        (Element.px
-                            (if window.width < 800 then
-                                toFloat 60 * 0.7 |> round
+    column [ centerX, spacing 32 ]
+        [ [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 350 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "ambue-logo.png", url = "https://www.ambue.com/", width = 220 }
+          , asImg { image = "nlx-logo.svg", url = "https://nlx.ai", width = 110 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 200 }
+          , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 160 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 100 }
+          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 100 }
+          , newTabLink
+                [ width fill ]
+                { url = "https://www.elmweekly.nl"
+                , label =
+                    row [ spacing 10, width (px 180) ]
+                        [ image
+                            [ width
+                                (px
+                                    (if window.width < 800 then
+                                        toFloat 50 * 0.7 |> round
 
-                             else
-                                60
-                            )
-                        )
-                    ]
-                    { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
-                ]
-        }
-    , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
-    ]
-        -- |> List.map asImg
-        |> Element.wrappedRow [ Element.spacing 32 ]
+                                     else
+                                        50
+                                    )
+                                )
+                            ]
+                            { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
+                        , el [ Font.size 24 ] <| text "Elm Weekly"
+                        ]
+                }
+          , asImg { image = "cookiewolf-logo.png", url = "", width = 120 }
+          ]
+            |> wrappedRow [ centerX, spacing 32 ]
+        ]
 
 
 unconferenceFormatContent : Element msg
@@ -1503,7 +1825,7 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
 
 venueAccessContent : Element msg
 venueAccessContent =
-    Element.column
+    column
         []
         [ """
 # The venue and access
@@ -1538,8 +1860,15 @@ England
 
 ### via plane
 
-* The closest airport is Exeter, with flight connections to a number of European cities
-* The next closest major airports in order of travel time are: Bristol, London Heathrow, London Gatwick, London Stanstead, London Luton.
+* The closest airport is Exeter, with [flight connections to the UK, Dublin, and Southern Spain](https://www.flightsfrom.com/EXT)
+* The next closest major airports in order of travel time are:
+  * [Bristol](https://www.flightsfrom.com/explorer/BRS?mapview) (Europe & Northern Africa)
+  * [London Heathrow](https://www.flightsfrom.com/explorer/LHR?mapview) (best International coverage)
+  * [London Gatwick](https://www.flightsfrom.com/explorer/LGW?mapview) (International)
+  * [London Stanstead](https://www.flightsfrom.com/explorer/STN?mapview) (Europe)
+  * [London Luton](https://www.flightsfrom.com/explorer/LTN?mapview)  (Europe)
+
+[Rome2Rio](https://www.rome2rio.com/s/Exeter-UK) is a useful tool for finding possible routes from your location.
 
 ## Local amenities
 
@@ -1611,7 +1940,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
             , Html.Attributes.style "border" "none"
             ]
             []
-            |> Element.html
+            |> html
         ]
 
 
@@ -1626,7 +1955,7 @@ contactDetails =
 
 elmCampArchiveContent : LoadedModel -> Element msg
 elmCampArchiveContent model =
-    Element.column []
+    column []
         [ """
 # What happened at Elm Camp 2023
 
@@ -1642,3 +1971,7 @@ Did you attend Elm Camp 2023? We're [open to contributions on Github](https://gi
         """
             |> MarkdownThemed.renderFull
         ]
+
+
+year =
+    "2024"
