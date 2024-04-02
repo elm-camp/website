@@ -3,6 +3,7 @@ module View.Countdown exposing (..)
 import Date
 import DateFormat
 import Element exposing (..)
+import Element.Font as Font
 import Theme
 import Time
 import TimeFormat
@@ -23,6 +24,26 @@ ui t description model =
         el [ centerX ] <|
             Theme.h2 <|
                 asTimeToGo target model.now
+
+
+ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
+ticketSalesLive t model =
+    let
+        target =
+            t |> Time.posixToMillis
+
+        now =
+            model.now
+                |> Time.posixToMillis
+
+        secondsRemaining =
+            (target - now) // 1000
+    in
+    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
+        True
+
+    else
+        False
 
 
 detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg
@@ -79,7 +100,7 @@ detailedCountdown t description model =
         none
 
     else
-        el Theme.contentAttributes <| el [ centerX ] <| Theme.h2 <| output ++ " " ++ description
+        paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 <| output ++ " " ++ description ]
 
 
 

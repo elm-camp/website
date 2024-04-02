@@ -270,9 +270,8 @@ normalButtonAttributes =
 
 
 showyButtonAttributes =
-    -- ADDED BY JC
     [ Element.width Element.fill
-    , Background.color (Element.rgb255 255 120 0)
+    , Background.color (Element.rgb255 255 172 98)
     , Element.padding 16
     , Border.rounded 8
     , Font.color (Element.rgb 0 0 0)

@@ -467,9 +467,6 @@ header config =
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
                     ]
-
-                -- vvv ADDED BY JC vvv
-                , el [ Font.size 20 ] goToTicketSales
                 ]
     in
     if config.window.width < 1000 || config.isCompact then
@@ -711,6 +708,23 @@ homepageView model =
 
             else
                 60
+
+        ticketsAreLive =
+            View.Countdown.ticketSalesLive ticketSalesOpen model
+
+        afterTicketsAreLive v =
+            if ticketsAreLive then
+                v
+
+            else
+                none
+
+        beforeTicketsAreLive v =
+            if ticketsAreLive then
+                none
+
+            else
+                v
     in
     column
         [ width fill ]
@@ -722,41 +736,45 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ column Theme.contentAttributes
-                    [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
-                    , case model.zone of
-                        Just zone ->
-                            DateFormat.format
-                                [ DateFormat.yearNumber
-                                , DateFormat.text "-"
-                                , DateFormat.monthFixed
-                                , DateFormat.text "-"
-                                , DateFormat.dayOfMonthFixed
-                                , DateFormat.text " "
-                                , DateFormat.hourFixed
-                                , DateFormat.text ":"
-                                , DateFormat.minuteFixed
-                                ]
-                                zone
-                                ticketSalesOpen
-                                |> (\t ->
-                                        el
-                                            [ centerX
-                                            , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
-                                            ]
-                                        <|
-                                            text t
-                                   )
+                [ column (Theme.contentAttributes ++ [ spacing 20 ]) <|
+                    if ticketsAreLive then
+                        [ el [ Font.size 20, centerX ] goToTicketSales ]
 
-                        _ ->
-                            el [ centerX ] <| text "nozone"
-                    , Input.button
-                        (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
-                        { onPress = Just DownloadTicketSalesReminder
-                        , label = el [ Font.center, centerX ] <| text "Add to calendar"
-                        }
-                    , text " "
-                    ]
+                    else
+                        [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
+                        , case model.zone of
+                            Just zone ->
+                                DateFormat.format
+                                    [ DateFormat.yearNumber
+                                    , DateFormat.text "-"
+                                    , DateFormat.monthFixed
+                                    , DateFormat.text "-"
+                                    , DateFormat.dayOfMonthFixed
+                                    , DateFormat.text " "
+                                    , DateFormat.hourFixed
+                                    , DateFormat.text ":"
+                                    , DateFormat.minuteFixed
+                                    ]
+                                    zone
+                                    ticketSalesOpen
+                                    |> (\t ->
+                                            el
+                                                [ centerX
+                                                , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
+                                                ]
+                                            <|
+                                                text t
+                                       )
+
+                            _ ->
+                                el [ centerX ] <| text "nozone"
+                        , Input.button
+                            (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                            { onPress = Just DownloadTicketSalesReminder
+                            , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                            }
+                        , text " "
+                        ]
                 , column Theme.contentAttributes [ content1 ]
                 , let
                     prefix =
@@ -781,27 +799,31 @@ homepageView model =
                             )
                         |> column [ spacing 10, width fill ]
                 , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
-                , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
-                , column Theme.contentAttributes
-                    [ ticketInfo
-                    ]
+
+                -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
+                , beforeTicketsAreLive <|
+                    column Theme.contentAttributes
+                        [ ticketInfo
+                        ]
                 , column
                     [ width fill
                     , spacing 60
                     , htmlAttribute (Html.Attributes.id ticketsHtmlId)
                     ]
                     [ el Theme.contentAttributes opportunityGrantInfo
-                    , el Theme.contentAttributes organisersInfo
-                    , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
                     , grantApplicationCopy
                         |> MarkdownThemed.renderFull
                         |> el Theme.contentAttributes
-                    , ticketsView model
-                    , accommodationView model
-                    , formView model
-                        (Id.fromString Product.ticket.campingSpot)
-                        (Id.fromString "testing")
-                        Tickets.attendanceTicket
+                    , el Theme.contentAttributes organisersInfo
+
+                    -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
+                    , afterTicketsAreLive <| ticketsView model
+                    , afterTicketsAreLive <| accommodationView model
+                    , afterTicketsAreLive <|
+                        formView model
+                            (Id.fromString Product.ticket.campingSpot)
+                            (Id.fromString "testing")
+                            Tickets.attendanceTicket
 
                     -- , Element.el Theme.contentAttributes content3
                     ]
@@ -1399,7 +1421,10 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
 
 
 goToTicketSales =
-    Input.button showyButtonAttributes { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200"), label = text "Tickets on sale now!" }
+    Input.button showyButtonAttributes
+        { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200")
+        , label = text "Tickets on sale now! ⬇️"
+        }
 
 
 jumpToId : String -> Cmd FrontendMsg_
@@ -1532,7 +1557,7 @@ organisersInfo =
 
 # Organisers
 
-Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
+Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic members of the Elm community](/organisers).
 
 """
         -- ++ organisers2024
