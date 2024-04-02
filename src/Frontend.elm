@@ -49,6 +49,10 @@ import Url.Parser.Query as Query
 import View.Countdown
 
 
+ticketSalesOpen =
+    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
+
+
 app =
     Audio.lamderaFrontendWithAudio
         { init = init
@@ -681,10 +685,6 @@ ticketsHtmlId =
     "tickets"
 
 
-ticketSalesOpen =
-    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
-
-
 downloadTicketSalesReminder =
     ICalendar.download
         { name = "elm-camp-ticket-sale-starts"
@@ -817,6 +817,7 @@ homepageView model =
                     , el Theme.contentAttributes organisersInfo
 
                     -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
+                    , afterTicketsAreLive <| el Theme.contentAttributes <| MarkdownThemed.renderFull "# Attend Elm Camp"
                     , afterTicketsAreLive <| ticketsView model
                     , afterTicketsAreLive <| accommodationView model
                     , afterTicketsAreLive <|
@@ -902,6 +903,7 @@ Attendance for Elm Camp's 4 day / 3 night event.
                     , column
                         [ spacing 16, width fill ]
                         (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
+                    , paragraph [] [ text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
 
                     -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
                     ]
