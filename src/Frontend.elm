@@ -1548,7 +1548,6 @@ opportunityGrantInfo =
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
-**Thanks to Concentric and generous individual sponsors for making the Elm Camp 2023 opportunity grants possible**.
 """
         |> MarkdownThemed.renderFull
 
