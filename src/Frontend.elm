@@ -1627,7 +1627,7 @@ sponsors window =
           ]
             |> wrappedRow [ centerX, spacing 32 ]
         , [ asImg { image = "ambue-logo.png", url = "https://www.ambue.com/", width = 220 }
-          , asImg { image = "nlx_logo.png", url = "https://nlx.ai", width = 150 }
+          , asImg { image = "nlx-logo.svg", url = "https://nlx.ai", width = 110 }
           ]
             |> wrappedRow [ centerX, spacing 32 ]
         , [ asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 200 }
