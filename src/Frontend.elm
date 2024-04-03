@@ -751,7 +751,7 @@ homepageView model =
                                     , DateFormat.text "-"
                                     , DateFormat.dayOfMonthFixed
                                     , DateFormat.text " "
-                                    , DateFormat.hourFixed
+                                    , DateFormat.hourMilitaryFixed
                                     , DateFormat.text ":"
                                     , DateFormat.minuteFixed
                                     ]
