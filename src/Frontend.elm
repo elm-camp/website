@@ -470,6 +470,11 @@ header config =
                     [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
+                    , Element.link
+                        [ Element.paddingXY 0 18 ]
+                        { url = Route.encode VenueAndAccessRoute
+                        , label = Element.el [ Font.size 24, Font.semiBold, Font.underline, Font.color (Element.rgb255 4 150 90) ] (Element.text "Venue & Access")
+                        }
                     ]
                 ]
     in
@@ -1098,7 +1103,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "🫶 Opportunity grants"
+        [ Theme.h2 "\u{1FAF6} Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
@@ -1544,7 +1549,7 @@ tooltip text =
 
 opportunityGrantInfo =
     """
-# 🫶 Opportunity grant
+# \u{1FAF6} Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
