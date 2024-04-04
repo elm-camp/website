@@ -44,7 +44,7 @@ toText icsFile =
 toTextEvent : Event -> String
 toTextEvent event =
     let
-        stamp =
+        format =
             -- Needs to be this format
             -- 20240330T100000Z
             DateFormat.format
@@ -52,18 +52,24 @@ toTextEvent event =
                 , DateFormat.monthFixed
                 , DateFormat.dayOfMonthFixed
                 , DateFormat.text "T"
-                , DateFormat.hourFixed
+                , DateFormat.hourMilitaryFixed
                 , DateFormat.minuteFixed
                 , DateFormat.secondFixed
                 , DateFormat.text "Z"
                 ]
                 Time.utc
+
+        stamp =
+            format
                 event.start
+
+        stampPlus =
+            event.start |> Time.posixToMillis |> (+) (1000 * 60 * 60) |> Time.millisToPosix |> format
     in
     [ "BEGIN:VEVENT"
     , "UID:{uid}"
-    , "DTSTAMP:{stamp}"
     , "DTSTART:{stamp}"
+    , "DTEND:{stampPlus}"
     , "SUMMARY:{summary}"
     , "DESCRIPTION:{description}"
     , "END:VEVENT"
@@ -71,5 +77,6 @@ toTextEvent event =
         |> String.join "\u{000D}\n"
         |> String.replace "{uid}" event.uid
         |> String.replace "{stamp}" stamp
+        |> String.replace "{stampPlus}" stampPlus
         |> String.replace "{summary}" event.summary
         |> String.replace "{description}" event.description
