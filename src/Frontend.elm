@@ -500,11 +500,6 @@ header config =
                 [ spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
-                , Element.link
-                    [ Element.paddingXY 0 18 ]
-                    { url = Route.encode VenueAndAccessRoute
-                    , label = Element.el [ Font.size 24, Font.semiBold, Font.underline, Font.color (Element.rgb255 4 150 90) ] (Element.text "Venue & Access")
-                    }
                 ]
             ]
 
@@ -1471,7 +1466,7 @@ Elm Camp is now in its second year! Following last year’s delightful debut in 
 
 - Depart 10am Fri 21st June 2024
 
-- 🇬🇧 Colehayes Park, Devon UK
+- 🇬🇧 Colehayes Park, Devon UK • [Venue & Access](https://elm.camp/venue-and-access)
 
 - Collaborative session creation throughout
 
