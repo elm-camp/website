@@ -470,11 +470,6 @@ header config =
                     [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tues 18th — Fri 21st June")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇬🇧 Colehayes Park, Devon")
-                    , Element.link
-                        [ Element.paddingXY 0 18 ]
-                        { url = Route.encode VenueAndAccessRoute
-                        , label = Element.el [ Font.size 24, Font.semiBold, Font.underline, Font.color (Element.rgb255 4 150 90) ] (Element.text "Venue & Access")
-                        }
                     ]
                 ]
     in
@@ -505,6 +500,11 @@ header config =
                 [ spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
+                , Element.link
+                    [ Element.paddingXY 0 18 ]
+                    { url = Route.encode VenueAndAccessRoute
+                    , label = Element.el [ Font.size 24, Font.semiBold, Font.underline, Font.color (Element.rgb255 4 150 90) ] (Element.text "Venue & Access")
+                    }
                 ]
             ]
 
