@@ -71,6 +71,7 @@ colors =
     { green = Element.rgb255 92 176 126
     , lightGrey = Element.rgb255 200 200 200
     , white = Element.rgb255 255 255 255
+    , red = Element.rgb255 234 87 59
     }
 
 

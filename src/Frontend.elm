@@ -1015,17 +1015,12 @@ formView model productId priceId ticket =
                 , label = el [ centerX ] (text "Cancel")
                 }
 
-        includedAccommodationNote =
-            """
-Please note: your selected options ***${accommodationStatus} accommodation***.
-"""
-                |> String.replace "${accommodationStatus}"
-                    (if Tickets.formIncludesAccom form then
-                        "include"
+        orderNotes =
+            if Tickets.formIncludesAccom form && List.length form.attendees == 0 then
+                "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
 
-                     else
-                        "do not include"
-                    )
+            else
+                "Please note: your selected options ***do not include accommodation***."
     in
     column
         [ width fill, spacing 60 ]
@@ -1043,7 +1038,7 @@ Please note: your selected options ***${accommodationStatus} accommodation***.
                    ]
             )
             [ none
-            , MarkdownThemed.renderFull includedAccommodationNote
+            , MarkdownThemed.renderFull orderNotes
             , textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
@@ -1079,7 +1074,7 @@ By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
 textInput form onChange title validator text =
     column
-        [ spacing 4, width fill ]
+        [ spacing 4, width fill, alignTop ]
         [ Input.text
             [ Border.rounded 8 ]
             { text = text
@@ -1217,6 +1212,17 @@ summary model =
         grantTotal =
             model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0
 
+        ticketsTotal =
+            model.form.attendees
+                |> List.length
+                |> (\num ->
+                        model.prices
+                            |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                            |> Maybe.map (\price -> Theme.priceAmount price.price)
+                            |> Maybe.withDefault 0
+                            |> (\price -> price * toFloat num)
+                   )
+
         accomTotal =
             model.form.accommodationBookings
                 |> List.map
@@ -1243,11 +1249,11 @@ summary model =
                 |> Maybe.withDefault 0
 
         total =
-            accomTotal + grantTotal + sponsorshipTotal
+            ticketsTotal + accomTotal + grantTotal + sponsorshipTotal
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat accomTotal)
+        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat ticketsTotal)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
 

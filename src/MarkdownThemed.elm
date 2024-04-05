@@ -106,6 +106,7 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "maxwidth"
                 |> Markdown.Html.withOptionalAttribute "bg"
             , Markdown.Html.tag "br" (\_ -> html <| Html.br [] [])
+            , Markdown.Html.tag "red" (\children -> paragraph [ Font.color Theme.colors.red ] children)
             ]
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
