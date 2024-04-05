@@ -1093,7 +1093,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "🫶 Opportunity grants"
+        [ Theme.h2 "\u{1FAF6} Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
@@ -1550,7 +1550,7 @@ tooltip text =
 
 opportunityGrantInfo =
     """
-# 🫶 Opportunity grant
+# \u{1FAF6} Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
@@ -1805,7 +1805,7 @@ If you have any concerns when planning, during or after your session, please get
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
 
 * Email the organiser team: [team@elm.camp](mailto:team@elm.camp)
-* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord](https://discord.gg/QeZDXJrN78): Katja#0091
+* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord](https://discord.gg/QeZDXJrN78): katjam_
 
 ## How we handle Code of Conduct issues
 
@@ -1952,7 +1952,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
 contactDetails : String
 contactDetails =
     """
-* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM Katja#0091
+* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM katjam_
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """
