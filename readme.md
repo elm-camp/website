@@ -1,5 +1,4 @@
-
-## The Elm Camp website
+## The Elm Camp website
 
 https://elm.camp
 
