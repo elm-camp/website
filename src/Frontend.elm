@@ -343,7 +343,7 @@ updateLoaded msg model =
                             Debug.log "form invalid" ()
                     in
                     ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                    , Cmd.none
+                    , jumpToId errorHtmlId 110
                     )
 
                 _ ->
@@ -375,7 +375,7 @@ updateLoaded msg model =
                     ( { model | pressedAudioButton = True }, Cmd.none )
 
         SetViewPortForElement elmentId ->
-            ( model, jumpToId elmentId )
+            ( model, jumpToId elmentId 40 )
 
         Noop ->
             ( model, Cmd.none )
@@ -915,16 +915,27 @@ attendeeForm model i attendee =
         form =
             model.form
 
+        columnWhen =
+            700
+
+        removeButtonAlignment =
+            if model.window.width > columnWhen then
+                -- This depends on the size of the text input labels.
+                15
+
+            else
+                0
+
         removeButton =
             Input.button
-                (normalButtonAttributes ++ [ width (px 100) ])
+                (normalButtonAttributes ++ [ width (px 100), alignTop, moveDown removeButtonAlignment ])
                 { onPress =
                     Just
                         (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
                 , label = el [ centerX ] (text "Remove")
                 }
     in
-    Theme.rowToColumnWhen 700
+    Theme.rowToColumnWhen columnWhen
         model
         [ width fill, spacing 16 ]
         [ textInput
@@ -969,9 +980,25 @@ attendeeForm model i attendee =
         ]
 
 
+{-| Used to scroll to errors.
+
+It’s technically invalid to use the same ID multiple times, but in practice
+getting an element by ID means getting the _first_ element with that ID, which
+is exactly what we want here.
+
+-}
+errorHtmlId : String
+errorHtmlId =
+    "error"
+
+
 errorText : String -> Element msg
 errorText error =
-    paragraph [ Font.color (rgb255 150 0 0) ] [ text error ]
+    paragraph
+        [ Font.color (rgb255 172 0 0)
+        , htmlAttribute (Html.Attributes.id errorHtmlId)
+        ]
+        [ text ("🚨 " ++ error) ]
 
 
 formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
@@ -1433,10 +1460,10 @@ goToTicketSales =
         }
 
 
-jumpToId : String -> Cmd FrontendMsg_
-jumpToId id =
+jumpToId : String -> Float -> Cmd FrontendMsg_
+jumpToId id offset =
     Browser.Dom.getElement id
-        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - 40))
+        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - offset))
         |> Task.attempt
             (\_ -> Noop)
 
