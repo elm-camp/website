@@ -915,16 +915,27 @@ attendeeForm model i attendee =
         form =
             model.form
 
+        columnWhen =
+            700
+
+        removeButtonAlignment =
+            if model.window.width > columnWhen then
+                -- This depends on the size of the text input labels.
+                15
+
+            else
+                0
+
         removeButton =
             Input.button
-                (normalButtonAttributes ++ [ width (px 100) ])
+                (normalButtonAttributes ++ [ width (px 100), alignTop, moveDown removeButtonAlignment ])
                 { onPress =
                     Just
                         (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
                 , label = el [ centerX ] (text "Remove")
                 }
     in
-    Theme.rowToColumnWhen 700
+    Theme.rowToColumnWhen columnWhen
         model
         [ width fill, spacing 16 ]
         [ textInput
