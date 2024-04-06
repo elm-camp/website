@@ -924,50 +924,48 @@ attendeeForm model i attendee =
                 , label = el [ centerX ] (text "Remove")
                 }
     in
-    column
+    Theme.rowToColumnWhen 700
+        model
         [ width fill, spacing 16 ]
-        [ row
-            [ width fill, spacing 16 ]
-            [ textInput
-                model.form
-                (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
-                "Name"
-                PurchaseForm.validateName
-                attendee.name
-            , textInput
-                model.form
-                (\a -> FormChanged { form | attendees = List.setAt i { attendee | email = a } model.form.attendees })
-                "Email"
-                PurchaseForm.validateEmailAddress
-                attendee.email
-            , textInput
-                model.form
-                (\a -> FormChanged { form | attendees = List.setAt i { attendee | country = a } model.form.attendees })
-                "Country you live in"
-                (\text ->
-                    case String.Nonempty.fromString text of
-                        Just nonempty ->
-                            Ok nonempty
+        [ textInput
+            model.form
+            (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
+            "Name"
+            PurchaseForm.validateName
+            attendee.name
+        , textInput
+            model.form
+            (\a -> FormChanged { form | attendees = List.setAt i { attendee | email = a } model.form.attendees })
+            "Email"
+            PurchaseForm.validateEmailAddress
+            attendee.email
+        , textInput
+            model.form
+            (\a -> FormChanged { form | attendees = List.setAt i { attendee | country = a } model.form.attendees })
+            "Country you live in"
+            (\text ->
+                case String.Nonempty.fromString text of
+                    Just nonempty ->
+                        Ok nonempty
 
-                        Nothing ->
-                            Err "Please type in the name of the country you live in"
-                )
-                attendee.country
-            , textInput
-                model.form
-                (\a -> FormChanged { form | attendees = List.setAt i { attendee | originCity = a } model.form.attendees })
-                "City/town"
-                (\text ->
-                    case String.Nonempty.fromString text of
-                        Just nonempty ->
-                            Ok nonempty
+                    Nothing ->
+                        Err "Please type in the name of the country you live in"
+            )
+            attendee.country
+        , textInput
+            model.form
+            (\a -> FormChanged { form | attendees = List.setAt i { attendee | originCity = a } model.form.attendees })
+            "City/town"
+            (\text ->
+                case String.Nonempty.fromString text of
+                    Just nonempty ->
+                        Ok nonempty
 
-                        Nothing ->
-                            Err "Please type in the name of city nearest to you"
-                )
-                attendee.originCity
-            , removeButton
-            ]
+                    Nothing ->
+                        Err "Please type in the name of city nearest to you"
+            )
+            attendee.originCity
+        , removeButton
         ]
 
 
@@ -1093,7 +1091,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "\u{1FAF6} Opportunity grants"
+        [ Theme.h2 "🫶 Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
@@ -1550,7 +1548,7 @@ tooltip text =
 
 opportunityGrantInfo =
     """
-# \u{1FAF6} Opportunity grant
+# 🫶 Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
