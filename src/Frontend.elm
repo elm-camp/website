@@ -995,10 +995,10 @@ errorHtmlId =
 errorText : String -> Element msg
 errorText error =
     paragraph
-        [ Font.color (rgb255 150 0 0)
+        [ Font.color (rgb255 172 0 0)
         , htmlAttribute (Html.Attributes.id errorHtmlId)
         ]
-        [ text error ]
+        [ text ("🚨 " ++ error) ]
 
 
 formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
