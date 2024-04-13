@@ -53,6 +53,7 @@ viewAdmin backendModel =
         [ el [ Element.Font.size 18 ] (text "Admin")
         , el [ Element.Font.size 18 ] (text info)
         , viewOrders backendModel.orders
+        , viewExpiredOrders backendModel.expiredOrders
 
         --, viewPendingOrder backendModel.pendingOrder
         --, viewExpiredOrders backendModel.expiredOrders
@@ -100,6 +101,19 @@ viewOrders orders =
         (orders |> AssocList.toList |> List.indexedMap viewOrder)
 
 
+viewExpiredOrders : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders orders =
+    let
+        n =
+            orders |> AssocList.toList |> List.length |> Debug.log "Number of pending orders: "
+    in
+    column
+        [ width fill
+        , spacing 12
+        ]
+        (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+
+
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
 viewOrder idx ( id, order ) =
     row
@@ -109,8 +123,22 @@ viewOrder idx ( id, order ) =
         ]
 
 
+viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element msg
+viewPendingOrder idx ( id, order ) =
+    row
+        [ width fill, Element.Font.size 14, spacing 12 ]
+        [ Element.el [] <| text <| String.fromInt idx
+        , Element.el [] <| text <| String.join ", " <| attendees2 order
+        ]
+
+
 attendees : Types.Order -> List String
 attendees order =
+    order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
+
+
+attendees2 : Types.PendingOrder -> List String
+attendees2 order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
 
 
@@ -120,28 +148,15 @@ attendees order =
 --|> Order.attendees
 --|> AssocList.toList
 --|> List.map Tuple.first
-
-
-viewPendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder -> Element msg
-viewPendingOrder pendingOrders =
-    column
-        [ width fill
-        ]
-        [ text "Pending Orders TODO"
-
-        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) pendingOrders |> text
-        ]
-
-
-viewExpiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder -> Element msg
-viewExpiredOrders expiredOrders =
-    column
-        [ width fill
-        ]
-        [ text "Expired Orders TODO"
-
-        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) expiredOrders |> text
-        ]
+--viewExpiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder -> Element msg
+--viewExpiredOrders expiredOrders =
+--    column
+--        [ width fill
+--        ]
+--        [ text "Expired Orders TODO"
+--
+--        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) expiredOrders |> text
+--        ]
 
 
 loadProdBackend : Cmd msg
