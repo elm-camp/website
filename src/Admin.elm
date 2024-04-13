@@ -6,6 +6,7 @@ import Element exposing (..)
 import Element.Font
 import Id exposing (Id)
 import Lamdera
+import List.Extra
 import Name
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Types exposing (..)
@@ -53,7 +54,9 @@ viewAdmin backendModel =
         [ el [ Element.Font.size 18 ] (text "Admin")
         , el [ Element.Font.size 18 ] (text info)
         , viewOrders backendModel.orders
+        , viewExpiredOrders2 backendModel.expiredOrders
         , viewExpiredOrders backendModel.expiredOrders
+
 
         --, viewPendingOrder backendModel.pendingOrder
         --, viewExpiredOrders backendModel.expiredOrders
@@ -111,7 +114,25 @@ viewExpiredOrders orders =
         [ width fill
         , spacing 12
         ]
-        (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+        (el [] (text <| "Expired orders: " ++ String.fromInt n)  :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+
+
+viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders2 orders =
+    let
+        ordersCleaned : List String
+        ordersCleaned =
+            orders |> AssocList.toList
+              |> List.map (Tuple.second >> attendeesPending)
+              |> List.concat
+              |> List.Extra.unique
+
+    in
+    column
+        [ width fill
+        , spacing 8
+        ]
+        (el [] (text <| "Expired orders (cleaned up): " ++ String.fromInt (List.length ordersCleaned))  ::(ordersCleaned |> List.indexedMap (\k s -> row [Element.Font.size 14] [text <| String.fromInt (k + 1), text s]))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
@@ -127,36 +148,21 @@ viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element 
 viewPendingOrder idx ( id, order ) =
     row
         [ width fill, Element.Font.size 14, spacing 12 ]
-        [ Element.el [] <| text <| String.fromInt idx
-        , Element.el [] <| text <| String.join ", " <| attendees2 order
+        [ Element.el [] <| text <| String.fromInt (idx + 1)
+        , Element.el [] <| text <| String.join ", " <| attendeesPending order
         ]
-
 
 attendees : Types.Order -> List String
 attendees order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
 
 
-attendees2 : Types.PendingOrder -> List String
-attendees2 order =
+attendeesPending : Types.PendingOrder -> List String
+attendeesPending order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
 
 
 
--- |> AssocList.toList |> List.map Tuple.first
---|> Form.attendees |> AssocList.toList |> List.map Tuple.first
---|> Order.attendees
---|> AssocList.toList
---|> List.map Tuple.first
---viewExpiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder -> Element msg
---viewExpiredOrders expiredOrders =
---    column
---        [ width fill
---        ]
---        [ text "Expired Orders TODO"
---
---        -- , Codec.encodeToString 2 (Types.assocListCodec Types.pendingOrderCodec) expiredOrders |> text
---        ]
 
 
 loadProdBackend : Cmd msg
