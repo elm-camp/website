@@ -126,6 +126,7 @@ viewExpiredOrders2 orders =
                 |> List.map (Tuple.second >> attendeesPending)
                 |> List.concat
                 |> List.Extra.unique
+                |> List.sort
     in
     column
         [ width fill
