@@ -57,7 +57,6 @@ viewAdmin backendModel =
         , viewExpiredOrders2 backendModel.expiredOrders
         , viewExpiredOrders backendModel.expiredOrders
 
-
         --, viewPendingOrder backendModel.pendingOrder
         --, viewExpiredOrders backendModel.expiredOrders
         --, viewPrices backendModel.prices
@@ -114,7 +113,7 @@ viewExpiredOrders orders =
         [ width fill
         , spacing 12
         ]
-        (el [] (text <| "Expired orders: " ++ String.fromInt n)  :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder))
+        (el [] (text <| "Expired orders: " ++ String.fromInt n) :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder))
 
 
 viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
@@ -122,17 +121,17 @@ viewExpiredOrders2 orders =
     let
         ordersCleaned : List String
         ordersCleaned =
-            orders |> AssocList.toList
-              |> List.map (Tuple.second >> attendeesPending)
-              |> List.concat
-              |> List.Extra.unique
-
+            orders
+                |> AssocList.toList
+                |> List.map (Tuple.second >> attendeesPending)
+                |> List.concat
+                |> List.Extra.unique
     in
     column
         [ width fill
         , spacing 8
         ]
-        (el [] (text <| "Expired orders (cleaned up): " ++ String.fromInt (List.length ordersCleaned))  ::(ordersCleaned |> List.indexedMap (\k s -> row [Element.Font.size 14] [text <| String.fromInt (k + 1), text s]))
+        (el [] (text <| "Expired orders (cleaned up): " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Element.Font.size 14 ] [ text <| String.fromInt (k + 1), text s ])))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
@@ -152,6 +151,7 @@ viewPendingOrder idx ( id, order ) =
         , Element.el [] <| text <| String.join ", " <| attendeesPending order
         ]
 
+
 attendees : Types.Order -> List String
 attendees order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
@@ -160,9 +160,6 @@ attendees order =
 attendeesPending : Types.PendingOrder -> List String
 attendeesPending order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
-
-
-
 
 
 loadProdBackend : Cmd msg
