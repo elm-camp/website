@@ -13,8 +13,9 @@ import Id
 import Json.Decode
 import Json.Encode
 import Lamdera exposing (SessionId)
+import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
-import LamderaRPC
+import LamderaRPC exposing (..)
 import List.Nonempty exposing (Nonempty(..))
 import Name
 import Postmark
@@ -25,31 +26,37 @@ import Task exposing (Task)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
 
 
-backendModelEndpoint :
-    SessionId
-    -> BackendModel
-    -> Json.Decode.Value
-    -> ( Result Http.Error Json.Decode.Value, BackendModel, Cmd BackendMsg )
+backendModelEndpoint : SessionId -> BackendModel -> HttpRequest -> ( RPCResult, BackendModel, Cmd BackendMsg )
 backendModelEndpoint _ model request =
-    case Json.Decode.decodeValue Json.Decode.string request of
-        Ok ok ->
-            if ok == Env.adminPassword then
-                ( Http.BadBody "todo implement backendModelEndpoint" |> Err, model, Cmd.none )
-                -- ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
+    case request.body of
+        BodyJson json ->
+            case Json.Decode.decodeValue Json.Decode.string json of
+                Ok ok ->
+                    if ok == Env.adminPassword then
+                        ( badReq "todo implement backendModelEndpoint", model, Cmd.none )
+                        -- ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
 
-            else
-                ( Http.BadBody "Invalid admin password" |> Err, model, Cmd.none )
+                    else
+                        ( badReq "Invalid admin password", model, Cmd.none )
 
-        Err _ ->
-            ( Http.BadBody "Expected request body to look like this: \"SECRET_KEY\"" |> Err, model, Cmd.none )
+                Err _ ->
+                    ( badReq "Expected request body to look like this: \"SECRET_KEY\"", model, Cmd.none )
+
+        _ ->
+            ( badReq "Expected request body to be JSON", model, Cmd.none )
+
+
+badReq reason =
+    resultWith StatusBadRequest [] (BodyString reason)
 
 
 purchaseCompletedEndpoint :
     SessionId
     -> BackendModel
-    -> Json.Decode.Value
-    -> ( Result Http.Error Json.Decode.Value, BackendModel, Cmd BackendMsg )
-purchaseCompletedEndpoint _ model request =
+    -> Headers
+    -> Json.Value
+    -> ( Result Http.Error Json.Value, BackendModel, Cmd BackendMsg )
+purchaseCompletedEndpoint _ model headers json =
     let
         response =
             if Env.isProduction then
@@ -58,7 +65,7 @@ purchaseCompletedEndpoint _ model request =
             else
                 Ok (Json.Encode.string "dev")
     in
-    case Json.Decode.decodeValue Stripe.decodeWebhook request of
+    case Json.Decode.decodeValue Stripe.decodeWebhook json of
         Ok webhook ->
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
@@ -186,17 +193,14 @@ requestPurchaseCompletedEndpoint value =
     LamderaRPC.asTask Wire3.encodeString Wire3.decodeString value "purchaseCompletedEndpoint"
 
 
-lamdera_handleEndpoints :
-    LamderaRPC.RPCArgs
-    -> BackendModel
-    -> ( LamderaRPC.RPCResult, BackendModel, Cmd BackendMsg )
-lamdera_handleEndpoints args model =
-    case args.endpoint of
+lamdera_handleEndpoints : Json.Value -> HttpRequest -> BackendModel -> ( LamderaRPC.RPCResult, BackendModel, Cmd BackendMsg )
+lamdera_handleEndpoints reqRaw req model =
+    case req.endpoint of
         "stripe" ->
-            LamderaRPC.handleEndpointJson purchaseCompletedEndpoint args model
+            LamderaRPC.handleEndpointJson purchaseCompletedEndpoint req model
 
         "backend-model" ->
-            LamderaRPC.handleEndpointJson backendModelEndpoint args model
+            LamderaRPC.handleEndpoint backendModelEndpoint req model
 
         "tickets-enabled" ->
             ( LamderaRPC.ResultString "enabled"
@@ -215,4 +219,4 @@ lamdera_handleEndpoints args model =
             )
 
         _ ->
-            ( LamderaRPC.ResultFailure <| Http.BadBody <| "Unknown endpoint " ++ args.endpoint, model, Cmd.none )
+            ( LamderaRPC.resultWith LamderaRPC.StatusNotFound [] <| LamderaRPC.BodyString <| "Unknown endpoint " ++ req.endpoint, model, Cmd.none )
