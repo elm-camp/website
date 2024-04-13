@@ -51,6 +51,7 @@ viewAdmin backendModel =
         , spacing 40
         ]
         [ el [ Element.Font.size 18 ] (text "Admin")
+        , el [ Element.Font.size 18 ] (text info)
         , viewOrders backendModel.orders
 
         --, viewPendingOrder backendModel.pendingOrder
@@ -88,6 +89,10 @@ viewPrices prices =
 
 viewOrders : AssocList.Dict (Id StripeSessionId) Types.Order -> Element msg
 viewOrders orders =
+    let
+        n =
+            orders |> AssocList.toList |> List.length |> Debug.log "Number of orders: "
+    in
     column
         [ width fill
         , spacing 12
