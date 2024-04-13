@@ -114,7 +114,7 @@ viewExpiredOrders orders =
         [ width fill
         , spacing 12
         ]
-        (el [] (text <| "Expired orders: " ++ String.fromInt n)  :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+        (el [] (text <| "Expired orders: " ++ String.fromInt n)  :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder))
 
 
 viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
