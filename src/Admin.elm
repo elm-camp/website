@@ -131,7 +131,7 @@ viewExpiredOrders2 orders =
         [ width fill
         , spacing 8
         ]
-        (el [] (text <| "Expired orders (cleaned up): " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Element.Font.size 14 ] [ text <| String.fromInt (k + 1), text s ])))
+        (el [] (text <| "Expired orders (cleaned up): " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Element.Font.size 14, spacing 8 ] [ text <| String.fromInt (k + 1), text s ])))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
