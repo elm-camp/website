@@ -18,7 +18,6 @@ ui t description model =
         now =
             model.now
                 |> Time.posixToMillis
-                |> Debug.log "now"
     in
     el Theme.contentAttributes <|
         el [ centerX ] <|

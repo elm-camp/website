@@ -3,8 +3,10 @@ module Admin exposing (..)
 import AssocList
 import Codec
 import Element exposing (..)
+import Element.Font
 import Id exposing (Id)
 import Lamdera
+import Name
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Types exposing (..)
 
@@ -29,16 +31,32 @@ viewAdmin backendModel =
     --     , time : Time.Posix
     --     , ticketsEnabled : TicketsEnabled
     --     }
+    let
+        numberOfOrders =
+            List.length (AssocList.toList backendModel.orders)
+
+        numberOfPendingOrders =
+            List.length (AssocList.toList backendModel.pendingOrder)
+
+        numberOfExpiredOrders =
+            List.length (AssocList.toList backendModel.expiredOrders)
+
+        info =
+            "Orders (completed, pending, expired): "
+                ++ (List.map String.fromInt [ numberOfOrders, numberOfPendingOrders, numberOfExpiredOrders ] |> String.join ", ")
+    in
     column
         [ width fill
+        , Element.padding 24
         , spacing 40
         ]
-        [ text "Admin"
+        [ el [ Element.Font.size 18 ] (text "Admin")
         , viewOrders backendModel.orders
-        , viewPendingOrder backendModel.pendingOrder
-        , viewExpiredOrders backendModel.expiredOrders
-        , viewPrices backendModel.prices
-        , viewTicketsEnabled backendModel.ticketsEnabled
+
+        --, viewPendingOrder backendModel.pendingOrder
+        --, viewExpiredOrders backendModel.expiredOrders
+        --, viewPrices backendModel.prices
+        --, viewTicketsEnabled backendModel.ticketsEnabled
         ]
 
 
@@ -72,11 +90,31 @@ viewOrders : AssocList.Dict (Id StripeSessionId) Types.Order -> Element msg
 viewOrders orders =
     column
         [ width fill
+        , spacing 12
         ]
-        [ text "Orders TODO"
+        (orders |> AssocList.toList |> List.indexedMap viewOrder)
 
-        -- , Codec.encodeToString 2 (Types.assocListCodec Types.orderCodec) orders |> text
+
+viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
+viewOrder idx ( id, order ) =
+    row
+        [ width fill, Element.Font.size 14, spacing 12 ]
+        [ Element.el [] <| text <| String.fromInt idx
+        , Element.el [] <| text <| String.join ", " <| attendees order
         ]
+
+
+attendees : Types.Order -> List String
+attendees order =
+    order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
+
+
+
+-- |> AssocList.toList |> List.map Tuple.first
+--|> Form.attendees |> AssocList.toList |> List.map Tuple.first
+--|> Order.attendees
+--|> AssocList.toList
+--|> List.map Tuple.first
 
 
 viewPendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder -> Element msg
