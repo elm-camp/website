@@ -1423,6 +1423,8 @@ accommodationView model =
             , """
 You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
 
+There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms.
+
 The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
 """
                 |> MarkdownThemed.renderFull
