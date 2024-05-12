@@ -3,13 +3,16 @@ module Admin exposing (..)
 import AssocList
 import Codec
 import Element exposing (..)
-import Element.Font
+import Element.Font as Font
 import Element.Input as Input
+import EmailAddress
 import Env
+import Html
 import Id exposing (Id)
 import Lamdera
 import List.Extra
 import Name
+import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
 import Types exposing (..)
@@ -51,7 +54,7 @@ viewAdmin backendModel =
     in
     column
         [ width fill
-        , Element.padding 24
+        , padding 24
         , spacing 40
         ]
         [ if Env.mode == Env.Development then
@@ -63,10 +66,11 @@ viewAdmin backendModel =
 
           else
             none
-        , el [ Element.Font.size 18 ] (text "Admin")
-        , el [ Element.Font.size 18 ] (text info)
+        , el [ Font.size 18 ] (text "Admin")
+        , el [ Font.size 18 ] (text info)
         , viewOrders backendModel.orders
-        , viewExpiredOrders2 backendModel.expiredOrders
+
+        -- , viewExpiredOrders2 backendModel.expiredOrders
         , viewExpiredOrders backendModel.expiredOrders
 
         --, viewPendingOrder backendModel.pendingOrder
@@ -125,9 +129,28 @@ viewExpiredOrders orders =
         [ width fill
         , spacing 12
         ]
-        (el [] (text <| "Expired orders: " ++ String.fromInt n)
-            :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+        ([ el [] (text <| "Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n)
+         , quickTable (orders |> AssocList.values)
+            [ attendeesPending >> String.join ", "
+            , attendeesDetail (.email >> EmailAddress.toString) >> String.join ", "
+            , .form >> .accommodationBookings >> Debug.toString
+
+            -- , .form >> .grantApply >> Debug.toString
+            -- , .form >> .grantContribution >> Debug.toString
+            -- , .form >> .sponsorship >> Debug.toString
+            , attendeesDetail (.country >> String.Nonempty.toString) >> String.join ", "
+            ]
+         ]
+         -- ++ (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
         )
+
+
+quickTable collection fns =
+    -- Because Element.table copy/paste doesn't do table formatting in GDocs
+    collection
+        |> List.map (\order -> List.map (\fn -> fn order |> (\v -> Html.td [] [ Html.text v ])) fns |> Html.tr [])
+        |> Html.table []
+        |> html
 
 
 viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
@@ -146,24 +169,26 @@ viewExpiredOrders2 orders =
         [ width fill
         , spacing 8
         ]
-        (el [] (text <| "Participants: " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Element.Font.size 14, spacing 8 ] [ text <| String.fromInt (k + 1), text s ])))
+        (el [] (text <| "Participants: " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Font.size 14, spacing 8 ] [ text <| String.fromInt (k + 1), text s ])))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
 viewOrder idx ( id, order ) =
     row
-        [ width fill, Element.Font.size 14, spacing 12 ]
-        [ Element.el [] <| text <| String.fromInt idx
-        , Element.el [] <| text <| String.join ", " <| attendees order
+        [ width fill, Font.size 14, spacing 12 ]
+        [ el [] <| text <| String.fromInt idx
+        , el [] <| text <| String.join ", " <| attendees order
         ]
 
 
 viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element msg
 viewPendingOrder idx ( id, order ) =
     row
-        [ width fill, Element.Font.size 14, spacing 12 ]
-        [ Element.el [] <| text <| String.fromInt (idx + 1)
-        , Element.el [] <| text <| String.join ", " <| attendeesPending order
+        [ width fill, Font.size 14, spacing 12 ]
+        [ el [] <| text <| String.fromInt (idx + 1)
+        , el [] <| text <| String.join ", " <| attendeesPending order
+
+        -- , text <| Debug.toString order
         ]
 
 
@@ -175,6 +200,10 @@ attendees order =
 attendeesPending : Types.PendingOrder -> List String
 attendeesPending order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
+
+
+attendeesDetail fn order =
+    order.form.attendees |> List.map (fn >> Debug.toString)
 
 
 loadProdBackend : Cmd msg
