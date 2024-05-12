@@ -1,6 +1,5 @@
 module LamderaRPC exposing (..)
 
-import Bytes exposing (Bytes)
 import Dict exposing (Dict)
 import Env
 import Http exposing (..)
@@ -8,24 +7,12 @@ import Json.Decode as D
 import Lamdera exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
-import Set
 import Task exposing (Task)
 import Types exposing (BackendModel)
 
 
 
 -- The Lamdera HTTP RPC abstraction
-
-
-type RPC a
-    = Response a
-    | ResponseJson Json.Value
-    | ResponseString String
-    | Failure Http.Error
-
-
-fail string =
-    Failure <| Http.BadBody string
 
 
 type RPCResult
@@ -236,6 +223,28 @@ asTask encoder decoder requestValue endpoint =
                                 Wire3.bytesDecode decoder bytes
                                     |> Result.fromMaybe (BadBody <| "Failed to decode response from " ++ endpoint)
                             )
+        , timeout = Just 15000
+        }
+
+
+postJsonBytes :
+    Wire3.Decoder b
+    -> Json.Value
+    -> String
+    -> Task Http.Error b
+postJsonBytes decoder requestValue endpoint =
+    Http.task
+        { method = "POST"
+        , headers = []
+        , url = endpoint
+        , body = Http.jsonBody requestValue
+        , resolver =
+            Http.bytesResolver <|
+                customResolver
+                    (\metadata bytes ->
+                        Wire3.bytesDecode decoder bytes
+                            |> Result.fromMaybe (BadBody <| "Failed to decode response from " ++ endpoint)
+                    )
         , timeout = Just 15000
         }
 

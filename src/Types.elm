@@ -286,6 +286,8 @@ type FrontendMsg_
     | LoadedMusic (Result Audio.LoadError Audio.Source)
     | LiveScheduleMsg LiveSchedule.Msg
     | SetViewPortForElement String
+    | AdminPullBackendModel
+    | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | Noop
 
 

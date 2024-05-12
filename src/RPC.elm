@@ -33,8 +33,7 @@ backendModelEndpoint _ model request =
             case Json.Decode.decodeValue Json.Decode.string json of
                 Ok ok ->
                     if ok == Env.adminPassword then
-                        ( badReq "todo implement backendModelEndpoint", model, Cmd.none )
-                        -- ( Ok (Codec.encodeToValue Types.backendModelCodec model), model, Cmd.none )
+                        ( ResultBytes <| Wire3.intListFromBytes <| Wire3.bytesEncode <| Types.w3_encode_BackendModel model, model, Cmd.none )
 
                     else
                         ( badReq "Invalid admin password", model, Cmd.none )

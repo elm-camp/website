@@ -27,7 +27,10 @@ import Html.Events
 import ICalendar exposing (IcsFile)
 import Id exposing (Id)
 import Json.Decode
+import Json.Encode
 import Lamdera
+import Lamdera.Wire3
+import LamderaRPC
 import List.Extra as List
 import LiveSchedule
 import MarkdownThemed
@@ -376,6 +379,27 @@ updateLoaded msg model =
 
         SetViewPortForElement elmentId ->
             ( model, jumpToId elmentId 40 )
+
+        AdminPullBackendModel ->
+            ( model
+            , LamderaRPC.postJsonBytes
+                Types.w3_decode_BackendModel
+                (Json.Encode.string Env.adminPassword)
+                "http://localhost:8001/https://elm.camp/_r/backend-model"
+                |> Task.attempt AdminPullBackendModelResponse
+            )
+
+        AdminPullBackendModelResponse res ->
+            case res of
+                Ok backendModel ->
+                    ( { model | backendModel = Just backendModel }, Cmd.none )
+
+                Err err ->
+                    let
+                        _ =
+                            Debug.log "Failed to pull backend model" err
+                    in
+                    ( model, Cmd.none )
 
         Noop ->
             ( model, Cmd.none )
@@ -1118,7 +1142,7 @@ textInput form onChange title validator text =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "\u{1FAF6} Opportunity grants"
+        [ Theme.h2 "🫶 Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
@@ -1577,7 +1601,7 @@ tooltip text =
 
 opportunityGrantInfo =
     """
-# \u{1FAF6} Opportunity grant
+# 🫶 Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 

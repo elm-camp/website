@@ -4,15 +4,18 @@ import AssocList
 import Codec
 import Element exposing (..)
 import Element.Font
+import Element.Input as Input
+import Env
 import Id exposing (Id)
 import Lamdera
 import List.Extra
 import Name
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
+import Theme
 import Types exposing (..)
 
 
-view : LoadedModel -> Element msg
+view : LoadedModel -> Element FrontendMsg_
 view model =
     case model.backendModel of
         Just backendModel ->
@@ -22,7 +25,7 @@ view model =
             text "loading"
 
 
-viewAdmin : BackendModel -> Element msg
+viewAdmin : BackendModel -> Element FrontendMsg_
 viewAdmin backendModel =
     -- type alias BackendModel =
     --     { orders : AssocList.Dict (Id StripeSessionId) Order
@@ -51,7 +54,16 @@ viewAdmin backendModel =
         , Element.padding 24
         , spacing 40
         ]
-        [ el [ Element.Font.size 18 ] (text "Admin")
+        [ if Env.mode == Env.Development then
+            Input.button
+                Theme.normalButtonAttributes
+                { onPress = Just AdminPullBackendModel
+                , label = el [ centerX ] (text "Pull Backend Model from prod")
+                }
+
+          else
+            none
+        , el [ Element.Font.size 18 ] (text "Admin")
         , el [ Element.Font.size 18 ] (text info)
         , viewOrders backendModel.orders
         , viewExpiredOrders2 backendModel.expiredOrders
@@ -94,7 +106,7 @@ viewOrders : AssocList.Dict (Id StripeSessionId) Types.Order -> Element msg
 viewOrders orders =
     let
         n =
-            orders |> AssocList.toList |> List.length |> Debug.log "Number of orders: "
+            orders |> AssocList.toList |> List.length
     in
     column
         [ width fill
@@ -107,13 +119,15 @@ viewExpiredOrders : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> El
 viewExpiredOrders orders =
     let
         n =
-            orders |> AssocList.toList |> List.length |> Debug.log "Number of pending orders: "
+            orders |> AssocList.toList |> List.length
     in
     column
         [ width fill
         , spacing 12
         ]
-        (el [] (text <| "Expired orders: " ++ String.fromInt n) :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder))
+        (el [] (text <| "Expired orders: " ++ String.fromInt n)
+            :: (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+        )
 
 
 viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
