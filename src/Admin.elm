@@ -133,7 +133,7 @@ viewExpiredOrders orders =
          , quickTable (orders |> AssocList.values)
             [ attendeesPending >> String.join ", "
             , attendeesDetail (.email >> EmailAddress.toString) >> String.join ", "
-            , .form >> .accommodationBookings >> Debug.toString
+            , .form >> .accommodationBookings >> toString
 
             -- , .form >> .grantApply >> Debug.toString
             -- , .form >> .grantContribution >> Debug.toString
@@ -148,7 +148,15 @@ viewExpiredOrders orders =
 quickTable collection fns =
     -- Because Element.table copy/paste doesn't do table formatting in GDocs
     collection
-        |> List.map (\order -> List.map (\fn -> fn order |> (\v -> Html.td [] [ Html.text v ])) fns |> Html.tr [])
+        |> List.map
+            (\item ->
+                fns
+                    |> List.map
+                        (\fn ->
+                            Html.td [] [ Html.text <| fn item ]
+                        )
+                    |> Html.tr []
+            )
         |> Html.table []
         |> html
 
@@ -203,7 +211,7 @@ attendeesPending order =
 
 
 attendeesDetail fn order =
-    order.form.attendees |> List.map (fn >> Debug.toString)
+    order.form.attendees |> List.map (fn >> toString)
 
 
 loadProdBackend : Cmd msg
@@ -231,3 +239,9 @@ loadProdBackend =
 --                     ]
 --             )
 --         |> column []
+
+
+toString x =
+    -- swap back to the original implementation when developing
+    -- Debug.toString x
+    "<toString neutered>"
