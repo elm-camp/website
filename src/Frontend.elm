@@ -1065,12 +1065,21 @@ formView model productId priceId ticket =
                 , label = el [ centerX ] (text "Cancel")
                 }
 
+        includesAccom =
+            Tickets.formIncludesAccom form
+
+        hasAttendees =
+            List.length form.attendees > 0
+
         orderNotes =
-            if Tickets.formIncludesAccom form && List.length form.attendees == 0 then
+            if includesAccom && not hasAttendees then
                 "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
 
-            else
+            else if not includesAccom && hasAttendees then
                 "Please note: your selected options ***do not include accommodation***."
+
+            else
+                ""
     in
     column
         [ width fill, spacing 60 ]
