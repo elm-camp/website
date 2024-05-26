@@ -1072,15 +1072,14 @@ formView model productId priceId ticket =
             List.length form.attendees > 0
 
         orderNotes =
-            Debug.log "order notes" <|
-                if includesAccom && not hasAttendees then
-                    "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
+            if includesAccom && not hasAttendees then
+                "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
 
-                else if not includesAccom && hasAttendees then
-                    "Please note: your selected options ***do not include accommodation***."
+            else if not includesAccom && hasAttendees then
+                "Please note: your selected options ***do not include accommodation***."
 
-                else
-                    ""
+            else
+                ""
     in
     column
         [ width fill, spacing 60 ]
