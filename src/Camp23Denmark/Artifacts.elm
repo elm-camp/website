@@ -28,6 +28,6 @@ media =
     """
 ## Media
 
-<img src="/camps/23-denmark/elm-camp-23-attendees.jpeg" width="100%" />
+<img src="/23-denmark/elm-camp-23-attendees.jpeg" width="100%" />
 
 """

@@ -12,6 +12,7 @@ import Camp23Denmark.Artifacts
 import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
+import Camp24Uk
 import DateFormat
 import Dict
 import Element exposing (..)
@@ -704,6 +705,9 @@ loadedView model =
 
         Camp23Denmark subpage ->
             Camp23Denmark.view model subpage
+
+        Camp24Uk subpage ->
+            Camp24Uk.view model subpage
 
 
 ticketsHtmlId =

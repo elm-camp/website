@@ -21,6 +21,7 @@ type Route
     | PaymentCancelRoute
     | LiveScheduleRoute
     | Camp23Denmark SubPage
+    | Camp24Uk SubPage
 
 
 type SubPage
@@ -52,6 +53,7 @@ decode url =
 
         -- Previous events
         , Url.Parser.s "23-denmark" </> subPageParser |> Url.Parser.map Camp23Denmark
+        , Url.Parser.s "24-uk" </> subPageParser |> Url.Parser.map Camp24Uk
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -118,6 +120,14 @@ encode route =
 
                     Artifacts ->
                         [ "23-denmark", "artifacts" ]
+
+            Camp24Uk subPage ->
+                case subPage of
+                    Home ->
+                        [ "24-uk" ]
+
+                    Artifacts ->
+                        [ "24-uk", "artifacts" ]
         )
         (case route of
             HomepageRoute ->
@@ -156,6 +166,14 @@ encode route =
                 []
 
             Camp23Denmark subPage ->
+                case subPage of
+                    Home ->
+                        []
+
+                    Artifacts ->
+                        []
+
+            Camp24Uk subPage ->
                 case subPage of
                     Home ->
                         []
