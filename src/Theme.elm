@@ -207,34 +207,29 @@ glow =
 
 footer : Element msg
 footer =
+    let
+        btn route label =
+            Element.link
+                [ Background.color (Element.rgb255 12 109 82), paddingXY 10 10, Border.rounded 10 ]
+                { url = Route.encode route, label = Element.text label }
+    in
     Element.el
-        [ Background.color (Element.rgb255 12 109 82)
-        , Element.paddingXY 24 16
+        [ Element.paddingXY 24 16
         , Element.width Element.fill
         , Element.alignBottom
         ]
         (Element.wrappedRow
-            ([ Element.spacing 32
-             , Background.color (Element.rgb255 12 109 82)
+            ([ Element.spacing 10
              , Font.color (Element.rgb 1 1 1)
              ]
                 ++ contentAttributes
             )
-            [ Element.link
-                []
-                { url = Route.encode CodeOfConductRoute, label = Element.text "Code of Conduct" }
-            , Element.link
-                []
-                { url = Route.encode UnconferenceFormatRoute, label = Element.text "Unconference Guidelines" }
-            , Element.link
-                []
-                { url = Route.encode VenueAndAccessRoute, label = Element.text "Venue & Access" }
-            , Element.link
-                []
-                { url = Route.encode OrganisersRoute, label = Element.text "Organisers" }
-            , Element.link
-                []
-                { url = Route.encode ElmCampArchiveRoute, label = Element.text "Elm Camp Archive" }
+            [ btn CodeOfConductRoute "Code of Conduct"
+            , btn UnconferenceFormatRoute "Unconference Guidelines"
+
+            -- , btn VenueAndAccessRoute "Venue & Access"
+            , btn OrganisersRoute "Organisers"
+            , btn ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )
 
