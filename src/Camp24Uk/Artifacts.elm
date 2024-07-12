@@ -14,6 +14,7 @@ This page is [open to contributions on Github](https://github.com/elm-camp/websi
 
 - [Notes from Elm Camp 2024](https://martin.janiczek.cz/2024/06/22/notes-from-elm-camp-2024.html) by @janiczek (Blog)
 - [Elm Camp 2024 Reflections](https://wolfgangschuster.wordpress.com/2024/06/23/elm-camp-2024-reflections/) by @wolfadex (Blog)
+- [Elm Camp 2024](https://jfmengels.net/elm-camp-2024/) by @jfmengels (Blog)
 
 ## Media
 
