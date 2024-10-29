@@ -775,7 +775,7 @@ jumpToId id offset =
 elmCampOverview : Element msg
 elmCampOverview =
     """
-Elm Camp is currently planning for it's 3rd year! Please [help us find the next location](https://docs.google.com/forms/d/e/1FAIpQLSc2jj01mORQateduf_aKe7jdpSS5ESk032yWEw0VX6H3aDpig/viewform)!
+Elm Camp is currently planning for it's 3rd year!
 
 ---
 
