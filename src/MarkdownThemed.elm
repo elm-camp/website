@@ -105,6 +105,32 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "width"
                 |> Markdown.Html.withOptionalAttribute "maxwidth"
                 |> Markdown.Html.withOptionalAttribute "bg"
+            , Markdown.Html.tag "iframe"
+                (\src ratio title_ content ->
+                    html <|
+                        Html.div
+                            [ Html.Attributes.style "position" "relative"
+                            , Html.Attributes.style "width" "100%"
+                            , Html.Attributes.style "padding-bottom" ratio
+                            , Html.Attributes.style "height" "0"
+                            , Html.Attributes.style "overflow" "hidden"
+                            ]
+                            [ Html.iframe
+                                [ Html.Attributes.src src
+                                , Html.Attributes.title title_
+                                , Html.Attributes.style "position" "absolute"
+                                , Html.Attributes.style "top" "0"
+                                , Html.Attributes.style "left" "0"
+                                , Html.Attributes.style "width" "100%"
+                                , Html.Attributes.style "height" "100%"
+                                , Html.Attributes.style "border" "0"
+                                ]
+                                []
+                            ]
+                )
+                |> Markdown.Html.withAttribute "src"
+                |> Markdown.Html.withAttribute "ratio"
+                |> Markdown.Html.withAttribute "title"
             , Markdown.Html.tag "br" (\_ -> html <| Html.br [] [])
             , Markdown.Html.tag "red" (\children -> paragraph [ Font.color Theme.colors.red ] children)
             ]

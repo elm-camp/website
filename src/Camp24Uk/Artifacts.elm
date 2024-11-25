@@ -24,5 +24,13 @@ This page is [open to contributions on Github](https://github.com/elm-camp/websi
 
 <img src="/24-colehayes/elm-camp-24-attendees.jpg" width="100%" />
 
+<br/>
+
+<iframe ratio="56.25%" src="https://www.youtube.com/embed/cBXrfI2bxnA?si=qw0ozEtDVWnRFglk" title="Elm Camp 2024 - YouTube video player"></iframe>
+
+<br/>
+
+([watch on Youtube for the nice HD version](https://www.youtube.com/embed/cBXrfI2bxnA?si=qw0ozEtDVWnRFglk&vq=hd1080))
+
 """
         |> MarkdownThemed.renderFull
