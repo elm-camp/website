@@ -493,7 +493,9 @@ header config =
                 , column
                     [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "")
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "TBC 🌍 Planet earth")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇺🇸 Watervliet, Michigan")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "24 - 27 June 2025")
                     ]
                 ]
 
