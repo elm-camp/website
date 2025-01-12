@@ -496,7 +496,7 @@ header config =
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇺🇸 Watervliet, Michigan")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "24 - 27 June 2025")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tuesday 24th - Friday 27th June 2025")
                     ]
                 ]
 
