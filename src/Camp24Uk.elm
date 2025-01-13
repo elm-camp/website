@@ -1,7 +1,7 @@
 module Camp24Uk exposing (..)
 
+import Camp24Uk.Archive
 import Camp24Uk.Artifacts
-import Camp25US.Archive
 import Element exposing (..)
 import Element.Font as Font
 import Html
@@ -37,7 +37,7 @@ view model subpage =
                 ]
             , case subpage of
                 Home ->
-                    Camp25US.Archive.view model
+                    Camp24Uk.Archive.view model
 
                 Artifacts ->
                     Camp24Uk.Artifacts.view model
