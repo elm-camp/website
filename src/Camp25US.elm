@@ -1,7 +1,7 @@
 module Camp25US exposing (..)
 
-import Camp24Uk.Archive
-import Camp24Uk.Artifacts
+import Camp25US.Archive
+import Camp25US.Artifacts
 import Element exposing (..)
 import Element.Font as Font
 import Html
@@ -31,22 +31,22 @@ view model subpage =
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
                     [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
-                    , elmCampDenmarkTopLine
-                    , elmCampDenmarkBottomLine
+                    , elmTopLine
+                    , elmBottomLine
                     ]
                 ]
             , case subpage of
                 Home ->
-                    Camp24Uk.Archive.view model
+                    Camp25US.Archive.view model
 
                 Artifacts ->
-                    Camp24Uk.Artifacts.view model
+                    Camp25US.Artifacts.view model
             ]
         , Theme.footer
         ]
 
 
-elmCampDenmarkTopLine =
+elmTopLine =
     Element.row
         [ Element.centerX, Element.spacing 13 ]
         [ Element.image [ Element.width (Element.px 49) ] meta.logo
@@ -58,7 +58,7 @@ elmCampDenmarkTopLine =
         ]
 
 
-elmCampDenmarkBottomLine =
+elmBottomLine =
     Element.column
         [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
         [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
