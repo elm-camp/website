@@ -13,6 +13,7 @@ import Camp24Devon.Inventory as Inventory
 import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
 import Camp24Uk
+import Camp25US
 import DateFormat
 import Dict
 import Element exposing (..)
@@ -495,7 +496,7 @@ header config =
                     [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇺🇸 Watervliet, Michigan")
                     , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "24 - 27 June 2025")
+                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tuesday 24th - Friday 27th June 2025")
                     ]
                 ]
 
@@ -625,7 +626,7 @@ loadedView model =
                 [ header { window = model.window, isCompact = True }
                 , column
                     (padding 20 :: Theme.contentAttributes)
-                    [ Camp24Uk.venueAccessContent
+                    [ Camp25US.venueAccessContent
                     ]
                 , Theme.footer
                 ]
@@ -648,7 +649,7 @@ loadedView model =
                 , column
                     (padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
-                    , Camp24Uk.organisers |> MarkdownThemed.renderFull
+                    , Camp25US.organisers |> MarkdownThemed.renderFull
                     ]
                 , Theme.footer
                 ]
@@ -756,8 +757,8 @@ homepageView model =
                 [ -- View.Sales.ticketSalesOpenCountdown model
                   column Theme.contentAttributes [ elmCampOverview ]
 
-                -- , column Theme.contentAttributes [ Camp24Uk.conferenceSummary ]
-                -- , Camp24Uk.venuePictures model
+                -- , column Theme.contentAttributes [ Camp25US.conferenceSummary ]
+                -- , Camp25US.venuePictures model
                 -- , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
                 -- , View.Sales.view model
                 ]
