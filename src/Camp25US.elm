@@ -70,28 +70,45 @@ conferenceSummary : Element msg
 conferenceSummary =
     """
 
-# Unconference
+# The Unconference
 
-- Arrive anytime on Tue 18th June 2024
+• Arrive anytime on Tues 24th June 2025
 
-- Depart 10am Fri 21st June 2024
+• Depart 10am on Fri 27th June 2025
 
-- 🇬🇧 Colehayes Park, Devon UK – [Venue & Access](https://elm.camp/venue-and-access)
+• 2 full days of talks
 
-- Collaborative session creation throughout
+• Location: Ronora Lodge and Retreat Center - Watervliet, Michigan
 
-- Periodic collective scheduling sessions
+• 60+ attendees
 
-- At least 3 tracks, sessions in both short and long blocks
+Prospective Schedule:
 
-- Countless hallway conversations and mealtime connections
+- Tue 24th June
+• 3pm arrivals & halls officially open
+• Opening of session board
+• Informal dinner
+• Evening stroll
 
-- Full and exclusive access to the Park grounds and facilities
+- Wed 25th June
+• Breakfast
+• Unconference sessions
+• Lunch
+• Unconference sessions
+• Dinner
+• Board Games and informal chats
 
-- 60+ attendees
+- Thu 26th June
+• Breakfast
+• Unconference sessions
+• Lunch
+• Unconference Sessions
+• Dinner
+• Unconference wrap-up & party
 
-
-**NOTE.** We will announce arrangements to get you from Exeter to Colehayes Park by shuttle closer to the event.  Exeter is easily accessible by train from London, Bristol, Birmingham and other major cities.
+- Fri 27th June
+• Grab and go breakfast
+• Depart by 10am
 
 """
         |> MarkdownThemed.renderFull
