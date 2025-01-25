@@ -506,7 +506,7 @@ header config =
         eventImage =
             image
                 [ width (maximum imageMaxWidth fill), Theme.attr "fetchpriority" "high" ]
-                { src = "/logo-24.webp", description = illustrationAltText }
+                { src = "/logo-25.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
         column
