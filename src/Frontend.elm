@@ -506,7 +506,7 @@ header config =
         eventImage =
             image
                 [ width (maximum imageMaxWidth fill), Theme.attr "fetchpriority" "high" ]
-                { src = "/logo-24.webp", description = illustrationAltText }
+                { src = "/logo-25.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
         column
@@ -800,7 +800,7 @@ codeOfConductContent =
 # Code of Conduct
 
 Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions.
-
+<br/>
 ## Help everyone feel welcome at Elm Camp
 
 Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds.
@@ -837,7 +837,7 @@ We expect everyone here to ensure that our community is harrassment-free for eve
 As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it.
 
 If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you.
-
+<br/>
 
 ## Talk to us
 
