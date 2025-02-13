@@ -10,10 +10,10 @@ import Browser.Navigation
 import Camp23Denmark
 import Camp23Denmark.Artifacts
 import Camp24Devon.Inventory as Inventory
-import Camp24Devon.Product as Product
 import Camp24Devon.Tickets as Tickets
 import Camp24Uk
 import Camp25US
+import Camp25US.Product as Product
 import DateFormat
 import Dict
 import Element exposing (..)
@@ -385,7 +385,7 @@ updateLoaded msg model =
             , LamderaRPC.postJsonBytes
                 Types.w3_decode_BackendModel
                 -- (Json.Encode.string Env.adminPassword)
-                (Json.Encode.string "adjust me when developping locally")
+                (Json.Encode.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
             )
@@ -754,13 +754,13 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ -- View.Sales.ticketSalesOpenCountdown model
-                  column Theme.contentAttributes [ elmCampOverview ]
+                [ View.Sales.ticketSalesOpenCountdown model
+                , column Theme.contentAttributes [ elmCampOverview ]
+                , column Theme.contentAttributes [ Camp25US.conferenceSummary ]
+                , Camp25US.venuePictures model
 
-                -- , column Theme.contentAttributes [ Camp25US.conferenceSummary ]
-                -- , Camp25US.venuePictures model
-                -- , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
-                -- , View.Sales.view model
+                --, column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
+                , View.Sales.view model
                 ]
             ]
         , Theme.footer
