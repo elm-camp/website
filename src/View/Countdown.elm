@@ -4,6 +4,7 @@ import Date
 import DateFormat
 import Element exposing (..)
 import Element.Font as Font
+import Env
 import Theme
 import Time
 import TimeFormat
@@ -38,7 +39,10 @@ ticketSalesLive t model =
         secondsRemaining =
             (target - now) // 1000
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
+    if not Env.isProduction then
+        True
+
+    else if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
         True
 
     else
