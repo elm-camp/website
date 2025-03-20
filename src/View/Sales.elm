@@ -1,9 +1,9 @@
 module View.Sales exposing (..)
 
 import AssocList
-import Camp24Devon.Inventory as Inventory
-import Camp24Devon.Product as Product
-import Camp24Devon.Tickets as Tickets
+import Camp25US.Inventory as Inventory
+import Camp25US.Product as Product
+import Camp25US.Tickets as Tickets
 import DateFormat
 import Element exposing (..)
 import Element.Background as Background
@@ -27,11 +27,11 @@ import View.Countdown
 
 
 year =
-    "2024"
+    "2025"
 
 
 ticketSalesOpen =
-    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
+    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
 view model =
@@ -180,7 +180,7 @@ You can upgrade a camp ticket with any of the below on-site accommodation option
 - Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
 - Purchase 1 campfire ticket (£200) and a single room (£400) for £600
 
-This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
+This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """
         |> MarkdownThemed.renderFull
 
@@ -817,7 +817,7 @@ textInput form onChange title validator text =
 
 {-| Used to scroll to errors.
 
-It’s technically invalid to use the same ID multiple times, but in practice
+It's technically invalid to use the same ID multiple times, but in practice
 getting an element by ID means getting the _first_ element with that ID, which
 is exactly what we want here.
 
