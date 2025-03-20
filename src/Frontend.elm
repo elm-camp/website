@@ -881,8 +881,9 @@ Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories
 Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
 
 [Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+
 [Archive: Elm Camp 2024 - UK website](/24-uk)
-[Elm Camp 2025 - Michigan, US](/25-us)
+
         """
             |> MarkdownThemed.renderFull
         ]
