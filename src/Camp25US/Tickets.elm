@@ -1,5 +1,11 @@
 module Camp25US.Tickets exposing (..)
 
+{-
+   TODO for Camp25US Tickets:
+   - Revise accommodation types based on Ronora Lodge facilities
+   - Verify product IDs match those in Product.elm after they're updated
+-}
+
 import AssocList
 import Camp25US.Product as Product
 import Element exposing (..)
@@ -33,7 +39,7 @@ type alias Ticket =
 attendanceTicket : Ticket
 attendanceTicket =
     { name = "Campfire Ticket"
-    , description = "Attendee ticket for one person. Full access to the event 18th - 21st June, breakfast, lunch, tea & dinner included as per schedule"
+    , description = "Attendee ticket for one person. Full access to the event 24th - 27th June, breakfast, lunch, tea & dinner included as per schedule"
     , image = ""
     , productId = Product.ticket.attendanceTicket
     }

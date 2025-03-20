@@ -1,5 +1,12 @@
 module Camp25US.Product exposing (..)
 
+{-
+   TODO for Camp25US Product:
+   - Update all Stripe product IDs for 2025 US event tickets
+   - Update sponsorship product IDs for 2025 (if different)
+   - Update to latest sponsorship tiers and prices
+-}
+
 import Env
 
 

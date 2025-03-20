@@ -1,5 +1,17 @@
 module Camp25US.Inventory exposing (..)
 
+{-
+   TODO for Camp25US:
+   - Verify maxAttendees capacity for Ronora Lodge
+   - Check accommodation types and adjust maxForAccommodationType values:
+     - Confirm if Single/Double/Group rooms are still applicable
+     - Update capacity limits based on actual Ronora Lodge room availability
+     - Consider adding cabin-specific accommodation types if needed
+   - Ensure TicketAvailability record fields match new accommodation options
+   - Verify that Product IDs in purchaseable function match new 2025 Stripe products
+   - Check if BackendModel structure changes would affect the slotsRemaining function
+-}
+
 import AssocList
 import Camp25US.Product as Product
 import PurchaseForm exposing (..)
