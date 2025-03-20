@@ -131,9 +131,14 @@ ticketSalesOpenCountdown model =
             ]
 
 
+ticketSalesHtmlId : String
+ticketSalesHtmlId =
+    "ticket-sales"
+
+
 goToTicketSales =
     Input.button showyButtonAttributes
-        { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200")
+        { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
         , label = text "Tickets on sale now! ⬇️"
         }
 
@@ -227,7 +232,7 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
 
 ticketsView model =
     column Theme.contentAttributes
-        [ row [ width fill, htmlId "ticket-sales" ]
+        [ row [ width fill, htmlId ticketSalesHtmlId ]
             [ column [ width fill ]
                 [ """
 ## 🎟️ Attendance Ticket - £200
