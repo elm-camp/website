@@ -53,7 +53,7 @@ view model =
             else
                 v
     in
-    column []
+    column Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive <|
             column Theme.contentAttributes
