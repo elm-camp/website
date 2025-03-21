@@ -249,7 +249,7 @@ See the example ticket combinations below for more details.
 You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
 
 ### Outdoor camping space – """
-        ++ (if campingPrice == "£0" then
+        ++ (if campingPrice == "£0" || campingPrice == "$0" then
                 "Free"
 
             else
@@ -694,13 +694,21 @@ sponsorships model form =
         [ Theme.h2 "🤝 Sponsor Elm Camp"
         , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
-            |> List.map (sponsorshipOption form)
+            |> List.map (sponsorshipOption model form)
             |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
         ]
 
 
-sponsorshipOption form s =
+sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg_
+sponsorshipOption model form s =
     let
+        displayCurrency =
+            model.prices
+                |> AssocList.get (Id.fromString s.productId)
+                |> Maybe.map .price
+                |> Maybe.map .currency
+                |> Maybe.withDefault Money.USD
+
         selected =
             form.sponsorship == Just s.productId
 
@@ -710,10 +718,15 @@ sponsorshipOption form s =
 
             else
                 [ Border.color (rgba255 0 0 0 0), Border.width 3 ]
+
+        priceDisplay =
+            Theme.priceText { currency = displayCurrency, amount = s.price }
+
+        -- Fallback to hardcoded price if not in model.prices
     in
     Theme.panel attrs
         [ el [ Font.size 20, Font.bold ] (text s.name)
-        , el [ Font.size 30, Font.bold ] (text <| "£" ++ String.fromInt s.price)
+        , el [ Font.size 30, Font.bold ] (text priceDisplay)
         , paragraph [] [ text s.description ]
         , s.features
             |> List.map (\point -> paragraph [ Font.size 12 ] [ text <| "• " ++ point ])
