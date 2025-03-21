@@ -16,6 +16,7 @@ import Html.Events
 import Id exposing (Id)
 import List.Extra as List
 import MarkdownThemed
+import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
@@ -676,10 +677,18 @@ summary model =
 
         total =
             ticketsTotal + accomTotal + grantTotal + sponsorshipTotal
+
+        displayCurrency : Money.Currency
+        displayCurrency =
+            model.prices
+                |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> Maybe.map .price
+                |> Maybe.map .currency
+                |> Maybe.withDefault Money.USD
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat ticketsTotal)
+        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor ticketsTotal })
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
 
@@ -687,21 +696,22 @@ summary model =
             model.form.accommodationBookings
                 |> List.group
                 |> List.map
-                    (\group -> summaryAccommodation model group)
+                    (\group -> summaryAccommodation model group displayCurrency)
                 |> column []
         , Theme.viewIf (model.form.grantContribution /= "0") <|
             text <|
-                "Opportunity grant: £"
-                    ++ model.form.grantContribution
+                "Opportunity grant: "
+                    ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
         , Theme.viewIf (sponsorshipTotal > 0) <|
             text <|
-                "Sponsorship: £"
-                    ++ String.fromFloat sponsorshipTotal
-        , Theme.h3 <| "Total: £" ++ String.fromFloat total
+                "Sponsorship: "
+                    ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
+        , Theme.h3 <| "Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
         ]
 
 
-summaryAccommodation model ( accom, items ) =
+summaryAccommodation : LoadedModel -> ( PurchaseForm.Accommodation, List PurchaseForm.Accommodation ) -> Money.Currency -> Element msg
+summaryAccommodation model ( accom, items ) displayCurrency =
     model.form.accommodationBookings
         |> List.filter ((==) accom)
         |> List.length
@@ -714,7 +724,7 @@ summaryAccommodation model ( accom, items ) =
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
                 in
-                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – £" ++ String.fromFloat total
+                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
            )
         |> text
 
