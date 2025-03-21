@@ -231,17 +231,26 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
 
 
 ticketsView model =
+    let
+        attendanceTicketPriceText =
+            -- Look up the attendance ticket price from model.prices
+            case AssocList.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
+                Just priceInfo ->
+                    " - " ++ Theme.priceText priceInfo.price
+
+                Nothing ->
+                    " - Price not available"
+    in
     column Theme.contentAttributes
         [ row [ width fill, htmlId ticketSalesHtmlId ]
             [ column [ width fill ]
-                [ """
-## 🎟️ Attendance Ticket - £200
+                [ ("## 🎟️ Attendance Ticket" ++ attendanceTicketPriceText ++ """
 
 Attendance for Elm Camp's 4 day / 3 night event.
 
 - Full accees to the venue grounds and activities
 - All meals (Breakfast, Lunch, Dinner) included as per schedule
-                """
+                """)
                     |> MarkdownThemed.renderFull
                 ]
             , column []
