@@ -58,7 +58,7 @@ view model =
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive <|
             column Theme.contentAttributes
-                [ ticketInfo
+                [ ticketInfo model
                 ]
         , column
             [ width fill
@@ -144,7 +144,79 @@ goToTicketSales =
         }
 
 
-ticketInfo =
+ticketInfo : LoadedModel -> Element msg
+ticketInfo model =
+    let
+        -- Get prices for each ticket type
+        formatTicketPrice productId =
+            model.prices
+                |> AssocList.get (Id.fromString productId)
+                |> Maybe.map (\price -> Theme.priceText price.price)
+                |> Maybe.withDefault "Price not available"
+
+        attendancePrice =
+            formatTicketPrice Product.ticket.attendanceTicket
+
+        campingPrice =
+            formatTicketPrice Product.ticket.campingSpot
+
+        singlePrice =
+            formatTicketPrice Product.ticket.singleRoom
+
+        doublePrice =
+            formatTicketPrice Product.ticket.doubleRoom
+
+        dormPrice =
+            formatTicketPrice Product.ticket.groupRoom
+
+        -- Calculate example prices
+        exampleTickets3 =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
+                |> Maybe.withDefault 0
+
+        exampleDorm =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.groupRoom)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleTotal1 =
+            exampleTickets3 + exampleDorm
+
+        examplePerson1 =
+            exampleTotal1 / 3
+
+        exampleTicket1 =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleSingle =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.singleRoom)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleTotal2 =
+            exampleTicket1 + exampleSingle
+
+        -- Get a reference price for formatting
+        refPrice =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map .price
+
+        formatPrice amount =
+            case refPrice of
+                Just price ->
+                    Theme.priceText { price | amount = round (amount * 100) }
+
+                Nothing ->
+                    "Price not available"
+    in
     """
 # Tickets
 
@@ -161,30 +233,59 @@ a single room ticket (limited availability), or (3) organize
 with others for a shared double room ticket or a shared  dorm room ticket.
 See the example ticket combinations below for more details.
 
-## Campfire Ticket – £200
+## Campfire Ticket – """
+        ++ attendancePrice
+        ++ """
 - Attendee ticket, full access to the event 18th - 21st June 2024
 - Breakfast, lunch, tea & dinner included as per schedule
 
 ## Room Add-ons
 You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
 
-### Outdoor camping space – Free
+### Outdoor camping space – """
+        ++ (if campingPrice == "£0" then
+                "Free"
+
+            else
+                campingPrice
+           )
+        ++ """
 - Bring your own tent or campervan and stay on site
 - Showers & toilets provided
 
-### Dorm room - £600
+### Dorm room - """
+        ++ dormPrice
+        ++ """
 - Suitable for up to 4 people
 
-### Double room – £500
+### Double room – """
+        ++ doublePrice
+        ++ """
 - Suitable for couple or twin beds
 
-### Single room – £400
+### Single room – """
+        ++ singlePrice
+        ++ """
 - Limited availability
 
 
 **Example ticket combinations:**
-- Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
-- Purchase 1 campfire ticket (£200) and a single room (£400) for £600
+- Purchase 3 campfire tickets ("""
+        ++ formatPrice exampleTickets3
+        ++ """) and 1 dorm room ("""
+        ++ formatPrice exampleDorm
+        ++ """) to share for """
+        ++ formatPrice exampleTotal1
+        ++ """ ("""
+        ++ formatPrice examplePerson1
+        ++ """ per person)
+- Purchase 1 campfire ticket ("""
+        ++ formatPrice exampleTicket1
+        ++ """) and a single room ("""
+        ++ formatPrice exampleSingle
+        ++ """) for """
+        ++ formatPrice exampleTotal2
+        ++ """
 
 This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """
