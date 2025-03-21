@@ -18,7 +18,7 @@ Features:
 
 ## Todos for tickets live
 - [ ] Check ticket types and product ids
-- [ ] Update all places hardcoded to show GBP (£)
+- [x] Update all places hardcoded to show GBP (£)
 - [ ] Check maxAttendees = 80 is still correct
 - [ ] Double check email confirmation messages
 - [ ] Double check Sponsorship price display. Sponsorships have a product id, but they also have a .price. Should we show the

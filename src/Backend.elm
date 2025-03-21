@@ -316,7 +316,7 @@ updateFromFrontend sessionId clientId msg model =
                                 [ Stripe.Unpriced
                                     { name = "Opportunity Grant"
                                     , quantity = 1
-                                    , currency = "gbp"
+                                    , currency = "usd"
                                     , amountDecimal = purchaseForm.grantContribution * 100
                                     }
                                 ]
