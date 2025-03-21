@@ -144,6 +144,12 @@ goToTicketSales =
         }
 
 
+
+{--| Note that ticketInfo is shown before tickets are live.
+    It is replaced by accommodationView after tickets are live.
+--}
+
+
 ticketInfo : LoadedModel -> Element msg
 ticketInfo model =
     let
@@ -415,6 +421,12 @@ Attendance for Elm Camp's 4 day / 3 night event.
                     -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
                     ]
         ]
+
+
+
+{--| Note that accommodationView is shown after tickets are live
+    It is replaced by ticketInfo before tickets are live.
+--}
 
 
 accommodationView : LoadedModel -> Element FrontendMsg_
