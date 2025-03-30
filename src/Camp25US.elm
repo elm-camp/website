@@ -316,19 +316,12 @@ sponsors window =
                 }
     in
     column [ centerX, spacing 32 ]
-        [ [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 350 }
+        [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
+          , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
           ]
             |> wrappedRow [ centerX, spacing 32 ]
-        , [ asImg { image = "ambue-logo.png", url = "https://www.ambue.com/", width = 220 }
-          , asImg { image = "nlx-logo.svg", url = "https://nlx.ai", width = 110 }
-          ]
-            |> wrappedRow [ centerX, spacing 32 ]
-        , [ asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 200 }
-          , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 160 }
-          ]
-            |> wrappedRow [ centerX, spacing 32 ]
-        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 100 }
-          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 100 }
+        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
+          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
           , newTabLink
                 [ width fill ]
                 { url = "https://www.elmweekly.nl"
@@ -349,7 +342,6 @@ sponsors window =
                         , el [ Font.size 24 ] <| text "Elm Weekly"
                         ]
                 }
-          , asImg { image = "cookiewolf-logo.png", url = "", width = 120 }
           ]
             |> wrappedRow [ centerX, spacing 32 ]
         ]

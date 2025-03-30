@@ -757,8 +757,7 @@ homepageView model =
                     [ Camp25US.venuePictures model
                     , Camp25US.conferenceSummary
                     ]
-
-                -- , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
+                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
                 , View.Sales.view model
                 ]
             ]
