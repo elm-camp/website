@@ -385,7 +385,7 @@ updateLoaded msg model =
             , LamderaRPC.postJsonBytes
                 Types.w3_decode_BackendModel
                 -- (Json.Encode.string Env.adminPassword)
-                (Json.Encode.string "adjust me when developping locally")
+                (Json.Encode.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
             )

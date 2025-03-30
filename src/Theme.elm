@@ -226,8 +226,7 @@ footer =
             )
             [ btn CodeOfConductRoute "Code of Conduct"
             , btn UnconferenceFormatRoute "Unconference Guidelines"
-
-            -- , btn VenueAndAccessRoute "Venue & Access"
+            , btn VenueAndAccessRoute "Venue & Access"
             , btn OrganisersRoute "Organisers"
             , btn ElmCampArchiveRoute "Elm Camp Archives"
             ]

@@ -172,87 +172,14 @@ venueAccessContent =
 
 ## The venue
 
-**Colehayes Park**<br/>
-Haytor Road<br/>
-Bovey Tracey<br/>
-South Devon<br/>
-TQ13 9LD<br/>
-England
+**Ronora Lodge & Retreat Center**<br/>
+9325 Dwight Boyer Road<br/>
+Watervliet, Michigan 49098<br/>
+USA
 
-[Google Maps](https://goo.gl/maps/Q44YiJCJ79apMmQ8A)
+[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
 
-[https://www.colehayes.co.uk/](https://www.colehayes.co.uk/)
-
-## Getting there
-
-### via train & cab/Elm Camp shuttle
-
-* The closest train station is ([Newton Abbot station](https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot))
-  * Express direct trains from London Paddington take 2.5 – 3.5 hours (best for all London Airports)
-  * Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)
-  * From Exeter Airport a 30 minute cab/rideshare directly to the venue is best
-* Colehayes Park is then a 20 minute cab from Newton Abbot station.
-* Elm Camp will organise shuttles between Exeter or Newton Abbot and the venue at key times
-
-### via car
-
-* There is ample parking on site
-
-### via plane
-
-* The closest airport is Exeter, with [flight connections to the UK, Dublin, and Southern Spain](https://www.flightsfrom.com/EXT)
-* The next closest major airports in order of travel time are:
-  * [Bristol](https://www.flightsfrom.com/explorer/BRS?mapview) (Europe & Northern Africa)
-  * [London Heathrow](https://www.flightsfrom.com/explorer/LHR?mapview) (best International coverage)
-  * [London Gatwick](https://www.flightsfrom.com/explorer/LGW?mapview) (International)
-  * [London Stanstead](https://www.flightsfrom.com/explorer/STN?mapview) (Europe)
-  * [London Luton](https://www.flightsfrom.com/explorer/LTN?mapview)  (Europe)
-
-[Rome2Rio](https://www.rome2rio.com/s/Exeter-UK) is a useful tool for finding possible routes from your location.
-
-## Local amenities
-
-Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, nearby Bovey Tracey offers a few shops.
-
-### Supermarkets
-
-- [Tesco Express](https://www.tesco.com/store-locator/newton-abbot/47-fore-st) (7 am—11 pm), 47 Fore St
-
-### Health
-
-- Pharmacy ([Bovey Tracey Pharmacy](https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40)) (9 am—5:30 pm), near Tesco Express supermarket
-
-## Accessibility
-
-
-Attendees will be able to camp in the grounds or book a variety of rooms in the main house or the cottage.
-
-Please let us know if you have specific needs so that we can work with the venue to accommodate you.
-
-### Floor plans
-
-* [The main house](https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf)
-* [The cottage](https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf)
-
-
-### Partially step free.
-Please ask if you require step free accommodation. There is one bedroom on the ground floor.
-
-* Toilets, dining rooms and conference talk / workshop rooms can be accessed from ground level.
-
-### It's an old manor house
-
-* The house has been renovated to a high standard but there are creaky bits. We ask that you be sensible when exploring
-* There are plenty of spaces to hang out in private or in a small quiet group
-* There are a variety of seating options
-
-### Toilets
-
-* All toilets are gender neutral
-* There are blocks of toilets and showers on each floor and a couple of single units
-* There is at least one bath in the house
-* The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
-* There are also toilet and shower blocks in the garden for campers
+[https://www.ronoralodge.com](https://www.ronoralodge.com/)
 
 ### Open water & rough ground
 
