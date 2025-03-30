@@ -160,8 +160,8 @@ ticketInfo model =
                 |> Maybe.map (\price -> Theme.priceText price.price)
                 |> Maybe.withDefault "Price not available"
 
-        attendancePrice =
-            formatTicketPrice Product.ticket.attendanceTicket
+        offsitePrice =
+            formatTicketPrice Product.ticket.offsite
 
         campingPrice =
             formatTicketPrice Product.ticket.campingSpot
@@ -230,25 +230,19 @@ There is a mix of room types — singles, doubles, dorm style rooms
 suitable for up to four people. Attendees will self-organize
 to distribute among the rooms and share bathrooms.
 The facilities for those who wish to bring a tent or campervan and camp
-are excellent. The surrounding grounds and countryside are
+are excellent. The surrounding grounds are
 beautiful and include woodland, a swimming lake and a firepit.
 
-Each attendee will need to purchase a campfire ticket and (1)
- plan to camp or (2) purchase a
-a single room ticket (limited availability), or (3) organize
-with others for a shared double room ticket or a shared  dorm room ticket.
-See the example ticket combinations below for more details.
+Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction.
 
-## Campfire Ticket – """
-        ++ attendancePrice
+## All tickets include full access to the event 18th - 21st June 2024 and all meals.
+
+### Staying offsite - """
+        ++ offsitePrice
         ++ """
-- Attendee ticket, full access to the event 18th - 21st June 2024
-- Breakfast, lunch, tea & dinner included as per schedule
+You will organise your own accommodation elsewhere.
 
-## Room Add-ons
-You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
-
-### Outdoor camping space – """
+### Camping space – """
         ++ (if campingPrice == "£0" || campingPrice == "$0" then
                 "Free"
 
@@ -259,39 +253,16 @@ You can upgrade a camp ticket with any of the below on-site accommodation option
 - Bring your own tent or campervan and stay on site
 - Showers & toilets provided
 
-### Dorm room - """
+### Shared room - """
         ++ dormPrice
         ++ """
-- Suitable for up to 4 people
-
-### Double room – """
-        ++ doublePrice
-        ++ """
-- Suitable for couple or twin beds
+- Suitable for a couple or up to 4 people in twin beds
 
 ### Single room – """
         ++ singlePrice
         ++ """
 - Limited availability
 
-
-**Example ticket combinations:**
-- Purchase 3 campfire tickets ("""
-        ++ formatPrice exampleTickets3
-        ++ """) and 1 dorm room ("""
-        ++ formatPrice exampleDorm
-        ++ """) to share for """
-        ++ formatPrice exampleTotal1
-        ++ """ ("""
-        ++ formatPrice examplePerson1
-        ++ """ per person)
-- Purchase 1 campfire ticket ("""
-        ++ formatPrice exampleTicket1
-        ++ """) and a single room ("""
-        ++ formatPrice exampleSingle
-        ++ """) for """
-        ++ formatPrice exampleTotal2
-        ++ """
 
 This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """

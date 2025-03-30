@@ -18,18 +18,18 @@ ticket :
 ticket =
     case Env.mode of
         Env.Production ->
-            { attendanceTicket = "prod_RzWC4KcrRdLzBH"
-            , offsite = ""
-            , campingSpot = ""
+            { attendanceTicket = ""
+            , offsite = "prod_RzWC4KcrRdLzBH"
+            , campingSpot = "prod_RzWC4KcrRdLzBH"
             , singleRoom = "prod_RzWGafvirlc2HL"
             , doubleRoom = ""
             , groupRoom = "prod_RzWIY7BfNEYSqF"
             }
 
         Env.Development ->
-            { attendanceTicket = "prod_RzWC4KcrRdLzBH"
-            , offsite = ""
-            , campingSpot = ""
+            { attendanceTicket = ""
+            , offsite = "prod_RzWC4KcrRdLzBH"
+            , campingSpot = "prod_RzWC4KcrRdLzBH"
             , singleRoom = "prod_RzWGafvirlc2HL"
             , doubleRoom = ""
             , groupRoom = "prod_RzWIY7BfNEYSqF"

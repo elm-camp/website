@@ -83,8 +83,8 @@ doubleRoom =
 
 groupRoom : Ticket
 groupRoom =
-    { name = "Group Room"
-    , description = "Suitable for up to 4 people for 3 nights. Can be stretched up to 7 people –\u{00A0}contact us!"
+    { name = "Shared Room"
+    , description = "Suitable for couples or up to 4 people for 3 nights. Purchase 1 `Shared Room` ticket per person and let us know who you are sharing with."
     , image = ""
     , productId = Product.ticket.groupRoom
     }
@@ -139,11 +139,11 @@ accomToString accom =
             "Double Room"
 
         Group ->
-            "Group Room"
+            "Shared Room"
 
 
 allAccommodations =
-    [ Offsite, Campsite, Single, Double, Group ]
+    [ Offsite, Campsite, Single, Group ]
 
 
 formIncludesAccom : PurchaseForm -> Bool
@@ -179,7 +179,7 @@ accommodationOptions =
 
 dict : AssocList.Dict (Id ProductId) Ticket
 dict =
-    [ attendanceTicket, campingSpot, singleRoom, doubleRoom, groupRoom ]
+    [ offsite, campingSpot, singleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
         |> AssocList.fromList
 
