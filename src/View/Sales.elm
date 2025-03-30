@@ -317,7 +317,7 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 
 opportunityGrantInfo =
     """
-# 🫶 Opportunity grant
+# \u{1FAF6} Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
@@ -646,17 +646,23 @@ attendeeForm model i attendee =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "🫶 Opportunity grants"
+        [ Theme.h2 "\u{1FAF6} Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
                 [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
                 , row [ width fill, spacing 30 ]
-                    [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                    [ column [ width (fillPortion 1) ]
+                        [ row []
+                            [ text "$ "
+                            , textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                            ]
+                        ]
                     , column [ width (fillPortion 3) ]
                         [ row [ width (fillPortion 3) ]
                             [ el [ paddingXY 0 10 ] <| text "0"
-                            , el [ paddingXY 0 10, alignRight ] <| text "600"
+                            , el [ paddingXY 0 10, alignRight ] <|
+                                text (Theme.priceText { currency = Money.USD, amount = 75000 })
                             ]
                         , Input.slider
                             [ behindContent
@@ -670,13 +676,13 @@ opportunityGrant form =
                                     none
                                 )
                             ]
-                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
                             , label = Input.labelHidden "Opportunity grant contribution value selection slider"
                             , min = 0
-                            , max = 600
-                            , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                            , max = 75000
+                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
                             , thumb = Input.defaultThumb
-                            , step = Just 10
+                            , step = Just 1000
                             }
                         , row [ width (fillPortion 3) ]
                             [ el [ paddingXY 0 10 ] <| text "No contribution"
@@ -763,7 +769,7 @@ summary : LoadedModel -> Element msg
 summary model =
     let
         grantTotal =
-            model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0
+            (model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0) * 100
 
         ticketsTotal =
             model.form.attendees

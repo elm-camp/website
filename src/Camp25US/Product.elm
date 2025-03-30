@@ -1,12 +1,5 @@
 module Camp25US.Product exposing (..)
 
-{-
-   TODO for Camp25US Product:
-   - Update all Stripe product IDs for 2025 US event tickets
-   - Update sponsorship product IDs for 2025 (if different)
-   - Update to latest sponsorship tiers and prices
--}
-
 import Env
 
 
@@ -25,21 +18,21 @@ ticket :
 ticket =
     case Env.mode of
         Env.Production ->
-            { attendanceTicket = "prod_PhhIapmx1JVmy9"
-            , offsite = "prod_PiNYzP0oSVQgSD"
-            , campingSpot = "prod_PhhJG27yB8GmzH"
-            , singleRoom = "prod_PhhLtqV8I5Spjo"
-            , doubleRoom = "prod_PhhLZ9pJjyEDfF"
-            , groupRoom = "prod_PhhLsuxKXAfjse"
+            { attendanceTicket = "prod_RzWC4KcrRdLzBH"
+            , offsite = ""
+            , campingSpot = ""
+            , singleRoom = "prod_RzWGafvirlc2HL"
+            , doubleRoom = ""
+            , groupRoom = "prod_RzWIY7BfNEYSqF"
             }
 
         Env.Development ->
-            { attendanceTicket = "prod_PhhIapmx1JVmy9"
-            , offsite = "prod_PiNYzP0oSVQgSD"
-            , campingSpot = "prod_PhhJG27yB8GmzH"
-            , singleRoom = "prod_PhhLtqV8I5Spjo"
-            , doubleRoom = "prod_PhhLZ9pJjyEDfF"
-            , groupRoom = "prod_PhhLsuxKXAfjse"
+            { attendanceTicket = "prod_RzWC4KcrRdLzBH"
+            , offsite = ""
+            , campingSpot = ""
+            , singleRoom = "prod_RzWGafvirlc2HL"
+            , doubleRoom = ""
+            , groupRoom = "prod_RzWIY7BfNEYSqF"
             }
 
 
@@ -47,15 +40,15 @@ sponsorship : { silver : String, gold : String, platinum : String }
 sponsorship =
     case Env.mode of
         Env.Production ->
-            { silver = "prod_PmxuGnMiIu7Lb7"
-            , gold = "prod_PmxuoGoPc9guET"
-            , platinum = "prod_Pmxv076S7IM05N"
+            { silver = "prod_RzWTill7eglkFc"
+            , gold = "prod_RzWVRbQ0spItOf"
+            , platinum = "prod_RzWWOS4E6aID6y"
             }
 
         Env.Development ->
-            { silver = "prod_PmxuGnMiIu7Lb7"
-            , gold = "prod_PmxuoGoPc9guET"
-            , platinum = "prod_Pmxv076S7IM05N"
+            { silver = "prod_RzWTill7eglkFc"
+            , gold = "prod_RzWVRbQ0spItOf"
+            , platinum = "prod_RzWWOS4E6aID6y"
             }
 
 
@@ -65,7 +58,7 @@ type alias Sponsorship =
 
 sponsorshipItems =
     [ { name = "Silver"
-      , price = 750
+      , price = 100000
       , productId = sponsorship.silver
       , description = "You will be a major supporter of Elm Camp " ++ year ++ "."
       , features =
@@ -75,7 +68,7 @@ sponsorshipItems =
             ]
       }
     , { name = "Gold"
-      , price = 1500
+      , price = 250000
       , productId = sponsorship.gold
       , description = "You will be a pivotal supporter of Elm Camp " ++ year ++ "."
       , features =
@@ -87,7 +80,7 @@ sponsorshipItems =
             ]
       }
     , { name = "Platinum"
-      , price = 3000
+      , price = 500000
       , productId = sponsorship.platinum
       , description = "You will be principal sponsor and guarantee that Elm Camp " ++ year ++ " is a success."
       , features =

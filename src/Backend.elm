@@ -1,9 +1,9 @@
 module Backend exposing (..)
 
 import AssocList
-import Camp24Devon.Inventory as Inventory
-import Camp24Devon.Product as Product
-import Camp24Devon.Tickets as Tickets
+import Camp25US.Inventory as Inventory
+import Camp25US.Product as Product
+import Camp25US.Tickets as Tickets
 import Duration
 import EmailAddress exposing (EmailAddress)
 import Env
