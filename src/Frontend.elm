@@ -753,8 +753,10 @@ homepageView model =
                 [ width fill, spacing 40 ]
                 [ View.Sales.ticketSalesOpenCountdown model
                 , column Theme.contentAttributes [ elmCampOverview ]
-                , column Theme.contentAttributes [ Camp25US.conferenceSummary ]
-                , Camp25US.venuePictures model
+                , column Theme.contentAttributes
+                    [ Camp25US.venuePictures model
+                    , Camp25US.conferenceSummary
+                    ]
 
                 -- , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
                 , View.Sales.view model

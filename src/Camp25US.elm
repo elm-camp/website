@@ -72,16 +72,13 @@ conferenceSummary =
 
 # The Unconference
 
-• Arrive anytime on Tues 24th June 2025
+## Ronora Lodge and Retreat Center - Watervliet, Michigan
+### Arrive anytime on Tues 24th June 2025
+### Depart 10am on Fri 27th June 2025
+#### 2 full days of talks
+#### 40+ attendees
 
-• Depart 10am on Fri 27th June 2025
-
-• 2 full days of talks
-
-• Location: Ronora Lodge and Retreat Center - Watervliet, Michigan
-
-• 40+ attendees
-
+---
 ## Prospective Schedule:
 
 ### Tue 24th June
