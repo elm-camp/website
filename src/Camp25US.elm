@@ -16,7 +16,7 @@ meta =
     , tag = "Michigan, US 2025"
     , location = "🇺🇸 Watervliet, Michigan"
     , dates = "Tues 24th - Fri 27th June 2025"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
+    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
 
 
@@ -80,35 +80,35 @@ conferenceSummary =
 
 • Location: Ronora Lodge and Retreat Center - Watervliet, Michigan
 
-• 60+ attendees
+• 40+ attendees
 
-Prospective Schedule:
+## Prospective Schedule:
 
-- Tue 24th June
-• 3pm arrivals & halls officially open
-• Opening of session board
-• Informal dinner
-• Evening stroll
+### Tue 24th June
+  - 3pm arrivals & halls officially open
+  - Opening of session board
+  - Informal dinner
+  - Evening stroll
 
-- Wed 25th June
-• Breakfast
-• Unconference sessions
-• Lunch
-• Unconference sessions
-• Dinner
-• Board Games and informal chats
+### Wed 25th June
+  - Breakfast
+  - Unconference sessions
+  - Lunch
+  - Unconference sessions
+  - Dinner
+  - Board Games and informal chats
 
-- Thu 26th June
-• Breakfast
-• Unconference sessions
-• Lunch
-• Unconference Sessions
-• Dinner
-• Unconference wrap-up & party
+### Thu 26th June
+  - Breakfast
+  - Unconference sessions
+  - Lunch
+  - Unconference Sessions
+  - Dinner
+  - Unconference wrap-up & party
 
-- Fri 27th June
-• Grab and go breakfast
-• Depart by 10am
+### Fri 27th June
+  - Grab and go breakfast
+  - Depart by 10am
 
 """
         |> MarkdownThemed.renderFull
@@ -117,7 +117,7 @@ Prospective Schedule:
 venuePictures model =
     let
         prefix =
-            "24-colehayes/colehayes-"
+            "25-ronora/"
     in
     if model.window.width > 950 then
         [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
@@ -143,7 +143,7 @@ venueImage : Length -> String -> Element msg
 venueImage width path =
     image
         [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
+        { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
 
 
 organisers =
