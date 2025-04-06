@@ -18,7 +18,7 @@ ticket :
 ticket =
     case Env.mode of
         Env.Production ->
-            { attendanceTicket = ""
+            { attendanceTicket = "prod_S57SF0eTq5vOvx"
             , offsite = "prod_RzWC4KcrRdLzBH"
             , campingSpot = "prod_RzWC4KcrRdLzBH"
             , singleRoom = "prod_RzWGafvirlc2HL"
@@ -27,7 +27,7 @@ ticket =
             }
 
         Env.Development ->
-            { attendanceTicket = ""
+            { attendanceTicket = "prod_S57SF0eTq5vOvx"
             , offsite = "prod_RzWC4KcrRdLzBH"
             , campingSpot = "prod_RzWC4KcrRdLzBH"
             , singleRoom = "prod_RzWGafvirlc2HL"

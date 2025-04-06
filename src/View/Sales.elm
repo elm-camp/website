@@ -484,7 +484,8 @@ formView model productId priceId ticket =
 
         -- , carbonOffsetForm model.showCarbonOffsetTooltip form
         , opportunityGrant form
-        , sponsorships model form
+
+        --, sponsorships model form
         , summary model
         , column
             (Theme.contentAttributes
