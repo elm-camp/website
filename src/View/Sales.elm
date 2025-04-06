@@ -323,58 +323,39 @@ ticketsView model =
     column Theme.contentAttributes
         [ row [ width fill, htmlId ticketSalesHtmlId ]
             [ column [ width fill ]
-                [ ("## 🎟️ Attendance Ticket" ++ attendanceTicketPriceText ++ """
-
-Attendance for Elm Camp's 4 day / 3 night event.
-
-- Full accees to the venue grounds and activities
-- All meals (Breakfast, Lunch, Dinner) included as per schedule
-                """)
+                [ """## 🎟️ Attendee Details
+Please enter details for each person attending Elm camp, then select your accommodation below.
+                """
                     |> MarkdownThemed.renderFull
                 ]
             , column []
-                [ if List.length model.form.attendees == 0 then
-                    let
-                        form =
-                            model.form
-                    in
-                    Input.button
-                        (Theme.submitButtonAttributes True)
-                        { onPress = Just <| FormChanged { form | attendees = model.form.attendees ++ [ PurchaseForm.defaultAttendee ] }
-                        , label =
-                            el
-                                [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                                (text "Select")
-                        }
-
-                  else
-                    Theme.numericField
-                        "Tickets"
-                        (List.length model.form.attendees)
-                        (\_ ->
-                            -- Remove last attendee from the list
-                            model.form.attendees
-                                |> List.init
-                                |> Maybe.withDefault []
-                                |> (\attendees ->
-                                        let
-                                            form =
-                                                model.form
-                                        in
-                                        FormChanged { form | attendees = attendees }
-                                   )
-                        )
-                        (\_ ->
-                            -- Add a new attendee to the list
-                            model.form.attendees
-                                |> (\attendees ->
-                                        let
-                                            form =
-                                                model.form
-                                        in
-                                        FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
-                                   )
-                        )
+                [ Theme.numericField
+                    "Tickets"
+                    (List.length model.form.attendees)
+                    (\_ ->
+                        -- Remove last attendee from the list
+                        model.form.attendees
+                            |> List.init
+                            |> Maybe.withDefault []
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees }
+                               )
+                    )
+                    (\_ ->
+                        -- Add a new attendee to the list
+                        model.form.attendees
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
+                               )
+                    )
                 ]
             ]
         , case model.form.attendees of
@@ -404,11 +385,11 @@ accommodationView : LoadedModel -> Element FrontendMsg_
 accommodationView model =
     column [ width fill, spacing 20 ]
         [ column Theme.contentAttributes
-            [ Theme.h2 "🏕️ Accommodation"
+            [ Theme.h2 "🏕️ Ticket type"
             , """
-You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+Please select one accommodation option per attendee.
 
-There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms.
+There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared.
 
 The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
 """
@@ -442,9 +423,9 @@ formView model productId priceId ticket =
         form =
             model.form
 
-        submitButton =
+        submitButton hasAttendeesAndAccommodation =
             Input.button
-                (Theme.submitButtonAttributes (Inventory.purchaseable ticket.productId model.slotsRemaining))
+                (Theme.submitButtonAttributes (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining))
                 { onPress = Just PressedSubmitForm
                 , label =
                     paragraph
@@ -481,12 +462,18 @@ formView model productId priceId ticket =
         hasAttendees =
             List.length form.attendees > 0
 
+        includesRoom =
+            Tickets.formIncludesRoom form
+
         orderNotes =
             if includesAccom && not hasAttendees then
-                "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
+                "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
 
             else if not includesAccom && hasAttendees then
-                "Please note: your selected options ***do not include accommodation***."
+                "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
+
+            else if not includesRoom then
+                "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
 
             else
                 ""
@@ -530,10 +517,10 @@ Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofo
 By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
-                row [ width fill, spacing 16 ] [ cancelButton, submitButton ]
+                row [ width fill, spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
-                column [ width fill, spacing 16 ] [ submitButton, cancelButton ]
+                column [ width fill, spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
             , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
                 |> MarkdownThemed.renderFull
             ]
@@ -791,7 +778,7 @@ summary model =
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor ticketsTotal })
+        , model.form.attendees |> List.length |> (\num -> text <| "Attendees x " ++ String.fromInt num)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
 

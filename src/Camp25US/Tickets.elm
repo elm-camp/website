@@ -151,12 +151,26 @@ formIncludesAccom form =
     form.accommodationBookings |> List.filter includesAccom |> List.length |> (\c -> c > 0)
 
 
+formIncludesRoom : PurchaseForm -> Bool
+formIncludesRoom form =
+    form.accommodationBookings |> List.filter includesRoom |> List.length |> (\c -> c > 0)
+
+
 includesAccom accom =
     case accom of
         Offsite ->
             False
 
+        _ ->
+            True
+
+
+includesRoom accom =
+    case accom of
         Campsite ->
+            False
+
+        Offsite ->
             False
 
         _ ->

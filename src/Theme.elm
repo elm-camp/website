@@ -113,7 +113,7 @@ priceText { currency, amount } =
 
 priceAmount : Price -> Float
 priceAmount { amount } =
-    toFloat (amount // 100)
+    toFloat amount
 
 
 panel attrs x =
