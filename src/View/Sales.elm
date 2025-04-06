@@ -1,9 +1,9 @@
 module View.Sales exposing (..)
 
 import AssocList
-import Camp24Devon.Inventory as Inventory
-import Camp24Devon.Product as Product
-import Camp24Devon.Tickets as Tickets
+import Camp25US.Inventory as Inventory
+import Camp25US.Product as Product
+import Camp25US.Tickets as Tickets
 import DateFormat
 import Element exposing (..)
 import Element.Background as Background
@@ -16,6 +16,7 @@ import Html.Events
 import Id exposing (Id)
 import List.Extra as List
 import MarkdownThemed
+import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
@@ -27,11 +28,11 @@ import View.Countdown
 
 
 year =
-    "2024"
+    "2025"
 
 
 ticketSalesOpen =
-    (TimeFormat.certain "2024-04-04T19:00" Time.utc).time
+    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
 view model =
@@ -53,11 +54,11 @@ view model =
             else
                 v
     in
-    column []
+    column Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive <|
             column Theme.contentAttributes
-                [ ticketInfo
+                [ ticketInfo model
                 ]
         , column
             [ width fill
@@ -131,14 +132,97 @@ ticketSalesOpenCountdown model =
             ]
 
 
+ticketSalesHtmlId : String
+ticketSalesHtmlId =
+    "ticket-sales"
+
+
 goToTicketSales =
     Input.button showyButtonAttributes
-        { onPress = Just (SetViewPortForElement "🎟️-attendance-ticket---£200")
+        { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
         , label = text "Tickets on sale now! ⬇️"
         }
 
 
-ticketInfo =
+
+{--| Note that ticketInfo is shown before tickets are live.
+    It is replaced by accommodationView after tickets are live.
+--}
+
+
+ticketInfo : LoadedModel -> Element msg
+ticketInfo model =
+    let
+        -- Get prices for each ticket type
+        formatTicketPrice productId =
+            model.prices
+                |> AssocList.get (Id.fromString productId)
+                |> Maybe.map (\price -> Theme.priceText price.price)
+                |> Maybe.withDefault "Price not available"
+
+        offsitePrice =
+            formatTicketPrice Product.ticket.offsite
+
+        campingPrice =
+            formatTicketPrice Product.ticket.campingSpot
+
+        singlePrice =
+            formatTicketPrice Product.ticket.singleRoom
+
+        doublePrice =
+            formatTicketPrice Product.ticket.doubleRoom
+
+        dormPrice =
+            formatTicketPrice Product.ticket.groupRoom
+
+        -- Calculate example prices
+        exampleTickets3 =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
+                |> Maybe.withDefault 0
+
+        exampleDorm =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.groupRoom)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleTotal1 =
+            exampleTickets3 + exampleDorm
+
+        examplePerson1 =
+            exampleTotal1 / 3
+
+        exampleTicket1 =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleSingle =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.singleRoom)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+
+        exampleTotal2 =
+            exampleTicket1 + exampleSingle
+
+        -- Get a reference price for formatting
+        refPrice =
+            model.prices
+                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> Maybe.map .price
+
+        formatPrice amount =
+            case refPrice of
+                Just price ->
+                    Theme.priceText { price | amount = round (amount * 100) }
+
+                Nothing ->
+                    "Price not available"
+    in
     """
 # Tickets
 
@@ -146,41 +230,41 @@ There is a mix of room types — singles, doubles, dorm style rooms
 suitable for up to four people. Attendees will self-organize
 to distribute among the rooms and share bathrooms.
 The facilities for those who wish to bring a tent or campervan and camp
-are excellent. The surrounding grounds and countryside are
+are excellent. The surrounding grounds are
 beautiful and include woodland, a swimming lake and a firepit.
 
-Each attendee will need to purchase a campfire ticket and (1)
- plan to camp or (2) purchase a
-a single room ticket (limited availability), or (3) organize
-with others for a shared double room ticket or a shared  dorm room ticket.
-See the example ticket combinations below for more details.
+Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction.
 
-## Campfire Ticket – £200
-- Attendee ticket, full access to the event 18th - 21st June 2024
-- Breakfast, lunch, tea & dinner included as per schedule
+## All tickets include full access to the event 18th - 21st June 2024 and all meals.
 
-## Room Add-ons
-You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+### Staying offsite - """
+        ++ offsitePrice
+        ++ """
+You will organise your own accommodation elsewhere.
 
-### Outdoor camping space – Free
+### Camping space – """
+        ++ (if campingPrice == "£0" || campingPrice == "$0" then
+                "Free"
+
+            else
+                campingPrice
+           )
+        ++ """
 - Bring your own tent or campervan and stay on site
 - Showers & toilets provided
 
-### Dorm room - £600
-- Suitable for up to 4 people
+### Shared room - """
+        ++ dormPrice
+        ++ """
+- Suitable for a couple or up to 4 people in twin beds
 
-### Double room – £500
-- Suitable for couple or twin beds
-
-### Single room – £400
+### Single room – """
+        ++ singlePrice
+        ++ """
 - Limited availability
 
 
-**Example ticket combinations:**
-- Purchase 3 campfire tickets (£600) and 1 dorm room (£600) to share for £1200 (£400 per person)
-- Purchase 1 campfire ticket (£200) and a single room (£400) for £600
-
-This year’s venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
+This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
 """
         |> MarkdownThemed.renderFull
 
@@ -204,7 +288,7 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 
 opportunityGrantInfo =
     """
-# 🫶 Opportunity grant
+# \u{1FAF6} Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
@@ -226,62 +310,52 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
 
 
 ticketsView model =
+    let
+        attendanceTicketPriceText =
+            -- Look up the attendance ticket price from model.prices
+            case AssocList.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
+                Just priceInfo ->
+                    " - " ++ Theme.priceText priceInfo.price
+
+                Nothing ->
+                    " - Price not available"
+    in
     column Theme.contentAttributes
-        [ row [ width fill, htmlId "ticket-sales" ]
+        [ row [ width fill, htmlId ticketSalesHtmlId ]
             [ column [ width fill ]
-                [ """
-## 🎟️ Attendance Ticket - £200
-
-Attendance for Elm Camp's 4 day / 3 night event.
-
-- Full accees to the venue grounds and activities
-- All meals (Breakfast, Lunch, Dinner) included as per schedule
+                [ """## 🎟️ Attendee Details
+Please enter details for each person attending Elm camp, then select your accommodation below.
                 """
                     |> MarkdownThemed.renderFull
                 ]
             , column []
-                [ if List.length model.form.attendees == 0 then
-                    let
-                        form =
-                            model.form
-                    in
-                    Input.button
-                        (Theme.submitButtonAttributes True)
-                        { onPress = Just <| FormChanged { form | attendees = model.form.attendees ++ [ PurchaseForm.defaultAttendee ] }
-                        , label =
-                            el
-                                [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                                (text "Select")
-                        }
-
-                  else
-                    Theme.numericField
-                        "Tickets"
-                        (List.length model.form.attendees)
-                        (\_ ->
-                            -- Remove last attendee from the list
-                            model.form.attendees
-                                |> List.init
-                                |> Maybe.withDefault []
-                                |> (\attendees ->
-                                        let
-                                            form =
-                                                model.form
-                                        in
-                                        FormChanged { form | attendees = attendees }
-                                   )
-                        )
-                        (\_ ->
-                            -- Add a new attendee to the list
-                            model.form.attendees
-                                |> (\attendees ->
-                                        let
-                                            form =
-                                                model.form
-                                        in
-                                        FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
-                                   )
-                        )
+                [ Theme.numericField
+                    "Tickets"
+                    (List.length model.form.attendees)
+                    (\_ ->
+                        -- Remove last attendee from the list
+                        model.form.attendees
+                            |> List.init
+                            |> Maybe.withDefault []
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees }
+                               )
+                    )
+                    (\_ ->
+                        -- Add a new attendee to the list
+                        model.form.attendees
+                            |> (\attendees ->
+                                    let
+                                        form =
+                                            model.form
+                                    in
+                                    FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
+                               )
+                    )
                 ]
             ]
         , case model.form.attendees of
@@ -301,15 +375,21 @@ Attendance for Elm Camp's 4 day / 3 night event.
         ]
 
 
+
+{--| Note that accommodationView is shown after tickets are live
+    It is replaced by ticketInfo before tickets are live.
+--}
+
+
 accommodationView : LoadedModel -> Element FrontendMsg_
 accommodationView model =
     column [ width fill, spacing 20 ]
         [ column Theme.contentAttributes
-            [ Theme.h2 "🏕️ Accommodation"
+            [ Theme.h2 "🏕️ Ticket type"
             , """
-You can upgrade a camp ticket with any of the below on-site accommodation options, or organise your own off-site accommodation.
+Please select one accommodation option per attendee.
 
-There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms.
+There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared.
 
 The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
 """
@@ -343,9 +423,9 @@ formView model productId priceId ticket =
         form =
             model.form
 
-        submitButton =
+        submitButton hasAttendeesAndAccommodation =
             Input.button
-                (Theme.submitButtonAttributes (Inventory.purchaseable ticket.productId model.slotsRemaining))
+                (Theme.submitButtonAttributes (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining))
                 { onPress = Just PressedSubmitForm
                 , label =
                     paragraph
@@ -382,12 +462,18 @@ formView model productId priceId ticket =
         hasAttendees =
             List.length form.attendees > 0
 
+        includesRoom =
+            Tickets.formIncludesRoom form
+
         orderNotes =
             if includesAccom && not hasAttendees then
-                "<red>Warning: you have chosen accommodation but no attendees, please make sure each attendee has a ticket selection (unless they've purchased them separately).</red>"
+                "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
 
             else if not includesAccom && hasAttendees then
-                "Please note: your selected options ***do not include accommodation***."
+                "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
+
+            else if not includesRoom then
+                "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
 
             else
                 ""
@@ -398,7 +484,8 @@ formView model productId priceId ticket =
 
         -- , carbonOffsetForm model.showCarbonOffsetTooltip form
         , opportunityGrant form
-        , sponsorships model form
+
+        --, sponsorships model form
         , summary model
         , column
             (Theme.contentAttributes
@@ -431,10 +518,10 @@ Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofo
 By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
-                row [ width fill, spacing 16 ] [ cancelButton, submitButton ]
+                row [ width fill, spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
-                column [ width fill, spacing 16 ] [ submitButton, cancelButton ]
+                column [ width fill, spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
             , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
                 |> MarkdownThemed.renderFull
             ]
@@ -518,17 +605,23 @@ attendeeForm model i attendee =
 
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "🫶 Opportunity grants"
+        [ Theme.h2 "\u{1FAF6} Opportunity grants"
         , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ column []
                 [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
                 , row [ width fill, spacing 30 ]
-                    [ textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                    [ column [ width (fillPortion 1) ]
+                        [ row []
+                            [ text "$ "
+                            , textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
+                            ]
+                        ]
                     , column [ width (fillPortion 3) ]
                         [ row [ width (fillPortion 3) ]
                             [ el [ paddingXY 0 10 ] <| text "0"
-                            , el [ paddingXY 0 10, alignRight ] <| text "600"
+                            , el [ paddingXY 0 10, alignRight ] <|
+                                text (Theme.priceText { currency = Money.USD, amount = 75000 })
                             ]
                         , Input.slider
                             [ behindContent
@@ -542,13 +635,13 @@ opportunityGrant form =
                                     none
                                 )
                             ]
-                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat a }
+                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
                             , label = Input.labelHidden "Opportunity grant contribution value selection slider"
                             , min = 0
-                            , max = 600
-                            , value = String.toFloat form.grantContribution |> Maybe.withDefault 0
+                            , max = 75000
+                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
                             , thumb = Input.defaultThumb
-                            , step = Just 10
+                            , step = Just 1000
                             }
                         , row [ width (fillPortion 3) ]
                             [ el [ paddingXY 0 10 ] <| text "No contribution"
@@ -566,13 +659,21 @@ sponsorships model form =
         [ Theme.h2 "🤝 Sponsor Elm Camp"
         , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
-            |> List.map (sponsorshipOption form)
+            |> List.map (sponsorshipOption model form)
             |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
         ]
 
 
-sponsorshipOption form s =
+sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg_
+sponsorshipOption model form s =
     let
+        displayCurrency =
+            model.prices
+                |> AssocList.get (Id.fromString s.productId)
+                |> Maybe.map .price
+                |> Maybe.map .currency
+                |> Maybe.withDefault Money.USD
+
         selected =
             form.sponsorship == Just s.productId
 
@@ -582,10 +683,15 @@ sponsorshipOption form s =
 
             else
                 [ Border.color (rgba255 0 0 0 0), Border.width 3 ]
+
+        priceDisplay =
+            Theme.priceText { currency = displayCurrency, amount = s.price }
+
+        -- Fallback to hardcoded price if not in model.prices
     in
     Theme.panel attrs
         [ el [ Font.size 20, Font.bold ] (text s.name)
-        , el [ Font.size 30, Font.bold ] (text <| "£" ++ String.fromInt s.price)
+        , el [ Font.size 30, Font.bold ] (text priceDisplay)
         , paragraph [] [ text s.description ]
         , s.features
             |> List.map (\point -> paragraph [ Font.size 12 ] [ text <| "• " ++ point ])
@@ -622,7 +728,7 @@ summary : LoadedModel -> Element msg
 summary model =
     let
         grantTotal =
-            model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0
+            (model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0) * 100
 
         ticketsTotal =
             model.form.attendees
@@ -662,10 +768,18 @@ summary model =
 
         total =
             ticketsTotal + accomTotal + grantTotal + sponsorshipTotal
+
+        displayCurrency : Money.Currency
+        displayCurrency =
+            model.prices
+                |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> Maybe.map .price
+                |> Maybe.map .currency
+                |> Maybe.withDefault Money.USD
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendance tickets x " ++ String.fromInt num ++ " – £" ++ String.fromFloat ticketsTotal)
+        , model.form.attendees |> List.length |> (\num -> text <| "Attendees x " ++ String.fromInt num)
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
 
@@ -673,21 +787,22 @@ summary model =
             model.form.accommodationBookings
                 |> List.group
                 |> List.map
-                    (\group -> summaryAccommodation model group)
+                    (\group -> summaryAccommodation model group displayCurrency)
                 |> column []
         , Theme.viewIf (model.form.grantContribution /= "0") <|
             text <|
-                "Opportunity grant: £"
-                    ++ model.form.grantContribution
+                "Opportunity grant: "
+                    ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
         , Theme.viewIf (sponsorshipTotal > 0) <|
             text <|
-                "Sponsorship: £"
-                    ++ String.fromFloat sponsorshipTotal
-        , Theme.h3 <| "Total: £" ++ String.fromFloat total
+                "Sponsorship: "
+                    ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
+        , Theme.h3 <| "Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
         ]
 
 
-summaryAccommodation model ( accom, items ) =
+summaryAccommodation : LoadedModel -> ( PurchaseForm.Accommodation, List PurchaseForm.Accommodation ) -> Money.Currency -> Element msg
+summaryAccommodation model ( accom, items ) displayCurrency =
     model.form.accommodationBookings
         |> List.filter ((==) accom)
         |> List.length
@@ -700,7 +815,7 @@ summaryAccommodation model ( accom, items ) =
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
                 in
-                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – £" ++ String.fromFloat total
+                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
            )
         |> text
 
@@ -817,7 +932,7 @@ textInput form onChange title validator text =
 
 {-| Used to scroll to errors.
 
-It’s technically invalid to use the same ID multiple times, but in practice
+It's technically invalid to use the same ID multiple times, but in practice
 getting an element by ID means getting the _first_ element with that ID, which
 is exactly what we want here.
 

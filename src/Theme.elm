@@ -113,7 +113,7 @@ priceText { currency, amount } =
 
 priceAmount : Price -> Float
 priceAmount { amount } =
-    toFloat (amount // 100)
+    toFloat amount
 
 
 panel attrs x =
@@ -226,8 +226,7 @@ footer =
             )
             [ btn CodeOfConductRoute "Code of Conduct"
             , btn UnconferenceFormatRoute "Unconference Guidelines"
-
-            -- , btn VenueAndAccessRoute "Venue & Access"
+            , btn VenueAndAccessRoute "Venue & Access"
             , btn OrganisersRoute "Organisers"
             , btn ElmCampArchiveRoute "Elm Camp Archives"
             ]

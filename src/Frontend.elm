@@ -9,11 +9,11 @@ import Browser.Events
 import Browser.Navigation
 import Camp23Denmark
 import Camp23Denmark.Artifacts
-import Camp24Devon.Inventory as Inventory
-import Camp24Devon.Product as Product
-import Camp24Devon.Tickets as Tickets
 import Camp24Uk
 import Camp25US
+import Camp25US.Inventory as Inventory
+import Camp25US.Product as Product
+import Camp25US.Tickets as Tickets
 import DateFormat
 import Dict
 import Element exposing (..)
@@ -385,7 +385,7 @@ updateLoaded msg model =
             , LamderaRPC.postJsonBytes
                 Types.w3_decode_BackendModel
                 -- (Json.Encode.string Env.adminPassword)
-                (Json.Encode.string "adjust me when developping locally")
+                (Json.Encode.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
             )
@@ -660,13 +660,7 @@ loadedView model =
                 [ header { window = model.window, isCompact = True }
                 , column
                     (padding 20 :: Theme.contentAttributes)
-                    [ MarkdownThemed.renderFull """
-# Elm Camp Archive
-
-- [Elm Camp 2023 Artifacts](/23-denmark/artifacts)
-- [Elm Camp 2024 Artifacts](/24-uk/artifacts)
-                    """
-                    ]
+                    [ elmCampArchiveContent model ]
                 , Theme.footer
                 ]
 
@@ -719,6 +713,9 @@ loadedView model =
         Camp24Uk subpage ->
             Camp24Uk.view model subpage
 
+        Camp25US subpage ->
+            Camp25US.view model subpage
+
 
 downloadTicketSalesReminder =
     ICalendar.download
@@ -754,13 +751,14 @@ homepageView model =
             [ header { window = model.window, isCompact = False }
             , column
                 [ width fill, spacing 40 ]
-                [ -- View.Sales.ticketSalesOpenCountdown model
-                  column Theme.contentAttributes [ elmCampOverview ]
-
-                -- , column Theme.contentAttributes [ Camp25US.conferenceSummary ]
-                -- , Camp25US.venuePictures model
-                -- , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", sponsors model.window ]
-                -- , View.Sales.view model
+                [ View.Sales.ticketSalesOpenCountdown model
+                , column Theme.contentAttributes [ elmCampOverview ]
+                , column Theme.contentAttributes
+                    [ Camp25US.venuePictures model
+                    , Camp25US.conferenceSummary
+                    ]
+                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
+                , View.Sales.view model
                 ]
             ]
         , Theme.footer
@@ -778,7 +776,9 @@ jumpToId id offset =
 elmCampOverview : Element msg
 elmCampOverview =
     """
-Elm Camp is currently planning for it's 3rd year!
+# Elm Camp 2025 - Michigan, US
+
+Elm Camp returns for its 3rd year, this time in Watervliet, Michigan!
 
 ---
 
@@ -858,7 +858,7 @@ However, if you feel you want help resolving something more privately, please as
 
 Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise.
 
-Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can’t possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn’t write down explicitly here.
+Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can't possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn't write down explicitly here.
 
 If you have any questions, concerns or suggestions regarding this policy, please get in touch.
 
@@ -882,6 +882,9 @@ Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories
 Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
 
 [Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+
+[Archive: Elm Camp 2024 - UK website](/24-uk)
+
         """
             |> MarkdownThemed.renderFull
         ]
