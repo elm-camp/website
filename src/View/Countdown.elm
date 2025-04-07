@@ -39,10 +39,7 @@ ticketSalesLive t model =
         secondsRemaining =
             (target - now) // 1000
     in
-    if not Env.isProduction then
-        True
-
-    else if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
+    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
         True
 
     else
