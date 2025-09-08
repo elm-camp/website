@@ -286,7 +286,7 @@ updateLoaded msg model =
 
         PressedSelectTicket productId priceId ->
             case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
-                ( Just ( accom, ticket ), TicketsEnabled ) ->
+                ( Just ( _, ticket ), TicketsEnabled ) ->
                     if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , scrollToTop
@@ -326,7 +326,7 @@ updateLoaded msg model =
                 Submitting ->
                     ( model, Cmd.none )
 
-                SubmitBackendError str ->
+                SubmitBackendError _ ->
                     ( { model | form = form }, Cmd.none )
 
         PressedSubmitForm ->
@@ -664,7 +664,7 @@ loadedView model =
                 , Theme.footer
                 ]
 
-        AdminRoute passM ->
+        AdminRoute _ ->
             Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->

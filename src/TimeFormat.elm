@@ -26,7 +26,7 @@ zonedZero =
 
 certain s zone =
     case Iso8601.toTime s of
-        Err deadEnds ->
+        Err _ ->
             -- let
             --     x =
             --         Debug.log ("deadends for " ++ s) deadEnds

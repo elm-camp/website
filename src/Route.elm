@@ -105,7 +105,7 @@ encode route =
             ElmCampArchiveRoute ->
                 [ "elm-camp-archive" ]
 
-            AdminRoute passM ->
+            AdminRoute _ ->
                 [ "admin" ]
 
             PaymentSuccessRoute _ ->
@@ -160,7 +160,7 @@ encode route =
             ElmCampArchiveRoute ->
                 []
 
-            AdminRoute passM ->
+            AdminRoute _ ->
                 []
 
             PaymentSuccessRoute maybeEmailAddress ->

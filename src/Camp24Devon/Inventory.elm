@@ -104,7 +104,7 @@ purchaseable productId availability =
 
 caseof v opts =
     case List.head (List.filter (\( a, b ) -> a == v) opts) of
-        Just ( a, b ) ->
+        Just ( _, b ) ->
             b
 
         Nothing ->

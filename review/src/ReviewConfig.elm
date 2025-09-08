@@ -47,12 +47,13 @@ config =
     , RunUnsafeAtStartup.rule
     , NoStaleReferences.rule
         |> defaultIgnore
-    , NoUnusedFields.rule |> defaultIgnore
-    , NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
-    , NoUnused.Patterns.rule |> defaultIgnore
 
-    --, Docs.ReviewAtDocs.rule |> defaultIgnore
-    --, NoConfusingPrefixOperator.rule |> defaultIgnore
+    --, NoUnusedFields.rule |> defaultIgnore
+    --, NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
+    , NoUnused.Patterns.rule |> defaultIgnore
+    , Docs.ReviewAtDocs.rule |> defaultIgnore
+    , NoConfusingPrefixOperator.rule |> defaultIgnore
+
     --, NoDebug.TodoOrToString.rule
     --    |> Review.Rule.ignoreErrorsForDirectories [ "tests/" ]
     --    |> defaultIgnore

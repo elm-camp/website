@@ -95,7 +95,7 @@ renderer theme =
                                     ]
                     in
                     case bg_ of
-                        Just bg ->
+                        Just _ ->
                             el [ Element.Border.rounded 10, padding 20 ] <| image attrs { src = src, description = "" }
 
                         Nothing ->

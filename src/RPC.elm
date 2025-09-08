@@ -69,7 +69,7 @@ purchaseCompletedEndpoint _ model headers json =
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
                     case AssocList.get stripeSessionId model.pendingOrder of
-                        Just order ->
+                        Just _ ->
                             -- let
                             --     maybeTicket : Maybe Tickets.Ticket
                             --     maybeTicket =
