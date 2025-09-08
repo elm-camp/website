@@ -35,7 +35,7 @@ import Stripe
 import Task
 import Theme exposing (normalButtonAttributes)
 import Time
-import Types exposing (FrontendModel_(..), FrontendMsg_(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (FrontendModel, FrontendModel_(..), FrontendMsg_(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
@@ -44,17 +44,11 @@ import View.Sales
 
 
 app :
-    { init :
-        Url.Url
-        -> Browser.Navigation.Key
-        ->
-            ( Audio.Model FrontendMsg_ FrontendModel_
-            , Cmd (Audio.Msg FrontendMsg_)
-            )
-    , view : Audio.Model FrontendMsg_ FrontendModel_ -> Browser.Document (Audio.Msg FrontendMsg_)
-    , update : Audio.Msg FrontendMsg_ -> Audio.Model FrontendMsg_ FrontendModel_ -> ( Audio.Model FrontendMsg_ FrontendModel_, Cmd (Audio.Msg FrontendMsg_) )
-    , updateFromBackend : ToFrontend -> Audio.Model FrontendMsg_ FrontendModel_ -> ( Audio.Model FrontendMsg_ FrontendModel_, Cmd (Audio.Msg FrontendMsg_) )
-    , subscriptions : Audio.Model FrontendMsg_ FrontendModel_ -> Sub (Audio.Msg FrontendMsg_)
+    { init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd (Audio.Msg FrontendMsg_) )
+    , view : FrontendModel -> Browser.Document (Audio.Msg FrontendMsg_)
+    , update : Audio.Msg FrontendMsg_ -> FrontendModel -> ( FrontendModel, Cmd (Audio.Msg FrontendMsg_) )
+    , updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd (Audio.Msg FrontendMsg_) )
+    , subscriptions : FrontendModel -> Sub (Audio.Msg FrontendMsg_)
     , onUrlRequest : UrlRequest -> Audio.Msg FrontendMsg_
     , onUrlChange : Url.Url -> Audio.Msg FrontendMsg_
     }
