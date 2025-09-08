@@ -17,7 +17,6 @@ module Admin exposing
     )
 
 import AssocList
-import Codec
 import Element exposing (Element, centerX, column, el, fill, html, none, padding, row, spacing, text, width)
 import Element.Font as Font
 import Element.Input as Input
@@ -25,7 +24,6 @@ import EmailAddress
 import Env
 import Html
 import Id exposing (Id)
-import Lamdera
 import List.Extra
 import Name
 import String.Nonempty
@@ -161,6 +159,7 @@ viewExpiredOrders orders =
         )
 
 
+quickTable : List a -> List (a -> String) -> Element msg
 quickTable collection fns =
     -- Because Element.table copy/paste doesn't do table formatting in GDocs
     collection
@@ -226,6 +225,7 @@ attendeesPending order =
     order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
 
 
+attendeesDetail : (a -> b) -> { c | form : { d | attendees : List a } } -> List String
 attendeesDetail fn order =
     order.form.attendees |> List.map (fn >> toString)
 
@@ -257,6 +257,7 @@ loadProdBackend =
 --         |> column []
 
 
+toString : a -> String
 toString x =
     -- swap back to the original implementation when developing
     -- Debug.toString x

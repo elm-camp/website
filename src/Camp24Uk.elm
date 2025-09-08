@@ -14,6 +14,7 @@ module Camp24Uk exposing
 
 import Camp24Uk.Archive
 import Camp24Uk.Artifacts
+import Camp25US exposing (Meta)
 import Element exposing (Element, Length, centerX, column, el, fill, html, image, newTabLink, px, row, spacing, text, width, wrappedRow)
 import Element.Font as Font
 import Html
@@ -21,8 +22,10 @@ import Html.Attributes
 import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
+import Types exposing (FrontendMsg_, LoadedModel)
 
 
+meta : Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Europe 2024"
@@ -32,13 +35,14 @@ meta =
     }
 
 
+view : LoadedModel -> SubPage -> Element FrontendMsg_
 view model subpage =
     Element.column
         [ Element.width Element.fill, Element.height Element.fill ]
         [ Element.column
             (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
             [ Theme.rowToColumnWhen 700
-                model
+                model.window
                 [ Element.spacing 30, Element.centerX, Font.center ]
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
@@ -58,6 +62,7 @@ view model subpage =
         ]
 
 
+elmCampDenmarkTopLine : Element msg
 elmCampDenmarkTopLine =
     Element.row
         [ Element.centerX, Element.spacing 13 ]
@@ -70,6 +75,7 @@ elmCampDenmarkTopLine =
         ]
 
 
+elmCampDenmarkBottomLine : Element msg
 elmCampDenmarkBottomLine =
     Element.column
         [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
@@ -109,6 +115,7 @@ conferenceSummary =
         |> MarkdownThemed.renderFull
 
 
+venuePictures : LoadedModel -> Element msg
 venuePictures model =
     let
         prefix =
@@ -141,6 +148,7 @@ venueImage width path =
         { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
 
 
+organisers : String
 organisers =
     """
 🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of [codereading.club](https://codereading.club/)

@@ -327,5 +327,6 @@ type TicketsEnabled
     | TicketsDisabled { adminMessage : String }
 
 
+maxSlotsAvailable : number
 maxSlotsAvailable =
     50

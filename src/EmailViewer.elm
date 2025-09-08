@@ -8,6 +8,7 @@ import String.Nonempty exposing (NonemptyString)
 import Tickets
 
 
+main : Html msg
 main =
     [ emailView (RPC.confirmationEmail Tickets.campTicket)
     ]

@@ -20,10 +20,12 @@ type alias Zoned =
     { time : Time.Posix, zone : Time.Zone }
 
 
+zonedZero : Zoned
 zonedZero =
     { time = Time.millisToPosix 0, zone = Time.utc }
 
 
+certain : String -> Time.Zone -> Zoned
 certain s zone =
     case Iso8601.toTime s of
         Err _ ->

@@ -1,19 +1,16 @@
 module Camp23Denmark.Archive exposing (view)
 
-import Browser exposing (UrlRequest(..))
 import Element exposing (Element)
 import Element.Background
 import Element.Border
 import Element.Font
 import Element.Input
 import MarkdownThemed
-import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated, SubmitStatus(..))
-import Route exposing (Route(..), SubPage(..))
-import Stripe exposing (ProductId(..))
 import Theme
 import Types exposing (FrontendMsg_(..), LoadedModel)
 
 
+view : LoadedModel -> Element FrontendMsg_
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -184,6 +181,7 @@ Elm Camp is a community-driven non-profit initiative, organised by enthusiastic 
         |> MarkdownThemed.renderFull
 
 
+content3 : Element msg
 content3 =
     """
 # Something else?

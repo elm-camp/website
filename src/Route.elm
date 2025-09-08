@@ -62,6 +62,7 @@ decode url =
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
 
+liveSchedulePath : String
 liveSchedulePath =
     "live"
 

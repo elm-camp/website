@@ -59,9 +59,9 @@ config =
     --    |> defaultIgnore
     , NoExposingEverything.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Env.elm" ] |> defaultIgnore
     , NoImportingEverything.rule [] |> defaultIgnore
+    , NoMissingTypeAnnotation.rule |> defaultIgnore
+    , NoMissingTypeExpose.rule |> defaultIgnore
 
-    --, NoMissingTypeAnnotation.rule |> defaultIgnore
-    --, NoMissingTypeExpose.rule |> defaultIgnore
     --, NoSimpleLetBody.rule |> defaultIgnore
     --, NoUnused.Dependencies.rule |> defaultIgnore
     --, NoUnused.Exports.rule |> defaultIgnore

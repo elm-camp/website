@@ -1,6 +1,9 @@
-module Camp23Denmark.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket)
-
-import Env
+module Camp23Denmark.Product exposing
+    ( Sponsorship
+    , sponsorship
+    , sponsorshipItems
+    , ticket
+    )
 
 
 ticket : { campFire : String, camp : String, couplesCamp : String }
@@ -39,6 +42,7 @@ type alias Sponsorship =
     { name : String, price : Int, productId : String, description : String, features : List String }
 
 
+sponsorshipItems : List Sponsorship
 sponsorshipItems =
     [ { name = "Silver"
       , price = 1000

@@ -55,6 +55,7 @@ purchaseForm (Untrusted a) =
             Nothing
 
 
+validateList : List (Maybe a) -> Result String (List a)
 validateList validated =
     if validated |> List.all Helpers.isJust then
         validated |> Helpers.justs |> Ok

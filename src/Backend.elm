@@ -1,4 +1,14 @@
-module Backend exposing (app, elmCampEmailAddress, errorEmail, init, priceIdToProductId, sessionIdToStripeSessionId, subscriptions, update, updateFromFrontend)
+module Backend exposing
+    ( app
+    , elmCampEmailAddress
+    , errorEmail
+    , init
+    , priceIdToProductId
+    , sessionIdToStripeSessionId
+    , subscriptions
+    , update
+    , updateFromFrontend
+    )
 
 import AssocList
 import Camp25US.Inventory as Inventory
@@ -25,6 +35,12 @@ import Unsafe
 import Untrusted
 
 
+app :
+    { init : ( BackendModel, Cmd BackendMsg )
+    , update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+    , updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+    , subscriptions : BackendModel -> Sub BackendMsg
+    }
 app =
     Lamdera.backend
         { init = init

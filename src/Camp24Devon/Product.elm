@@ -3,6 +3,7 @@ module Camp24Devon.Product exposing (Sponsorship, sponsorship, sponsorshipItems,
 import Env
 
 
+year : String
 year =
     "2024"
 
@@ -56,6 +57,7 @@ type alias Sponsorship =
     { name : String, price : Int, productId : String, description : String, features : List String }
 
 
+sponsorshipItems : List Sponsorship
 sponsorshipItems =
     [ { name = "Silver"
       , price = 750

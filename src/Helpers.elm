@@ -15,6 +15,7 @@ justs =
         []
 
 
+isJust : Maybe a -> Bool
 isJust r =
     case r of
         Just _ ->

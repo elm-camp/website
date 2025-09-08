@@ -18,10 +18,12 @@ import PurchaseForm exposing (Accommodation(..))
 import Types exposing (BackendModel, TicketAvailability)
 
 
+maxAttendees : number
 maxAttendees =
     80
 
 
+maxForAccommodationType : Accommodation -> number
 maxForAccommodationType t =
     case t of
         Offsite ->
@@ -94,6 +96,7 @@ allSoldOut { attendanceTickets } =
     attendanceTickets
 
 
+extract : (a -> b -> List c) -> AssocList.Dict a b -> List c
 extract selector assocList =
     assocList
         |> AssocList.map selector
@@ -114,6 +117,7 @@ purchaseable productId availability =
         ]
 
 
+caseof : a -> List ( a, Bool ) -> Bool
 caseof v opts =
     case List.head (List.filter (\( a, b ) -> a == v) opts) of
         Just ( _, b ) ->

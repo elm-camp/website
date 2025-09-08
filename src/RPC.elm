@@ -45,6 +45,7 @@ backendModelEndpoint _ model request =
             ( badReq "Expected request body to be JSON", model, Cmd.none )
 
 
+badReq : String -> RPCResult
 badReq reason =
     LamderaRPC.resultWith StatusBadRequest [] (BodyString reason)
 

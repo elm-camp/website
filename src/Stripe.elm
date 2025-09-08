@@ -85,6 +85,7 @@ getPrices toMsg =
         }
 
 
+decodePrices : D.Decoder (List PriceData)
 decodePrices =
     D.field "data" (D.list decodePrice)
 
@@ -108,6 +109,7 @@ decodePrice =
         |> Json.Decode.Pipeline.required "created" (D.map Time.millisToPosix D.int)
 
 
+decodeCurrency : D.Decoder Money.Currency
 decodeCurrency =
     D.andThen
         (\text ->

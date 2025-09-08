@@ -65,14 +65,17 @@ audio song =
         |> Audio.group
 
 
+day28 : Time.Posix
 day28 =
     Duration.subtractFrom day29 Duration.day
 
 
+day29 : Time.Posix
 day29 =
     Time.millisToPosix 1687989600000
 
 
+day30 : Time.Posix
 day30 =
     Duration.addTo day29 Duration.day
 
@@ -91,6 +94,7 @@ type Event
     | Other String
 
 
+day28Schedule : List { start : number, duration : Float, event : Event }
 day28Schedule =
     [ { start = 15, duration = 1, event = Other "Arrivals and registration" }
     , { start = 16, duration = 1, event = Other "Coffee and snacks" }
@@ -262,6 +266,10 @@ day30Schedule =
     ]
 
 
+offsetEvents :
+    Time.Posix
+    -> List { a | start : Float, duration : Float, event : Event }
+    -> List { start : Time.Posix, duration : Duration, event : Event }
 offsetEvents day events =
     List.map
         (\{ start, duration, event } ->
@@ -280,9 +288,7 @@ fullSchedule =
         ++ offsetEvents day30 day30Schedule
 
 
-remainingEvents :
-    Time.Posix
-    -> ( Maybe EventAndTime, List EventAndTime )
+remainingEvents : Time.Posix -> ( Maybe EventAndTime, List EventAndTime )
 remainingEvents time =
     case List.Extra.splitWhen (\{ start } -> Duration.from time start |> Quantity.greaterThanZero) fullSchedule of
         Just ( past, future ) ->
@@ -531,6 +537,7 @@ roomText room window =
         )
 
 
+denmarkTimezone : Time.Zone
 denmarkTimezone =
     Time.customZone 120 []
 

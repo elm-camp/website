@@ -56,14 +56,17 @@ import Types exposing (FrontendMsg_(..), LoadedModel)
 import View.Countdown
 
 
+year : String
 year =
     "2025"
 
 
+ticketSalesOpen : Time.Posix
 ticketSalesOpen =
     (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
+view : LoadedModel -> Element FrontendMsg_
 view model =
     let
         ticketsAreLive =
@@ -115,6 +118,7 @@ view model =
         ]
 
 
+ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg_
 ticketSalesOpenCountdown model =
     let
         ticketsAreLive =
@@ -166,6 +170,7 @@ ticketSalesHtmlId =
     "ticket-sales"
 
 
+goToTicketSales : Element FrontendMsg_
 goToTicketSales =
     Input.button showyButtonAttributes
         { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
@@ -298,10 +303,12 @@ This year's venue has capacity for 75 attendees. Our plan is to maximise opportu
         |> MarkdownThemed.renderFull
 
 
+ticketsHtmlId : String
 ticketsHtmlId =
     "tickets"
 
 
+grantApplicationCopy : String
 grantApplicationCopy =
     """
 
@@ -315,6 +322,7 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 """
 
 
+opportunityGrantInfo : Element msg
 opportunityGrantInfo =
     """
 # 🫶 Opportunity grant
@@ -338,6 +346,7 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
         |> MarkdownThemed.renderFull
 
 
+ticketsView : LoadedModel -> Element FrontendMsg_
 ticketsView model =
     let
         attendanceTicketPriceText =
@@ -442,7 +451,7 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
                         Nothing ->
                             text "No ticket prices found"
                 )
-            |> Theme.rowToColumnWhen 1200 model [ spacing 16 ]
+            |> Theme.rowToColumnWhen 1200 model.window [ spacing 16 ]
         ]
 
 
@@ -562,6 +571,7 @@ htmlId str =
     Element.htmlAttribute (Html.Attributes.id str)
 
 
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg_
 attendeeForm model i attendee =
     let
         form =
@@ -588,7 +598,7 @@ attendeeForm model i attendee =
                 }
     in
     Theme.rowToColumnWhen columnWhen
-        model
+        model.window
         [ width fill, spacing 16 ]
         [ textInput
             model.form
@@ -632,6 +642,7 @@ attendeeForm model i attendee =
         ]
 
 
+opportunityGrant : PurchaseForm -> Element FrontendMsg_
 opportunityGrant form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
         [ Theme.h2 "🫶 Opportunity grants"
@@ -683,13 +694,14 @@ opportunityGrant form =
         ]
 
 
+sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg_
 sponsorships model form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
         , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
-            |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
+            |> Theme.rowToColumnWhen 700 model.window [ spacing 20, width fill ]
         ]
 
 

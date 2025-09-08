@@ -43,6 +43,21 @@ import Url.Parser.Query as Query
 import View.Sales
 
 
+app :
+    { init :
+        Url.Url
+        -> Browser.Navigation.Key
+        ->
+            ( Audio.Model FrontendMsg_ FrontendModel_
+            , Cmd (Audio.Msg FrontendMsg_)
+            )
+    , view : Audio.Model FrontendMsg_ FrontendModel_ -> Browser.Document (Audio.Msg FrontendMsg_)
+    , update : Audio.Msg FrontendMsg_ -> Audio.Model FrontendMsg_ FrontendModel_ -> ( Audio.Model FrontendMsg_ FrontendModel_, Cmd (Audio.Msg FrontendMsg_) )
+    , updateFromBackend : ToFrontend -> Audio.Model FrontendMsg_ FrontendModel_ -> ( Audio.Model FrontendMsg_ FrontendModel_, Cmd (Audio.Msg FrontendMsg_) )
+    , subscriptions : Audio.Model FrontendMsg_ FrontendModel_ -> Sub (Audio.Msg FrontendMsg_)
+    , onUrlRequest : UrlRequest -> Audio.Msg FrontendMsg_
+    , onUrlChange : Url.Url -> Audio.Msg FrontendMsg_
+    }
 app =
     Audio.lamderaFrontendWithAudio
         { init = init
@@ -97,6 +112,7 @@ subscriptions _ =
         ]
 
 
+queryBool : String -> Query.Parser (Maybe Bool)
 queryBool name =
     Query.enum name (Dict.fromList [ ( "true", True ), ( "false", False ) ])
 
@@ -704,6 +720,7 @@ loadedView model =
             Camp25US.view model subpage
 
 
+downloadTicketSalesReminder : Cmd msg
 downloadTicketSalesReminder =
     ICalendar.download
         { name = "elm-camp-ticket-sale-starts"

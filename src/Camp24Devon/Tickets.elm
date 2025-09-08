@@ -132,6 +132,7 @@ accomToString accom =
             "Group Room"
 
 
+allAccommodations : List Accommodation
 allAccommodations =
     [ Offsite, Campsite, Single, Double, Group ]
 
@@ -141,6 +142,7 @@ formIncludesAccom form =
     form.accommodationBookings |> List.filter includesAccom |> List.length |> (\c -> c > 0)
 
 
+includesAccom : Accommodation -> Bool
 includesAccom accom =
     case accom of
         Offsite ->

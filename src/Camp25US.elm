@@ -1,4 +1,17 @@
-module Camp25US exposing (conferenceSummary, contactDetails, elmBottomLine, elmTopLine, meta, organisers, sponsors, venueAccessContent, venueImage, venuePictures, view)
+module Camp25US exposing
+    ( Meta
+    , conferenceSummary
+    , contactDetails
+    , elmBottomLine
+    , elmTopLine
+    , meta
+    , organisers
+    , sponsors
+    , venueAccessContent
+    , venueImage
+    , venuePictures
+    , view
+    )
 
 import Camp25US.Archive
 import Camp25US.Artifacts
@@ -9,8 +22,19 @@ import Html.Attributes
 import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
+import Types exposing (FrontendMsg_, LoadedModel)
 
 
+type alias Meta =
+    { logo : { src : String, description : String }
+    , tag : String
+    , location : String
+    , dates : String
+    , artifactPicture : { src : String, description : String }
+    }
+
+
+meta : Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Michigan, US 2025"
@@ -20,13 +44,14 @@ meta =
     }
 
 
+view : LoadedModel -> SubPage -> Element FrontendMsg_
 view model subpage =
     Element.column
         [ Element.width Element.fill, Element.height Element.fill ]
         [ Element.column
             (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
             [ Theme.rowToColumnWhen 700
-                model
+                model.window
                 [ Element.spacing 30, Element.centerX, Font.center ]
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
@@ -46,6 +71,7 @@ view model subpage =
         ]
 
 
+elmTopLine : Element msg
 elmTopLine =
     Element.row
         [ Element.centerX, Element.spacing 13 ]
@@ -58,6 +84,7 @@ elmTopLine =
         ]
 
 
+elmBottomLine : Element msg
 elmBottomLine =
     Element.column
         [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
@@ -111,6 +138,7 @@ conferenceSummary =
         |> MarkdownThemed.renderFull
 
 
+venuePictures : LoadedModel -> Element msg
 venuePictures model =
     let
         prefix =
@@ -143,6 +171,7 @@ venueImage width path =
         { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
 
 
+organisers : String
 organisers =
     """
 🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.

@@ -6,7 +6,7 @@ import Element exposing (Element, centerX, el, none, paragraph)
 import Element.Font as Font
 import Theme
 import Time
-import TimeFormat
+import TimeFormat exposing (Zoned)
 
 
 ui : String -> String -> { model | now : Time.Posix } -> Element msg
@@ -108,6 +108,7 @@ detailedCountdown t description model =
 --     ++ description
 
 
+asTimeToGo : Zoned -> Time.Posix -> String
 asTimeToGo zoned now =
     let
         days =

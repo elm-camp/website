@@ -10,6 +10,7 @@ import Theme
 import Types exposing (FrontendMsg_(..), LoadedModel)
 
 
+view : LoadedModel -> Element FrontendMsg_
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -180,6 +181,7 @@ Elm Camp is a community-driven non-profit initiative, organised by enthusiastic 
         |> MarkdownThemed.renderFull
 
 
+content3 : Element msg
 content3 =
     """
 # Something else?

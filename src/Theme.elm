@@ -1,4 +1,35 @@
-module Theme exposing (Theme, attr, colorWithAlpha, colors, contentAttributes, css, fontFace, footer, glow, h1, h2, h3, h4, heading1Attrs, heading2Attrs, heading3Attrs, heading4Attrs, lightTheme, normalButtonAttributes, numericField, panel, priceAmount, priceText, rowToColumnWhen, showyButtonAttributes, spinnerWhite, submitButtonAttributes, toggleButton, toggleButtonAttributes, viewIf)
+module Theme exposing
+    ( Theme
+    , attr
+    , colorWithAlpha
+    , colors
+    , contentAttributes
+    , css
+    , fontFace
+    , footer
+    , glow
+    , h1
+    , h2
+    , h3
+    , h4
+    , heading1Attrs
+    , heading2Attrs
+    , heading3Attrs
+    , heading4Attrs
+    , lightTheme
+    , normalButtonAttributes
+    , numericField
+    , panel
+    , priceAmount
+    , priceText
+    , rowToColumnWhen
+    , showyButtonAttributes
+    , spinnerWhite
+    , submitButtonAttributes
+    , toggleButton
+    , toggleButtonAttributes
+    , viewIf
+    )
 
 import Element exposing (Element, el, fill, height, htmlAttribute, none, paddingXY, px, row, spacing, text, width)
 import Element.Background as Background
@@ -67,6 +98,7 @@ css =
         ]
 
 
+colors : { green : Element.Color, lightGrey : Element.Color, white : Element.Color, red : Element.Color }
 colors =
     { green = Element.rgb255 92 176 126
     , lightGrey = Element.rgb255 200 200 200
@@ -98,6 +130,7 @@ fontFace weight name fontFamilyName =
 }"""
 
 
+viewIf : Bool -> Element msg -> Element msg
 viewIf condition view =
     if condition then
         view
@@ -116,6 +149,7 @@ priceAmount { amount } =
     toFloat amount
 
 
+panel : List (Element.Attribute msg) -> List (Element msg) -> Element msg
 panel attrs x =
     Element.column
         ([ Element.width Element.fill
@@ -151,6 +185,7 @@ submitButtonAttributes isEnabled =
     ]
 
 
+toggleButton : String -> Bool -> Maybe msg -> Element msg
 toggleButton label isActive onPress =
     Input.button
         (toggleButtonAttributes isActive)
@@ -177,14 +212,16 @@ toggleButtonAttributes isActive =
     ]
 
 
-rowToColumnWhen width model attrs children =
-    if model.window.width > width then
+rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Element.Attribute msg) -> List (Element msg) -> Element msg
+rowToColumnWhen width window attrs children =
+    if window.width > width then
         Element.row attrs children
 
     else
         Element.column attrs children
 
 
+spinnerWhite : Element msg
 spinnerWhite =
     el
         [ width (px 16)
@@ -197,10 +234,12 @@ spinnerWhite =
         none
 
 
+attr : String -> String -> Element.Attribute msg
 attr name value =
     htmlAttribute <| Html.Attributes.style name value
 
 
+glow : Element.Attr decorative msg
 glow =
     Font.glow (colorWithAlpha 0.25 lightTheme.defaultText) 4
 
@@ -233,6 +272,7 @@ footer =
         )
 
 
+numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Element msg
 numericField title value downMsg upMsg =
     row [ spacing 5, width fill ]
         [ Input.button
@@ -253,6 +293,7 @@ numericField title value downMsg upMsg =
         ]
 
 
+normalButtonAttributes : List (Element.Attribute msg)
 normalButtonAttributes =
     [ Element.width Element.fill
     , Background.color (Element.rgb255 255 255 255)
@@ -264,6 +305,7 @@ normalButtonAttributes =
     ]
 
 
+showyButtonAttributes : List (Element.Attribute msg)
 showyButtonAttributes =
     [ Element.width Element.fill
     , Background.color (Element.rgb255 255 172 98)
@@ -276,18 +318,22 @@ showyButtonAttributes =
     ]
 
 
+h1 : String -> Element msg
 h1 t =
     el (heading1Attrs lightTheme) (text t)
 
 
+h2 : String -> Element msg
 h2 t =
     el (heading2Attrs lightTheme) (text t)
 
 
+h3 : String -> Element msg
 h3 t =
     el (heading3Attrs lightTheme) (text t)
 
 
+h4 : String -> Element msg
 h4 t =
     el (heading4Attrs lightTheme) (text t)
 
