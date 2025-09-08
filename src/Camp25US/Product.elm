@@ -1,4 +1,4 @@
-module Camp25US.Product exposing (..)
+module Camp25US.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket, year)
 
 import Env
 

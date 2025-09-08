@@ -1,4 +1,4 @@
-module RPC exposing (..)
+module RPC exposing (backendModelEndpoint, badReq, confirmationEmail, lamdera_handleEndpoints, purchaseCompletedEndpoint, requestPurchaseCompletedEndpoint)
 
 import AssocList
 import Backend
@@ -15,7 +15,7 @@ import Json.Encode
 import Lamdera exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
-import LamderaRPC exposing (..)
+import LamderaRPC exposing (Headers, HttpBody(..), HttpRequest, RPCResult(..), StatusCode(..))
 import List.Nonempty exposing (Nonempty(..))
 import Name
 import Postmark
@@ -46,7 +46,7 @@ backendModelEndpoint _ model request =
 
 
 badReq reason =
-    resultWith StatusBadRequest [] (BodyString reason)
+    LamderaRPC.resultWith StatusBadRequest [] (BodyString reason)
 
 
 purchaseCompletedEndpoint :

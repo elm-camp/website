@@ -1,4 +1,4 @@
-module Backend exposing (..)
+module Backend exposing (app, elmCampEmailAddress, errorEmail, init, priceIdToProductId, sessionIdToStripeSessionId, subscriptions, update, updateFromFrontend)
 
 import AssocList
 import Camp25US.Inventory as Inventory
@@ -20,7 +20,7 @@ import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
 import Task
 import Time
-import Types exposing (..)
+import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 

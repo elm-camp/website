@@ -12,26 +12,17 @@ import Camp23Denmark.Artifacts
 import Camp24Uk
 import Camp25US
 import Camp25US.Inventory as Inventory
-import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
-import DateFormat
 import Dict
-import Element exposing (..)
+import Element exposing (Element, centerX, centerY, column, el, fill, height, image, link, maximum, moveRight, moveUp, none, padding, paddingEach, paddingXY, paragraph, px, row, spacing, text, width)
 import Element.Background as Background
-import Element.Border as Border
 import Element.Font as Font
-import Element.Input as Input
 import EmailAddress exposing (EmailAddress)
 import Env
-import Html exposing (Html)
-import Html.Attributes
-import Html.Events
 import ICalendar exposing (IcsFile)
-import Id exposing (Id)
 import Json.Decode
 import Json.Encode
 import Lamdera
-import Lamdera.Wire3
 import LamderaRPC
 import List.Extra as List
 import LiveSchedule
@@ -40,19 +31,15 @@ import Page.UnconferenceFormat
 import Ports
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
-import String.Nonempty
 import Stripe
 import Task
-import Theme exposing (normalButtonAttributes, showyButtonAttributes)
+import Theme exposing (normalButtonAttributes)
 import Time
-import TimeFormat
-import TravelMode
-import Types exposing (..)
+import Types exposing (FrontendModel_(..), FrontendMsg_(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
-import View.Countdown
 import View.Sales
 
 
@@ -705,7 +692,7 @@ loadedView model =
                 ]
 
         LiveScheduleRoute ->
-            LiveSchedule.view model |> map LiveScheduleMsg
+            LiveSchedule.view model |> Element.map LiveScheduleMsg
 
         Camp23Denmark subpage ->
             Camp23Denmark.view model subpage

@@ -1,16 +1,12 @@
-module Camp24Devon.Tickets exposing (..)
+module Camp24Devon.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, groupRoom, includesAccom, offsite, singleRoom, viewAccom)
 
 import AssocList
 import Camp24Devon.Product as Product
-import Element exposing (..)
-import Element.Background as Background
-import Element.Border as Border
+import Element exposing (Element, alignBottom, centerX, el, none, paragraph, rgb, text)
 import Element.Font as Font
 import Element.Input as Input
-import Env
 import Id exposing (Id)
 import MarkdownThemed
-import Money
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import Stripe exposing (Price, ProductId(..))
 import Theme

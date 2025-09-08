@@ -1,11 +1,11 @@
-module Camp23Denmark exposing (..)
+module Camp23Denmark exposing (elmCampDenmarkBottomLine, elmCampDenmarkTopLine, view)
 
 import Camp23Denmark.Archive
 import Camp23Denmark.Artifacts
 import Element
 import Element.Font
 import MarkdownThemed
-import Route exposing (..)
+import Route exposing (SubPage(..))
 import Theme
 
 

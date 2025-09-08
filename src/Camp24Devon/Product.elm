@@ -1,4 +1,4 @@
-module Camp24Devon.Product exposing (..)
+module Camp24Devon.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket, year)
 
 import Env
 

@@ -1,6 +1,6 @@
 module MarkdownThemed exposing (bulletPoint, renderFull)
 
-import Element exposing (..)
+import Element exposing (Element, centerX, el, fill, html, image, maximum, padding, paddingEach, paragraph, px, width)
 import Element.Background as Background
 import Element.Border
 import Element.Font as Font

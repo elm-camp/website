@@ -1,13 +1,13 @@
-module Camp25US exposing (..)
+module Camp25US exposing (conferenceSummary, contactDetails, elmBottomLine, elmTopLine, meta, organisers, sponsors, venueAccessContent, venueImage, venuePictures, view)
 
 import Camp25US.Archive
 import Camp25US.Artifacts
-import Element exposing (..)
+import Element exposing (Element, Length, centerX, column, el, fill, html, image, newTabLink, px, row, spacing, text, width, wrappedRow)
 import Element.Font as Font
 import Html
 import Html.Attributes
 import MarkdownThemed
-import Route exposing (..)
+import Route exposing (SubPage(..))
 import Theme
 
 

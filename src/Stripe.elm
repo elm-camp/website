@@ -20,10 +20,10 @@ module Stripe exposing
 import EmailAddress exposing (EmailAddress)
 import Env
 import Http
-import HttpHelpers exposing (..)
+import HttpHelpers
 import Id exposing (Id)
 import Json.Decode as D
-import Json.Decode.Pipeline exposing (..)
+import Json.Decode.Pipeline
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
@@ -61,7 +61,7 @@ decodeWebhook =
                 case eventType of
                     "checkout.session.completed" ->
                         D.succeed StripeSessionCompleted
-                            |> required "data" (D.field "object" (D.field "id" Id.decoder))
+                            |> Json.Decode.Pipeline.required "data" (D.field "object" (D.field "id" Id.decoder))
 
                     _ ->
                         D.fail ("Unhandled stripe webhook event: " ++ eventType)
@@ -79,7 +79,7 @@ getPrices toMsg =
         , headers = headers
         , url = "https://api.stripe.com/v1/prices"
         , body = Http.emptyBody
-        , expect = expectJson_ toMsg decodePrices
+        , expect = HttpHelpers.expectJson_ toMsg decodePrices
         , timeout = Nothing
         , tracker = Nothing
         }
@@ -100,12 +100,12 @@ decodePrice =
             , createdAt = createdAt
             }
         )
-        |> required "id" Id.decoder
-        |> required "currency" decodeCurrency
-        |> optional "unit_amount" D.int 0
-        |> required "product" Id.decoder
-        |> required "active" D.bool
-        |> required "created" (D.map Time.millisToPosix D.int)
+        |> Json.Decode.Pipeline.required "id" Id.decoder
+        |> Json.Decode.Pipeline.required "currency" decodeCurrency
+        |> Json.Decode.Pipeline.optional "unit_amount" D.int 0
+        |> Json.Decode.Pipeline.required "product" Id.decoder
+        |> Json.Decode.Pipeline.required "active" D.bool
+        |> Json.Decode.Pipeline.required "created" (D.map Time.millisToPosix D.int)
 
 
 decodeCurrency =
@@ -183,7 +183,7 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
         , headers = headers
         , url = "https://api.stripe.com/v1/checkout/sessions"
         , body = body
-        , resolver = jsonResolver decodeSession
+        , resolver = HttpHelpers.jsonResolver decodeSession
         , timeout = Nothing
         }
 
@@ -219,7 +219,7 @@ expireSession stripeSessionId =
                 [ "v1", "checkout", "sessions", Id.toString stripeSessionId, "expire" ]
                 []
         , body = Http.emptyBody
-        , resolver = jsonResolver (D.succeed ())
+        , resolver = HttpHelpers.jsonResolver (D.succeed ())
         , timeout = Nothing
         }
 

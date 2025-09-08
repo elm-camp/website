@@ -11,7 +11,7 @@ import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated, SubmitSt
 import Route exposing (Route(..), SubPage(..))
 import Stripe exposing (ProductId(..))
 import Theme
-import Types exposing (..)
+import Types exposing (FrontendMsg_(..), LoadedModel)
 
 
 view model =

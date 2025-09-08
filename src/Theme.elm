@@ -1,6 +1,6 @@
-module Theme exposing (..)
+module Theme exposing (Theme, attr, colorWithAlpha, colors, contentAttributes, css, fontFace, footer, glow, h1, h2, h3, h4, heading1Attrs, heading2Attrs, heading3Attrs, heading4Attrs, lightTheme, normalButtonAttributes, numericField, panel, priceAmount, priceText, rowToColumnWhen, showyButtonAttributes, spinnerWhite, submitButtonAttributes, toggleButton, toggleButtonAttributes, viewIf)
 
-import Element exposing (..)
+import Element exposing (Element, el, fill, height, htmlAttribute, none, paddingXY, px, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font

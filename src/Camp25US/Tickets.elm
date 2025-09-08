@@ -1,4 +1,4 @@
-module Camp25US.Tickets exposing (..)
+module Camp25US.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, formIncludesRoom, groupRoom, includesAccom, includesRoom, offsite, singleRoom, viewAccom)
 
 {-
    TODO for Camp25US Tickets:
@@ -8,7 +8,7 @@ module Camp25US.Tickets exposing (..)
 
 import AssocList
 import Camp25US.Product as Product
-import Element exposing (..)
+import Element exposing (Element, alignBottom, centerX, el, none, paragraph, rgb, text)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font

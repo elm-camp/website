@@ -1,4 +1,4 @@
-module Helpers exposing (..)
+module Helpers exposing (isJust, justs)
 
 
 justs : List (Maybe a) -> List a

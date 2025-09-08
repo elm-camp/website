@@ -1,8 +1,24 @@
-module Admin exposing (..)
+module Admin exposing
+    ( attendees
+    , attendeesDetail
+    , attendeesPending
+    , loadProdBackend
+    , quickTable
+    , toString
+    , view
+    , viewAdmin
+    , viewExpiredOrders
+    , viewExpiredOrders2
+    , viewOrder
+    , viewOrders
+    , viewPendingOrder
+    , viewPrices
+    , viewTicketsEnabled
+    )
 
 import AssocList
 import Codec
-import Element exposing (..)
+import Element exposing (Element, centerX, column, el, fill, html, none, padding, row, spacing, text, width)
 import Element.Font as Font
 import Element.Input as Input
 import EmailAddress
@@ -15,7 +31,7 @@ import Name
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
-import Types exposing (..)
+import Types exposing (BackendModel, FrontendMsg_(..), LoadedModel, Price2, TicketsEnabled(..))
 
 
 view : LoadedModel -> Element FrontendMsg_

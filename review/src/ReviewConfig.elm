@@ -57,8 +57,9 @@ config =
     --, NoDebug.TodoOrToString.rule
     --    |> Review.Rule.ignoreErrorsForDirectories [ "tests/" ]
     --    |> defaultIgnore
-    --, NoExposingEverything.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Env.elm" ] |> defaultIgnore
-    --, NoImportingEverything.rule [] |> defaultIgnore
+    , NoExposingEverything.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Env.elm" ] |> defaultIgnore
+    , NoImportingEverything.rule [] |> defaultIgnore
+
     --, NoMissingTypeAnnotation.rule |> defaultIgnore
     --, NoMissingTypeExpose.rule |> defaultIgnore
     --, NoSimpleLetBody.rule |> defaultIgnore
@@ -108,6 +109,6 @@ config =
 defaultIgnore : Rule -> Rule
 defaultIgnore rule =
     Review.Rule.ignoreErrorsForFiles
-        []
+        [ "src/LamderaRPC.elm" ]
         rule
         |> Review.Rule.ignoreErrorsForDirectories [ "vendored", "src/Evergreen" ]

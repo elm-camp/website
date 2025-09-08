@@ -1,4 +1,4 @@
-module LiveSchedule exposing (..)
+module LiveSchedule exposing (Event(..), EventAndTime, Msg(..), Room(..), ShortBreak(..), audio, cardBackground, currentView, day28, day28Schedule, day29, day29Schedule, day30, day30Schedule, denmarkTimezone, fontSize, fullSchedule, height, moveUp, nextTimeText, nextView, offsetEvents, padList, padding, presentationBreak, remainingEvents, roomText, spacing, timeLeftText, view)
 
 import Audio exposing (Audio)
 import Duration exposing (Duration)

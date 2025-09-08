@@ -1,4 +1,4 @@
-module ICalendar exposing (..)
+module ICalendar exposing (Event, IcsFile, download, toText, toTextEvent)
 
 import DateFormat
 import File.Download

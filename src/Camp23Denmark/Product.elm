@@ -1,4 +1,4 @@
-module Camp23Denmark.Product exposing (..)
+module Camp23Denmark.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket)
 
 import Env
 

@@ -9,7 +9,7 @@ module Untrusted exposing
 import EmailAddress exposing (EmailAddress)
 import Helpers
 import Name exposing (Name)
-import PurchaseForm exposing (..)
+import PurchaseForm exposing (AttendeeFormValidated, PurchaseFormValidated)
 import Toop exposing (T2(..), T3(..))
 
 

@@ -1,13 +1,25 @@
-module Camp24Uk exposing (..)
+module Camp24Uk exposing
+    ( conferenceSummary
+    , contactDetails
+    , elmCampDenmarkBottomLine
+    , elmCampDenmarkTopLine
+    , meta
+    , organisers
+    , sponsors
+    , venueAccessContent
+    , venueImage
+    , venuePictures
+    , view
+    )
 
 import Camp24Uk.Archive
 import Camp24Uk.Artifacts
-import Element exposing (..)
+import Element exposing (Element, Length, centerX, column, el, fill, html, image, newTabLink, px, row, spacing, text, width, wrappedRow)
 import Element.Font as Font
 import Html
 import Html.Attributes
 import MarkdownThemed
-import Route exposing (..)
+import Route exposing (SubPage(..))
 import Theme
 
 

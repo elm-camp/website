@@ -1,4 +1,4 @@
-module Camp25US.Inventory exposing (..)
+module Camp25US.Inventory exposing (allSoldOut, caseof, extract, maxAttendees, maxForAccommodationType, purchaseable, slotsRemaining)
 
 {-
    TODO for Camp25US:
@@ -14,8 +14,8 @@ module Camp25US.Inventory exposing (..)
 
 import AssocList
 import Camp25US.Product as Product
-import PurchaseForm exposing (..)
-import Types exposing (..)
+import PurchaseForm exposing (Accommodation(..))
+import Types exposing (BackendModel, TicketAvailability)
 
 
 maxAttendees =

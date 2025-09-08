@@ -1,4 +1,4 @@
-module TravelMode exposing (..)
+module TravelMode exposing (TravelMode(..), all, codec, toString)
 
 import Codec exposing (Codec)
 import List.Extra as List

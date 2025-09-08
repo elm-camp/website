@@ -1,9 +1,9 @@
-module Camp24Devon.Inventory exposing (..)
+module Camp24Devon.Inventory exposing (allSoldOut, caseof, extract, maxAttendees, maxForAccommodationType, purchaseable, slotsRemaining)
 
 import AssocList
 import Camp24Devon.Product as Product
-import PurchaseForm exposing (..)
-import Types exposing (..)
+import PurchaseForm exposing (Accommodation(..))
+import Types exposing (BackendModel, TicketAvailability)
 
 
 maxAttendees =

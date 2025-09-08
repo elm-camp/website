@@ -1,10 +1,9 @@
-module View.Countdown exposing (..)
+module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, ui)
 
 import Date
 import DateFormat
-import Element exposing (..)
+import Element exposing (Element, centerX, el, none, paragraph)
 import Element.Font as Font
-import Env
 import Theme
 import Time
 import TimeFormat
