@@ -78,8 +78,8 @@ config =
         ]
         |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
         |> defaultIgnore
+    , Simplify.rule Simplify.defaults |> defaultIgnore
 
-    --, Simplify.rule Simplify.defaults |> defaultIgnore
     --, NoInconsistentAliases.config
     --    []
     --    |> NoInconsistentAliases.rule

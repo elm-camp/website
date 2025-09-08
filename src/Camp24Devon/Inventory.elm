@@ -97,8 +97,7 @@ extract selector assocList =
     assocList
         |> AssocList.map selector
         |> AssocList.toList
-        |> List.map Tuple.second
-        |> List.concat
+        |> List.concatMap Tuple.second
 
 
 purchaseable : String -> TicketAvailability -> Bool

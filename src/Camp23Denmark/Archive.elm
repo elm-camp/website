@@ -227,7 +227,7 @@ sponsors window =
                     [ Element.width
                         (Element.px
                             (if window.width < 800 then
-                                toFloat 60 * 0.7 |> round
+                                60 * 0.7 |> round
 
                              else
                                 60

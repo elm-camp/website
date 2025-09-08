@@ -823,7 +823,7 @@ summary model =
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
         , model.form.attendees |> List.length |> (\num -> text ("Attendees x " ++ String.fromInt num))
-        , if List.length model.form.accommodationBookings == 0 then
+        , if List.isEmpty model.form.accommodationBookings then
             text "No accommodation bookings"
 
           else

@@ -35,11 +35,7 @@ ticketSalesLive t model =
         secondsRemaining =
             (target - now) // 1000
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        True
-
-    else
-        False
+    (Time.posixToMillis model.now == 0) || secondsRemaining < 0
 
 
 detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg

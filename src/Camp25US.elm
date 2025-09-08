@@ -287,7 +287,7 @@ sponsors window =
                             [ width
                                 (px
                                     (if window.width < 800 then
-                                        toFloat 50 * 0.7 |> round
+                                        50 * 0.7 |> round
 
                                      else
                                         50

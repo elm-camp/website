@@ -125,16 +125,14 @@ update msg model =
 
         OnConnected _ clientId ->
             ( model
-            , Cmd.batch
-                [ Lamdera.sendToFrontend
-                    clientId
-                    (InitData
-                        { prices = model.prices
-                        , slotsRemaining = Inventory.slotsRemaining model
-                        , ticketsEnabled = model.ticketsEnabled
-                        }
-                    )
-                ]
+            , Lamdera.sendToFrontend
+                clientId
+                (InitData
+                    { prices = model.prices
+                    , slotsRemaining = Inventory.slotsRemaining model
+                    , ticketsEnabled = model.ticketsEnabled
+                    }
+                )
             )
 
         CreatedCheckoutSession sessionId clientId purchaseForm result ->
@@ -353,7 +351,7 @@ updateFromFrontend sessionId clientId msg model =
                                     , now = now
                                     , expiresInMinutes = 30
                                     }
-                                    |> Task.andThen (\res -> Task.succeed ( res, now ))
+                                    |> Task.map (\res -> ( res, now ))
                             )
                         |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
                     )

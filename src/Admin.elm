@@ -183,8 +183,7 @@ viewExpiredOrders2 orders =
         ordersCleaned =
             orders
                 |> AssocList.toList
-                |> List.map (\( _, value ) -> attendeesPending value)
-                |> List.concat
+                |> List.concatMap (\( _, value ) -> attendeesPending value)
                 |> List.Extra.unique
                 |> List.sort
     in
