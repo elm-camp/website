@@ -1,6 +1,6 @@
 module MarkdownThemed exposing (bulletPoint, renderFull)
 
-import Element exposing (Element, centerX, el, fill, html, image, maximum, padding, paddingEach, paragraph, px, width)
+import Element exposing (Element, centerX, el, fill, height, html, image, maximum, padding, paddingEach, paragraph, px, width)
 import Element.Background as Background
 import Element.Border
 import Element.Font as Font
@@ -220,7 +220,11 @@ renderer theme =
                 ]
                 [ Element.html (Html.text body)
                 ]
-    , thematicBreak = Element.el [ paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, width fill ] <| Element.el [ width fill, height (px 2), Background.color Theme.colors.green ] Element.none
+    , thematicBreak =
+        Element.el
+            [ paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, width fill ]
+        <|
+            Element.el [ width fill, height (px 2), Background.color Theme.colors.green ] Element.none
     , table = \children -> Element.column [ Element.width Element.fill ] children
     , tableHeader = \children -> Element.column [] children
     , tableBody = \children -> Element.column [] children
