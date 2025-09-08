@@ -19,10 +19,7 @@ ui t description model =
             model.now
                 |> Time.posixToMillis
     in
-    el Theme.contentAttributes <|
-        el [ centerX ] <|
-            Theme.h2 <|
-                asTimeToGo target model.now
+    el Theme.contentAttributes (el [ centerX ] (Theme.h2 (asTimeToGo target model.now)))
 
 
 ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
@@ -99,7 +96,7 @@ detailedCountdown t description model =
         none
 
     else
-        paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 <| output ++ " " ++ description ]
+        paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 (output ++ " " ++ description) ]
 
 
 

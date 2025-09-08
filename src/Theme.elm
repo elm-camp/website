@@ -73,8 +73,8 @@ css : Html msg
 css =
     Html.node "style"
         []
-        [ Html.text <|
-            fontFace 800 "Figtree-ExtraBold" "Open Sans"
+        [ Html.text
+            (fontFace 800 "Figtree-ExtraBold" "Open Sans"
                 ++ fontFace 700 "Figtree-Bold" "Open Sans"
                 ++ fontFace 600 "Figtree-SemiBold" "Open Sans"
                 ++ fontFace 500 "Figtree-Medium" "Open Sans"
@@ -95,6 +95,7 @@ css =
           animation: spin 1s infinite linear;
 }
 """
+            )
         ]
 
 
@@ -226,7 +227,7 @@ spinnerWhite =
     el
         [ width (px 16)
         , height (px 16)
-        , htmlAttribute <| Html.Attributes.class "spin"
+        , htmlAttribute (Html.Attributes.class "spin")
         , attr "border" "2px solid #fff"
         , attr "border-top-color" "transparent"
         , attr "border-radius" "50px"
@@ -236,7 +237,7 @@ spinnerWhite =
 
 attr : String -> String -> Element.Attribute msg
 attr name value =
-    htmlAttribute <| Html.Attributes.style name value
+    htmlAttribute (Html.Attributes.style name value)
 
 
 glow : Element.Attr decorative msg

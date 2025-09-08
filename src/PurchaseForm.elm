@@ -155,7 +155,11 @@ validateForm form =
         sponsorship =
             case form.sponsorship of
                 Just id ->
-                    Product.sponsorshipItems |> List.filter (\s -> s.productId == id) |> List.head |> Result.fromMaybe "Invalid sponsorship" |> Result.map (.productId >> Just)
+                    Product.sponsorshipItems
+                        |> List.filter (\s -> s.productId == id)
+                        |> List.head
+                        |> Result.fromMaybe "Invalid sponsorship"
+                        |> Result.map (\a -> a.productId |> Just)
 
                 Nothing ->
                     Ok Nothing

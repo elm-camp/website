@@ -105,7 +105,7 @@ viewTicketsEnabled ticketsEnabled =
                 text "TicketsEnabled"
 
             TicketsDisabled d ->
-                text <| "TicketsDisabled" ++ d.adminMessage
+                text ("TicketsDisabled" ++ d.adminMessage)
         ]
 
 
@@ -143,16 +143,16 @@ viewExpiredOrders orders =
         [ width fill
         , spacing 12
         ]
-        ([ el [] (text <| "Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n)
+        ([ el [] (text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
          , quickTable (orders |> AssocList.values)
-            [ attendeesPending >> String.join ", "
-            , attendeesDetail (.email >> EmailAddress.toString) >> String.join ", "
-            , .form >> .accommodationBookings >> toString
+            [ \order -> attendeesPending order |> String.join ", "
+            , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
+            , \order -> toString order.form.accommodationBookings
 
             -- , .form >> .grantApply >> Debug.toString
             -- , .form >> .grantContribution >> Debug.toString
             -- , .form >> .sponsorship >> Debug.toString
-            , attendeesDetail (.country >> String.Nonempty.toString) >> String.join ", "
+            , \order -> attendeesDetail (\a -> String.Nonempty.toString a.country) order |> String.join ", "
             ]
          ]
          -- ++ (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
@@ -168,7 +168,7 @@ quickTable collection fns =
                 fns
                     |> List.map
                         (\fn ->
-                            Html.td [] [ Html.text <| fn item ]
+                            Html.td [] [ Html.text (fn item) ]
                         )
                     |> Html.tr []
             )
@@ -183,7 +183,7 @@ viewExpiredOrders2 orders =
         ordersCleaned =
             orders
                 |> AssocList.toList
-                |> List.map (Tuple.second >> attendeesPending)
+                |> List.map (\( _, value ) -> attendeesPending value)
                 |> List.concat
                 |> List.Extra.unique
                 |> List.sort
@@ -192,15 +192,15 @@ viewExpiredOrders2 orders =
         [ width fill
         , spacing 8
         ]
-        (el [] (text <| "Participants: " ++ String.fromInt (List.length ordersCleaned)) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Font.size 14, spacing 8 ] [ text <| String.fromInt (k + 1), text s ])))
+        (el [] (text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Font.size 14, spacing 8 ] [ text (String.fromInt (k + 1)), text s ])))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
 viewOrder idx ( id, order ) =
     row
         [ width fill, Font.size 14, spacing 12 ]
-        [ el [] <| text <| String.fromInt idx
-        , el [] <| text <| String.join ", " <| attendees order
+        [ el [] (text (String.fromInt idx))
+        , el [] (text (String.join ", " (attendees order)))
         ]
 
 
@@ -208,8 +208,8 @@ viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element 
 viewPendingOrder idx ( id, order ) =
     row
         [ width fill, Font.size 14, spacing 12 ]
-        [ el [] <| text <| String.fromInt (idx + 1)
-        , el [] <| text <| String.join ", " <| attendeesPending order
+        [ el [] (text (String.fromInt (idx + 1)))
+        , el [] (text (String.join ", " (attendeesPending order)))
 
         -- , text <| Debug.toString order
         ]
@@ -217,17 +217,17 @@ viewPendingOrder idx ( id, order ) =
 
 attendees : Types.Order -> List String
 attendees order =
-    order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
+    order.form.attendees |> List.map (\a -> Name.toString a.name)
 
 
 attendeesPending : Types.PendingOrder -> List String
 attendeesPending order =
-    order.form.attendees |> List.map (.name >> (\(Name.Name n) -> n))
+    order.form.attendees |> List.map (\a -> Name.toString a.name)
 
 
 attendeesDetail : (a -> b) -> { c | form : { d | attendees : List a } } -> List String
 attendeesDetail fn order =
-    order.form.attendees |> List.map (fn >> toString)
+    order.form.attendees |> List.map (\a -> fn a |> toString)
 
 
 loadProdBackend : Cmd msg

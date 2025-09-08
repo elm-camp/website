@@ -63,22 +63,22 @@ config =
     , NoMissingTypeExpose.rule |> defaultIgnore
 
     --, NoSimpleLetBody.rule |> defaultIgnore
-    , NoUnused.Dependencies.rule |> defaultIgnore
-
+    --, NoUnused.Dependencies.rule |> defaultIgnore
     --, NoUnused.Exports.rule |> defaultIgnore
     --, NoUnused.Modules.rule |> defaultIgnore
     --, NoUnused.Parameters.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Unsafe.elm" ] |> defaultIgnore
-    --, ReviewPipelineStyles.rule
-    --    [ ReviewPipelineStyles.forbid ReviewPipelineStyles.leftPizzaPipelines
-    --        |> ReviewPipelineStyles.andTryToFixThemBy ReviewPipelineStyles.Fixes.convertingToParentheticalApplication
-    --        |> ReviewPipelineStyles.andCallThem "forbidden <| pipeline"
-    --    , ReviewPipelineStyles.forbid ReviewPipelineStyles.leftCompositionPipelines
-    --        |> ReviewPipelineStyles.andCallThem "forbidden << composition"
-    --    , ReviewPipelineStyles.forbid ReviewPipelineStyles.rightCompositionPipelines
-    --        |> ReviewPipelineStyles.andCallThem "forbidden >> composition"
-    --    ]
-    --    |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
-    --    |> defaultIgnore
+    , ReviewPipelineStyles.rule
+        [ ReviewPipelineStyles.forbid ReviewPipelineStyles.leftPizzaPipelines
+            |> ReviewPipelineStyles.andTryToFixThemBy ReviewPipelineStyles.Fixes.convertingToParentheticalApplication
+            |> ReviewPipelineStyles.andCallThem "forbidden <| pipeline"
+        , ReviewPipelineStyles.forbid ReviewPipelineStyles.leftCompositionPipelines
+            |> ReviewPipelineStyles.andCallThem "forbidden << composition"
+        , ReviewPipelineStyles.forbid ReviewPipelineStyles.rightCompositionPipelines
+            |> ReviewPipelineStyles.andCallThem "forbidden >> composition"
+        ]
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
+        |> defaultIgnore
+
     --, Simplify.rule Simplify.defaults |> defaultIgnore
     --, NoInconsistentAliases.config
     --    []

@@ -96,7 +96,7 @@ renderer theme =
                     in
                     case bg_ of
                         Just _ ->
-                            el [ Element.Border.rounded 10, padding 20 ] <| image attrs { src = src, description = "" }
+                            el [ Element.Border.rounded 10, padding 20 ] (image attrs { src = src, description = "" })
 
                         Nothing ->
                             image attrs { src = src, description = "" }
@@ -107,8 +107,8 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "bg"
             , Markdown.Html.tag "iframe"
                 (\src ratio title_ content ->
-                    html <|
-                        Html.div
+                    html
+                        (Html.div
                             [ Html.Attributes.style "position" "relative"
                             , Html.Attributes.style "width" "100%"
                             , Html.Attributes.style "padding-bottom" ratio
@@ -127,11 +127,12 @@ renderer theme =
                                 ]
                                 []
                             ]
+                        )
                 )
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withAttribute "ratio"
                 |> Markdown.Html.withAttribute "title"
-            , Markdown.Html.tag "br" (\_ -> html <| Html.br [] [])
+            , Markdown.Html.tag "br" (\_ -> html (Html.br [] []))
             , Markdown.Html.tag "red" (\children -> paragraph [ Font.color Theme.colors.red ] children)
             ]
     , text = \s -> Element.el [] (Element.text s)
@@ -223,8 +224,7 @@ renderer theme =
     , thematicBreak =
         Element.el
             [ paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, width fill ]
-        <|
-            Element.el [ width fill, height (px 2), Background.color Theme.colors.green ] Element.none
+            (Element.el [ width fill, height (px 2), Background.color Theme.colors.green ] Element.none)
     , table = \children -> Element.column [ Element.width Element.fill ] children
     , tableHeader = \children -> Element.column [] children
     , tableBody = \children -> Element.column [] children

@@ -161,24 +161,22 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
                     ]
 
         body =
-            formBody <|
-                [ ( "mode", "payment" )
-                , ( "allow_promotion_codes", "true" )
+            [ ( "mode", "payment" )
+            , ( "allow_promotion_codes", "true" )
 
-                -- Stripe expects seconds since epoch
-                , ( "expires_at", String.fromInt <| (Time.posixToMillis now // 1000) + (expiresInMinutes * 60) )
-                , ( "success_url"
-                  , Url.Builder.crossOrigin
-                        Env.domain
-                        [ successPath ]
-                        [ Url.Builder.string emailAddressParameter (EmailAddress.toString emailAddress) ]
-                  )
-                , ( "cancel_url"
-                  , Url.Builder.crossOrigin Env.domain [ cancelPath ] []
-                  )
-                , ( "customer_email", EmailAddress.toString emailAddress )
-                ]
-                    ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
+            -- Stripe expects seconds since epoch
+            , ( "expires_at", String.fromInt ((Time.posixToMillis now // 1000) + (expiresInMinutes * 60)) )
+            , ( "success_url"
+              , Url.Builder.crossOrigin
+                    Env.domain
+                    [ successPath ]
+                    [ Url.Builder.string emailAddressParameter (EmailAddress.toString emailAddress) ]
+              )
+            , ( "cancel_url", Url.Builder.crossOrigin Env.domain [ cancelPath ] [] )
+            , ( "customer_email", EmailAddress.toString emailAddress )
+            ]
+                ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
+                |> formBody
     in
     Http.task
         { method = "POST"
@@ -264,9 +262,10 @@ loadCheckout publicApiKey sid =
 
 toJsMessage : String -> List ( String, E.Value ) -> Cmd msg
 toJsMessage msg values =
-    stripe_to_js <|
-        E.object
+    stripe_to_js
+        (E.object
             (( "msg", E.string msg ) :: values)
+        )
 
 
 
@@ -283,15 +282,13 @@ cgiParameter ( key, value ) =
 {-| Encode a CGI parameter list.
 -}
 cgiParameters : List ( String, String ) -> String
-cgiParameters =
-    List.map cgiParameter
-        >> String.join "&"
+cgiParameters parameters =
+    List.map cgiParameter parameters |> String.join "&"
 
 
 {-| Put some key-value pairs in the body of your `Request`. This will automatically
 add the `Content-Type: application/x-www-form-urlencoded` header.
 -}
 formBody : List ( String, String ) -> Http.Body
-formBody =
-    cgiParameters
-        >> Http.stringBody "application/x-www-form-urlencoded"
+formBody parameters =
+    cgiParameters parameters |> Http.stringBody "application/x-www-form-urlencoded"

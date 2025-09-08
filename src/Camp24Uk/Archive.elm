@@ -235,7 +235,7 @@ sponsors window =
                         )
                     ]
                     { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
+                , Element.el [ Element.Font.size 24 ] (Element.text "Elm Weekly")
                 ]
         }
     , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }

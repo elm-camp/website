@@ -88,10 +88,11 @@ view model =
     in
     column Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
-          beforeTicketsAreLive <|
-            column Theme.contentAttributes
+          beforeTicketsAreLive
+            (column Theme.contentAttributes
                 [ ticketInfo model
                 ]
+            )
         , column
             [ width fill
             , spacing 60
@@ -104,14 +105,15 @@ view model =
             , el Theme.contentAttributes organisersInfo
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive <| el Theme.contentAttributes <| MarkdownThemed.renderFull "# Attend Elm Camp"
-            , afterTicketsAreLive <| ticketsView model
-            , afterTicketsAreLive <| accommodationView model
-            , afterTicketsAreLive <|
-                formView model
+            , afterTicketsAreLive (el Theme.contentAttributes (MarkdownThemed.renderFull "# Attend Elm Camp"))
+            , afterTicketsAreLive (ticketsView model)
+            , afterTicketsAreLive (accommodationView model)
+            , afterTicketsAreLive
+                (formView model
                     (Id.fromString Product.ticket.campingSpot)
                     (Id.fromString "testing")
                     Tickets.attendanceTicket
+                )
 
             -- , Element.el Theme.contentAttributes content3
             ]
@@ -124,11 +126,11 @@ ticketSalesOpenCountdown model =
         ticketsAreLive =
             View.Countdown.ticketSalesLive ticketSalesOpen model
     in
-    column (Theme.contentAttributes ++ [ spacing 20 ]) <|
-        if ticketsAreLive then
+    column (Theme.contentAttributes ++ [ spacing 20 ])
+        (if ticketsAreLive then
             [ el [ Font.size 20, centerX ] goToTicketSales ]
 
-        else
+         else
             [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
             , case model.zone of
                 Just zone ->
@@ -150,19 +152,19 @@ ticketSalesOpenCountdown model =
                                     [ centerX
                                     , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
                                     ]
-                                <|
-                                    text t
+                                    (text t)
                            )
 
                 _ ->
-                    el [ centerX ] <| text "nozone"
+                    el [ centerX ] (text "nozone")
             , Input.button
                 (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
                 { onPress = Just DownloadTicketSalesReminder
-                , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                , label = el [ Font.center, centerX ] (text "Add to calendar")
                 }
             , text " "
             ]
+        )
 
 
 ticketSalesHtmlId : String
@@ -659,9 +661,8 @@ opportunityGrant form =
                         ]
                     , column [ width (fillPortion 3) ]
                         [ row [ width (fillPortion 3) ]
-                            [ el [ paddingXY 0 10 ] <| text "0"
-                            , el [ paddingXY 0 10, alignRight ] <|
-                                text (Theme.priceText { currency = Money.USD, amount = 75000 })
+                            [ el [ paddingXY 0 10 ] (text "0")
+                            , el [ paddingXY 0 10, alignRight ] (text (Theme.priceText { currency = Money.USD, amount = 75000 }))
                             ]
                         , Input.slider
                             [ behindContent
@@ -684,8 +685,8 @@ opportunityGrant form =
                             , step = Just 1000
                             }
                         , row [ width (fillPortion 3) ]
-                            [ el [ paddingXY 0 10 ] <| text "No contribution"
-                            , el [ paddingXY 0 10, alignRight ] <| text "Donate full attendance"
+                            [ el [ paddingXY 0 10 ] (text "No contribution")
+                            , el [ paddingXY 0 10, alignRight ] (text "Donate full attendance")
                             ]
                         ]
                     ]
@@ -698,7 +699,7 @@ sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg_
 sponsorships model form =
     column (Theme.contentAttributes ++ [ spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
+        , paragraph [] [ text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
             |> Theme.rowToColumnWhen 700 model.window [ spacing 20, width fill ]
@@ -735,13 +736,13 @@ sponsorshipOption model form s =
         , el [ Font.size 30, Font.bold ] (text priceDisplay)
         , paragraph [] [ text s.description ]
         , s.features
-            |> List.map (\point -> paragraph [ Font.size 12 ] [ text <| "• " ++ point ])
+            |> List.map (\point -> paragraph [ Font.size 12 ] [ text ("• " ++ point) ])
             |> column [ spacing 5 ]
         , Input.button
             (Theme.submitButtonAttributes True)
             { onPress =
-                Just <|
-                    FormChanged
+                Just
+                    (FormChanged
                         { form
                             | sponsorship =
                                 if selected then
@@ -750,6 +751,7 @@ sponsorshipOption model form s =
                                 else
                                     Just s.productId
                         }
+                    )
             , label =
                 el
                     [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
@@ -820,7 +822,7 @@ summary model =
     in
     column (Theme.contentAttributes ++ [ spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendees x " ++ String.fromInt num)
+        , model.form.attendees |> List.length |> (\num -> text ("Attendees x " ++ String.fromInt num))
         , if List.length model.form.accommodationBookings == 0 then
             text "No accommodation bookings"
 
@@ -830,15 +832,19 @@ summary model =
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
                 |> column []
-        , Theme.viewIf (model.form.grantContribution /= "0") <|
-            text <|
-                "Opportunity grant: "
+        , Theme.viewIf (model.form.grantContribution /= "0")
+            (text
+                ("Opportunity grant: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
-        , Theme.viewIf (sponsorshipTotal > 0) <|
-            text <|
-                "Sponsorship: "
+                )
+            )
+        , Theme.viewIf (sponsorshipTotal > 0)
+            (text
+                ("Sponsorship: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
-        , Theme.h3 <| "Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
+                )
+            )
+        , Theme.h3 ("Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total })
         ]
 
 

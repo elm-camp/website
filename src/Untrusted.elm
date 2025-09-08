@@ -37,7 +37,7 @@ purchaseForm (Untrusted a) =
     case
         T2 (untrust a.billingEmail |> emailAddress)
             (a.attendees
-                |> List.map (untrust >> attendeeForm)
+                |> List.map (\b -> untrust b |> attendeeForm)
                 |> validateList
             )
     of

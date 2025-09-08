@@ -1,4 +1,4 @@
-module HttpHelpers exposing (customError, customErrorEffect, expectJson_, httpErrorToString, httpErrorToStringEffect, jsonResolver, jsonResolverEffect, parseError)
+module HttpHelpers exposing (customError, customErrorEffect, expectJson_, httpErrorToString, httpErrorToStringEffect, jsonResolver, jsonResolverEffect)
 
 import Http
 import Json.Decode as D
@@ -13,8 +13,8 @@ so we can actually see the error message.
 -}
 expectJson_ : (Result Http.Error a -> msg) -> D.Decoder a -> Http.Expect msg
 expectJson_ toMsg decoder =
-    Http.expectStringResponse toMsg <|
-        \response ->
+    Http.expectStringResponse toMsg
+        (\response ->
             case response of
                 Http.BadUrl_ url ->
                     Err (Http.BadUrl url)
@@ -35,15 +35,11 @@ expectJson_ toMsg decoder =
 
                         Err err ->
                             Err (Http.BadBody (D.errorToString err))
+        )
 
 
 
 -- From https://github.com/krisajenkins/remotedata/issues/28
-
-
-parseError : String -> Maybe String
-parseError =
-    D.decodeString (D.field "error" D.string) >> Result.toMaybe
 
 
 httpErrorToString : Http.Error -> String
@@ -86,18 +82,18 @@ httpErrorToStringEffect err =
 
 customError : String -> Http.Error
 customError s =
-    Http.BadBody <| "Error: " ++ s
+    Http.BadBody ("Error: " ++ s)
 
 
 customErrorEffect : String -> Http.Error
 customErrorEffect s =
-    Http.BadBody <| "Error: " ++ s
+    Http.BadBody ("Error: " ++ s)
 
 
 jsonResolver : D.Decoder a -> Http.Resolver Http.Error a
 jsonResolver decoder =
-    Http.stringResolver <|
-        \response ->
+    Http.stringResolver
+        (\response ->
             case response of
                 Http.GoodStatus_ _ body ->
                     D.decodeString decoder body
@@ -115,12 +111,13 @@ jsonResolver decoder =
 
                 Http.BadStatus_ metadata body ->
                     Err (Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
+        )
 
 
 jsonResolverEffect : D.Decoder a -> Http.Resolver Http.Error a
 jsonResolverEffect decoder =
-    Http.stringResolver <|
-        \response ->
+    Http.stringResolver
+        (\response ->
             case response of
                 Http.GoodStatus_ _ body ->
                     D.decodeString decoder body
@@ -138,3 +135,4 @@ jsonResolverEffect decoder =
 
                 Http.BadStatus_ metadata body ->
                     Err (Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
+        )

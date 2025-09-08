@@ -33,7 +33,7 @@ backendModelEndpoint _ model request =
             case Json.Decode.decodeValue Json.Decode.string json of
                 Ok ok ->
                     if ok == Env.adminPassword then
-                        ( ResultBytes <| Wire3.intListFromBytes <| Wire3.bytesEncode <| Types.w3_encode_BackendModel model, model, Cmd.none )
+                        ( ResultBytes (Wire3.intListFromBytes (Wire3.bytesEncode (Types.w3_encode_BackendModel model))), model, Cmd.none )
 
                     else
                         ( badReq "Invalid admin password", model, Cmd.none )
@@ -219,4 +219,4 @@ lamdera_handleEndpoints reqRaw req model =
             )
 
         _ ->
-            ( LamderaRPC.resultWith LamderaRPC.StatusNotFound [] <| LamderaRPC.BodyString <| "Unknown endpoint " ++ req.endpoint, model, Cmd.none )
+            ( LamderaRPC.resultWith LamderaRPC.StatusNotFound [] (LamderaRPC.BodyString ("Unknown endpoint " ++ req.endpoint)), model, Cmd.none )

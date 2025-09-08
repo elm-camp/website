@@ -295,7 +295,7 @@ sponsors window =
                                 )
                             ]
                             { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                        , el [ Font.size 24 ] <| text "Elm Weekly"
+                        , el [ Font.size 24 ] (text "Elm Weekly")
                         ]
                 }
           ]
