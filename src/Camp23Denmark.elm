@@ -9,7 +9,7 @@ import Theme
 import Types exposing (FrontendMsg_, LoadedModel)
 
 
-view : LoadedModel -> SubPage -> Element.Element FrontendMsg_
+view : LoadedModel -> SubPage -> Element FrontendMsg_
 view model subpage =
     Element.column
         [ Element.width Element.fill, Element.height Element.fill ]

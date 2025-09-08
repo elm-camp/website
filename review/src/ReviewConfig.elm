@@ -53,16 +53,15 @@ config =
     , NoUnused.Patterns.rule |> defaultIgnore
     , Docs.ReviewAtDocs.rule |> defaultIgnore
     , NoConfusingPrefixOperator.rule |> defaultIgnore
-
-    --, NoDebug.TodoOrToString.rule
-    --    |> Review.Rule.ignoreErrorsForDirectories [ "tests/" ]
-    --    |> defaultIgnore
+    , NoDebug.TodoOrToString.rule
+        |> Review.Rule.ignoreErrorsForDirectories [ "tests/" ]
+        |> defaultIgnore
     , NoExposingEverything.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Env.elm" ] |> defaultIgnore
     , NoImportingEverything.rule [] |> defaultIgnore
     , NoMissingTypeAnnotation.rule |> defaultIgnore
     , NoMissingTypeExpose.rule |> defaultIgnore
+    , NoSimpleLetBody.rule |> defaultIgnore
 
-    --, NoSimpleLetBody.rule |> defaultIgnore
     --, NoUnused.Dependencies.rule |> defaultIgnore
     --, NoUnused.Exports.rule |> defaultIgnore
     --, NoUnused.Modules.rule |> defaultIgnore
@@ -79,12 +78,14 @@ config =
         |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
         |> defaultIgnore
     , Simplify.rule Simplify.defaults |> defaultIgnore
+    , NoInconsistentAliases.config
+        [ ( "Json.Decode", "D" )
+        , ( "Json.Encode", "E" )
+        ]
+        |> NoInconsistentAliases.rule
+        |> defaultIgnore
+    , NoModuleOnExposedNames.rule |> defaultIgnore
 
-    --, NoInconsistentAliases.config
-    --    []
-    --    |> NoInconsistentAliases.rule
-    --    |> defaultIgnore
-    --, NoModuleOnExposedNames.rule |> defaultIgnore
     --, NoMissingTypeConstructor.rule |> defaultIgnore
     --, NoUnused.Variables.rule
     --    |> Review.Rule.ignoreErrorsForDirectories
@@ -96,14 +97,14 @@ config =
     --        [ "src/LamderaRPC.elm"
     --        ]
     --    |> Review.Rule.ignoreErrorsForDirectories [ "vendored" ]
-    --, NoBrokenParserFunctions.rule
-    --, BackendOnly.rule
-    --    { functions =
-    --        []
-    --    , modules =
-    --        [ [ "Backend" ]
-    --        ]
-    --    }
+    , NoBrokenParserFunctions.rule
+    , BackendOnly.rule
+        { functions =
+            []
+        , modules =
+            [ [ "Backend" ]
+            ]
+        }
     ]
 
 
