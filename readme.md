@@ -23,7 +23,7 @@ Features:
 - [ ] Amend maxAttendees and ticket type limits
 - [ ] Double check email confirmation messages
 - [ ] Double check Sponsorship price display. Sponsorships have a product id, but they also have a .price. Should we show the
-  price on the sponsorhip record or the price we have stored for the sponsorship's product id? See Sales.elm.
+  price on the sponsorship record or the price we have stored for the sponsorship's product id? See Sales.elm.
 -- Are these necessary for tickets live?
 - [x] Update Venue and Access route info and uncomment the link in the footer or other places
 - [x] Update Grant contribution slider from GBP
