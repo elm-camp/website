@@ -27,5 +27,4 @@ content1 =
 unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
 unconferenceBulletPoints model =
     []
-        |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
         |> Element.column [ Element.spacing 15 ]

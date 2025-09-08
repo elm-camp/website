@@ -200,24 +200,13 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (\_ -> addMsg)
 
             else
-                let
-                    ( text_, msg ) =
-                        if ticketAvailable then
-                            ( "Select", Just addMsg )
-
-                        else if ticket.name == "Campfire Ticket" then
-                            ( "Waitlist", Nothing )
-
-                        else
-                            ( "Waitlist", Nothing )
-                in
                 Input.button
                     (Theme.submitButtonAttributes ticketAvailable)
-                    { onPress = msg
+                    { onPress = Just addMsg
                     , label =
                         el
                             [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                            (text text_)
+                            (text "Select")
                     }
 
           else if ticket.name == "Campfire Ticket" then

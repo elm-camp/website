@@ -140,18 +140,7 @@ asTimeToGo zoned now =
             zoned.time
             ++ " Tomorrow"
 
-    else if days == 0 then
-        DateFormat.format
-            [ DateFormat.hourMilitaryFixed
-            , DateFormat.text ":"
-            , DateFormat.minuteFixed
-            ]
-            zoned.zone
-            zoned.time
-            ++ " today"
-
     else
-        -- String.fromInt days ++ " days"
         DateFormat.format
             [ DateFormat.hourMilitaryFixed
             , DateFormat.text ":"
