@@ -2,7 +2,7 @@ module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, 
 
 import Date
 import DateFormat
-import Element exposing (Element, centerX, el, none, paragraph)
+import Element exposing (Element)
 import Element.Font as Font
 import Theme
 import Time
@@ -19,7 +19,7 @@ ui t description model =
             model.now
                 |> Time.posixToMillis
     in
-    el Theme.contentAttributes (el [ centerX ] (Theme.h2 (asTimeToGo target model.now)))
+    Element.el Theme.contentAttributes (Element.el [ Element.centerX ] (Theme.h2 (asTimeToGo target model.now)))
 
 
 ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
@@ -89,10 +89,10 @@ detailedCountdown t description model =
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
     if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        none
+        Element.none
 
     else
-        paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 (output ++ " " ++ description) ]
+        Element.paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 (output ++ " " ++ description) ]
 
 
 

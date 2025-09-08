@@ -14,7 +14,7 @@ import Camp25US
 import Camp25US.Inventory as Inventory
 import Camp25US.Tickets as Tickets
 import Dict
-import Element exposing (Element, centerX, centerY, column, el, fill, height, image, link, maximum, moveRight, moveUp, none, padding, paddingEach, paddingXY, paragraph, px, row, spacing, text, width)
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
 import EmailAddress exposing (EmailAddress)
@@ -473,33 +473,33 @@ header config =
                 80
 
         elmCampTitle =
-            link
+            Element.link
                 []
                 { url = Route.encode HomepageRoute
-                , label = el [ Font.size titleSize, Theme.glow, paddingXY 0 8 ] (text "Elm Camp")
+                , label = Element.el [ Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
                 }
 
         elmCampNextTopLine =
-            column [ spacing 30 ]
-                [ row
-                    [ centerX, spacing 13 ]
-                    [ image
-                        [ width (px 49) ]
+            Element.column [ Element.spacing 30 ]
+                [ Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
                         { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-                    , column []
-                        [ column
-                            [ spacing 2, Font.size 24, moveUp 1 ]
-                            [ el [ Theme.glow ] (text "Unconference")
-                            , el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (text "2025")
+                    , Element.column []
+                        [ Element.column
+                            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
+                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
+                            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text "2025")
                             ]
                         ]
                     ]
-                , column
-                    [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
-                    [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "")
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇺🇸 Watervliet, Michigan")
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tuesday 24th - Friday 27th June 2025")
+                , Element.column
+                    [ Element.moveRight 0, Element.spacing 2, Font.size 18, Element.moveUp 1 ]
+                    [ Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "🇺🇸 Watervliet, Michigan")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "Tuesday 24th - Friday 27th June 2025")
                     ]
                 ]
 
@@ -507,31 +507,31 @@ header config =
             300
 
         eventImage =
-            image
-                [ width (maximum imageMaxWidth fill), Theme.attr "fetchpriority" "high" ]
+            Element.image
+                [ Element.width (Element.maximum imageMaxWidth Element.fill), Theme.attr "fetchpriority" "high" ]
                 { src = "/logo-25.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
-        column
-            [ padding 30, spacing 20, centerX ]
+        Element.column
+            [ Element.padding 30, Element.spacing 20, Element.centerX ]
             [ if config.isCompact then
-                none
+                Element.none
 
               else
                 eventImage
-            , column
-                [ spacing 24, centerX ]
+            , Element.column
+                [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
             ]
 
     else
-        row
-            [ padding 30, spacing 40, centerX ]
+        Element.row
+            [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ eventImage
-            , column
-                [ spacing 24 ]
+            , Element.column
+                [ Element.spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
@@ -613,44 +613,44 @@ loadedView model =
             homepageView model
 
         UnconferenceFormatRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ Page.UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
 
         VenueAndAccessRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ Camp25US.venueAccessContent
                     ]
                 , Theme.footer
                 ]
 
         CodeOfConductRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
                     ]
                 , Theme.footer
                 ]
 
         OrganisersRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
                     , Camp25US.organisers |> MarkdownThemed.renderFull
                     ]
@@ -658,11 +658,11 @@ loadedView model =
                 ]
 
         ElmCampArchiveRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ elmCampArchiveContent model ]
                 , Theme.footer
                 ]
@@ -671,39 +671,39 @@ loadedView model =
             Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->
-            column
-                [ centerX, centerY, padding 24, spacing 16 ]
-                [ paragraph [ Font.size 20, Font.center ] [ text "Your ticket purchase was successful!" ]
-                , paragraph
-                    [ width (px 420) ]
-                    [ text "An email has been sent to "
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
+                [ Element.paragraph [ Font.size 20, Font.center ] [ Element.text "Your ticket purchase was successful!" ]
+                , Element.paragraph
+                    [ Element.width (Element.px 420) ]
+                    [ Element.text "An email has been sent to "
                     , case maybeEmailAddress of
                         Just emailAddress ->
                             EmailAddress.toString emailAddress
-                                |> text
-                                |> el [ Font.semiBold ]
+                                |> Element.text
+                                |> Element.el [ Font.semiBold ]
 
                         Nothing ->
-                            text "your email address"
-                    , text " with additional information."
+                            Element.text "your email address"
+                    , Element.text " with additional information."
                     ]
-                , link
+                , Element.link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = el [ centerX ] (text "Return to homepage")
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
 
         PaymentCancelRoute ->
-            column
-                [ centerX, centerY, padding 24, spacing 16 ]
-                [ paragraph
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
+                [ Element.paragraph
                     [ Font.size 20 ]
-                    [ text "You cancelled your ticket purchase" ]
-                , link
+                    [ Element.text "You cancelled your ticket purchase" ]
+                , Element.link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = el [ centerX ] (text "Return to homepage")
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
 
@@ -745,23 +745,23 @@ homepageView model =
             else
                 60
     in
-    column
-        [ width fill ]
-        [ column
-            [ spacing 50
-            , width fill
-            , paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+    Element.column
+        [ Element.width Element.fill ]
+        [ Element.column
+            [ Element.spacing 50
+            , Element.width Element.fill
+            , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
             ]
             [ header { window = model.window, isCompact = False }
-            , column
-                [ width fill, spacing 40 ]
+            , Element.column
+                [ Element.width Element.fill, Element.spacing 40 ]
                 [ --View.Sales.ticketSalesOpenCountdown model
-                  column Theme.contentAttributes [ elmCampOverview ]
-                , column Theme.contentAttributes
+                  Element.column Theme.contentAttributes [ elmCampOverview ]
+                , Element.column Theme.contentAttributes
                     [ Camp25US.venuePictures model
                     , Camp25US.conferenceSummary
                     ]
-                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
+                , Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
 
                 --, View.Sales.view model
                 ]
@@ -874,7 +874,7 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
 
 elmCampArchiveContent : LoadedModel -> Element msg
 elmCampArchiveContent model =
-    column []
+    Element.column []
         [ """
 # What happened at Elm Camp 2023
 

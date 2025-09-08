@@ -1,6 +1,6 @@
 module MarkdownThemed exposing (bulletPoint, renderFull)
 
-import Element exposing (Element, centerX, el, fill, height, html, image, maximum, padding, paddingEach, paragraph, px, width)
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Border
 import Element.Font as Font
@@ -82,24 +82,26 @@ renderer theme =
                                 Just maxWidth ->
                                     [ maxWidth
                                         |> String.toInt
-                                        |> Maybe.map (\w -> width (fill |> maximum w))
-                                        |> Maybe.withDefault (width fill)
-                                    , centerX
+                                        |> Maybe.map (\w -> Element.width (Element.fill |> Element.maximum w))
+                                        |> Maybe.withDefault (Element.width Element.fill)
+                                    , Element.centerX
                                     ]
 
                                 Nothing ->
                                     [ width_
                                         |> Maybe.andThen String.toInt
-                                        |> Maybe.map (\w -> width (px w))
-                                        |> Maybe.withDefault (width fill)
+                                        |> Maybe.map (\w -> Element.width (Element.px w))
+                                        |> Maybe.withDefault (Element.width Element.fill)
                                     ]
                     in
                     case bg_ of
                         Just _ ->
-                            el [ Element.Border.rounded 10, padding 20 ] (image attrs { src = src, description = "" })
+                            Element.el
+                                [ Element.Border.rounded 10, Element.padding 20 ]
+                                (Element.image attrs { src = src, description = "" })
 
                         Nothing ->
-                            image attrs { src = src, description = "" }
+                            Element.image attrs { src = src, description = "" }
                 )
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withOptionalAttribute "width"
@@ -107,7 +109,7 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "bg"
             , Markdown.Html.tag "iframe"
                 (\src ratio title_ content ->
-                    html
+                    Element.html
                         (Html.div
                             [ Html.Attributes.style "position" "relative"
                             , Html.Attributes.style "width" "100%"
@@ -132,8 +134,8 @@ renderer theme =
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withAttribute "ratio"
                 |> Markdown.Html.withAttribute "title"
-            , Markdown.Html.tag "br" (\_ -> html (Html.br [] []))
-            , Markdown.Html.tag "red" (\children -> paragraph [ Font.color Theme.colors.red ] children)
+            , Markdown.Html.tag "br" (\_ -> Element.html (Html.br [] []))
+            , Markdown.Html.tag "red" (\children -> Element.paragraph [ Font.color Theme.colors.red ] children)
             ]
     , text = \s -> Element.el [] (Element.text s)
     , codeSpan =
@@ -223,8 +225,11 @@ renderer theme =
                 ]
     , thematicBreak =
         Element.el
-            [ paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, width fill ]
-            (Element.el [ width fill, height (px 2), Background.color Theme.colors.green ] Element.none)
+            [ Element.paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, Element.width Element.fill ]
+            (Element.el
+                [ Element.width Element.fill, Element.height (Element.px 2), Background.color Theme.colors.green ]
+                Element.none
+            )
     , table = \children -> Element.column [ Element.width Element.fill ] children
     , tableHeader = \children -> Element.column [] children
     , tableBody = \children -> Element.column [] children

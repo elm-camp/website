@@ -17,7 +17,7 @@ module Admin exposing
     )
 
 import AssocList
-import Element exposing (Element, centerX, column, el, fill, html, none, padding, row, spacing, text, width)
+import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
 import EmailAddress
@@ -39,7 +39,7 @@ view model =
             viewAdmin backendModel
 
         Nothing ->
-            text "loading"
+            Element.text "loading"
 
 
 viewAdmin : BackendModel -> Element FrontendMsg_
@@ -66,22 +66,22 @@ viewAdmin backendModel =
             "Orders (completed, pending, expired): "
                 ++ (List.map String.fromInt [ numberOfOrders, numberOfPendingOrders, numberOfExpiredOrders ] |> String.join ", ")
     in
-    column
-        [ width fill
-        , padding 24
-        , spacing 40
+    Element.column
+        [ Element.width Element.fill
+        , Element.padding 24
+        , Element.spacing 40
         ]
         [ if Env.mode == Env.Development then
             Input.button
                 Theme.normalButtonAttributes
                 { onPress = Just AdminPullBackendModel
-                , label = el [ centerX ] (text "Pull Backend Model from prod")
+                , label = Element.el [ Element.centerX ] (Element.text "Pull Backend Model from prod")
                 }
 
           else
-            none
-        , el [ Font.size 18 ] (text "Admin")
-        , el [ Font.size 18 ] (text info)
+            Element.none
+        , Element.el [ Font.size 18 ] (Element.text "Admin")
+        , Element.el [ Font.size 18 ] (Element.text info)
         , viewOrders backendModel.orders
 
         -- , viewExpiredOrders2 backendModel.expiredOrders
@@ -96,27 +96,27 @@ viewAdmin backendModel =
 
 viewTicketsEnabled : TicketsEnabled -> Element msg
 viewTicketsEnabled ticketsEnabled =
-    column
-        [ width fill
+    Element.column
+        [ Element.width Element.fill
         ]
-        [ text "TicketsEnabled:"
+        [ Element.text "TicketsEnabled:"
         , case ticketsEnabled of
             TicketsEnabled ->
-                text "TicketsEnabled"
+                Element.text "TicketsEnabled"
 
             TicketsDisabled d ->
-                text ("TicketsDisabled" ++ d.adminMessage)
+                Element.text ("TicketsDisabled" ++ d.adminMessage)
         ]
 
 
 viewPrices : AssocList.Dict (Id ProductId) Price2 -> Element msg
 viewPrices prices =
-    column
-        [ width fill
+    Element.column
+        [ Element.width Element.fill
         ]
-        [ text "Prices TODO"
+        [ Element.text "Prices TODO"
 
-        -- , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> text
+        -- , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> Element.text
         ]
 
 
@@ -126,9 +126,9 @@ viewOrders orders =
         n =
             orders |> AssocList.toList |> List.length
     in
-    column
-        [ width fill
-        , spacing 12
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacing 12
         ]
         (orders |> AssocList.toList |> List.indexedMap viewOrder)
 
@@ -139,11 +139,11 @@ viewExpiredOrders orders =
         n =
             orders |> AssocList.toList |> List.length
     in
-    column
-        [ width fill
-        , spacing 12
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacing 12
         ]
-        ([ el [] (text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
+        ([ Element.el [] (Element.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
          , quickTable (orders |> AssocList.values)
             [ \order -> attendeesPending order |> String.join ", "
             , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
@@ -173,7 +173,7 @@ quickTable collection fns =
                     |> Html.tr []
             )
         |> Html.table []
-        |> html
+        |> Element.html
 
 
 viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
@@ -187,30 +187,30 @@ viewExpiredOrders2 orders =
                 |> List.Extra.unique
                 |> List.sort
     in
-    column
-        [ width fill
-        , spacing 8
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacing 8
         ]
-        (el [] (text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> row [ Font.size 14, spacing 8 ] [ text (String.fromInt (k + 1)), text s ])))
+        (Element.el [] (Element.text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> Element.row [ Font.size 14, Element.spacing 8 ] [ Element.text (String.fromInt (k + 1)), Element.text s ])))
 
 
 viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
 viewOrder idx ( id, order ) =
-    row
-        [ width fill, Font.size 14, spacing 12 ]
-        [ el [] (text (String.fromInt idx))
-        , el [] (text (String.join ", " (attendees order)))
+    Element.row
+        [ Element.width Element.fill, Font.size 14, Element.spacing 12 ]
+        [ Element.el [] (Element.text (String.fromInt idx))
+        , Element.el [] (Element.text (String.join ", " (attendees order)))
         ]
 
 
 viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element msg
 viewPendingOrder idx ( id, order ) =
-    row
-        [ width fill, Font.size 14, spacing 12 ]
-        [ el [] (text (String.fromInt (idx + 1)))
-        , el [] (text (String.join ", " (attendeesPending order)))
+    Element.row
+        [ Element.width Element.fill, Font.size 14, Element.spacing 12 ]
+        [ Element.el [] (Element.text (String.fromInt (idx + 1)))
+        , Element.el [] (Element.text (String.join ", " (attendeesPending order)))
 
-        -- , text <| Debug.toString order
+        -- , Element.text <| Debug.toString order
         ]
 
 
@@ -247,13 +247,13 @@ loadProdBackend =
 --         |> AssocList.toList
 --         |> List.map
 --             (\data ->
---                 column
+--                 Element.column
 --                     [ width fill
 --                     ]
---                     [ paragraph [] [ text (Debug.toString data) ]
+--                     [ paragraph [] [ Element.text (Debug.toString data) ]
 --                     ]
 --             )
---         |> column []
+--         |> Element.column []
 
 
 toString : a -> String

@@ -2,7 +2,7 @@ module Camp24Devon.Tickets exposing (Ticket, accomToString, accomToTicket, accom
 
 import AssocList
 import Camp24Devon.Product as Product
-import Element exposing (Element, alignBottom, centerX, el, none, paragraph, rgb, text)
+import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
 import Id exposing (Id)
@@ -183,14 +183,14 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
             form.accommodationBookings |> List.filter ((==) accom) |> List.length
     in
     Theme.panel []
-        [ none
+        [ Element.none
 
         -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
-        , paragraph [ Font.semiBold, Font.size 20 ] [ text ticket.name ]
+        , Element.paragraph [ Font.semiBold, Font.size 20 ] [ Element.text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
-        , el
-            [ Font.bold, Font.size 36, alignBottom ]
-            (text (Theme.priceText price))
+        , Element.el
+            [ Font.bold, Font.size 36, Element.alignBottom ]
+            (Element.text (Theme.priceText price))
         , if ticketAvailable then
             if selectedCount > 0 then
                 Theme.numericField
@@ -204,14 +204,14 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (Theme.submitButtonAttributes ticketAvailable)
                     { onPress = Just addMsg
                     , label =
-                        el
-                            [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                            (text "Select")
+                        Element.el
+                            [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
+                            (Element.text "Select")
                     }
 
           else if ticket.name == "Campfire Ticket" then
-            text "Waitlist"
+            Element.text "Waitlist"
 
           else
-            text "Sold out!"
+            Element.text "Sold out!"
         ]

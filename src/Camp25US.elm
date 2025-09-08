@@ -15,7 +15,7 @@ module Camp25US exposing
 
 import Camp25US.Archive
 import Camp25US.Artifacts
-import Element exposing (Element, Length, centerX, column, el, fill, html, image, newTabLink, px, row, spacing, text, width, wrappedRow)
+import Element exposing (Element, Length)
 import Element.Font as Font
 import Html
 import Html.Attributes
@@ -146,9 +146,9 @@ venuePictures model =
     in
     if model.window.width > 950 then
         [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (px 288) (prefix ++ image))
-            |> wrappedRow
-                [ spacing 10, width (px 900), centerX ]
+            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
+            |> Element.wrappedRow
+                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
 
     else
         [ [ "image1.webp", "image2.webp" ]
@@ -157,16 +157,16 @@ venuePictures model =
         ]
             |> List.map
                 (\paths ->
-                    row
-                        [ spacing 10, width fill ]
-                        (List.map (\image -> venueImage fill (prefix ++ image)) paths)
+                    Element.row
+                        [ Element.spacing 10, Element.width Element.fill ]
+                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
                 )
-            |> column [ spacing 10, width fill ]
+            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
 
 
 venueImage : Length -> String -> Element msg
 venueImage width path =
-    image
+    Element.image
         [ Element.width width ]
         { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
 
@@ -194,7 +194,7 @@ organisers =
 
 venueAccessContent : Element msg
 venueAccessContent =
-    column
+    Element.column
         []
         [ """
 # The venue and access
@@ -236,7 +236,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
             , Html.Attributes.style "border" "none"
             ]
             []
-            |> html
+            |> Element.html
         ]
 
 
@@ -253,13 +253,13 @@ sponsors : { window | width : Int } -> Element msg
 sponsors window =
     let
         asImg { image, url, width } =
-            newTabLink
-                [ Element.width fill ]
+            Element.newTabLink
+                [ Element.width Element.fill ]
                 { url = url
                 , label =
                     Element.image
                         [ Element.width
-                            (px
+                            (Element.px
                                 (if window.width < 800 then
                                     toFloat width * 0.7 |> round
 
@@ -271,21 +271,21 @@ sponsors window =
                         { src = "/sponsors/" ++ image, description = url }
                 }
     in
-    column [ centerX, spacing 32 ]
+    Element.column [ Element.centerX, Element.spacing 32 ]
         [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
           , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
           ]
-            |> wrappedRow [ centerX, spacing 32 ]
+            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
         , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
           , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , newTabLink
-                [ width fill ]
+          , Element.newTabLink
+                [ Element.width Element.fill ]
                 { url = "https://www.elmweekly.nl"
                 , label =
-                    row [ spacing 10, width (px 180) ]
-                        [ image
-                            [ width
-                                (px
+                    Element.row [ Element.spacing 10, Element.width (Element.px 180) ]
+                        [ Element.image
+                            [ Element.width
+                                (Element.px
                                     (if window.width < 800 then
                                         50 * 0.7 |> round
 
@@ -295,9 +295,9 @@ sponsors window =
                                 )
                             ]
                             { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                        , el [ Font.size 24 ] (text "Elm Weekly")
+                        , Element.el [ Font.size 24 ] (Element.text "Elm Weekly")
                         ]
                 }
           ]
-            |> wrappedRow [ centerX, spacing 32 ]
+            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
         ]

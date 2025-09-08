@@ -31,7 +31,7 @@ module Theme exposing
     , viewIf
     )
 
-import Element exposing (Element, el, fill, height, htmlAttribute, none, paddingXY, px, row, spacing, text, width)
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -224,20 +224,20 @@ rowToColumnWhen width window attrs children =
 
 spinnerWhite : Element msg
 spinnerWhite =
-    el
-        [ width (px 16)
-        , height (px 16)
-        , htmlAttribute (Html.Attributes.class "spin")
+    Element.el
+        [ Element.width (Element.px 16)
+        , Element.height (Element.px 16)
+        , Element.htmlAttribute (Html.Attributes.class "spin")
         , attr "border" "2px solid #fff"
         , attr "border-top-color" "transparent"
         , attr "border-radius" "50px"
         ]
-        none
+        Element.none
 
 
 attr : String -> String -> Element.Attribute msg
 attr name value =
-    htmlAttribute (Html.Attributes.style name value)
+    Element.htmlAttribute (Html.Attributes.style name value)
 
 
 glow : Element.Attr decorative msg
@@ -250,7 +250,7 @@ footer =
     let
         btn route label =
             Element.link
-                [ Background.color (Element.rgb255 12 109 82), paddingXY 10 10, Border.rounded 10 ]
+                [ Background.color (Element.rgb255 12 109 82), Element.paddingXY 10 10, Border.rounded 10 ]
                 { url = Route.encode route, label = Element.text label }
     in
     Element.el
@@ -275,19 +275,29 @@ footer =
 
 numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Element msg
 numericField title value downMsg upMsg =
-    row [ spacing 5, width fill ]
+    Element.row [ Element.spacing 5, Element.width Element.fill ]
         [ Input.button
-            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            (normalButtonAttributes
+                ++ [ Background.color colors.green
+                   , Font.color colors.white
+                   , Element.width (Element.px 50)
+                   ]
+            )
             { onPress = Just (downMsg (value - 1))
             , label = Element.el [ Element.centerX ] (Element.text "-")
             }
         , Input.button
             normalButtonAttributes
             { onPress = Nothing
-            , label = text (String.fromInt value)
+            , label = Element.text (String.fromInt value)
             }
         , Input.button
-            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            (normalButtonAttributes
+                ++ [ Background.color colors.green
+                   , Font.color colors.white
+                   , Element.width (Element.px 50)
+                   ]
+            )
             { onPress = Just (upMsg (value + 1))
             , label = Element.el [ Element.centerX ] (Element.text "+")
             }
@@ -321,22 +331,22 @@ showyButtonAttributes =
 
 h1 : String -> Element msg
 h1 t =
-    el (heading1Attrs lightTheme) (text t)
+    Element.el (heading1Attrs lightTheme) (Element.text t)
 
 
 h2 : String -> Element msg
 h2 t =
-    el (heading2Attrs lightTheme) (text t)
+    Element.el (heading2Attrs lightTheme) (Element.text t)
 
 
 h3 : String -> Element msg
 h3 t =
-    el (heading3Attrs lightTheme) (text t)
+    Element.el (heading3Attrs lightTheme) (Element.text t)
 
 
 h4 : String -> Element msg
 h4 t =
-    el (heading4Attrs lightTheme) (text t)
+    Element.el (heading4Attrs lightTheme) (Element.text t)
 
 
 heading1Attrs : Theme -> List (Element.Attr () msg)
