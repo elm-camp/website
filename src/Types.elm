@@ -12,7 +12,7 @@ import Id exposing (Id)
 import Lamdera exposing (ClientId, SessionId)
 import LiveSchedule
 import Money
-import Postmark exposing (PostmarkSendResponse)
+import Postmark
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
@@ -231,7 +231,7 @@ type alias Order =
 
 type EmailResult
     = SendingEmail
-    | EmailSuccess PostmarkSendResponse
+    | EmailSuccess
     | EmailFailed Http.Error
 
 
@@ -303,8 +303,8 @@ type BackendMsg
     | OnConnected SessionId ClientId
     | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
-    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error PostmarkSendResponse)
-    | ErrorEmailSent (Result Http.Error PostmarkSendResponse)
+    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error ())
+    | ErrorEmailSent (Result Postmark.SendEmailError ())
 
 
 type alias InitData2 =

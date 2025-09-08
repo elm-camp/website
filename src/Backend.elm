@@ -13,7 +13,7 @@ import Lamdera exposing (ClientId, SessionId)
 import List.Extra as List
 import List.Nonempty
 import Name
-import Postmark exposing (PostmarkEmailBody(..))
+import Postmark
 import PurchaseForm exposing (PurchaseFormValidated)
 import Quantity
 import String.Nonempty exposing (NonemptyString(..))
@@ -187,12 +187,12 @@ update msg model =
             case AssocList.get stripeSessionId model.orders of
                 Just order ->
                     case result of
-                        Ok data ->
+                        Ok () ->
                             ( { model
                                 | orders =
                                     AssocList.insert
                                         stripeSessionId
-                                        { order | emailResult = EmailSuccess data }
+                                        { order | emailResult = EmailSuccess }
                                         model.orders
                               }
                             , Cmd.none
@@ -408,8 +408,9 @@ errorEmail errorMessage =
                                     "(dev)"
                                )
                         )
-                , body = BodyText errorMessage
-                , messageStream = "outbound"
+                , body = Postmark.TextBody errorMessage
+                , messageStream = Postmark.TransactionalEmail
+                , attachments = Postmark.noAttachments
                 }
 
         Nothing ->
