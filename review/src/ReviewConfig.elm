@@ -63,7 +63,8 @@ config =
     , NoMissingTypeExpose.rule |> defaultIgnore
 
     --, NoSimpleLetBody.rule |> defaultIgnore
-    --, NoUnused.Dependencies.rule |> defaultIgnore
+    , NoUnused.Dependencies.rule |> defaultIgnore
+
     --, NoUnused.Exports.rule |> defaultIgnore
     --, NoUnused.Modules.rule |> defaultIgnore
     --, NoUnused.Parameters.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Unsafe.elm" ] |> defaultIgnore
