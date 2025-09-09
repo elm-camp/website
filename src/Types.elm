@@ -1,6 +1,5 @@
 module Types exposing (BackendModel, BackendMsg(..), CityCode, EmailResult(..), FrontendModel, FrontendModel_(..), FrontendMsg, FrontendMsg_(..), InitData2, LoadedModel, LoadingModel, Order, OrderStatus(..), PendingOrder, Price2, Product(..), Sponsorship(..), StripePaymentId(..), TicketAvailability, TicketsEnabled(..), ToBackend(..), ToFrontend(..), maxSlotsAvailable)
 
-import AssocList
 import Audio
 import Browser exposing (UrlRequest)
 import Browser.Dom
@@ -15,6 +14,7 @@ import Money
 import Postmark
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
+import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Time
 import Untrusted exposing (Untrusted)
@@ -47,7 +47,7 @@ type alias LoadedModel =
     , now : Time.Posix
     , zone : Maybe Time.Zone
     , window : { width : Int, height : Int }
-    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
@@ -72,10 +72,10 @@ type alias TicketAvailability =
 
 
 type alias BackendModel =
-    { orders : AssocList.Dict (Id StripeSessionId) Order
-    , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
-    , expiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder
-    , prices : AssocList.Dict (Id ProductId) Price2
+    { orders : SeqDict (Id StripeSessionId) Order
+    , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
+    , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
+    , prices : SeqDict (Id ProductId) Price2
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
     }
@@ -133,11 +133,11 @@ type alias Price2 =
 --         )
 --         Money.toString
 --         Codec.string
--- assocListCodec : Codec b -> Codec (AssocList.Dict (Id a) b)
+-- assocListCodec : Codec b -> Codec (SeqDict (Id a) b)
 -- assocListCodec codec =
 --     Codec.map
---         (\dict -> Dict.toList dict |> List.map (Tuple.mapFirst Id.fromString) |> AssocList.fromList)
---         (\assocList -> AssocList.toList assocList |> List.map (Tuple.mapFirst Id.toString) |> Dict.fromList)
+--         (\dict -> Dict.toList dict |> List.map (Tuple.mapFirst Id.fromString) |> SeqDict.fromList)
+--         (\SeqDict -> SeqDict.toList SeqDict |> List.map (Tuple.mapFirst Id.toString) |> Dict.fromList)
 --         (Codec.dict codec)
 -- idCodec : Codec (Id a)
 -- idCodec =
@@ -308,7 +308,7 @@ type BackendMsg
 
 
 type alias InitData2 =
-    { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    { prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , slotsRemaining : TicketAvailability
     , ticketsEnabled : TicketsEnabled
     }

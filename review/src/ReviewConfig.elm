@@ -49,7 +49,7 @@ config =
         |> defaultIgnore
 
     --, NoUnusedFields.rule |> defaultIgnore
-    --, NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
+    , NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
     , NoUnused.Patterns.rule |> defaultIgnore
     , Docs.ReviewAtDocs.rule |> defaultIgnore
     , NoConfusingPrefixOperator.rule |> defaultIgnore
@@ -63,9 +63,9 @@ config =
     , NoSimpleLetBody.rule |> defaultIgnore
 
     --, NoUnused.Dependencies.rule |> defaultIgnore
-    --, NoUnused.Exports.rule |> defaultIgnore
-    --, NoUnused.Modules.rule |> defaultIgnore
-    --, NoUnused.Parameters.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Unsafe.elm" ] |> defaultIgnore
+    , NoUnused.Exports.rule |> defaultIgnore
+    , NoUnused.Modules.rule |> defaultIgnore
+    , NoUnused.Parameters.rule |> defaultIgnore
     , ReviewPipelineStyles.rule
         [ ReviewPipelineStyles.forbid ReviewPipelineStyles.leftPizzaPipelines
             |> ReviewPipelineStyles.andTryToFixThemBy ReviewPipelineStyles.Fixes.convertingToParentheticalApplication
@@ -85,18 +85,16 @@ config =
         |> NoInconsistentAliases.rule
         |> defaultIgnore
     , NoModuleOnExposedNames.rule |> defaultIgnore
-
-    --, NoMissingTypeConstructor.rule |> defaultIgnore
-    --, NoUnused.Variables.rule
-    --    |> Review.Rule.ignoreErrorsForDirectories
-    --        (List.map
-    --            (\v -> "src/Evergreen/V" ++ String.fromInt v)
-    --            (List.range 1 1000)
-    --        )
-    --    |> Review.Rule.ignoreErrorsForFiles
-    --        [ "src/LamderaRPC.elm"
-    --        ]
-    --    |> Review.Rule.ignoreErrorsForDirectories [ "vendored" ]
+    , NoMissingTypeConstructor.rule |> defaultIgnore
+    , NoUnused.Variables.rule
+        |> Review.Rule.ignoreErrorsForDirectories
+            (List.map
+                (\v -> "src/Evergreen/V" ++ String.fromInt v)
+                (List.range 1 1000)
+            )
+        |> Review.Rule.ignoreErrorsForFiles
+            [ "src/LamderaRPC.elm"
+            ]
     , NoBrokenParserFunctions.rule
     , BackendOnly.rule
         { functions =

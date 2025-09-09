@@ -1,6 +1,5 @@
 module Camp24Devon.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, groupRoom, includesAccom, offsite, singleRoom, viewAccom)
 
-import AssocList
 import Camp24Devon.Product as Product
 import Element exposing (Element)
 import Element.Font as Font
@@ -8,6 +7,7 @@ import Element.Input as Input
 import Id exposing (Id)
 import MarkdownThemed
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
+import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -155,7 +155,7 @@ includesAccom accom =
             True
 
 
-accommodationOptions : AssocList.Dict (Id ProductId) ( Accommodation, Ticket )
+accommodationOptions : SeqDict (Id ProductId) ( Accommodation, Ticket )
 accommodationOptions =
     allAccommodations
         |> List.map
@@ -166,14 +166,14 @@ accommodationOptions =
                 in
                 ( Id.fromString t.productId, ( a, t ) )
             )
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
-dict : AssocList.Dict (Id ProductId) Ticket
+dict : SeqDict (Id ProductId) Ticket
 dict =
     [ attendanceTicket, campingSpot, singleRoom, doubleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
 viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Element msg

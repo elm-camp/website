@@ -29,7 +29,6 @@ module View.Sales exposing
     , year
     )
 
-import AssocList
 import Camp25US.Inventory as Inventory
 import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
@@ -47,6 +46,7 @@ import List.Extra as List
 import MarkdownThemed
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
@@ -192,7 +192,7 @@ ticketInfo model =
         -- Get prices for each ticket type
         formatTicketPrice productId =
             model.prices
-                |> AssocList.get (Id.fromString productId)
+                |> SeqDict.get (Id.fromString productId)
                 |> Maybe.map (\price -> Theme.priceText price.price)
                 |> Maybe.withDefault "Price not available"
 
@@ -214,13 +214,13 @@ ticketInfo model =
         -- Calculate example prices
         exampleTickets3 =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
                 |> Maybe.withDefault 0
 
         exampleDorm =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.groupRoom)
+                |> SeqDict.get (Id.fromString Product.ticket.groupRoom)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
@@ -232,13 +232,13 @@ ticketInfo model =
 
         exampleTicket1 =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
         exampleSingle =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.singleRoom)
+                |> SeqDict.get (Id.fromString Product.ticket.singleRoom)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
@@ -248,7 +248,7 @@ ticketInfo model =
         -- Get a reference price for formatting
         refPrice =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map .price
 
         formatPrice amount =
@@ -353,7 +353,7 @@ ticketsView model =
     let
         attendanceTicketPriceText =
             -- Look up the attendance ticket price from model.prices
-            case AssocList.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
+            case SeqDict.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
                 Just priceInfo ->
                     " - " ++ Theme.priceText priceInfo.price
 
@@ -435,11 +435,11 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
 """
                 |> MarkdownThemed.renderFull
             ]
-        , AssocList.toList Tickets.accommodationOptions
+        , SeqDict.toList Tickets.accommodationOptions
             |> List.reverse
             |> List.map
                 (\( productId, ( accom, ticket ) ) ->
-                    case AssocList.get productId model.prices of
+                    case SeqDict.get productId model.prices of
                         Just price ->
                             Tickets.viewAccom model.form
                                 accom
@@ -711,7 +711,7 @@ sponsorshipOption model form s =
     let
         displayCurrency =
             model.prices
-                |> AssocList.get (Id.fromString s.productId)
+                |> SeqDict.get (Id.fromString s.productId)
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
@@ -778,7 +778,7 @@ summary model =
                 |> List.length
                 |> (\num ->
                         model.prices
-                            |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                            |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
@@ -793,7 +793,7 @@ summary model =
                                 Tickets.accomToTicket accom
                         in
                         model.prices
-                            |> AssocList.get (Id.fromString t.productId)
+                            |> SeqDict.get (Id.fromString t.productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                     )
@@ -804,7 +804,7 @@ summary model =
                 |> Maybe.andThen
                     (\productId ->
                         model.prices
-                            |> AssocList.get (Id.fromString productId)
+                            |> SeqDict.get (Id.fromString productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                     )
                 |> Maybe.withDefault 0
@@ -815,7 +815,7 @@ summary model =
         displayCurrency : Money.Currency
         displayCurrency =
             model.prices
-                |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
@@ -857,7 +857,7 @@ summaryAccommodation model ( accom, items ) displayCurrency =
                 let
                     total =
                         model.prices
-                            |> AssocList.get (Id.fromString (Tickets.accomToTicket accom).productId)
+                            |> SeqDict.get (Id.fromString (Tickets.accomToTicket accom).productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)

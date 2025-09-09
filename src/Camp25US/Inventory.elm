@@ -12,9 +12,9 @@ module Camp25US.Inventory exposing (allSoldOut, caseof, extract, maxAttendees, m
    - Check if BackendModel structure changes would affect the slotsRemaining function
 -}
 
-import AssocList
 import Camp25US.Product as Product
 import PurchaseForm exposing (Accommodation(..))
+import SeqDict exposing (SeqDict)
 import Types exposing (BackendModel, TicketAvailability)
 
 
@@ -96,11 +96,11 @@ allSoldOut { attendanceTickets } =
     attendanceTickets
 
 
-extract : (a -> b -> List c) -> AssocList.Dict a b -> List c
-extract selector assocList =
-    assocList
-        |> AssocList.map selector
-        |> AssocList.toList
+extract : (a -> b -> List c) -> SeqDict a b -> List c
+extract selector dict =
+    dict
+        |> SeqDict.map selector
+        |> SeqDict.toList
         |> List.concatMap Tuple.second
 
 

@@ -16,7 +16,6 @@ module Admin exposing
     , viewTicketsEnabled
     )
 
-import AssocList
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
@@ -26,6 +25,7 @@ import Html
 import Id exposing (Id)
 import List.Extra
 import Name
+import SeqDict exposing (SeqDict)
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
@@ -45,22 +45,22 @@ view model =
 viewAdmin : BackendModel -> Element FrontendMsg_
 viewAdmin backendModel =
     -- type alias BackendModel =
-    --     { orders : AssocList.Dict (Id StripeSessionId) Order
-    --     , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
-    --     , expiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder
-    --     , prices : AssocList.Dict (Id ProductId) Price2
+    --     { orders : SeqDict (Id StripeSessionId) Order
+    --     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
+    --     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
+    --     , prices : SeqDict (Id ProductId) Price2
     --     , time : Time.Posix
     --     , ticketsEnabled : TicketsEnabled
     --     }
     let
         numberOfOrders =
-            List.length (AssocList.toList backendModel.orders)
+            List.length (SeqDict.toList backendModel.orders)
 
         numberOfPendingOrders =
-            List.length (AssocList.toList backendModel.pendingOrder)
+            List.length (SeqDict.toList backendModel.pendingOrder)
 
         numberOfExpiredOrders =
-            List.length (AssocList.toList backendModel.expiredOrders)
+            List.length (SeqDict.toList backendModel.expiredOrders)
 
         info =
             "Orders (completed, pending, expired): "
@@ -109,7 +109,7 @@ viewTicketsEnabled ticketsEnabled =
         ]
 
 
-viewPrices : AssocList.Dict (Id ProductId) Price2 -> Element msg
+viewPrices : SeqDict (Id ProductId) Price2 -> Element msg
 viewPrices prices =
     Element.column
         [ Element.width Element.fill
@@ -120,31 +120,31 @@ viewPrices prices =
         ]
 
 
-viewOrders : AssocList.Dict (Id StripeSessionId) Types.Order -> Element msg
+viewOrders : SeqDict (Id StripeSessionId) Types.Order -> Element msg
 viewOrders orders =
     let
         n =
-            orders |> AssocList.toList |> List.length
+            orders |> SeqDict.toList |> List.length
     in
     Element.column
         [ Element.width Element.fill
         , Element.spacing 12
         ]
-        (orders |> AssocList.toList |> List.indexedMap viewOrder)
+        (orders |> SeqDict.toList |> List.indexedMap viewOrder)
 
 
-viewExpiredOrders : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders : SeqDict (Id StripeSessionId) Types.PendingOrder -> Element msg
 viewExpiredOrders orders =
     let
         n =
-            orders |> AssocList.toList |> List.length
+            orders |> SeqDict.toList |> List.length
     in
     Element.column
         [ Element.width Element.fill
         , Element.spacing 12
         ]
         ([ Element.el [] (Element.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
-         , quickTable (orders |> AssocList.values)
+         , quickTable (orders |> SeqDict.values)
             [ \order -> attendeesPending order |> String.join ", "
             , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
             , \order -> toString order.form.accommodationBookings
@@ -155,7 +155,7 @@ viewExpiredOrders orders =
             , \order -> attendeesDetail (\a -> String.Nonempty.toString a.country) order |> String.join ", "
             ]
          ]
-         -- ++ (orders |> AssocList.toList |> List.indexedMap viewPendingOrder)
+         -- ++ (orders |> SeqDict.toList |> List.indexedMap viewPendingOrder)
         )
 
 
@@ -176,13 +176,13 @@ quickTable collection fns =
         |> Element.html
 
 
-viewExpiredOrders2 : AssocList.Dict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders2 : SeqDict (Id StripeSessionId) Types.PendingOrder -> Element msg
 viewExpiredOrders2 orders =
     let
         ordersCleaned : List String
         ordersCleaned =
             orders
-                |> AssocList.toList
+                |> SeqDict.toList
                 |> List.concatMap (\( _, value ) -> attendeesPending value)
                 |> List.Extra.unique
                 |> List.sort
@@ -242,9 +242,9 @@ loadProdBackend =
 
 
 
--- debugAssocList assoc =
+-- debugSeqDict assoc =
 --     assoc
---         |> AssocList.toList
+--         |> SeqDict.toList
 --         |> List.map
 --             (\data ->
 --                 Element.column

@@ -8,9 +8,9 @@ module Camp24Devon.Inventory exposing
     , slotsRemaining
     )
 
-import AssocList
 import Camp24Devon.Product as Product
 import PurchaseForm exposing (Accommodation(..))
+import SeqDict
 import Types exposing (BackendModel, TicketAvailability)
 
 
@@ -92,11 +92,11 @@ allSoldOut { attendanceTickets } =
     attendanceTickets
 
 
-extract : (a -> b -> List c) -> AssocList.Dict a b -> List c
-extract selector assocList =
-    assocList
-        |> AssocList.map selector
-        |> AssocList.toList
+extract : (a -> b -> List c) -> SeqDict a b -> List c
+extract selector SeqDict =
+    SeqDict
+        |> SeqDict.map selector
+        |> SeqDict.toList
         |> List.concatMap Tuple.second
 
 

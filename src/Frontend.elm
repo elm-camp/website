@@ -1,7 +1,6 @@
 module Frontend exposing (app)
 
 import Admin
-import AssocList
 import Audio exposing (Audio, AudioCmd)
 import Browser exposing (UrlRequest(..))
 import Browser.Dom
@@ -31,6 +30,7 @@ import Page.UnconferenceFormat
 import Ports
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
+import SeqDict
 import Stripe
 import Task
 import Theme exposing (normalButtonAttributes)
@@ -282,7 +282,7 @@ updateLoaded msg model =
             ( model, downloadTicketSalesReminder )
 
         PressedSelectTicket productId priceId ->
-            case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
+            case ( SeqDict.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
                 ( Just ( _, ticket ), TicketsEnabled ) ->
                     if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }

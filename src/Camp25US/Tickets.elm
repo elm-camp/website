@@ -6,7 +6,6 @@ module Camp25US.Tickets exposing (Ticket, accomToString, accomToTicket, accommod
    - Verify product IDs match those in Product.elm after they're updated
 -}
 
-import AssocList
 import Camp25US.Product as Product
 import Element exposing (Element)
 import Element.Background as Background
@@ -18,6 +17,7 @@ import Id exposing (Id)
 import MarkdownThemed
 import Money
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
+import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -180,7 +180,7 @@ includesRoom accom =
             True
 
 
-accommodationOptions : AssocList.Dict (Id ProductId) ( Accommodation, Ticket )
+accommodationOptions : SeqDict (Id ProductId) ( Accommodation, Ticket )
 accommodationOptions =
     allAccommodations
         |> List.map
@@ -191,14 +191,14 @@ accommodationOptions =
                 in
                 ( Id.fromString t.productId, ( a, t ) )
             )
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
-dict : AssocList.Dict (Id ProductId) Ticket
+dict : SeqDict (Id ProductId) Ticket
 dict =
     [ offsite, campingSpot, singleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
 viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Element msg

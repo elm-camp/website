@@ -10,7 +10,6 @@ module Backend exposing
     , updateFromFrontend
     )
 
-import AssocList
 import Camp25US.Inventory as Inventory
 import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
@@ -26,6 +25,7 @@ import Name
 import Postmark
 import PurchaseForm exposing (PurchaseFormValidated)
 import Quantity
+import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
 import Task
@@ -52,10 +52,10 @@ app =
 
 init : ( BackendModel, Cmd BackendMsg )
 init =
-    ( { orders = AssocList.empty
-      , pendingOrder = AssocList.empty
-      , expiredOrders = AssocList.empty
-      , prices = AssocList.empty
+    ( { orders = SeqDict.empty
+      , pendingOrder = SeqDict.empty
+      , expiredOrders = SeqDict.empty
+      , prices = SeqDict.empty
       , time = Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
       }
@@ -80,14 +80,14 @@ update msg model =
         GotTime time ->
             let
                 ( expiredOrders, remainingOrders ) =
-                    AssocList.partition
+                    SeqDict.partition
                         (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
                         model.pendingOrder
             in
             ( { model
                 | time = time
                 , pendingOrder = remainingOrders
-                , expiredOrders = AssocList.union expiredOrders model.expiredOrders
+                , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
               }
             , Cmd.batch
                 [ Stripe.getPrices GotPrices
@@ -96,7 +96,7 @@ update msg model =
                         Stripe.expireSession stripeSessionId
                             |> Task.attempt (ExpiredStripeSession stripeSessionId)
                     )
-                    (AssocList.keys expiredOrders)
+                    (SeqDict.keys expiredOrders)
                     |> Cmd.batch
                 ]
             )
@@ -115,7 +115,7 @@ update msg model =
                                         Nothing
                                 )
                                 prices
-                                |> AssocList.fromList
+                                |> SeqDict.fromList
                       }
                     , Cmd.none
                     )
@@ -140,14 +140,14 @@ update msg model =
                 Ok ( stripeSessionId, submitTime ) ->
                     let
                         existingStripeSessions =
-                            AssocList.filter
+                            SeqDict.filter
                                 (\_ data -> data.sessionId == sessionId)
                                 model.pendingOrder
-                                |> AssocList.keys
+                                |> SeqDict.keys
                     in
                     ( { model
                         | pendingOrder =
-                            AssocList.insert
+                            SeqDict.insert
                                 stripeSessionId
                                 { submitTime = submitTime
                                 , form = purchaseForm
@@ -182,11 +182,11 @@ update msg model =
         ExpiredStripeSession stripeSessionId result ->
             case result of
                 Ok () ->
-                    case AssocList.get stripeSessionId model.pendingOrder of
+                    case SeqDict.get stripeSessionId model.pendingOrder of
                         Just expired ->
                             ( { model
-                                | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
-                                , expiredOrders = AssocList.insert stripeSessionId expired model.expiredOrders
+                                | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                , expiredOrders = SeqDict.insert stripeSessionId expired model.expiredOrders
                               }
                             , Cmd.none
                             )
@@ -198,13 +198,13 @@ update msg model =
                     ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error ++ " stripeSessionId: " ++ Id.toString stripeSessionId) )
 
         ConfirmationEmailSent stripeSessionId result ->
-            case AssocList.get stripeSessionId model.orders of
+            case SeqDict.get stripeSessionId model.orders of
                 Just order ->
                     case result of
                         Ok () ->
                             ( { model
                                 | orders =
-                                    AssocList.insert
+                                    SeqDict.insert
                                         stripeSessionId
                                         { order | emailResult = EmailSuccess }
                                         model.orders
@@ -215,7 +215,7 @@ update msg model =
                         Err error ->
                             ( { model
                                 | orders =
-                                    AssocList.insert
+                                    SeqDict.insert
                                         stripeSessionId
                                         { order | emailResult = EmailFailed error }
                                         model.orders
@@ -267,7 +267,7 @@ updateFromFrontend sessionId clientId msg model =
                         sponsorshipItems =
                             case purchaseForm.sponsorship of
                                 Just sponsorshipId ->
-                                    case AssocList.get (Id.fromString sponsorshipId) model.prices of
+                                    case SeqDict.get (Id.fromString sponsorshipId) model.prices of
                                         Just price ->
                                             [ Stripe.Priced
                                                 { name = "Sponsorship"
@@ -293,7 +293,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     productId =
                                                         Id.fromString Tickets.attendanceTicket.productId
                                                 in
-                                                case AssocList.get productId model.prices of
+                                                case SeqDict.get productId model.prices of
                                                     Just price ->
                                                         price.priceId
 
@@ -315,7 +315,7 @@ updateFromFrontend sessionId clientId msg model =
                                                     productId =
                                                         Id.fromString (Tickets.accomToTicket accom).productId
                                                 in
-                                                case AssocList.get productId model.prices of
+                                                case SeqDict.get productId model.prices of
                                                     Just price ->
                                                         price.priceId
 
@@ -379,7 +379,7 @@ updateFromFrontend sessionId clientId msg model =
 
 sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)
 sessionIdToStripeSessionId sessionId model =
-    AssocList.toList model.pendingOrder
+    SeqDict.toList model.pendingOrder
         |> List.findMap
             (\( stripeSessionId, data ) ->
                 if data.sessionId == sessionId then
@@ -392,7 +392,7 @@ sessionIdToStripeSessionId sessionId model =
 
 priceIdToProductId : BackendModel -> Id PriceId -> Maybe (Id ProductId)
 priceIdToProductId model priceId =
-    AssocList.toList model.prices
+    SeqDict.toList model.prices
         |> List.findMap
             (\( productId, prices ) ->
                 if prices.priceId == priceId then

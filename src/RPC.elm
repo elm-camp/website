@@ -1,6 +1,5 @@
 module RPC exposing (backendModelEndpoint, badReq, confirmationEmail, lamdera_handleEndpoints, purchaseCompletedEndpoint, requestPurchaseCompletedEndpoint)
 
-import AssocList
 import Backend
 import Camp24Devon.Tickets as Tickets
 import Codec
@@ -20,6 +19,7 @@ import List.Nonempty exposing (Nonempty(..))
 import Name
 import Postmark
 import PurchaseForm
+import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
@@ -69,14 +69,14 @@ purchaseCompletedEndpoint _ model headers json =
         Ok webhook ->
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
-                    case AssocList.get stripeSessionId model.pendingOrder of
+                    case SeqDict.get stripeSessionId model.pendingOrder of
                         Just _ ->
                             -- let
                             --     maybeTicket : Maybe Tickets.Ticket
                             --     maybeTicket =
                             --         case Backend.priceIdToProductId model order.priceId of
                             --             Just productId ->
-                            --                 AssocList.get productId Tickets.dict
+                            --                 SeqDict.get productId Tickets.dict
                             --             Nothing ->
                             --                 Nothing
                             -- in
@@ -90,9 +90,9 @@ purchaseCompletedEndpoint _ model headers json =
 
                         -- ( response
                         -- , { model
-                        --     | pendingOrder = AssocList.remove stripeSessionId model.pendingOrder
+                        --     | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
                         --     , orders =
-                        --         AssocList.insert
+                        --         SeqDict.insert
                         --             stripeSessionId
                         --             { priceId = order.priceId
                         --             , submitTime = order.submitTime
