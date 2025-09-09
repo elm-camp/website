@@ -1,6 +1,14 @@
-module HttpHelpers exposing (customError, customErrorEffect, expectJson_, httpErrorToString, httpErrorToStringEffect, jsonResolver, jsonResolverEffect)
+module HttpHelpers exposing
+    ( customError
+    , customErrorEffect
+    , expectJson_
+    , httpErrorToString
+    , httpErrorToStringEffect
+    , jsonResolver
+    , jsonResolverEffect
+    )
 
-import Http
+import Effect.Http
 import Json.Decode as D
 
 
@@ -11,30 +19,30 @@ describe our sitution perfectly, so that's that code below, with a modified
 Http.BadStatus\_ handler to map it to BadBody String instead of BadStatus Int
 so we can actually see the error message.
 -}
-expectJson_ : (Result Http.Error a -> msg) -> D.Decoder a -> Http.Expect msg
+expectJson_ : (Result Effect.Http.Error a -> msg) -> D.Decoder a -> Effect.Http.Expect msg
 expectJson_ toMsg decoder =
-    Http.expectStringResponse toMsg
+    Effect.Http.expectStringResponse toMsg
         (\response ->
             case response of
-                Http.BadUrl_ url ->
-                    Err (Http.BadUrl url)
+                Effect.Http.BadUrl_ url ->
+                    Err (Effect.Http.BadUrl url)
 
-                Http.Timeout_ ->
-                    Err Http.Timeout
+                Effect.Http.Timeout_ ->
+                    Err Effect.Http.Timeout
 
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
+                Effect.Http.NetworkError_ ->
+                    Err Effect.Http.NetworkError
 
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
+                Effect.Http.BadStatus_ metadata body ->
+                    Err (Effect.Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
 
-                Http.GoodStatus_ _ body ->
+                Effect.Http.GoodStatus_ _ body ->
                     case D.decodeString decoder body of
                         Ok value ->
                             Ok value
 
                         Err err ->
-                            Err (Http.BadBody (D.errorToString err))
+                            Err (Effect.Http.BadBody (D.errorToString err))
         )
 
 
@@ -42,97 +50,97 @@ expectJson_ toMsg decoder =
 -- From https://github.com/krisajenkins/remotedata/issues/28
 
 
-httpErrorToString : Http.Error -> String
+httpErrorToString : Effect.Http.Error -> String
 httpErrorToString err =
     case err of
-        Http.BadUrl url ->
+        Effect.Http.BadUrl url ->
             "HTTP malformed url: " ++ url
 
-        Http.Timeout ->
+        Effect.Http.Timeout ->
             "HTTP timeout exceeded"
 
-        Http.NetworkError ->
+        Effect.Http.NetworkError ->
             "HTTP network error"
 
-        Http.BadStatus code ->
+        Effect.Http.BadStatus code ->
             "Unexpected HTTP response code: " ++ String.fromInt code
 
-        Http.BadBody text ->
+        Effect.Http.BadBody text ->
             "HTTP error: " ++ text
 
 
-httpErrorToStringEffect : Http.Error -> String
+httpErrorToStringEffect : Effect.Http.Error -> String
 httpErrorToStringEffect err =
     case err of
-        Http.BadUrl url ->
+        Effect.Http.BadUrl url ->
             "HTTP malformed url: " ++ url
 
-        Http.Timeout ->
+        Effect.Http.Timeout ->
             "HTTP timeout exceeded"
 
-        Http.NetworkError ->
+        Effect.Http.NetworkError ->
             "HTTP network error"
 
-        Http.BadStatus code ->
+        Effect.Http.BadStatus code ->
             "Unexpected HTTP response code: " ++ String.fromInt code
 
-        Http.BadBody text ->
+        Effect.Http.BadBody text ->
             "HTTP error: " ++ text
 
 
-customError : String -> Http.Error
+customError : String -> Effect.Http.Error
 customError s =
-    Http.BadBody ("Error: " ++ s)
+    Effect.Http.BadBody ("Error: " ++ s)
 
 
-customErrorEffect : String -> Http.Error
+customErrorEffect : String -> Effect.Http.Error
 customErrorEffect s =
-    Http.BadBody ("Error: " ++ s)
+    Effect.Http.BadBody ("Error: " ++ s)
 
 
-jsonResolver : D.Decoder a -> Http.Resolver Http.Error a
+jsonResolver : D.Decoder a -> Effect.Http.Resolver restriction Effect.Http.Error a
 jsonResolver decoder =
-    Http.stringResolver
+    Effect.Http.stringResolver
         (\response ->
             case response of
-                Http.GoodStatus_ _ body ->
+                Effect.Http.GoodStatus_ _ body ->
                     D.decodeString decoder body
                         |> Result.mapError D.errorToString
-                        |> Result.mapError Http.BadBody
+                        |> Result.mapError Effect.Http.BadBody
 
-                Http.BadUrl_ message ->
-                    Err (Http.BadUrl message)
+                Effect.Http.BadUrl_ message ->
+                    Err (Effect.Http.BadUrl message)
 
-                Http.Timeout_ ->
-                    Err Http.Timeout
+                Effect.Http.Timeout_ ->
+                    Err Effect.Http.Timeout
 
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
+                Effect.Http.NetworkError_ ->
+                    Err Effect.Http.NetworkError
 
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
+                Effect.Http.BadStatus_ metadata body ->
+                    Err (Effect.Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
         )
 
 
-jsonResolverEffect : D.Decoder a -> Http.Resolver Http.Error a
+jsonResolverEffect : D.Decoder a -> Effect.Http.Resolver restriction Effect.Http.Error a
 jsonResolverEffect decoder =
-    Http.stringResolver
+    Effect.Http.stringResolver
         (\response ->
             case response of
-                Http.GoodStatus_ _ body ->
+                Effect.Http.GoodStatus_ _ body ->
                     D.decodeString decoder body
                         |> Result.mapError D.errorToString
-                        |> Result.mapError Http.BadBody
+                        |> Result.mapError Effect.Http.BadBody
 
-                Http.BadUrl_ message ->
-                    Err (Http.BadUrl message)
+                Effect.Http.BadUrl_ message ->
+                    Err (Effect.Http.BadUrl message)
 
-                Http.Timeout_ ->
-                    Err Http.Timeout
+                Effect.Http.Timeout_ ->
+                    Err Effect.Http.Timeout
 
-                Http.NetworkError_ ->
-                    Err Http.NetworkError
+                Effect.Http.NetworkError_ ->
+                    Err Effect.Http.NetworkError
 
-                Http.BadStatus_ metadata body ->
-                    Err (Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
+                Effect.Http.BadStatus_ metadata body ->
+                    Err (Effect.Http.BadBody (String.fromInt metadata.statusCode ++ ": " ++ body))
         )

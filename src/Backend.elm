@@ -1,5 +1,6 @@
 module Backend exposing
     ( app
+    , app_
     , elmCampEmailAddress
     , errorEmail
     , init
@@ -14,11 +15,17 @@ import Camp25US.Inventory as Inventory
 import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
 import Duration
+import Effect.Command as Command exposing (BackendOnly, Command)
+import Effect.Lamdera exposing (ClientId, SessionId)
+import Effect.Process
+import Effect.Subscription as Subscription exposing (Subscription)
+import Effect.Task
+import Effect.Time
 import EmailAddress exposing (EmailAddress)
 import Env
 import HttpHelpers
 import Id exposing (Id)
-import Lamdera exposing (ClientId, SessionId)
+import Lamdera
 import List.Extra as List
 import List.Nonempty
 import Name
@@ -28,8 +35,6 @@ import Quantity
 import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
-import Task
-import Time
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
@@ -38,43 +43,54 @@ import Untrusted
 app :
     { init : ( BackendModel, Cmd BackendMsg )
     , update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
-    , updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+    , updateFromFrontend : String -> String -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
     , subscriptions : BackendModel -> Sub BackendMsg
     }
 app =
-    Lamdera.backend
-        { init = init
-        , update = update
-        , updateFromFrontend = updateFromFrontend
-        , subscriptions = subscriptions
-        }
+    Effect.Lamdera.backend Lamdera.broadcast Lamdera.sendToFrontend app_
 
 
-init : ( BackendModel, Cmd BackendMsg )
+app_ :
+    { init : ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
+    , update : BackendMsg -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
+    , updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
+    , subscriptions : BackendModel -> Subscription BackendOnly BackendMsg
+    }
+app_ =
+    { init = init
+    , update = update
+    , updateFromFrontend = updateFromFrontend
+    , subscriptions = subscriptions
+    }
+
+
+init : ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 init =
     ( { orders = SeqDict.empty
       , pendingOrder = SeqDict.empty
       , expiredOrders = SeqDict.empty
       , prices = SeqDict.empty
-      , time = Time.millisToPosix 0
+      , time = Effect.Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
       }
-    , Cmd.batch
-        [ Time.now |> Task.perform GotTime
-        , Stripe.getPrices GotPrices
+    , Command.batch
+        [ Effect.Time.now |> Effect.Task.perform GotTime
+        , Effect.Process.sleep Duration.second
+            |> Effect.Task.andThen (\() -> Stripe.getPrices)
+            |> Effect.Task.attempt GotPrices
         ]
     )
 
 
-subscriptions : BackendModel -> Sub BackendMsg
+subscriptions : BackendModel -> Subscription BackendOnly BackendMsg
 subscriptions _ =
-    Sub.batch
-        [ Time.every (1000 * 60 * 15) GotTime
-        , Lamdera.onConnect OnConnected
+    Subscription.batch
+        [ Effect.Time.every (Duration.minutes 15) GotTime
+        , Effect.Lamdera.onConnect OnConnected
         ]
 
 
-update : BackendMsg -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+update : BackendMsg -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 update msg model =
     (case msg of
         GotTime time ->
@@ -89,15 +105,15 @@ update msg model =
                 , pendingOrder = remainingOrders
                 , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
               }
-            , Cmd.batch
-                [ Stripe.getPrices GotPrices
+            , Command.batch
+                [ Stripe.getPrices |> Effect.Task.attempt GotPrices
                 , List.map
                     (\stripeSessionId ->
                         Stripe.expireSession stripeSessionId
-                            |> Task.attempt (ExpiredStripeSession stripeSessionId)
+                            |> Effect.Task.attempt (ExpiredStripeSession stripeSessionId)
                     )
                     (SeqDict.keys expiredOrders)
-                    |> Cmd.batch
+                    |> Command.batch
                 ]
             )
 
@@ -117,15 +133,18 @@ update msg model =
                                 prices
                                 |> SeqDict.fromList
                       }
-                    , Cmd.none
+                    , Command.none
                     )
 
                 Err error ->
-                    ( model, errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error) )
+                    ( model
+                    , errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error)
+                        |> Command.fromCmd "GotPrices failed email"
+                    )
 
         OnConnected _ clientId ->
             ( model
-            , Lamdera.sendToFrontend
+            , Effect.Lamdera.sendToFrontend
                 clientId
                 (InitData
                     { prices = model.prices
@@ -155,15 +174,15 @@ update msg model =
                                 }
                                 model.pendingOrder
                       }
-                    , Cmd.batch
-                        [ SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId
+                    , Command.batch
+                        [ SubmitFormResponse (Ok stripeSessionId) |> Effect.Lamdera.sendToFrontend clientId
                         , List.map
                             (\stripeSessionId2 ->
                                 Stripe.expireSession stripeSessionId2
-                                    |> Task.attempt (ExpiredStripeSession stripeSessionId2)
+                                    |> Effect.Task.attempt (ExpiredStripeSession stripeSessionId2)
                             )
                             existingStripeSessions
-                            |> Cmd.batch
+                            |> Command.batch
                         ]
                     )
 
@@ -173,9 +192,9 @@ update msg model =
                             "CreatedCheckoutSession failed: " ++ HttpHelpers.httpErrorToString error
                     in
                     ( model
-                    , Cmd.batch
-                        [ SubmitFormResponse (Err err) |> Lamdera.sendToFrontend clientId
-                        , errorEmail err
+                    , Command.batch
+                        [ SubmitFormResponse (Err err) |> Effect.Lamdera.sendToFrontend clientId
+                        , errorEmail err |> Command.fromCmd "Send email"
                         ]
                     )
 
@@ -188,14 +207,22 @@ update msg model =
                                 | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
                                 , expiredOrders = SeqDict.insert stripeSessionId expired model.expiredOrders
                               }
-                            , Cmd.none
+                            , Command.none
                             )
 
                         Nothing ->
-                            ( model, Cmd.none )
+                            ( model, Command.none )
 
                 Err error ->
-                    ( model, errorEmail ("ExpiredStripeSession failed: " ++ HttpHelpers.httpErrorToString error ++ " stripeSessionId: " ++ Id.toString stripeSessionId) )
+                    ( model
+                    , errorEmail
+                        ("ExpiredStripeSession failed: "
+                            ++ HttpHelpers.httpErrorToString error
+                            ++ " stripeSessionId: "
+                            ++ Id.toString stripeSessionId
+                        )
+                        |> Command.fromCmd "ExpiredStripeSession email"
+                    )
 
         ConfirmationEmailSent stripeSessionId result ->
             case SeqDict.get stripeSessionId model.orders of
@@ -209,7 +236,7 @@ update msg model =
                                         { order | emailResult = EmailSuccess }
                                         model.orders
                               }
-                            , Cmd.none
+                            , Command.none
                             )
 
                         Err error ->
@@ -221,15 +248,17 @@ update msg model =
                                         model.orders
                               }
                             , errorEmail ("Confirmation email failed: " ++ HttpHelpers.httpErrorToString error)
+                                |> Command.fromCmd "Confirmation email failed"
                             )
 
                 Nothing ->
                     ( model
                     , errorEmail ("StripeSessionId not found for confirmation email: " ++ Id.toString stripeSessionId)
+                        |> Command.fromCmd "StripeSessionId not found email"
                     )
 
         ErrorEmailSent _ ->
-            ( model, Cmd.none )
+            ( model, Command.none )
     )
         |> (\( newModel, cmd ) ->
                 let
@@ -240,11 +269,11 @@ update msg model =
                     ( newModel, cmd )
 
                 else
-                    ( newModel, Cmd.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
+                    ( newModel, Command.batch [ cmd, Effect.Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
            )
 
 
-updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Cmd BackendMsg )
+updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest a ->
@@ -342,8 +371,8 @@ updateFromFrontend sessionId clientId msg model =
                             ticketItems ++ accommodationItems ++ opportunityGrantItems ++ sponsorshipItems
                     in
                     ( model
-                    , Time.now
-                        |> Task.andThen
+                    , Effect.Time.now
+                        |> Effect.Task.andThen
                             (\now ->
                                 Stripe.createCheckoutSession
                                     { items = items
@@ -351,30 +380,30 @@ updateFromFrontend sessionId clientId msg model =
                                     , now = now
                                     , expiresInMinutes = 30
                                     }
-                                    |> Task.map (\res -> ( res, now ))
+                                    |> Effect.Task.map (\res -> ( res, now ))
                             )
-                        |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
+                        |> Effect.Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
                     )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         CancelPurchaseRequest ->
             case sessionIdToStripeSessionId sessionId model of
                 Just stripeSessionId ->
                     ( model
-                    , Stripe.expireSession stripeSessionId |> Task.attempt (ExpiredStripeSession stripeSessionId)
+                    , Stripe.expireSession stripeSessionId |> Effect.Task.attempt (ExpiredStripeSession stripeSessionId)
                     )
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         AdminInspect pass ->
             if pass == Env.adminPassword then
-                ( model, Lamdera.sendToFrontend clientId (AdminInspectResponse model) )
+                ( model, Effect.Lamdera.sendToFrontend clientId (AdminInspectResponse model) )
 
             else
-                ( model, Cmd.none )
+                ( model, Command.none )
 
 
 sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)

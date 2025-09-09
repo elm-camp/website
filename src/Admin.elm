@@ -16,6 +16,7 @@ module Admin exposing
     , viewTicketsEnabled
     )
 
+import Effect.Command as Command exposing (Command)
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
@@ -229,7 +230,7 @@ attendeesDetail fn order =
     order.form.attendees |> List.map (\a -> fn a |> toString)
 
 
-loadProdBackend : Cmd msg
+loadProdBackend : Command restriction toMsg msg
 loadProdBackend =
     let
         x =
@@ -238,7 +239,7 @@ loadProdBackend =
         -- pass =
         --     Env.adminPassword
     in
-    Cmd.none
+    Command.none
 
 
 

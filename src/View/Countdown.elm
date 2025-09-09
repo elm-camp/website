@@ -2,51 +2,51 @@ module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, 
 
 import Date
 import DateFormat
+import Effect.Time
 import Element exposing (Element)
 import Element.Font as Font
 import Theme
-import Time
 import TimeFormat exposing (Zoned)
 
 
-ui : String -> String -> { model | now : Time.Posix } -> Element msg
+ui : String -> String -> { model | now : Effect.Time.Posix } -> Element msg
 ui t description model =
     let
         target =
-            TimeFormat.certain t Time.utc
+            TimeFormat.certain t Effect.Time.utc
 
         now =
             model.now
-                |> Time.posixToMillis
+                |> Effect.Time.posixToMillis
     in
     Element.el Theme.contentAttributes (Element.el [ Element.centerX ] (Theme.h2 (asTimeToGo target model.now)))
 
 
-ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
+ticketSalesLive : Effect.Time.Posix -> { model | now : Effect.Time.Posix } -> Bool
 ticketSalesLive t model =
     let
         target =
-            t |> Time.posixToMillis
+            t |> Effect.Time.posixToMillis
 
         now =
             model.now
-                |> Time.posixToMillis
+                |> Effect.Time.posixToMillis
 
         secondsRemaining =
             (target - now) // 1000
     in
-    (Time.posixToMillis model.now == 0) || secondsRemaining < 0
+    (Effect.Time.posixToMillis model.now == 0) || secondsRemaining < 0
 
 
-detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg
+detailedCountdown : Effect.Time.Posix -> String -> { model | now : Effect.Time.Posix } -> Element msg
 detailedCountdown t description model =
     let
         target =
-            t |> Time.posixToMillis
+            t |> Effect.Time.posixToMillis
 
         now =
             model.now
-                |> Time.posixToMillis
+                |> Effect.Time.posixToMillis
 
         secondsRemaining =
             (target - now) // 1000
@@ -88,7 +88,7 @@ detailedCountdown t description model =
             String.join " "
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
+    if (Effect.Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
         Element.none
 
     else
@@ -101,13 +101,13 @@ detailedCountdown t description model =
 --     ++ description
 
 
-asTimeToGo : Zoned -> Time.Posix -> String
+asTimeToGo : Zoned -> Effect.Time.Posix -> String
 asTimeToGo zoned now =
     let
         days =
-            Date.diff Date.Days (Date.fromPosix Time.utc now) (Date.fromPosix Time.utc zoned.time)
+            Date.diff Date.Days (Date.fromPosix Effect.Time.utc now) (Date.fromPosix Effect.Time.utc zoned.time)
     in
-    if zoned.time == Time.millisToPosix 0 then
+    if zoned.time == Effect.Time.millisToPosix 0 then
         "Never"
 
     else if days > 84 then

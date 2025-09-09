@@ -1,4 +1,11 @@
-module RPC exposing (backendModelEndpoint, badReq, confirmationEmail, lamdera_handleEndpoints, purchaseCompletedEndpoint, requestPurchaseCompletedEndpoint)
+module RPC exposing
+    ( backendModelEndpoint
+    , badReq
+    , confirmationEmail
+    , lamdera_handleEndpoints
+    , purchaseCompletedEndpoint
+    , requestPurchaseCompletedEndpoint
+    )
 
 import Backend
 import Camp24Devon.Tickets as Tickets

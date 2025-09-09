@@ -5,8 +5,8 @@ module TimeFormat exposing (Zoned, certain, zonedZero)
 -- import Round
 
 import DateFormat
+import Effect.Time
 import Iso8601
-import Time
 
 
 
@@ -17,15 +17,15 @@ import Time
 
 
 type alias Zoned =
-    { time : Time.Posix, zone : Time.Zone }
+    { time : Effect.Time.Posix, zone : Effect.Time.Zone }
 
 
 zonedZero : Zoned
 zonedZero =
-    { time = Time.millisToPosix 0, zone = Time.utc }
+    { time = Effect.Time.millisToPosix 0, zone = Effect.Time.utc }
 
 
-certain : String -> Time.Zone -> Zoned
+certain : String -> Effect.Time.Zone -> Zoned
 certain s zone =
     case Iso8601.toTime s of
         Err _ ->
@@ -33,7 +33,7 @@ certain s zone =
             --     x =
             --         Debug.log ("deadends for " ++ s) deadEnds
             -- in
-            Zoned (Time.millisToPosix 0) Time.utc
+            Zoned (Effect.Time.millisToPosix 0) Effect.Time.utc
 
         Ok t ->
             Zoned t zone

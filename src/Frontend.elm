@@ -1,10 +1,8 @@
-module Frontend exposing (app)
+module Frontend exposing (app, app_)
 
 import Admin
-import Browser exposing (UrlRequest(..))
-import Browser.Dom
-import Browser.Events
-import Browser.Navigation
+import Browser
+import Browser.Navigation exposing (Key)
 import Camp23Denmark
 import Camp23Denmark.Artifacts
 import Camp24Uk
@@ -12,6 +10,16 @@ import Camp25US
 import Camp25US.Inventory as Inventory
 import Camp25US.Tickets as Tickets
 import Dict
+import Duration
+import Effect.Browser
+import Effect.Browser.Dom exposing (HtmlId)
+import Effect.Browser.Events
+import Effect.Browser.Navigation
+import Effect.Command as Command exposing (Command, FrontendOnly)
+import Effect.Lamdera
+import Effect.Subscription as Subscription exposing (Subscription)
+import Effect.Task
+import Effect.Time
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
@@ -32,7 +40,6 @@ import SeqDict
 import Stripe
 import Task
 import Theme exposing (normalButtonAttributes)
-import Time
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Untrusted
 import Url
@@ -42,32 +49,44 @@ import View.Sales
 
 
 app :
-    { init : Lamdera.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
+    { init : Url.Url -> Key -> ( FrontendModel, Cmd FrontendMsg )
     , view : FrontendModel -> Browser.Document FrontendMsg
     , update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
     , updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
     , subscriptions : FrontendModel -> Sub FrontendMsg
-    , onUrlRequest : UrlRequest -> FrontendMsg
+    , onUrlRequest : Browser.UrlRequest -> FrontendMsg
     , onUrlChange : Url.Url -> FrontendMsg
     }
 app =
-    Lamdera.frontend
-        { init = init
-        , onUrlRequest = UrlClicked
-        , onUrlChange = UrlChanged
-        , update = update
-        , updateFromBackend = updateFromBackend
-        , subscriptions = subscriptions
-        , view = view
-        }
+    Effect.Lamdera.frontend Lamdera.sendToBackend app_
 
 
-subscriptions : FrontendModel -> Sub FrontendMsg
+app_ :
+    { init : Url.Url -> Effect.Browser.Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+    , onUrlRequest : Effect.Browser.UrlRequest -> FrontendMsg
+    , onUrlChange : Url.Url -> FrontendMsg
+    , update : FrontendMsg -> FrontendModel -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+    , updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
+    , subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
+    , view : FrontendModel -> Effect.Browser.Document FrontendMsg
+    }
+app_ =
+    { init = init
+    , onUrlRequest = UrlClicked
+    , onUrlChange = UrlChanged
+    , update = update
+    , updateFromBackend = updateFromBackend
+    , subscriptions = subscriptions
+    , view = view
+    }
+
+
+subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
 subscriptions _ =
-    Sub.batch
-        [ Browser.Events.onResize GotWindowSize
-        , Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
-        , Time.every 1000 Tick
+    Subscription.batch
+        [ Effect.Browser.Events.onResize GotWindowSize
+        , Effect.Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
+        , Effect.Time.every Duration.second Tick
         ]
 
 
@@ -76,7 +95,7 @@ queryBool name =
     Query.enum name (Dict.fromList [ ( "true", True ), ( "false", False ) ])
 
 
-init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel, Cmd FrontendMsg )
+init : Url.Url -> Effect.Browser.Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 init url key =
     let
         route =
@@ -92,37 +111,37 @@ init url key =
     in
     ( Loading
         { key = key
-        , now = Time.millisToPosix 0
+        , now = Effect.Time.millisToPosix 0
         , zone = Nothing
         , window = Nothing
         , initData = Nothing
         , route = route
         , isOrganiser = isOrganiser
         }
-    , Cmd.batch
-        [ Browser.Dom.getViewport
-            |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
-        , Time.now |> Task.perform Tick
-        , Time.here |> Task.perform GotZone
+    , Command.batch
+        [ Effect.Browser.Dom.getViewport
+            |> Effect.Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , Effect.Time.now |> Effect.Task.perform Tick
+        , Effect.Time.here |> Effect.Task.perform GotZone
         , case route of
             PaymentCancelRoute ->
-                Lamdera.sendToBackend CancelPurchaseRequest
+                Effect.Lamdera.sendToBackend CancelPurchaseRequest
 
             AdminRoute passM ->
                 case passM of
                     Just pass ->
-                        Lamdera.sendToBackend (AdminInspect pass)
+                        Effect.Lamdera.sendToBackend (AdminInspect pass)
 
                     Nothing ->
-                        Cmd.none
+                        Command.none
 
             _ ->
-                Cmd.none
+                Command.none
         ]
     )
 
 
-update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
+update : FrontendMsg -> FrontendModel -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 update msg model =
     case model of
         Loading loading ->
@@ -131,19 +150,19 @@ update msg model =
                     tryLoading { loading | window = Just { width = width, height = height } }
 
                 Tick now ->
-                    ( Loading { loading | now = now }, Cmd.none )
+                    ( Loading { loading | now = now }, Command.none )
 
                 GotZone zone ->
-                    ( Loading { loading | zone = Just zone }, Cmd.none )
+                    ( Loading { loading | zone = Just zone }, Command.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Loaded loaded ->
             updateLoaded msg loaded |> Tuple.mapFirst Loaded
 
 
-tryLoading : LoadingModel -> ( FrontendModel, Cmd FrontendMsg )
+tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
     Maybe.map2
         (\window { slotsRemaining, prices, ticketsEnabled } ->
@@ -164,46 +183,46 @@ tryLoading loadingModel =
                 , backendModel = Nothing
                 , pressedAudioButton = False
                 }
-            , Cmd.none
+            , Command.none
             )
         )
         loadingModel.window
         loadingModel.initData
-        |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
+        |> Maybe.withDefault ( Loading loadingModel, Command.none )
 
 
-updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Cmd FrontendMsg )
+updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Command FrontendOnly ToBackend FrontendMsg )
 updateLoaded msg model =
     case msg of
         UrlClicked urlRequest ->
             case urlRequest of
-                Internal url ->
+                Browser.Internal url ->
                     ( model
-                    , Browser.Navigation.pushUrl model.key (Url.toString url)
+                    , Effect.Browser.Navigation.pushUrl model.key (Url.toString url)
                     )
 
-                External url ->
+                Browser.External url ->
                     ( model
-                    , Browser.Navigation.load url
+                    , Effect.Browser.Navigation.load url
                     )
 
         UrlChanged url ->
             ( { model | route = Route.decode url }, scrollToTop )
 
         Tick now ->
-            ( { model | now = now }, Cmd.none )
+            ( { model | now = now }, Command.none )
 
         GotZone zone ->
-            ( { model | zone = Just zone }, Cmd.none )
+            ( { model | zone = Just zone }, Command.none )
 
         GotWindowSize width height ->
-            ( { model | window = { width = width, height = height } }, Cmd.none )
+            ( { model | window = { width = width, height = height } }, Command.none )
 
         PressedShowTooltip ->
-            ( { model | showTooltip = True }, Cmd.none )
+            ( { model | showTooltip = True }, Command.none )
 
         MouseDown ->
-            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
+            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Command.none )
 
         DownloadTicketSalesReminder ->
             ( model, downloadTicketSalesReminder )
@@ -217,10 +236,10 @@ updateLoaded msg model =
                         )
 
                     else
-                        ( model, Cmd.none )
+                        ( model, Command.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         AddAccom accom ->
             let
@@ -230,7 +249,7 @@ updateLoaded msg model =
                 newForm =
                     { form | accommodationBookings = model.form.accommodationBookings ++ [ accom ] }
             in
-            ( { model | form = newForm }, Cmd.none )
+            ( { model | form = newForm }, Command.none )
 
         RemoveAccom accom ->
             let
@@ -240,18 +259,18 @@ updateLoaded msg model =
                 newForm =
                     { form | accommodationBookings = List.remove accom model.form.accommodationBookings }
             in
-            ( { model | form = newForm }, Cmd.none )
+            ( { model | form = newForm }, Command.none )
 
         FormChanged form ->
             case model.form.submitStatus of
                 NotSubmitted _ ->
-                    ( { model | form = form }, Cmd.none )
+                    ( { model | form = form }, Command.none )
 
                 Submitting ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
                 SubmitBackendError _ ->
-                    ( { model | form = form }, Cmd.none )
+                    ( { model | form = form }, Command.none )
 
         PressedSubmitForm ->
             let
@@ -261,7 +280,7 @@ updateLoaded msg model =
             case ( form.submitStatus, PurchaseForm.validateForm form ) of
                 ( NotSubmitted _, Just purchaseFormValidated ) ->
                     ( { model | form = { form | submitStatus = Submitting } }
-                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                    , Effect.Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
                     )
 
                 ( NotSubmitted _, Nothing ) ->
@@ -278,20 +297,20 @@ updateLoaded msg model =
                         _ =
                             Debug.log "Form already submitted" "Form already submitted"
                     in
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         PressedCancelForm ->
             ( { model | selectedTicket = Nothing }
-            , Browser.Dom.getElement View.Sales.ticketsHtmlId
-                |> Task.andThen (\{ element } -> Browser.Dom.setViewport 0 element.y)
-                |> Task.attempt (\_ -> SetViewport)
+            , Effect.Browser.Dom.getElement View.Sales.ticketsHtmlId
+                |> Effect.Task.andThen (\{ element } -> Effect.Browser.Dom.setViewport 0 element.y)
+                |> Effect.Task.attempt (\_ -> SetViewport)
             )
 
         PressedShowCarbonOffsetTooltip ->
-            ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
+            ( { model | showCarbonOffsetTooltip = True }, Command.none )
 
         SetViewport ->
-            ( model, Cmd.none )
+            ( model, Command.none )
 
         SetViewPortForElement elmentId ->
             ( model, jumpToId elmentId 40 )
@@ -304,30 +323,31 @@ updateLoaded msg model =
                 (Json.Encode.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
+                |> Command.fromCmd "AdminPullBackendModel"
             )
 
         AdminPullBackendModelResponse res ->
             case res of
                 Ok backendModel ->
-                    ( { model | backendModel = Just backendModel }, Cmd.none )
+                    ( { model | backendModel = Just backendModel }, Command.none )
 
                 Err err ->
                     let
                         _ =
                             Debug.log "Failed to pull backend model" err
                     in
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Noop ->
-            ( model, Cmd.none )
+            ( model, Command.none )
 
 
-scrollToTop : Cmd FrontendMsg
+scrollToTop : Command FrontendOnly ToBackend FrontendMsg
 scrollToTop =
-    Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+    Effect.Browser.Dom.setViewport 0 0 |> Effect.Task.perform (\() -> SetViewport)
 
 
-updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
+updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 updateFromBackend msg model =
     case model of
         Loading loading ->
@@ -336,17 +356,17 @@ updateFromBackend msg model =
                     tryLoading { loading | initData = Just initData }
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Loaded loaded ->
             updateFromBackendLoaded msg loaded |> Tuple.mapFirst Loaded
 
 
-updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Cmd msg )
+updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Command FrontendOnly toMsg msg )
 updateFromBackendLoaded msg model =
     case msg of
         InitData { prices, slotsRemaining, ticketsEnabled } ->
-            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Cmd.none )
+            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Command.none )
 
         SubmitFormResponse result ->
             case result of
@@ -360,16 +380,16 @@ updateFromBackendLoaded msg model =
                         form =
                             model.form
                     in
-                    ( { model | form = { form | submitStatus = SubmitBackendError str } }, Cmd.none )
+                    ( { model | form = { form | submitStatus = SubmitBackendError str } }, Command.none )
 
         SlotRemainingChanged slotsRemaining ->
-            ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
+            ( { model | slotsRemaining = slotsRemaining }, Command.none )
 
         TicketsEnabledChanged ticketsEnabled ->
-            ( { model | ticketsEnabled = ticketsEnabled }, Cmd.none )
+            ( { model | ticketsEnabled = ticketsEnabled }, Command.none )
 
         AdminInspectResponse backendModel ->
-            ( { model | backendModel = Just backendModel }, Cmd.none )
+            ( { model | backendModel = Just backendModel }, Command.none )
 
 
 header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg
@@ -451,7 +471,7 @@ header config =
             ]
 
 
-view : FrontendModel -> Browser.Document FrontendMsg
+view : FrontendModel -> Effect.Browser.Document FrontendMsg
 view model =
     { title = "Elm Camp"
     , body =
@@ -611,7 +631,7 @@ loadedView model =
             Camp25US.view model subpage
 
 
-downloadTicketSalesReminder : Cmd msg
+downloadTicketSalesReminder : Command FrontendOnly toMsg msg
 downloadTicketSalesReminder =
     ICalendar.download
         { name = "elm-camp-ticket-sale-starts"
@@ -661,11 +681,11 @@ homepageView model =
         ]
 
 
-jumpToId : String -> Float -> Cmd FrontendMsg
+jumpToId : HtmlId -> Float -> Command FrontendOnly toMsg FrontendMsg
 jumpToId id offset =
-    Browser.Dom.getElement id
-        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - offset))
-        |> Task.attempt
+    Effect.Browser.Dom.getElement id
+        |> Effect.Task.andThen (\el -> Effect.Browser.Dom.setViewport 0 (el.element.y - offset))
+        |> Effect.Task.attempt
             (\_ -> Noop)
 
 

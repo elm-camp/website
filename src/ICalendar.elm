@@ -1,8 +1,9 @@
 module ICalendar exposing (Event, IcsFile, download, toText, toTextEvent)
 
 import DateFormat
-import File.Download
-import Time
+import Effect.Command as Command exposing (Command, FrontendOnly)
+import Effect.File.Download
+import Effect.Time
 
 
 {-| An ICS file is a text file that follows the iCalendar format. It is used to store events and to-dos.
@@ -16,15 +17,15 @@ type alias IcsFile =
 
 type alias Event =
     { uid : String
-    , start : Time.Posix
+    , start : Effect.Time.Posix
     , summary : String
     , description : String
     }
 
 
-download : IcsFile -> Cmd msg
+download : IcsFile -> Command FrontendOnly toMsg msg
 download icsFile =
-    File.Download.string (icsFile.name ++ ".ics") "text/calendar" (toText icsFile)
+    Effect.File.Download.string (icsFile.name ++ ".ics") "text/calendar" (toText icsFile)
 
 
 toText : IcsFile -> String
@@ -57,14 +58,14 @@ toTextEvent event =
                 , DateFormat.secondFixed
                 , DateFormat.text "Z"
                 ]
-                Time.utc
+                Effect.Time.utc
 
         stamp =
             format
                 event.start
 
         stampPlus =
-            event.start |> Time.posixToMillis |> (+) (1000 * 60 * 60) |> Time.millisToPosix |> format
+            event.start |> Effect.Time.posixToMillis |> (+) (1000 * 60 * 60) |> Effect.Time.millisToPosix |> format
     in
     [ "BEGIN:VEVENT"
     , "UID:{uid}"

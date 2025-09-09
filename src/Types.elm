@@ -22,17 +22,19 @@ module Types exposing
     , maxSlotsAvailable
     )
 
-import Browser exposing (UrlRequest)
-import Browser.Navigation exposing (Key)
+import Effect.Browser exposing (UrlRequest)
+import Effect.Browser.Dom exposing (HtmlId)
+import Effect.Browser.Navigation exposing (Key)
+import Effect.Http
+import Effect.Lamdera exposing (ClientId, SessionId)
+import Effect.Time
 import Http
 import Id exposing (Id)
-import Lamdera exposing (ClientId, SessionId)
 import Postmark
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
-import Time
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
 
@@ -43,9 +45,9 @@ type FrontendModel
 
 
 type alias LoadingModel =
-    { key : Key
-    , now : Time.Posix
-    , zone : Maybe Time.Zone
+    { key : Effect.Browser.Navigation.Key
+    , now : Effect.Time.Posix
+    , zone : Maybe Effect.Time.Zone
     , window : Maybe { width : Int, height : Int }
     , route : Route
     , isOrganiser : Bool
@@ -54,9 +56,9 @@ type alias LoadingModel =
 
 
 type alias LoadedModel =
-    { key : Key
-    , now : Time.Posix
-    , zone : Maybe Time.Zone
+    { key : Effect.Browser.Navigation.Key
+    , now : Effect.Time.Posix
+    , zone : Maybe Effect.Time.Zone
     , window : { width : Int, height : Int }
     , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
@@ -86,7 +88,7 @@ type alias BackendModel =
     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
     , prices : SeqDict (Id ProductId) Price2
-    , time : Time.Posix
+    , time : Effect.Time.Posix
     , ticketsEnabled : TicketsEnabled
     }
 
@@ -155,14 +157,14 @@ type alias Price2 =
 
 
 type alias PendingOrder =
-    { submitTime : Time.Posix
+    { submitTime : Effect.Time.Posix
     , form : PurchaseFormValidated
     , sessionId : SessionId
     }
 
 
 type alias Order =
-    { submitTime : Time.Posix
+    { submitTime : Effect.Time.Posix
     , form : PurchaseFormValidated
     , emailResult : EmailResult
 
@@ -242,7 +244,7 @@ type alias Order =
 type EmailResult
     = SendingEmail
     | EmailSuccess
-    | EmailFailed Http.Error
+    | EmailFailed Effect.Http.Error
 
 
 type OrderStatus
@@ -273,10 +275,10 @@ type alias CityCode =
 
 
 type FrontendMsg
-    = UrlClicked UrlRequest
+    = UrlClicked Effect.Browser.UrlRequest
     | UrlChanged Url
-    | Tick Time.Posix
-    | GotZone Time.Zone
+    | Tick Effect.Time.Posix
+    | GotZone Effect.Time.Zone
     | GotWindowSize Int Int
     | PressedShowTooltip
     | MouseDown
@@ -289,7 +291,7 @@ type FrontendMsg
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
     | SetViewport
-    | SetViewPortForElement String
+    | SetViewPortForElement HtmlId
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | Noop
@@ -302,12 +304,12 @@ type ToBackend
 
 
 type BackendMsg
-    = GotTime Time.Posix
-    | GotPrices (Result Http.Error (List PriceData))
+    = GotTime Effect.Time.Posix
+    | GotPrices (Result Effect.Http.Error (List PriceData))
     | OnConnected SessionId ClientId
-    | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
-    | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
-    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error ())
+    | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Effect.Http.Error ( Id StripeSessionId, Effect.Time.Posix ))
+    | ExpiredStripeSession (Id StripeSessionId) (Result Effect.Http.Error ())
+    | ConfirmationEmailSent (Id StripeSessionId) (Result Effect.Http.Error ())
     | ErrorEmailSent (Result Postmark.SendEmailError ())
 
 

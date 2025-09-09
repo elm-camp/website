@@ -17,9 +17,12 @@ module Stripe exposing
     , successPath
     )
 
+import Effect.Command as Command exposing (Command, FrontendOnly)
+import Effect.Http
+import Effect.Task exposing (Task)
+import Effect.Time
 import EmailAddress exposing (EmailAddress)
 import Env
-import Http
 import HttpHelpers
 import Id exposing (Id)
 import Json.Decode as D
@@ -27,8 +30,6 @@ import Json.Decode.Pipeline
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
-import Task exposing (Task)
-import Time
 import Url exposing (percentEncode)
 import Url.Builder
 
@@ -69,19 +70,18 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
+    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Effect.Time.Posix }
 
 
-getPrices : (Result Http.Error (List PriceData) -> msg) -> Cmd msg
-getPrices toMsg =
-    Http.request
+getPrices : Task restriction Effect.Http.Error (List PriceData)
+getPrices =
+    Effect.Http.task
         { method = "GET"
         , headers = headers
         , url = "https://api.stripe.com/v1/prices"
-        , body = Http.emptyBody
-        , expect = HttpHelpers.expectJson_ toMsg decodePrices
+        , body = Effect.Http.emptyBody
+        , resolver = HttpHelpers.jsonResolver decodePrices
         , timeout = Nothing
-        , tracker = Nothing
         }
 
 
@@ -106,7 +106,7 @@ decodePrice =
         |> Json.Decode.Pipeline.optional "unit_amount" D.int 0
         |> Json.Decode.Pipeline.required "product" Id.decoder
         |> Json.Decode.Pipeline.required "active" D.bool
-        |> Json.Decode.Pipeline.required "created" (D.map Time.millisToPosix D.int)
+        |> Json.Decode.Pipeline.required "created" (D.map Effect.Time.millisToPosix D.int)
 
 
 decodeCurrency : D.Decoder Money.Currency
@@ -140,10 +140,10 @@ type CheckoutItem
 createCheckoutSession :
     { items : List CheckoutItem
     , emailAddress : EmailAddress
-    , now : Time.Posix
+    , now : Effect.Time.Posix
     , expiresInMinutes : Int
     }
-    -> Task Http.Error (Id StripeSessionId)
+    -> Effect.Task.Task restriction Effect.Http.Error (Id StripeSessionId)
 createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
     let
         itemToStripeAttrs i item =
@@ -165,7 +165,7 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
             , ( "allow_promotion_codes", "true" )
 
             -- Stripe expects seconds since epoch
-            , ( "expires_at", String.fromInt ((Time.posixToMillis now // 1000) + (expiresInMinutes * 60)) )
+            , ( "expires_at", String.fromInt ((Effect.Time.posixToMillis now // 1000) + (expiresInMinutes * 60)) )
             , ( "success_url"
               , Url.Builder.crossOrigin
                     Env.domain
@@ -178,7 +178,7 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
                 ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
                 |> formBody
     in
-    Http.task
+    Effect.Http.task
         { method = "POST"
         , headers = headers
         , url = "https://api.stripe.com/v1/checkout/sessions"
@@ -208,9 +208,9 @@ cancelPath =
     "stripeCancel"
 
 
-expireSession : Id StripeSessionId -> Task Http.Error ()
+expireSession : Id StripeSessionId -> Effect.Task.Task restriction Effect.Http.Error ()
 expireSession stripeSessionId =
-    Http.task
+    Effect.Http.task
         { method = "POST"
         , headers = headers
         , url =
@@ -218,7 +218,7 @@ expireSession stripeSessionId =
                 "https://api.stripe.com"
                 [ "v1", "checkout", "sessions", Id.toString stripeSessionId, "expire" ]
                 []
-        , body = Http.emptyBody
+        , body = Effect.Http.emptyBody
         , resolver = HttpHelpers.jsonResolver (D.succeed ())
         , timeout = Nothing
         }
@@ -243,16 +243,16 @@ decodeSession =
     D.field "id" Id.decoder
 
 
-headers : List Http.Header
+headers : List Effect.Http.Header
 headers =
-    [ Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey) ]
+    [ Effect.Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey) ]
 
 
 
 -- Ports API
 
 
-loadCheckout : String -> Id StripeSessionId -> Cmd msg
+loadCheckout : String -> Id StripeSessionId -> Command FrontendOnly toMsg msg
 loadCheckout publicApiKey sid =
     toJsMessage "loadCheckout"
         [ ( "id", Id.encode sid )
@@ -260,9 +260,11 @@ loadCheckout publicApiKey sid =
         ]
 
 
-toJsMessage : String -> List ( String, E.Value ) -> Cmd msg
+toJsMessage : String -> List ( String, E.Value ) -> Command FrontendOnly toMsg msg
 toJsMessage msg values =
-    stripe_to_js
+    Command.sendToJs
+        "stripe_to_js"
+        stripe_to_js
         (E.object
             (( "msg", E.string msg ) :: values)
         )
@@ -289,6 +291,6 @@ cgiParameters parameters =
 {-| Put some key-value pairs in the body of your `Request`. This will automatically
 add the `Content-Type: application/x-www-form-urlencoded` header.
 -}
-formBody : List ( String, String ) -> Http.Body
+formBody : List ( String, String ) -> Effect.Http.Body
 formBody parameters =
-    cgiParameters parameters |> Http.stringBody "application/x-www-form-urlencoded"
+    cgiParameters parameters |> Effect.Http.stringBody "application/x-www-form-urlencoded"

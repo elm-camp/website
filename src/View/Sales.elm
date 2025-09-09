@@ -8,7 +8,6 @@ module View.Sales exposing
     , formView
     , goToTicketSales
     , grantApplicationCopy
-    , htmlId
     , opportunityGrant
     , opportunityGrantInfo
     , organisersInfo
@@ -33,6 +32,8 @@ import Camp25US.Inventory as Inventory
 import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
 import DateFormat
+import Effect.Browser.Dom as Dom exposing (HtmlId)
+import Effect.Time
 import Element exposing (Color, Element)
 import Element.Background as Background
 import Element.Border as Border
@@ -50,7 +51,6 @@ import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
-import Time
 import TimeFormat
 import Types exposing (FrontendMsg(..), LoadedModel)
 import View.Countdown
@@ -61,9 +61,9 @@ year =
     "2025"
 
 
-ticketSalesOpen : Time.Posix
+ticketSalesOpen : Effect.Time.Posix
 ticketSalesOpen =
-    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
+    (TimeFormat.certain "2025-04-04T19:00" Effect.Time.utc).time
 
 
 view : LoadedModel -> Element FrontendMsg
@@ -96,7 +96,7 @@ view model =
         , Element.column
             [ Element.width Element.fill
             , Element.spacing 60
-            , Element.htmlAttribute (Html.Attributes.id ticketsHtmlId)
+            , Element.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
             [ Element.el Theme.contentAttributes opportunityGrantInfo
             , grantApplicationCopy
@@ -167,9 +167,9 @@ ticketSalesOpenCountdown model =
         )
 
 
-ticketSalesHtmlId : String
+ticketSalesHtmlId : HtmlId
 ticketSalesHtmlId =
-    "ticket-sales"
+    Dom.id "ticket-sales"
 
 
 goToTicketSales : Element FrontendMsg
@@ -305,9 +305,9 @@ This year's venue has capacity for 75 attendees. Our plan is to maximise opportu
         |> MarkdownThemed.renderFull
 
 
-ticketsHtmlId : String
+ticketsHtmlId : HtmlId
 ticketsHtmlId =
-    "tickets"
+    Dom.id "tickets"
 
 
 grantApplicationCopy : String
@@ -361,7 +361,10 @@ ticketsView model =
                     " - Price not available"
     in
     Element.column Theme.contentAttributes
-        [ Element.row [ Element.width Element.fill, htmlId ticketSalesHtmlId ]
+        [ Element.row
+            [ Element.width Element.fill
+            , Element.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
+            ]
             [ Element.column [ Element.width Element.fill ]
                 [ """## 🎟️ Attendee Details
 Please enter details for each person attending Elm camp, then select your accommodation below.
@@ -566,11 +569,6 @@ By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
                 |> MarkdownThemed.renderFull
             ]
         ]
-
-
-htmlId : String -> Element.Attribute msg
-htmlId str =
-    Element.htmlAttribute (Html.Attributes.id str)
 
 
 attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg
@@ -984,16 +982,16 @@ getting an element by ID means getting the _first_ element with that ID, which
 is exactly what we want here.
 
 -}
-errorHtmlId : String
+errorHtmlId : HtmlId
 errorHtmlId =
-    "error"
+    Dom.id "error"
 
 
 errorText : String -> Element msg
 errorText error =
     Element.paragraph
         [ Font.color (Element.rgb255 172 0 0)
-        , Element.htmlAttribute (Html.Attributes.id errorHtmlId)
+        , Element.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
         [ Element.text ("🚨 " ++ error) ]
 
