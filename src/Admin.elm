@@ -29,10 +29,10 @@ import SeqDict exposing (SeqDict)
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
-import Types exposing (BackendModel, FrontendMsg_(..), LoadedModel, Price2, TicketsEnabled(..))
+import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, Price2, TicketsEnabled(..))
 
 
-view : LoadedModel -> Element FrontendMsg_
+view : LoadedModel -> Element FrontendMsg
 view model =
     case model.backendModel of
         Just backendModel ->
@@ -42,7 +42,7 @@ view model =
             Element.text "loading"
 
 
-viewAdmin : BackendModel -> Element FrontendMsg_
+viewAdmin : BackendModel -> Element FrontendMsg
 viewAdmin backendModel =
     -- type alias BackendModel =
     --     { orders : SeqDict (Id StripeSessionId) Order

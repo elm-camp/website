@@ -3,10 +3,10 @@ module Camp25US.Archive exposing (view)
 import Element exposing (Element)
 import MarkdownThemed
 import Theme
-import Types exposing (FrontendMsg_, LoadedModel)
+import Types exposing (FrontendMsg, LoadedModel)
 
 
-view : LoadedModel -> Element FrontendMsg_
+view : LoadedModel -> Element FrontendMsg
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -24,7 +24,7 @@ content1 =
         |> MarkdownThemed.renderFull
 
 
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
+unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
 unconferenceBulletPoints model =
     []
         |> Element.column [ Element.spacing 15 ]

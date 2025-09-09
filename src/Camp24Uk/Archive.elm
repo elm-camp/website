@@ -7,10 +7,10 @@ import Element.Font
 import Element.Input
 import MarkdownThemed
 import Theme
-import Types exposing (FrontendMsg_(..), LoadedModel)
+import Types exposing (FrontendMsg(..), LoadedModel)
 
 
-view : LoadedModel -> Element FrontendMsg_
+view : LoadedModel -> Element FrontendMsg
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -76,7 +76,7 @@ Elm Camp is the first Elm Unconference. Our intention is to debut as a small, ca
         |> MarkdownThemed.renderFull
 
 
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
+unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
 unconferenceBulletPoints model =
     [ Element.text "Arrive 3pm Wed 28 June"
     , Element.text "Depart 4pm Fri 30 June"

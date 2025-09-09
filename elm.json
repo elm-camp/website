@@ -7,7 +7,6 @@
     "dependencies": {
         "direct": {
             "Chadtech/elm-money": "7.0.0",
-            "MartinSStewart/elm-audio": "4.0.2",
             "MartinSStewart/elm-email": "1.0.1",
             "MartinSStewart/elm-nonempty-string": "2.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
@@ -30,7 +29,7 @@
             "lamdera/core": "1.0.0",
             "mdgriffith/elm-ui": "1.1.8",
             "mgold/elm-nonempty-list": "4.2.0",
-            "miniBill/elm-codec": "2.0.0",
+            "miniBill/elm-codec": "2.3.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "ryan-haskell/date-format": "1.0.0"
         },
@@ -39,7 +38,7 @@
             "elm/parser": "1.1.0",
             "elm/random": "1.0.0",
             "elm/regex": "1.0.0",
-            "elm/virtual-dom": "1.0.3",
+            "elm/virtual-dom": "1.0.4",
             "rtfeldman/elm-hex": "1.0.0"
         }
     },

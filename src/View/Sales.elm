@@ -52,7 +52,7 @@ import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
 import Time
 import TimeFormat
-import Types exposing (FrontendMsg_(..), LoadedModel)
+import Types exposing (FrontendMsg(..), LoadedModel)
 import View.Countdown
 
 
@@ -66,7 +66,7 @@ ticketSalesOpen =
     (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
-view : LoadedModel -> Element FrontendMsg_
+view : LoadedModel -> Element FrontendMsg
 view model =
     let
         ticketsAreLive =
@@ -120,7 +120,7 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg_
+ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg
 ticketSalesOpenCountdown model =
     let
         ticketsAreLive =
@@ -172,7 +172,7 @@ ticketSalesHtmlId =
     "ticket-sales"
 
 
-goToTicketSales : Element FrontendMsg_
+goToTicketSales : Element FrontendMsg
 goToTicketSales =
     Input.button showyButtonAttributes
         { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
@@ -348,7 +348,7 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
         |> MarkdownThemed.renderFull
 
 
-ticketsView : LoadedModel -> Element FrontendMsg_
+ticketsView : LoadedModel -> Element FrontendMsg
 ticketsView model =
     let
         attendanceTicketPriceText =
@@ -421,7 +421,7 @@ Please enter details for each person attending Elm camp, then select your accomm
 --}
 
 
-accommodationView : LoadedModel -> Element FrontendMsg_
+accommodationView : LoadedModel -> Element FrontendMsg
 accommodationView model =
     Element.column [ Element.width Element.fill, Element.spacing 20 ]
         [ Element.column Theme.contentAttributes
@@ -457,7 +457,7 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
         ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg
 formView model productId priceId ticket =
     let
         form =
@@ -573,7 +573,7 @@ htmlId str =
     Element.htmlAttribute (Html.Attributes.id str)
 
 
-attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg_
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg
 attendeeForm model i attendee =
     let
         form =
@@ -644,7 +644,7 @@ attendeeForm model i attendee =
         ]
 
 
-opportunityGrant : PurchaseForm -> Element FrontendMsg_
+opportunityGrant : PurchaseForm -> Element FrontendMsg
 opportunityGrant form =
     Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
         [ Theme.h2 "🫶 Opportunity grants"
@@ -695,7 +695,7 @@ opportunityGrant form =
         ]
 
 
-sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg_
+sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg
 sponsorships model form =
     Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
@@ -706,7 +706,7 @@ sponsorships model form =
         ]
 
 
-sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg_
+sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg
 sponsorshipOption model form s =
     let
         displayCurrency =
@@ -872,7 +872,7 @@ backgroundColor =
     Element.rgb255 255 244 225
 
 
-carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg_
+carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg
 carbonOffsetForm showCarbonOffsetTooltip form =
     Element.column
         [ Element.width Element.fill

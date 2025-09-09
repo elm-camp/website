@@ -22,7 +22,7 @@ import Html.Attributes
 import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
-import Types exposing (FrontendMsg_, LoadedModel)
+import Types exposing (FrontendMsg, LoadedModel)
 
 
 meta : Meta
@@ -35,7 +35,7 @@ meta =
     }
 
 
-view : LoadedModel -> SubPage -> Element FrontendMsg_
+view : LoadedModel -> SubPage -> Element FrontendMsg
 view model subpage =
     Element.column
         [ Element.width Element.fill, Element.height Element.fill ]
