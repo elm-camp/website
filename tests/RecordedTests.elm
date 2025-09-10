@@ -108,35 +108,13 @@ tests fileData =
             { width = 881, height = 1312 }
             (\tab1 ->
                 [ tab1.clickLink 100 "/code-of-conduct"
-
-                --, tab1.clickLink 100 "/unconference-format"
-                --, tab1.clickLink 100 "/venue-and-access"
-                --, tab1.clickLink 100 "/organisers"
-                --, tab1.clickLink 100 "/elm-camp-archive"
-                --, tab1.clickLink 100 "/24-uk"
+                , tab1.clickLink 100 "/unconference-format"
+                , tab1.clickLink 100 "/venue-and-access"
+                , tab1.clickLink 100 "/organisers"
+                , tab1.clickLink 100 "/elm-camp-archive"
+                , tab1.clickLink 100 "/24-uk"
                 ]
             )
         ]
-    , T.start
-        "new test 1"
-        (Time.millisToPosix 1757450110422)
-        config
-        [ T.connectFrontend
-            0
-            (Effect.Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
-            "/"
-            { width = 881, height = 1312 }
-            (\tab1 -> [ tab1.click 5000 (Dom.id "please-add-an-id"), tab1.clickLink 0 "/code-of-conduct" ])
-        ]
-    , T.start
-        "new test 2"
-        (Time.millisToPosix 1757450183304)
-        config
-        [ T.connectFrontend
-            0
-            (Effect.Lamdera.sessionIdFromString "789988c04b8f7b594cdeedebc2a8029b82943b0a")
-            "/"
-            { width = 1309, height = 909 }
-            (\tab1 -> [ tab1.click 2808 (Dom.id "please-add-an-id"), tab1.clickLink 0 "/code-of-conduct" ])
-        ]
+
     ]
