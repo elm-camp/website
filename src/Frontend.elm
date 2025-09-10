@@ -198,7 +198,7 @@ updateLoaded msg model =
             case urlRequest of
                 Browser.Internal url ->
                     ( model
-                    , Effect.Browser.Navigation.pushUrl model.key (Url.toString url)
+                    , Effect.Browser.Navigation.pushUrl model.key (Route.decode url |> Route.encode)
                     )
 
                 Browser.External url ->
