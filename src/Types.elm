@@ -90,6 +90,7 @@ type alias BackendModel =
     , prices : SeqDict (Id ProductId) Price2
     , time : Effect.Time.Posix
     , ticketsEnabled : TicketsEnabled
+    , backendInitialized : Bool
     }
 
 

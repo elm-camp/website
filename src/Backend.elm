@@ -72,13 +72,9 @@ init =
       , prices = SeqDict.empty
       , time = Effect.Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
+      , backendInitialized = False
       }
-    , Command.batch
-        [ Effect.Time.now |> Effect.Task.perform GotTime
-        , Effect.Process.sleep Duration.second
-            |> Effect.Task.andThen (\() -> Stripe.getPrices)
-            |> Effect.Task.attempt GotPrices
-        ]
+    , Command.none
     )
 
 
@@ -143,15 +139,27 @@ update msg model =
                     )
 
         OnConnected _ clientId ->
-            ( model
-            , Effect.Lamdera.sendToFrontend
-                clientId
-                (InitData
-                    { prices = model.prices
-                    , slotsRemaining = Inventory.slotsRemaining model
-                    , ticketsEnabled = model.ticketsEnabled
-                    }
-                )
+            ( { model | backendInitialized = True }
+            , Command.batch
+                [ Effect.Lamdera.sendToFrontend
+                    clientId
+                    (InitData
+                        { prices = model.prices
+                        , slotsRemaining = Inventory.slotsRemaining model
+                        , ticketsEnabled = model.ticketsEnabled
+                        }
+                    )
+                , if model.backendInitialized then
+                    Command.none
+
+                  else
+                    Command.batch
+                        [ Effect.Time.now |> Effect.Task.perform GotTime
+                        , Effect.Process.sleep Duration.second
+                            |> Effect.Task.andThen (\() -> Stripe.getPrices)
+                            |> Effect.Task.attempt GotPrices
+                        ]
+                ]
             )
 
         CreatedCheckoutSession sessionId clientId purchaseForm result ->

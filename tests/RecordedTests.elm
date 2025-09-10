@@ -35,8 +35,7 @@ domain =
 -}
 fileRequests : Dict String String
 fileRequests =
-    [ 
-    ]
+    []
         |> Dict.fromList
 
 
@@ -64,7 +63,11 @@ handleHttpRequests overrides fileData { currentRequest } =
             getData path
 
         _ ->
-            UnhandledHttpRequest
+            if currentRequest.url == "https://api.stripe.com/v1/prices" then
+                BadUrlResponse ""
+
+            else
+                UnhandledHttpRequest
 
 
 {-| You can change parts of this function represented with `...`.
