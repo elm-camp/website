@@ -1,11 +1,40 @@
-module View.Sales exposing (..)
+module View.Sales exposing
+    ( accommodationView
+    , attendeeForm
+    , backgroundColor
+    , carbonOffsetForm
+    , errorHtmlId
+    , errorText
+    , formView
+    , goToTicketSales
+    , grantApplicationCopy
+    , opportunityGrant
+    , opportunityGrantInfo
+    , organisersInfo
+    , radioButton
+    , sponsorshipOption
+    , sponsorships
+    , summary
+    , summaryAccommodation
+    , textInput
+    , ticketInfo
+    , ticketSalesHtmlId
+    , ticketSalesOpen
+    , ticketSalesOpenCountdown
+    , ticketsHtmlId
+    , ticketsView
+    , tooltip
+    , view
+    , year
+    )
 
-import AssocList
 import Camp25US.Inventory as Inventory
 import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
 import DateFormat
-import Element exposing (..)
+import Effect.Browser.Dom as Dom exposing (HtmlId)
+import Effect.Time as Time
+import Element exposing (Color, Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -18,23 +47,26 @@ import List.Extra as List
 import MarkdownThemed
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
-import Time
 import TimeFormat
-import Types exposing (..)
+import Types exposing (FrontendMsg(..), LoadedModel)
 import View.Countdown
 
 
+year : String
 year =
     "2025"
 
 
+ticketSalesOpen : Time.Posix
 ticketSalesOpen =
     (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
+view : LoadedModel -> Element FrontendMsg
 view model =
     let
         ticketsAreLive =
@@ -45,57 +77,60 @@ view model =
                 v
 
             else
-                none
+                Element.none
 
         beforeTicketsAreLive v =
             if ticketsAreLive then
-                none
+                Element.none
 
             else
                 v
     in
-    column Theme.contentAttributes
+    Element.column Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
-          beforeTicketsAreLive <|
-            column Theme.contentAttributes
+          beforeTicketsAreLive
+            (Element.column Theme.contentAttributes
                 [ ticketInfo model
                 ]
-        , column
-            [ width fill
-            , spacing 60
-            , htmlAttribute (Html.Attributes.id ticketsHtmlId)
+            )
+        , Element.column
+            [ Element.width Element.fill
+            , Element.spacing 60
+            , Element.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
-            [ el Theme.contentAttributes opportunityGrantInfo
+            [ Element.el Theme.contentAttributes opportunityGrantInfo
             , grantApplicationCopy
                 |> MarkdownThemed.renderFull
-                |> el Theme.contentAttributes
-            , el Theme.contentAttributes organisersInfo
+                |> Element.el Theme.contentAttributes
+            , Element.el Theme.contentAttributes organisersInfo
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive <| el Theme.contentAttributes <| MarkdownThemed.renderFull "# Attend Elm Camp"
-            , afterTicketsAreLive <| ticketsView model
-            , afterTicketsAreLive <| accommodationView model
-            , afterTicketsAreLive <|
-                formView model
+            , afterTicketsAreLive (Element.el Theme.contentAttributes (MarkdownThemed.renderFull "# Attend Elm Camp"))
+            , afterTicketsAreLive (ticketsView model)
+            , afterTicketsAreLive (accommodationView model)
+            , afterTicketsAreLive
+                (formView model
                     (Id.fromString Product.ticket.campingSpot)
                     (Id.fromString "testing")
                     Tickets.attendanceTicket
+                )
 
             -- , Element.el Theme.contentAttributes content3
             ]
         ]
 
 
+ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg
 ticketSalesOpenCountdown model =
     let
         ticketsAreLive =
             View.Countdown.ticketSalesLive ticketSalesOpen model
     in
-    column (Theme.contentAttributes ++ [ spacing 20 ]) <|
-        if ticketsAreLive then
-            [ el [ Font.size 20, centerX ] goToTicketSales ]
+    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
+        (if ticketsAreLive then
+            [ Element.el [ Font.size 20, Element.centerX ] goToTicketSales ]
 
-        else
+         else
             [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
             , case model.zone of
                 Just zone ->
@@ -113,34 +148,35 @@ ticketSalesOpenCountdown model =
                         zone
                         ticketSalesOpen
                         |> (\t ->
-                                el
-                                    [ centerX
-                                    , paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
+                                Element.el
+                                    [ Element.centerX
+                                    , Element.paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
                                     ]
-                                <|
-                                    text t
+                                    (Element.text t)
                            )
 
                 _ ->
-                    el [ centerX ] <| text "nozone"
+                    Element.el [ Element.centerX ] (Element.text "nozone")
             , Input.button
-                (Theme.submitButtonAttributes True ++ [ width (px 200), centerX ])
+                (Theme.submitButtonAttributes True ++ [ Element.width (Element.px 200), Element.centerX ])
                 { onPress = Just DownloadTicketSalesReminder
-                , label = el [ Font.center, centerX ] <| text "Add to calendar"
+                , label = Element.el [ Font.center, Element.centerX ] (Element.text "Add to calendar")
                 }
-            , text " "
+            , Element.text " "
             ]
+        )
 
 
-ticketSalesHtmlId : String
+ticketSalesHtmlId : HtmlId
 ticketSalesHtmlId =
-    "ticket-sales"
+    Dom.id "ticket-sales"
 
 
+goToTicketSales : Element FrontendMsg
 goToTicketSales =
     Input.button showyButtonAttributes
         { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
-        , label = text "Tickets on sale now! ⬇️"
+        , label = Element.text "Tickets on sale now! ⬇️"
         }
 
 
@@ -156,7 +192,7 @@ ticketInfo model =
         -- Get prices for each ticket type
         formatTicketPrice productId =
             model.prices
-                |> AssocList.get (Id.fromString productId)
+                |> SeqDict.get (Id.fromString productId)
                 |> Maybe.map (\price -> Theme.priceText price.price)
                 |> Maybe.withDefault "Price not available"
 
@@ -178,13 +214,13 @@ ticketInfo model =
         -- Calculate example prices
         exampleTickets3 =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
                 |> Maybe.withDefault 0
 
         exampleDorm =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.groupRoom)
+                |> SeqDict.get (Id.fromString Product.ticket.groupRoom)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
@@ -196,13 +232,13 @@ ticketInfo model =
 
         exampleTicket1 =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
         exampleSingle =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.singleRoom)
+                |> SeqDict.get (Id.fromString Product.ticket.singleRoom)
                 |> Maybe.map (\price -> Theme.priceAmount price.price)
                 |> Maybe.withDefault 0
 
@@ -212,7 +248,7 @@ ticketInfo model =
         -- Get a reference price for formatting
         refPrice =
             model.prices
-                |> AssocList.get (Id.fromString Product.ticket.attendanceTicket)
+                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
                 |> Maybe.map .price
 
         formatPrice amount =
@@ -269,10 +305,12 @@ This year's venue has capacity for 75 attendees. Our plan is to maximise opportu
         |> MarkdownThemed.renderFull
 
 
+ticketsHtmlId : HtmlId
 ticketsHtmlId =
-    "tickets"
+    Dom.id "tickets"
 
 
+grantApplicationCopy : String
 grantApplicationCopy =
     """
 
@@ -286,9 +324,10 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 """
 
 
+opportunityGrantInfo : Element msg
 opportunityGrantInfo =
     """
-# \u{1FAF6} Opportunity grant
+# 🫶 Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
 
@@ -309,26 +348,30 @@ Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic
         |> MarkdownThemed.renderFull
 
 
+ticketsView : LoadedModel -> Element FrontendMsg
 ticketsView model =
     let
         attendanceTicketPriceText =
             -- Look up the attendance ticket price from model.prices
-            case AssocList.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
+            case SeqDict.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
                 Just priceInfo ->
                     " - " ++ Theme.priceText priceInfo.price
 
                 Nothing ->
                     " - Price not available"
     in
-    column Theme.contentAttributes
-        [ row [ width fill, htmlId ticketSalesHtmlId ]
-            [ column [ width fill ]
+    Element.column Theme.contentAttributes
+        [ Element.row
+            [ Element.width Element.fill
+            , Element.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
+            ]
+            [ Element.column [ Element.width Element.fill ]
                 [ """## 🎟️ Attendee Details
 Please enter details for each person attending Elm camp, then select your accommodation below.
                 """
                     |> MarkdownThemed.renderFull
                 ]
-            , column []
+            , Element.column []
                 [ Theme.numericField
                     "Tickets"
                     (List.length model.form.attendees)
@@ -360,15 +403,15 @@ Please enter details for each person attending Elm camp, then select your accomm
             ]
         , case model.form.attendees of
             [] ->
-                none
+                Element.none
 
             _ ->
-                column [ width fill, spacing 20 ]
-                    [ el [ Font.size 20 ] (text "Attendees")
-                    , column
-                        [ spacing 16, width fill ]
+                Element.column [ Element.width Element.fill, Element.spacing 20 ]
+                    [ Element.el [ Font.size 20 ] (Element.text "Attendees")
+                    , Element.column
+                        [ Element.spacing 16, Element.width Element.fill ]
                         (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
-                    , paragraph [] [ text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
+                    , Element.paragraph [] [ Element.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
 
                     -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
                     ]
@@ -381,10 +424,10 @@ Please enter details for each person attending Elm camp, then select your accomm
 --}
 
 
-accommodationView : LoadedModel -> Element FrontendMsg_
+accommodationView : LoadedModel -> Element FrontendMsg
 accommodationView model =
-    column [ width fill, spacing 20 ]
-        [ column Theme.contentAttributes
+    Element.column [ Element.width Element.fill, Element.spacing 20 ]
+        [ Element.column Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
             , """
 Please select one accommodation option per attendee.
@@ -395,11 +438,11 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
 """
                 |> MarkdownThemed.renderFull
             ]
-        , AssocList.toList Tickets.accommodationOptions
+        , SeqDict.toList Tickets.accommodationOptions
             |> List.reverse
             |> List.map
                 (\( productId, ( accom, ticket ) ) ->
-                    case AssocList.get productId model.prices of
+                    case SeqDict.get productId model.prices of
                         Just price ->
                             Tickets.viewAccom model.form
                                 accom
@@ -411,13 +454,13 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
                                 ticket
 
                         Nothing ->
-                            text "No ticket prices found"
+                            Element.text "No ticket prices found"
                 )
-            |> Theme.rowToColumnWhen 1200 model [ spacing 16 ]
+            |> Theme.rowToColumnWhen 1200 model.window [ Element.spacing 16 ]
         ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg_
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg
 formView model productId priceId ticket =
     let
         form =
@@ -428,9 +471,9 @@ formView model productId priceId ticket =
                 (Theme.submitButtonAttributes (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining))
                 { onPress = Just PressedSubmitForm
                 , label =
-                    paragraph
+                    Element.paragraph
                         [ Font.center ]
-                        [ text
+                        [ Element.text
                             (if Inventory.purchaseable ticket.productId model.slotsRemaining then
                                 "Purchase "
 
@@ -438,14 +481,14 @@ formView model productId priceId ticket =
                                 "Waitlist"
                             )
                         , case form.submitStatus of
-                            NotSubmitted pressedSubmit ->
-                                none
+                            NotSubmitted _ ->
+                                Element.none
 
                             Submitting ->
-                                el [ moveDown 5 ] Theme.spinnerWhite
+                                Element.el [ Element.moveDown 5 ] Theme.spinnerWhite
 
-                            SubmitBackendError err ->
-                                none
+                            SubmitBackendError _ ->
+                                Element.none
                         ]
                 }
 
@@ -453,7 +496,7 @@ formView model productId priceId ticket =
             Input.button
                 normalButtonAttributes
                 { onPress = Just PressedCancelForm
-                , label = el [ centerX ] (text "Cancel")
+                , label = Element.el [ Element.centerX ] (Element.text "Cancel")
                 }
 
         includesAccom =
@@ -478,23 +521,23 @@ formView model productId priceId ticket =
             else
                 ""
     in
-    column
-        [ width fill, spacing 60 ]
-        [ none
+    Element.column
+        [ Element.width Element.fill, Element.spacing 60 ]
+        [ Element.none
 
         -- , carbonOffsetForm model.showCarbonOffsetTooltip form
         , opportunityGrant form
 
         --, sponsorships model form
         , summary model
-        , column
+        , Element.column
             (Theme.contentAttributes
-                ++ [ spacing 24
+                ++ [ Element.spacing 24
 
                    --    , padding 16
                    ]
             )
-            [ none
+            [ Element.none
             , MarkdownThemed.renderFull orderNotes
             , textInput
                 model.form
@@ -503,36 +546,32 @@ formView model productId priceId ticket =
                 PurchaseForm.validateEmailAddress
                 form.billingEmail
             , case form.submitStatus of
-                NotSubmitted pressedSubmit ->
-                    none
+                NotSubmitted _ ->
+                    Element.none
 
                 Submitting ->
                     -- @TODO spinner
-                    none
+                    Element.none
 
                 SubmitBackendError err ->
-                    paragraph [] [ text err ]
+                    Element.paragraph [] [ Element.text err ]
             , """
 Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
 
 By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
-                row [ width fill, spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
+                Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
-                column [ width fill, spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
+                Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
             , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
                 |> MarkdownThemed.renderFull
             ]
         ]
 
 
-htmlId : String -> Element.Attribute msg
-htmlId str =
-    Element.htmlAttribute (Html.Attributes.id str)
-
-
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg
 attendeeForm model i attendee =
     let
         form =
@@ -551,16 +590,16 @@ attendeeForm model i attendee =
 
         removeButton =
             Input.button
-                (normalButtonAttributes ++ [ width (px 100), alignTop, moveDown removeButtonAlignment ])
+                (normalButtonAttributes ++ [ Element.width (Element.px 100), Element.alignTop, Element.moveDown removeButtonAlignment ])
                 { onPress =
                     Just
                         (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
-                , label = el [ centerX ] (text "Remove")
+                , label = Element.el [ Element.centerX ] (Element.text "Remove")
                 }
     in
     Theme.rowToColumnWhen columnWhen
-        model
-        [ width fill, spacing 16 ]
+        model.window
+        [ Element.width Element.fill, Element.spacing 16 ]
         [ textInput
             model.form
             (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
@@ -603,36 +642,36 @@ attendeeForm model i attendee =
         ]
 
 
+opportunityGrant : PurchaseForm -> Element FrontendMsg
 opportunityGrant form =
-    column (Theme.contentAttributes ++ [ spacing 20 ])
-        [ Theme.h2 "\u{1FAF6} Opportunity grants"
-        , paragraph [] [ text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
+        [ Theme.h2 "🫶 Opportunity grants"
+        , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
-            [ column []
-                [ paragraph [] [ text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
-                , row [ width fill, spacing 30 ]
-                    [ column [ width (fillPortion 1) ]
-                        [ row []
-                            [ text "$ "
+            [ Element.column []
+                [ Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                , Element.row [ Element.width Element.fill, Element.spacing 30 ]
+                    [ Element.column [ Element.width (Element.fillPortion 1) ]
+                        [ Element.row []
+                            [ Element.text "$ "
                             , textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
                             ]
                         ]
-                    , column [ width (fillPortion 3) ]
-                        [ row [ width (fillPortion 3) ]
-                            [ el [ paddingXY 0 10 ] <| text "0"
-                            , el [ paddingXY 0 10, alignRight ] <|
-                                text (Theme.priceText { currency = Money.USD, amount = 75000 })
+                    , Element.column [ Element.width (Element.fillPortion 3) ]
+                        [ Element.row [ Element.width (Element.fillPortion 3) ]
+                            [ Element.el [ Element.paddingXY 0 10 ] (Element.text "0")
+                            , Element.el [ Element.paddingXY 0 10, Element.alignRight ] (Element.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
                             ]
                         , Input.slider
-                            [ behindContent
-                                (el
-                                    [ width fill
-                                    , height (px 5)
-                                    , centerY
-                                    , Background.color (rgb255 94 176 125)
+                            [ Element.behindContent
+                                (Element.el
+                                    [ Element.width Element.fill
+                                    , Element.height (Element.px 5)
+                                    , Element.centerY
+                                    , Background.color (Element.rgb255 94 176 125)
                                     , Border.rounded 2
                                     ]
-                                    none
+                                    Element.none
                                 )
                             ]
                             { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
@@ -643,9 +682,9 @@ opportunityGrant form =
                             , thumb = Input.defaultThumb
                             , step = Just 1000
                             }
-                        , row [ width (fillPortion 3) ]
-                            [ el [ paddingXY 0 10 ] <| text "No contribution"
-                            , el [ paddingXY 0 10, alignRight ] <| text "Donate full attendance"
+                        , Element.row [ Element.width (Element.fillPortion 3) ]
+                            [ Element.el [ Element.paddingXY 0 10 ] (Element.text "No contribution")
+                            , Element.el [ Element.paddingXY 0 10, Element.alignRight ] (Element.text "Donate full attendance")
                             ]
                         ]
                     ]
@@ -654,22 +693,23 @@ opportunityGrant form =
         ]
 
 
+sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg
 sponsorships model form =
-    column (Theme.contentAttributes ++ [ spacing 20 ])
+    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , paragraph [] [ text <| "Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering." ]
+        , Element.paragraph [] [ Element.text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
-            |> Theme.rowToColumnWhen 700 model [ spacing 20, width fill ]
+            |> Theme.rowToColumnWhen 700 model.window [ Element.spacing 20, Element.width Element.fill ]
         ]
 
 
-sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg_
+sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg
 sponsorshipOption model form s =
     let
         displayCurrency =
             model.prices
-                |> AssocList.get (Id.fromString s.productId)
+                |> SeqDict.get (Id.fromString s.productId)
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
@@ -679,10 +719,10 @@ sponsorshipOption model form s =
 
         attrs =
             if selected then
-                [ Border.color (rgb255 94 176 125), Border.width 3 ]
+                [ Border.color (Element.rgb255 94 176 125), Border.width 3 ]
 
             else
-                [ Border.color (rgba255 0 0 0 0), Border.width 3 ]
+                [ Border.color (Element.rgba255 0 0 0 0), Border.width 3 ]
 
         priceDisplay =
             Theme.priceText { currency = displayCurrency, amount = s.price }
@@ -690,17 +730,17 @@ sponsorshipOption model form s =
         -- Fallback to hardcoded price if not in model.prices
     in
     Theme.panel attrs
-        [ el [ Font.size 20, Font.bold ] (text s.name)
-        , el [ Font.size 30, Font.bold ] (text priceDisplay)
-        , paragraph [] [ text s.description ]
+        [ Element.el [ Font.size 20, Font.bold ] (Element.text s.name)
+        , Element.el [ Font.size 30, Font.bold ] (Element.text priceDisplay)
+        , Element.paragraph [] [ Element.text s.description ]
         , s.features
-            |> List.map (\point -> paragraph [ Font.size 12 ] [ text <| "• " ++ point ])
-            |> column [ spacing 5 ]
+            |> List.map (\point -> Element.paragraph [ Font.size 12 ] [ Element.text ("• " ++ point) ])
+            |> Element.column [ Element.spacing 5 ]
         , Input.button
             (Theme.submitButtonAttributes True)
             { onPress =
-                Just <|
-                    FormChanged
+                Just
+                    (FormChanged
                         { form
                             | sponsorship =
                                 if selected then
@@ -709,10 +749,11 @@ sponsorshipOption model form s =
                                 else
                                     Just s.productId
                         }
+                    )
             , label =
-                el
-                    [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                    (text
+                Element.el
+                    [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
+                    (Element.text
                         (if selected then
                             "Un-select"
 
@@ -735,7 +776,7 @@ summary model =
                 |> List.length
                 |> (\num ->
                         model.prices
-                            |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                            |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
@@ -750,7 +791,7 @@ summary model =
                                 Tickets.accomToTicket accom
                         in
                         model.prices
-                            |> AssocList.get (Id.fromString t.productId)
+                            |> SeqDict.get (Id.fromString t.productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                     )
@@ -761,7 +802,7 @@ summary model =
                 |> Maybe.andThen
                     (\productId ->
                         model.prices
-                            |> AssocList.get (Id.fromString productId)
+                            |> SeqDict.get (Id.fromString productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                     )
                 |> Maybe.withDefault 0
@@ -772,32 +813,36 @@ summary model =
         displayCurrency : Money.Currency
         displayCurrency =
             model.prices
-                |> AssocList.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
     in
-    column (Theme.contentAttributes ++ [ spacing 10 ])
+    Element.column (Theme.contentAttributes ++ [ Element.spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> text <| "Attendees x " ++ String.fromInt num)
-        , if List.length model.form.accommodationBookings == 0 then
-            text "No accommodation bookings"
+        , model.form.attendees |> List.length |> (\num -> Element.text ("Attendees x " ++ String.fromInt num))
+        , if List.isEmpty model.form.accommodationBookings then
+            Element.text "No accommodation bookings"
 
           else
             model.form.accommodationBookings
                 |> List.group
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
-                |> column []
-        , Theme.viewIf (model.form.grantContribution /= "0") <|
-            text <|
-                "Opportunity grant: "
+                |> Element.column []
+        , Theme.viewIf (model.form.grantContribution /= "0")
+            (Element.text
+                ("Opportunity grant: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
-        , Theme.viewIf (sponsorshipTotal > 0) <|
-            text <|
-                "Sponsorship: "
+                )
+            )
+        , Theme.viewIf (sponsorshipTotal > 0)
+            (Element.text
+                ("Sponsorship: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
-        , Theme.h3 <| "Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
+                )
+            )
+        , Theme.h3 ("Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total })
         ]
 
 
@@ -810,61 +855,61 @@ summaryAccommodation model ( accom, items ) displayCurrency =
                 let
                     total =
                         model.prices
-                            |> AssocList.get (Id.fromString (Tickets.accomToTicket accom).productId)
+                            |> SeqDict.get (Id.fromString (Tickets.accomToTicket accom).productId)
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
                 in
                 Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
            )
-        |> text
+        |> Element.text
 
 
 backgroundColor : Color
 backgroundColor =
-    rgb255 255 244 225
+    Element.rgb255 255 244 225
 
 
-carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg_
+carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg
 carbonOffsetForm showCarbonOffsetTooltip form =
-    column
-        [ width fill
-        , spacing 24
-        , paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacing 24
+        , Element.paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
         , Border.width 2
-        , Border.color (rgb255 94 176 125)
+        , Border.color (Element.rgb255 94 176 125)
         , Border.rounded 12
-        , el
+        , Element.el
             [ (if showCarbonOffsetTooltip then
                 tooltip "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)"
 
                else
-                none
+                Element.none
               )
-                |> below
-            , moveUp 20
-            , moveRight 8
+                |> Element.below
+            , Element.moveUp 20
+            , Element.moveRight 8
             , Background.color backgroundColor
             ]
             (Input.button
-                [ padding 8 ]
+                [ Element.padding 8 ]
                 { onPress = Just PressedShowCarbonOffsetTooltip
                 , label =
-                    row
+                    Element.row
                         []
-                        [ el [ Font.size 20 ] (text "🌲 Carbon offsetting ")
-                        , el [ Font.size 12 ] (text "ℹ️")
+                        [ Element.el [ Font.size 20 ] (Element.text "🌲 Carbon offsetting ")
+                        , Element.el [ Font.size 12 ] (Element.text "ℹ️")
                         ]
                 }
             )
-            |> inFront
+            |> Element.inFront
         ]
-        [ none
-        , column
-            [ spacing 8 ]
-            [ paragraph
+        [ Element.none
+        , Element.column
+            [ Element.spacing 8 ]
+            [ Element.paragraph
                 [ Font.semiBold ]
-                [ text "What will be your primary method of travelling to the event?" ]
+                [ Element.text "What will be your primary method of travelling to the event?" ]
 
             -- , TravelMode.all
             --     |> List.map
@@ -906,14 +951,14 @@ radioButton groupName text isChecked =
             []
         , Html.text text
         ]
-        |> html
-        |> el []
+        |> Element.html
+        |> Element.el []
 
 
 textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
 textInput form onChange title validator text =
-    column
-        [ spacing 4, width fill, alignTop ]
+    Element.column
+        [ Element.spacing 4, Element.width Element.fill, Element.alignTop ]
         [ Input.text
             [ Border.rounded 8 ]
             { text = text
@@ -926,7 +971,7 @@ textInput form onChange title validator text =
                 errorText error
 
             _ ->
-                none
+                Element.none
         ]
 
 
@@ -937,26 +982,26 @@ getting an element by ID means getting the _first_ element with that ID, which
 is exactly what we want here.
 
 -}
-errorHtmlId : String
+errorHtmlId : HtmlId
 errorHtmlId =
-    "error"
+    Dom.id "error"
 
 
 errorText : String -> Element msg
 errorText error =
-    paragraph
-        [ Font.color (rgb255 172 0 0)
-        , htmlAttribute (Html.Attributes.id errorHtmlId)
+    Element.paragraph
+        [ Font.color (Element.rgb255 172 0 0)
+        , Element.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
-        [ text ("🚨 " ++ error) ]
+        [ Element.text ("🚨 " ++ error) ]
 
 
 tooltip : String -> Element msg
 tooltip text =
-    paragraph
-        [ paddingXY 12 8
-        , Background.color (rgb 1 1 1)
-        , width (px 300)
-        , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = rgba 0 0 0 0.25 }
+    Element.paragraph
+        [ Element.paddingXY 12 8
+        , Background.color (Element.rgb 1 1 1)
+        , Element.width (Element.px 300)
+        , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
         ]
         [ Element.text text ]

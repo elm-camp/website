@@ -1,9 +1,11 @@
 module Camp25US.Artifacts exposing (view)
 
+import Element exposing (Element)
 import MarkdownThemed
 
 
-view model =
+view : a -> Element msg
+view _ =
     """
 
 # Artifacts

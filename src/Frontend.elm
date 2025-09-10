@@ -1,120 +1,103 @@
-module Frontend exposing (app)
+module Frontend exposing (app, app_)
 
 import Admin
-import AssocList
-import Audio exposing (Audio, AudioCmd)
-import Browser exposing (UrlRequest(..))
-import Browser.Dom
-import Browser.Events
-import Browser.Navigation
+import Browser
+import Browser.Navigation exposing (Key)
 import Camp23Denmark
 import Camp23Denmark.Artifacts
 import Camp24Uk
 import Camp25US
 import Camp25US.Inventory as Inventory
-import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
-import DateFormat
 import Dict
-import Element exposing (..)
+import Duration
+import Effect.Browser
+import Effect.Browser.Dom as Dom exposing (HtmlId)
+import Effect.Browser.Events
+import Effect.Browser.Navigation as Navigation
+import Effect.Command as Command exposing (Command, FrontendOnly)
+import Effect.Http as Http exposing (Error(..), Response(..))
+import Effect.Lamdera as Lamdera
+import Effect.Subscription as Subscription exposing (Subscription)
+import Effect.Task as Task exposing (Task)
+import Effect.Time as Time
+import Element exposing (Element)
 import Element.Background as Background
-import Element.Border as Border
 import Element.Font as Font
-import Element.Input as Input
 import EmailAddress exposing (EmailAddress)
 import Env
-import Html exposing (Html)
-import Html.Attributes
-import Html.Events
 import ICalendar exposing (IcsFile)
-import Id exposing (Id)
-import Json.Decode
-import Json.Encode
-import Lamdera
-import Lamdera.Wire3
+import Json.Decode as D
+import Json.Encode as E
+import Lamdera as LamderaCore
+import Lamdera.Wire3 as Wire3
 import LamderaRPC
 import List.Extra as List
-import LiveSchedule
 import MarkdownThemed
 import Page.UnconferenceFormat
 import Ports
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..), SubPage(..))
-import String.Nonempty
+import SeqDict
 import Stripe
-import Task
-import Theme exposing (normalButtonAttributes, showyButtonAttributes)
-import Time
-import TimeFormat
-import TravelMode
-import Types exposing (..)
+import Task as TaskCore
+import Theme exposing (normalButtonAttributes)
+import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
-import View.Countdown
 import View.Sales
 
 
+app :
+    { init : Url.Url -> Key -> ( FrontendModel, Cmd FrontendMsg )
+    , view : FrontendModel -> Browser.Document FrontendMsg
+    , update : FrontendMsg -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
+    , updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Cmd FrontendMsg )
+    , subscriptions : FrontendModel -> Sub FrontendMsg
+    , onUrlRequest : Browser.UrlRequest -> FrontendMsg
+    , onUrlChange : Url.Url -> FrontendMsg
+    }
 app =
-    Audio.lamderaFrontendWithAudio
-        { init = init
-        , onUrlRequest = UrlClicked
-        , onUrlChange = UrlChanged
-        , update =
-            \_ msg model ->
-                let
-                    ( newModel, cmd ) =
-                        update msg model
-                in
-                ( newModel, cmd, Audio.cmdNone )
-        , updateFromBackend =
-            \_ toFrontend model ->
-                let
-                    ( newModel, cmd ) =
-                        updateFromBackend toFrontend model
-                in
-                ( newModel, cmd, Audio.cmdNone )
-        , subscriptions = \_ model -> subscriptions model
-        , view = \_ model -> view model
-        , audio = audio
-        , audioPort = { toJS = Ports.audioPortToJS, fromJS = Ports.audioPortFromJS }
-        }
+    Lamdera.frontend LamderaCore.sendToBackend app_
 
 
-audio : a -> FrontendModel_ -> Audio
-audio _ model =
-    case model of
-        Loading _ ->
-            Audio.silence
+app_ :
+    { init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+    , onUrlRequest : Effect.Browser.UrlRequest -> FrontendMsg
+    , onUrlChange : Url.Url -> FrontendMsg
+    , update : FrontendMsg -> FrontendModel -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+    , updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
+    , subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
+    , view : FrontendModel -> Effect.Browser.Document FrontendMsg
+    }
+app_ =
+    { init = init
+    , onUrlRequest = UrlClicked
+    , onUrlChange = UrlChanged
+    , update = update
+    , updateFromBackend = updateFromBackend
+    , subscriptions = subscriptions
+    , view = view
+    }
 
-        Loaded loaded ->
-            case ( loaded.route, loaded.audio ) of
-                ( LiveScheduleRoute, Just song ) ->
-                    if loaded.pressedAudioButton then
-                        LiveSchedule.audio song
 
-                    else
-                        Audio.silence
-
-                _ ->
-                    Audio.silence
-
-
-subscriptions : FrontendModel_ -> Sub FrontendMsg_
+subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
 subscriptions _ =
-    Sub.batch
-        [ Browser.Events.onResize GotWindowSize
-        , Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
-        , Time.every 1000 Tick
+    Subscription.batch
+        [ Effect.Browser.Events.onResize GotWindowSize
+        , Effect.Browser.Events.onMouseUp (D.succeed MouseDown)
+        , Time.every Duration.second Tick
         ]
 
 
+queryBool : String -> Query.Parser (Maybe Bool)
 queryBool name =
     Query.enum name (Dict.fromList [ ( "true", True ), ( "false", False ) ])
 
 
-init : Url.Url -> Browser.Navigation.Key -> ( FrontendModel_, Cmd FrontendMsg_, AudioCmd FrontendMsg_ )
+init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 init url key =
     let
         route =
@@ -136,10 +119,9 @@ init url key =
         , initData = Nothing
         , route = route
         , isOrganiser = isOrganiser
-        , audio = Nothing
         }
-    , Cmd.batch
-        [ Browser.Dom.getViewport
+    , Command.batch
+        [ Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , Time.now |> Task.perform Tick
         , Time.here |> Task.perform GotZone
@@ -153,21 +135,15 @@ init url key =
                         Lamdera.sendToBackend (AdminInspect pass)
 
                     Nothing ->
-                        Cmd.none
+                        Command.none
 
             _ ->
-                Cmd.none
+                Command.none
         ]
-    , case route of
-        Route.LiveScheduleRoute ->
-            Audio.loadAudio LoadedMusic "cowboy bebob - elm.mp3"
-
-        _ ->
-            Audio.cmdNone
     )
 
 
-update : FrontendMsg_ -> FrontendModel_ -> ( FrontendModel_, Cmd FrontendMsg_ )
+update : FrontendMsg -> FrontendModel -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 update msg model =
     case model of
         Loading loading ->
@@ -175,128 +151,97 @@ update msg model =
                 GotWindowSize width height ->
                     tryLoading { loading | window = Just { width = width, height = height } }
 
-                LoadedMusic result ->
-                    tryLoading { loading | audio = Just result }
-
                 Tick now ->
-                    ( Loading { loading | now = now }, Cmd.none )
+                    ( Loading { loading | now = now }, Command.none )
 
                 GotZone zone ->
-                    ( Loading { loading | zone = Just zone }, Cmd.none )
+                    ( Loading { loading | zone = Just zone }, Command.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Loaded loaded ->
             updateLoaded msg loaded |> Tuple.mapFirst Loaded
 
 
-tryLoading : LoadingModel -> ( FrontendModel_, Cmd FrontendMsg_ )
+tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
     Maybe.map2
         (\window { slotsRemaining, prices, ticketsEnabled } ->
-            case ( loadingModel.audio, loadingModel.route ) of
-                ( Just (Ok song), LiveScheduleRoute ) ->
-                    ( Loaded
-                        { key = loadingModel.key
-                        , now = loadingModel.now
-                        , zone = loadingModel.zone
-                        , window = window
-                        , showTooltip = False
-                        , prices = prices
-                        , selectedTicket = Nothing
-                        , form = PurchaseForm.init
-                        , route = loadingModel.route
-                        , showCarbonOffsetTooltip = False
-                        , slotsRemaining = slotsRemaining
-                        , isOrganiser = loadingModel.isOrganiser
-                        , ticketsEnabled = ticketsEnabled
-                        , backendModel = Nothing
-                        , audio = Just song
-                        , pressedAudioButton = False
-                        }
-                    , Cmd.none
-                    )
-
-                ( _, LiveScheduleRoute ) ->
-                    ( Loading loadingModel, Cmd.none )
-
-                _ ->
-                    ( Loaded
-                        { key = loadingModel.key
-                        , now = loadingModel.now
-                        , zone = loadingModel.zone
-                        , window = window
-                        , showTooltip = False
-                        , prices = prices
-                        , selectedTicket = Nothing
-                        , form = PurchaseForm.init
-                        , route = loadingModel.route
-                        , showCarbonOffsetTooltip = False
-                        , slotsRemaining = slotsRemaining
-                        , isOrganiser = loadingModel.isOrganiser
-                        , ticketsEnabled = ticketsEnabled
-                        , backendModel = Nothing
-                        , audio = Nothing
-                        , pressedAudioButton = False
-                        }
-                    , Cmd.none
-                    )
+            ( Loaded
+                { key = loadingModel.key
+                , now = loadingModel.now
+                , zone = loadingModel.zone
+                , window = window
+                , showTooltip = False
+                , prices = prices
+                , selectedTicket = Nothing
+                , form = PurchaseForm.init
+                , route = loadingModel.route
+                , showCarbonOffsetTooltip = False
+                , slotsRemaining = slotsRemaining
+                , isOrganiser = loadingModel.isOrganiser
+                , ticketsEnabled = ticketsEnabled
+                , backendModel = Nothing
+                , pressedAudioButton = False
+                }
+            , Command.none
+            )
         )
         loadingModel.window
         loadingModel.initData
-        |> Maybe.withDefault ( Loading loadingModel, Cmd.none )
+        |> Maybe.withDefault ( Loading loadingModel, Command.none )
 
 
-updateLoaded : FrontendMsg_ -> LoadedModel -> ( LoadedModel, Cmd FrontendMsg_ )
+updateLoaded : FrontendMsg -> LoadedModel -> ( LoadedModel, Command FrontendOnly ToBackend FrontendMsg )
 updateLoaded msg model =
     case msg of
         UrlClicked urlRequest ->
             case urlRequest of
-                Internal url ->
+                Browser.Internal url ->
                     ( model
-                    , Browser.Navigation.pushUrl model.key (Url.toString url)
+                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode)
                     )
 
-                External url ->
+                Browser.External url ->
                     ( model
-                    , Browser.Navigation.load url
+                    , Navigation.load url
                     )
 
         UrlChanged url ->
             ( { model | route = Route.decode url }, scrollToTop )
 
         Tick now ->
-            ( { model | now = now }, Cmd.none )
+            ( { model | now = now }, Command.none )
 
         GotZone zone ->
-            ( { model | zone = Just zone }, Cmd.none )
+            ( { model | zone = Just zone }, Command.none )
 
         GotWindowSize width height ->
-            ( { model | window = { width = width, height = height } }, Cmd.none )
+            ( { model | window = { width = width, height = height } }, Command.none )
 
         PressedShowTooltip ->
-            ( { model | showTooltip = True }, Cmd.none )
+            ( { model | showTooltip = True }, Command.none )
 
         MouseDown ->
-            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Cmd.none )
+            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Command.none )
 
         DownloadTicketSalesReminder ->
             ( model, downloadTicketSalesReminder )
 
         PressedSelectTicket productId priceId ->
-            case ( AssocList.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
-                ( Just ( accom, ticket ), TicketsEnabled ) ->
+            case ( SeqDict.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
+                ( Just ( _, ticket ), TicketsEnabled ) ->
                     if Inventory.purchaseable ticket.productId model.slotsRemaining then
                         ( { model | selectedTicket = Just ( productId, priceId ) }
                         , scrollToTop
                         )
 
                     else
-                        ( model, Cmd.none )
+                        ( model, Command.none )
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         AddAccom accom ->
             let
@@ -306,7 +251,7 @@ updateLoaded msg model =
                 newForm =
                     { form | accommodationBookings = model.form.accommodationBookings ++ [ accom ] }
             in
-            ( { model | form = newForm }, Cmd.none )
+            ( { model | form = newForm }, Command.none )
 
         RemoveAccom accom ->
             let
@@ -316,18 +261,18 @@ updateLoaded msg model =
                 newForm =
                     { form | accommodationBookings = List.remove accom model.form.accommodationBookings }
             in
-            ( { model | form = newForm }, Cmd.none )
+            ( { model | form = newForm }, Command.none )
 
         FormChanged form ->
             case model.form.submitStatus of
                 NotSubmitted _ ->
-                    ( { model | form = form }, Cmd.none )
+                    ( { model | form = form }, Command.none )
 
                 Submitting ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
-                SubmitBackendError str ->
-                    ( { model | form = form }, Cmd.none )
+                SubmitBackendError _ ->
+                    ( { model | form = form }, Command.none )
 
         PressedSubmitForm ->
             let
@@ -354,38 +299,30 @@ updateLoaded msg model =
                         _ =
                             Debug.log "Form already submitted" "Form already submitted"
                     in
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         PressedCancelForm ->
             ( { model | selectedTicket = Nothing }
-            , Browser.Dom.getElement View.Sales.ticketsHtmlId
-                |> Task.andThen (\{ element } -> Browser.Dom.setViewport 0 element.y)
+            , Dom.getElement View.Sales.ticketsHtmlId
+                |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
                 |> Task.attempt (\_ -> SetViewport)
             )
 
         PressedShowCarbonOffsetTooltip ->
-            ( { model | showCarbonOffsetTooltip = True }, Cmd.none )
+            ( { model | showCarbonOffsetTooltip = True }, Command.none )
 
         SetViewport ->
-            ( model, Cmd.none )
-
-        LoadedMusic _ ->
-            ( model, Cmd.none )
-
-        LiveScheduleMsg liveScheduleMsg ->
-            case liveScheduleMsg of
-                LiveSchedule.PressedAllowAudio ->
-                    ( { model | pressedAudioButton = True }, Cmd.none )
+            ( model, Command.none )
 
         SetViewPortForElement elmentId ->
             ( model, jumpToId elmentId 40 )
 
         AdminPullBackendModel ->
             ( model
-            , LamderaRPC.postJsonBytes
+            , postJsonBytes
                 Types.w3_decode_BackendModel
                 -- (Json.Encode.string Env.adminPassword)
-                (Json.Encode.string "adjust me when developing locally")
+                (E.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
             )
@@ -393,25 +330,65 @@ updateLoaded msg model =
         AdminPullBackendModelResponse res ->
             case res of
                 Ok backendModel ->
-                    ( { model | backendModel = Just backendModel }, Cmd.none )
+                    ( { model | backendModel = Just backendModel }, Command.none )
 
                 Err err ->
                     let
                         _ =
                             Debug.log "Failed to pull backend model" err
                     in
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Noop ->
-            ( model, Cmd.none )
+            ( model, Command.none )
 
 
-scrollToTop : Cmd FrontendMsg_
+{-| Copied from LamderaRPC.elm and made program-test compatible
+-}
+postJsonBytes : Wire3.Decoder b -> D.Value -> String -> Task r Http.Error b
+postJsonBytes decoder requestValue endpoint =
+    Http.task
+        { method = "POST"
+        , headers = []
+        , url = endpoint
+        , body = Http.jsonBody requestValue
+        , resolver =
+            Http.bytesResolver <|
+                customResolver
+                    (\metadata bytes ->
+                        Wire3.bytesDecode decoder bytes
+                            |> Result.fromMaybe (BadBody <| "Failed to decode response from " ++ endpoint)
+                    )
+        , timeout = Just (Duration.seconds 15)
+        }
+
+
+customResolver : (Http.Metadata -> responseType -> Result Http.Error b) -> Http.Response responseType -> Result Http.Error b
+customResolver fn response =
+    case response of
+        BadUrl_ urlString ->
+            Err <| BadUrl urlString
+
+        Timeout_ ->
+            Err <| Timeout
+
+        NetworkError_ ->
+            Err <| NetworkError
+
+        BadStatus_ metadata body ->
+            -- @TODO use metadata better here
+            Err <| BadStatus metadata.statusCode
+
+        GoodStatus_ metadata text ->
+            fn metadata text
+
+
+scrollToTop : Command FrontendOnly ToBackend FrontendMsg
 scrollToTop =
-    Browser.Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+    Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
 
 
-updateFromBackend : ToFrontend -> FrontendModel_ -> ( FrontendModel_, Cmd FrontendMsg_ )
+updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 updateFromBackend msg model =
     case model of
         Loading loading ->
@@ -420,17 +397,17 @@ updateFromBackend msg model =
                     tryLoading { loading | initData = Just initData }
 
                 _ ->
-                    ( model, Cmd.none )
+                    ( model, Command.none )
 
         Loaded loaded ->
             updateFromBackendLoaded msg loaded |> Tuple.mapFirst Loaded
 
 
-updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Cmd msg )
+updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Command FrontendOnly toMsg msg )
 updateFromBackendLoaded msg model =
     case msg of
         InitData { prices, slotsRemaining, ticketsEnabled } ->
-            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Cmd.none )
+            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Command.none )
 
         SubmitFormResponse result ->
             case result of
@@ -444,19 +421,19 @@ updateFromBackendLoaded msg model =
                         form =
                             model.form
                     in
-                    ( { model | form = { form | submitStatus = SubmitBackendError str } }, Cmd.none )
+                    ( { model | form = { form | submitStatus = SubmitBackendError str } }, Command.none )
 
         SlotRemainingChanged slotsRemaining ->
-            ( { model | slotsRemaining = slotsRemaining }, Cmd.none )
+            ( { model | slotsRemaining = slotsRemaining }, Command.none )
 
         TicketsEnabledChanged ticketsEnabled ->
-            ( { model | ticketsEnabled = ticketsEnabled }, Cmd.none )
+            ( { model | ticketsEnabled = ticketsEnabled }, Command.none )
 
         AdminInspectResponse backendModel ->
-            ( { model | backendModel = Just backendModel }, Cmd.none )
+            ( { model | backendModel = Just backendModel }, Command.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg_
+header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg
 header config =
     let
         illustrationAltText =
@@ -470,33 +447,33 @@ header config =
                 80
 
         elmCampTitle =
-            link
+            Element.link
                 []
                 { url = Route.encode HomepageRoute
-                , label = el [ Font.size titleSize, Theme.glow, paddingXY 0 8 ] (text "Elm Camp")
+                , label = Element.el [ Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
                 }
 
         elmCampNextTopLine =
-            column [ spacing 30 ]
-                [ row
-                    [ centerX, spacing 13 ]
-                    [ image
-                        [ width (px 49) ]
+            Element.column [ Element.spacing 30 ]
+                [ Element.row
+                    [ Element.centerX, Element.spacing 13 ]
+                    [ Element.image
+                        [ Element.width (Element.px 49) ]
                         { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-                    , column []
-                        [ column
-                            [ spacing 2, Font.size 24, moveUp 1 ]
-                            [ el [ Theme.glow ] (text "Unconference")
-                            , el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (text "2025")
+                    , Element.column []
+                        [ Element.column
+                            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
+                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
+                            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text "2025")
                             ]
                         ]
                     ]
-                , column
-                    [ moveRight 0, spacing 2, Font.size 18, moveUp 1 ]
-                    [ el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "")
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "🇺🇸 Watervliet, Michigan")
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
-                    , el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (text "Tuesday 24th - Friday 27th June 2025")
+                , Element.column
+                    [ Element.moveRight 0, Element.spacing 2, Font.size 18, Element.moveUp 1 ]
+                    [ Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "🇺🇸 Watervliet, Michigan")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "Tuesday 24th - Friday 27th June 2025")
                     ]
                 ]
 
@@ -504,38 +481,38 @@ header config =
             300
 
         eventImage =
-            image
-                [ width (maximum imageMaxWidth fill), Theme.attr "fetchpriority" "high" ]
+            Element.image
+                [ Element.width (Element.maximum imageMaxWidth Element.fill), Theme.attr "fetchpriority" "high" ]
                 { src = "/logo-25.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
-        column
-            [ padding 30, spacing 20, centerX ]
+        Element.column
+            [ Element.padding 30, Element.spacing 20, Element.centerX ]
             [ if config.isCompact then
-                none
+                Element.none
 
               else
                 eventImage
-            , column
-                [ spacing 24, centerX ]
+            , Element.column
+                [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
             ]
 
     else
-        row
-            [ padding 30, spacing 40, centerX ]
+        Element.row
+            [ Element.padding 30, Element.spacing 40, Element.centerX ]
             [ eventImage
-            , column
-                [ spacing 24 ]
+            , Element.column
+                [ Element.spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
             ]
 
 
-view : FrontendModel_ -> Browser.Document FrontendMsg_
+view : FrontendModel -> Effect.Browser.Document FrontendMsg
 view model =
     { title = "Elm Camp"
     , body =
@@ -572,28 +549,9 @@ view model =
                 |> Element.inFront
             ]
             (case model of
-                Loading loading ->
+                Loading _ ->
                     Element.column [ Element.width Element.fill, Element.padding 20 ]
-                        [ (case loading.audio of
-                            Just (Err error) ->
-                                case error of
-                                    Audio.FailedToDecode ->
-                                        "Failed to decode song"
-
-                                    Audio.NetworkError ->
-                                        "Network error"
-
-                                    Audio.UnknownError ->
-                                        "Unknown error"
-
-                                    Audio.ErrorThatHappensWhenYouLoadMoreThan1000SoundsDueToHackyWorkAroundToMakeThisPackageBehaveMoreLikeAnEffectPackage ->
-                                        "Unknown error"
-
-                            _ ->
-                                "Loading..."
-                          )
-                            |> Element.text
-                            |> Element.el [ Element.centerX ]
+                        [ Element.el [ Element.centerX ] (Element.text "Loading...")
                         ]
 
                 Loaded loaded ->
@@ -603,51 +561,51 @@ view model =
     }
 
 
-loadedView : LoadedModel -> Element FrontendMsg_
+loadedView : LoadedModel -> Element FrontendMsg
 loadedView model =
     case model.route of
         HomepageRoute ->
             homepageView model
 
         UnconferenceFormatRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ Page.UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
 
         VenueAndAccessRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ Camp25US.venueAccessContent
                     ]
                 , Theme.footer
                 ]
 
         CodeOfConductRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
                     ]
                 , Theme.footer
                 ]
 
         OrganisersRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
                     , Camp25US.organisers |> MarkdownThemed.renderFull
                     ]
@@ -655,57 +613,54 @@ loadedView model =
                 ]
 
         ElmCampArchiveRoute ->
-            column
-                [ width fill, height fill ]
+            Element.column
+                [ Element.width Element.fill, Element.height Element.fill ]
                 [ header { window = model.window, isCompact = True }
-                , column
-                    (padding 20 :: Theme.contentAttributes)
+                , Element.column
+                    (Element.padding 20 :: Theme.contentAttributes)
                     [ elmCampArchiveContent model ]
                 , Theme.footer
                 ]
 
-        AdminRoute passM ->
+        AdminRoute _ ->
             Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->
-            column
-                [ centerX, centerY, padding 24, spacing 16 ]
-                [ paragraph [ Font.size 20, Font.center ] [ text "Your ticket purchase was successful!" ]
-                , paragraph
-                    [ width (px 420) ]
-                    [ text "An email has been sent to "
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
+                [ Element.paragraph [ Font.size 20, Font.center ] [ Element.text "Your ticket purchase was successful!" ]
+                , Element.paragraph
+                    [ Element.width (Element.px 420) ]
+                    [ Element.text "An email has been sent to "
                     , case maybeEmailAddress of
                         Just emailAddress ->
                             EmailAddress.toString emailAddress
-                                |> text
-                                |> el [ Font.semiBold ]
+                                |> Element.text
+                                |> Element.el [ Font.semiBold ]
 
                         Nothing ->
-                            text "your email address"
-                    , text " with additional information."
+                            Element.text "your email address"
+                    , Element.text " with additional information."
                     ]
-                , link
+                , Element.link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = el [ centerX ] (text "Return to homepage")
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
 
         PaymentCancelRoute ->
-            column
-                [ centerX, centerY, padding 24, spacing 16 ]
-                [ paragraph
+            Element.column
+                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
+                [ Element.paragraph
                     [ Font.size 20 ]
-                    [ text "You cancelled your ticket purchase" ]
-                , link
+                    [ Element.text "You cancelled your ticket purchase" ]
+                , Element.link
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = el [ centerX ] (text "Return to homepage")
+                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
                     }
                 ]
-
-        LiveScheduleRoute ->
-            LiveSchedule.view model |> map LiveScheduleMsg
 
         Camp23Denmark subpage ->
             Camp23Denmark.view model subpage
@@ -717,6 +672,7 @@ loadedView model =
             Camp25US.view model subpage
 
 
+downloadTicketSalesReminder : Command FrontendOnly toMsg msg
 downloadTicketSalesReminder =
     ICalendar.download
         { name = "elm-camp-ticket-sale-starts"
@@ -731,7 +687,7 @@ downloadTicketSalesReminder =
         }
 
 
-homepageView : LoadedModel -> Element FrontendMsg_
+homepageView : LoadedModel -> Element FrontendMsg
 homepageView model =
     let
         sidePadding =
@@ -741,23 +697,23 @@ homepageView model =
             else
                 60
     in
-    column
-        [ width fill ]
-        [ column
-            [ spacing 50
-            , width fill
-            , paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+    Element.column
+        [ Element.width Element.fill ]
+        [ Element.column
+            [ Element.spacing 50
+            , Element.width Element.fill
+            , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
             ]
             [ header { window = model.window, isCompact = False }
-            , column
-                [ width fill, spacing 40 ]
+            , Element.column
+                [ Element.width Element.fill, Element.spacing 40 ]
                 [ --View.Sales.ticketSalesOpenCountdown model
-                  column Theme.contentAttributes [ elmCampOverview ]
-                , column Theme.contentAttributes
+                  Element.column Theme.contentAttributes [ elmCampOverview ]
+                , Element.column Theme.contentAttributes
                     [ Camp25US.venuePictures model
                     , Camp25US.conferenceSummary
                     ]
-                , column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
+                , Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
 
                 --, View.Sales.view model
                 ]
@@ -766,10 +722,10 @@ homepageView model =
         ]
 
 
-jumpToId : String -> Float -> Cmd FrontendMsg_
+jumpToId : HtmlId -> Float -> Command FrontendOnly toMsg FrontendMsg
 jumpToId id offset =
-    Browser.Dom.getElement id
-        |> Task.andThen (\el -> Browser.Dom.setViewport 0 (el.element.y - offset))
+    Dom.getElement id
+        |> Task.andThen (\el -> Dom.setViewport 0 (el.element.y - offset))
         |> Task.attempt
             (\_ -> Noop)
 
@@ -870,7 +826,7 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
 
 elmCampArchiveContent : LoadedModel -> Element msg
 elmCampArchiveContent model =
-    column []
+    Element.column []
         [ """
 # What happened at Elm Camp 2023
 

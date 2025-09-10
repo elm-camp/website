@@ -1,19 +1,16 @@
 module Camp24Uk.Archive exposing (view)
 
-import Browser exposing (UrlRequest(..))
 import Element exposing (Element)
 import Element.Background
 import Element.Border
 import Element.Font
 import Element.Input
 import MarkdownThemed
-import PurchaseForm exposing (PressedSubmit(..), PurchaseFormValidated, SubmitStatus(..))
-import Route exposing (Route(..), SubPage(..))
-import Stripe exposing (ProductId(..))
 import Theme
-import Types exposing (..)
+import Types exposing (FrontendMsg(..), LoadedModel)
 
 
+view : LoadedModel -> Element FrontendMsg
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -79,7 +76,7 @@ Elm Camp is the first Elm Unconference. Our intention is to debut as a small, ca
         |> MarkdownThemed.renderFull
 
 
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
+unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
 unconferenceBulletPoints model =
     [ Element.text "Arrive 3pm Wed 28 June"
     , Element.text "Depart 4pm Fri 30 June"
@@ -184,6 +181,7 @@ Elm Camp is a community-driven non-profit initiative, organised by enthusiastic 
         |> MarkdownThemed.renderFull
 
 
+content3 : Element msg
 content3 =
     """
 # Something else?
@@ -229,7 +227,7 @@ sponsors window =
                     [ Element.width
                         (Element.px
                             (if window.width < 800 then
-                                toFloat 60 * 0.7 |> round
+                                60 * 0.7 |> round
 
                              else
                                 60
@@ -237,7 +235,7 @@ sponsors window =
                         )
                     ]
                     { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                , Element.el [ Element.Font.size 24 ] <| Element.text "Elm Weekly"
+                , Element.el [ Element.Font.size 24 ] (Element.text "Elm Weekly")
                 ]
         }
     , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }

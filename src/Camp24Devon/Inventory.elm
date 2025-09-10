@@ -1,15 +1,25 @@
-module Camp24Devon.Inventory exposing (..)
+module Camp24Devon.Inventory exposing
+    ( allSoldOut
+    , caseof
+    , extract
+    , maxAttendees
+    , maxForAccommodationType
+    , purchaseable
+    , slotsRemaining
+    )
 
-import AssocList
 import Camp24Devon.Product as Product
-import PurchaseForm exposing (..)
-import Types exposing (..)
+import PurchaseForm exposing (Accommodation(..))
+import SeqDict
+import Types exposing (BackendModel, TicketAvailability)
 
 
+maxAttendees : number
 maxAttendees =
     80
 
 
+maxForAccommodationType : Accommodation -> number
 maxForAccommodationType t =
     case t of
         Offsite ->
@@ -82,12 +92,12 @@ allSoldOut { attendanceTickets } =
     attendanceTickets
 
 
-extract selector assocList =
-    assocList
-        |> AssocList.map selector
-        |> AssocList.toList
-        |> List.map Tuple.second
-        |> List.concat
+extract : (a -> b -> List c) -> SeqDict a b -> List c
+extract selector SeqDict =
+    SeqDict
+        |> SeqDict.map selector
+        |> SeqDict.toList
+        |> List.concatMap Tuple.second
 
 
 purchaseable : String -> TicketAvailability -> Bool
@@ -102,9 +112,10 @@ purchaseable productId availability =
         ]
 
 
+caseof : a -> List ( a, Bool ) -> Bool
 caseof v opts =
     case List.head (List.filter (\( a, b ) -> a == v) opts) of
-        Just ( a, b ) ->
+        Just ( _, b ) ->
             b
 
         Nothing ->

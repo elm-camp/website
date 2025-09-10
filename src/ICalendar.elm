@@ -1,8 +1,9 @@
-module ICalendar exposing (..)
+module ICalendar exposing (Event, IcsFile, download, toText, toTextEvent)
 
 import DateFormat
-import File.Download
-import Time
+import Effect.Command as Command exposing (Command, FrontendOnly)
+import Effect.File.Download
+import Effect.Time as Time
 
 
 {-| An ICS file is a text file that follows the iCalendar format. It is used to store events and to-dos.
@@ -22,9 +23,9 @@ type alias Event =
     }
 
 
-download : IcsFile -> Cmd msg
+download : IcsFile -> Command FrontendOnly toMsg msg
 download icsFile =
-    File.Download.string (icsFile.name ++ ".ics") "text/calendar" (toText icsFile)
+    Effect.File.Download.string (icsFile.name ++ ".ics") "text/calendar" (toText icsFile)
 
 
 toText : IcsFile -> String

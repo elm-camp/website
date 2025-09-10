@@ -19,7 +19,6 @@ type Route
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
     | PaymentCancelRoute
-    | LiveScheduleRoute
     | Camp23Denmark SubPage
     | Camp24Uk SubPage
     | Camp25US SubPage
@@ -50,7 +49,6 @@ decode url =
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
-        , Url.Parser.s liveSchedulePath |> Url.Parser.map LiveScheduleRoute
 
         -- Previous events
         , Url.Parser.s "23-denmark" </> subPageParser |> Url.Parser.map Camp23Denmark
@@ -60,10 +58,6 @@ decode url =
         , Url.Parser.s "25-us" </> subPageParser |> Url.Parser.map Camp25US
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
-
-
-liveSchedulePath =
-    "live"
 
 
 parseEmail : Url.Parser.Query.Parser (Maybe EmailAddress)
@@ -105,7 +99,7 @@ encode route =
             ElmCampArchiveRoute ->
                 [ "elm-camp-archive" ]
 
-            AdminRoute passM ->
+            AdminRoute _ ->
                 [ "admin" ]
 
             PaymentSuccessRoute _ ->
@@ -113,9 +107,6 @@ encode route =
 
             PaymentCancelRoute ->
                 [ Stripe.cancelPath ]
-
-            LiveScheduleRoute ->
-                [ liveSchedulePath ]
 
             Camp23Denmark subPage ->
                 case subPage of
@@ -160,7 +151,7 @@ encode route =
             ElmCampArchiveRoute ->
                 []
 
-            AdminRoute passM ->
+            AdminRoute _ ->
                 []
 
             PaymentSuccessRoute maybeEmailAddress ->
@@ -172,9 +163,6 @@ encode route =
                         []
 
             PaymentCancelRoute ->
-                []
-
-            LiveScheduleRoute ->
                 []
 
             Camp23Denmark subPage ->

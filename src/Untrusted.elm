@@ -9,7 +9,7 @@ module Untrusted exposing
 import EmailAddress exposing (EmailAddress)
 import Helpers
 import Name exposing (Name)
-import PurchaseForm exposing (..)
+import PurchaseForm exposing (AttendeeFormValidated, PurchaseFormValidated)
 import Toop exposing (T2(..), T3(..))
 
 
@@ -37,7 +37,7 @@ purchaseForm (Untrusted a) =
     case
         T2 (untrust a.billingEmail |> emailAddress)
             (a.attendees
-                |> List.map (untrust >> attendeeForm)
+                |> List.map (\b -> untrust b |> attendeeForm)
                 |> validateList
             )
     of
@@ -55,6 +55,7 @@ purchaseForm (Untrusted a) =
             Nothing
 
 
+validateList : List (Maybe a) -> Result String (List a)
 validateList validated =
     if validated |> List.all Helpers.isJust then
         validated |> Helpers.justs |> Ok

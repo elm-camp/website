@@ -1,8 +1,10 @@
 module Camp23Denmark.Artifacts exposing (media, posts, view)
 
+import Element exposing (Element)
 import MarkdownThemed
 
 
+view : a -> Element msg
 view model =
     """
 This page is [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm).
@@ -12,6 +14,7 @@ This page is [open to contributions on Github](https://github.com/elm-camp/websi
         |> MarkdownThemed.renderFull
 
 
+posts : String
 posts =
     """
 ## Posts
@@ -24,6 +27,7 @@ posts =
 """
 
 
+media : String
 media =
     """
 ## Media

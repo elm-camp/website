@@ -1,6 +1,37 @@
-module Theme exposing (..)
+module Theme exposing
+    ( Theme
+    , attr
+    , colorWithAlpha
+    , colors
+    , contentAttributes
+    , css
+    , fontFace
+    , footer
+    , glow
+    , h1
+    , h2
+    , h3
+    , h4
+    , heading1Attrs
+    , heading2Attrs
+    , heading3Attrs
+    , heading4Attrs
+    , lightTheme
+    , normalButtonAttributes
+    , numericField
+    , panel
+    , priceAmount
+    , priceText
+    , rowToColumnWhen
+    , showyButtonAttributes
+    , spinnerWhite
+    , submitButtonAttributes
+    , toggleButton
+    , toggleButtonAttributes
+    , viewIf
+    )
 
-import Element exposing (..)
+import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -42,8 +73,8 @@ css : Html msg
 css =
     Html.node "style"
         []
-        [ Html.text <|
-            fontFace 800 "Figtree-ExtraBold" "Open Sans"
+        [ Html.text
+            (fontFace 800 "Figtree-ExtraBold" "Open Sans"
                 ++ fontFace 700 "Figtree-Bold" "Open Sans"
                 ++ fontFace 600 "Figtree-SemiBold" "Open Sans"
                 ++ fontFace 500 "Figtree-Medium" "Open Sans"
@@ -64,9 +95,11 @@ css =
           animation: spin 1s infinite linear;
 }
 """
+            )
         ]
 
 
+colors : { green : Element.Color, lightGrey : Element.Color, white : Element.Color, red : Element.Color }
 colors =
     { green = Element.rgb255 92 176 126
     , lightGrey = Element.rgb255 200 200 200
@@ -98,6 +131,7 @@ fontFace weight name fontFamilyName =
 }"""
 
 
+viewIf : Bool -> Element msg -> Element msg
 viewIf condition view =
     if condition then
         view
@@ -116,6 +150,7 @@ priceAmount { amount } =
     toFloat amount
 
 
+panel : List (Element.Attribute msg) -> List (Element msg) -> Element msg
 panel attrs x =
     Element.column
         ([ Element.width Element.fill
@@ -151,6 +186,7 @@ submitButtonAttributes isEnabled =
     ]
 
 
+toggleButton : String -> Bool -> Maybe msg -> Element msg
 toggleButton label isActive onPress =
     Input.button
         (toggleButtonAttributes isActive)
@@ -177,30 +213,34 @@ toggleButtonAttributes isActive =
     ]
 
 
-rowToColumnWhen width model attrs children =
-    if model.window.width > width then
+rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Element.Attribute msg) -> List (Element msg) -> Element msg
+rowToColumnWhen width window attrs children =
+    if window.width > width then
         Element.row attrs children
 
     else
         Element.column attrs children
 
 
+spinnerWhite : Element msg
 spinnerWhite =
-    el
-        [ width (px 16)
-        , height (px 16)
-        , htmlAttribute <| Html.Attributes.class "spin"
+    Element.el
+        [ Element.width (Element.px 16)
+        , Element.height (Element.px 16)
+        , Element.htmlAttribute (Html.Attributes.class "spin")
         , attr "border" "2px solid #fff"
         , attr "border-top-color" "transparent"
         , attr "border-radius" "50px"
         ]
-        none
+        Element.none
 
 
+attr : String -> String -> Element.Attribute msg
 attr name value =
-    htmlAttribute <| Html.Attributes.style name value
+    Element.htmlAttribute (Html.Attributes.style name value)
 
 
+glow : Element.Attr decorative msg
 glow =
     Font.glow (colorWithAlpha 0.25 lightTheme.defaultText) 4
 
@@ -210,7 +250,7 @@ footer =
     let
         btn route label =
             Element.link
-                [ Background.color (Element.rgb255 12 109 82), paddingXY 10 10, Border.rounded 10 ]
+                [ Background.color (Element.rgb255 12 109 82), Element.paddingXY 10 10, Border.rounded 10 ]
                 { url = Route.encode route, label = Element.text label }
     in
     Element.el
@@ -233,26 +273,38 @@ footer =
         )
 
 
+numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Element msg
 numericField title value downMsg upMsg =
-    row [ spacing 5, width fill ]
+    Element.row [ Element.spacing 5, Element.width Element.fill ]
         [ Input.button
-            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            (normalButtonAttributes
+                ++ [ Background.color colors.green
+                   , Font.color colors.white
+                   , Element.width (Element.px 50)
+                   ]
+            )
             { onPress = Just (downMsg (value - 1))
             , label = Element.el [ Element.centerX ] (Element.text "-")
             }
         , Input.button
             normalButtonAttributes
             { onPress = Nothing
-            , label = text (String.fromInt value)
+            , label = Element.text (String.fromInt value)
             }
         , Input.button
-            (normalButtonAttributes ++ [ Background.color colors.green, Font.color colors.white, width (px 50) ])
+            (normalButtonAttributes
+                ++ [ Background.color colors.green
+                   , Font.color colors.white
+                   , Element.width (Element.px 50)
+                   ]
+            )
             { onPress = Just (upMsg (value + 1))
             , label = Element.el [ Element.centerX ] (Element.text "+")
             }
         ]
 
 
+normalButtonAttributes : List (Element.Attribute msg)
 normalButtonAttributes =
     [ Element.width Element.fill
     , Background.color (Element.rgb255 255 255 255)
@@ -264,6 +316,7 @@ normalButtonAttributes =
     ]
 
 
+showyButtonAttributes : List (Element.Attribute msg)
 showyButtonAttributes =
     [ Element.width Element.fill
     , Background.color (Element.rgb255 255 172 98)
@@ -276,20 +329,24 @@ showyButtonAttributes =
     ]
 
 
+h1 : String -> Element msg
 h1 t =
-    el (heading1Attrs lightTheme) (text t)
+    Element.el (heading1Attrs lightTheme) (Element.text t)
 
 
+h2 : String -> Element msg
 h2 t =
-    el (heading2Attrs lightTheme) (text t)
+    Element.el (heading2Attrs lightTheme) (Element.text t)
 
 
+h3 : String -> Element msg
 h3 t =
-    el (heading3Attrs lightTheme) (text t)
+    Element.el (heading3Attrs lightTheme) (Element.text t)
 
 
+h4 : String -> Element msg
 h4 t =
-    el (heading4Attrs lightTheme) (text t)
+    Element.el (heading4Attrs lightTheme) (Element.text t)
 
 
 heading1Attrs : Theme -> List (Element.Attr () msg)

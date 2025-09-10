@@ -1,13 +1,12 @@
-module View.Countdown exposing (..)
+module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, ui)
 
 import Date
 import DateFormat
-import Element exposing (..)
+import Effect.Time as Time
+import Element exposing (Element)
 import Element.Font as Font
-import Env
 import Theme
-import Time
-import TimeFormat
+import TimeFormat exposing (Zoned)
 
 
 ui : String -> String -> { model | now : Time.Posix } -> Element msg
@@ -20,10 +19,7 @@ ui t description model =
             model.now
                 |> Time.posixToMillis
     in
-    el Theme.contentAttributes <|
-        el [ centerX ] <|
-            Theme.h2 <|
-                asTimeToGo target model.now
+    Element.el Theme.contentAttributes (Element.el [ Element.centerX ] (Theme.h2 (asTimeToGo target model.now)))
 
 
 ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
@@ -39,11 +35,7 @@ ticketSalesLive t model =
         secondsRemaining =
             (target - now) // 1000
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        True
-
-    else
-        False
+    (Time.posixToMillis model.now == 0) || secondsRemaining < 0
 
 
 detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg
@@ -97,10 +89,10 @@ detailedCountdown t description model =
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
     if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        none
+        Element.none
 
     else
-        paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 <| output ++ " " ++ description ]
+        Element.paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 (output ++ " " ++ description) ]
 
 
 
@@ -109,6 +101,7 @@ detailedCountdown t description model =
 --     ++ description
 
 
+asTimeToGo : Zoned -> Time.Posix -> String
 asTimeToGo zoned now =
     let
         days =
@@ -147,18 +140,7 @@ asTimeToGo zoned now =
             zoned.time
             ++ " Tomorrow"
 
-    else if days == 0 then
-        DateFormat.format
-            [ DateFormat.hourMilitaryFixed
-            , DateFormat.text ":"
-            , DateFormat.minuteFixed
-            ]
-            zoned.zone
-            zoned.time
-            ++ " today"
-
     else
-        -- String.fromInt days ++ " days"
         DateFormat.format
             [ DateFormat.hourMilitaryFixed
             , DateFormat.text ":"

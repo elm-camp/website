@@ -1,15 +1,12 @@
 module Camp25US.Archive exposing (view)
 
-import Browser exposing (UrlRequest(..))
 import Element exposing (Element)
-import Element.Background
-import Element.Border
 import MarkdownThemed
-import Route exposing (Route(..), SubPage(..))
 import Theme
-import Types exposing (..)
+import Types exposing (FrontendMsg, LoadedModel)
 
 
+view : LoadedModel -> Element FrontendMsg
 view model =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
@@ -27,8 +24,7 @@ content1 =
         |> MarkdownThemed.renderFull
 
 
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg_
+unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
 unconferenceBulletPoints model =
     []
-        |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
         |> Element.column [ Element.spacing 15 ]

@@ -6,8 +6,8 @@ module Id exposing
     , toString
     )
 
-import Json.Decode
-import Json.Encode
+import Json.Decode as D
+import Json.Encode as E
 
 
 type Id a
@@ -24,11 +24,11 @@ fromString =
     Id
 
 
-decoder : Json.Decode.Decoder (Id a)
+decoder : D.Decoder (Id a)
 decoder =
-    Json.Decode.map Id Json.Decode.string
+    D.map Id D.string
 
 
-encode : Id a -> Json.Encode.Value
+encode : Id a -> E.Value
 encode (Id id) =
-    Json.Encode.string id
+    E.string id

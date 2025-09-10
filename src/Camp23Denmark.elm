@@ -1,21 +1,22 @@
-module Camp23Denmark exposing (..)
+module Camp23Denmark exposing (elmCampDenmarkBottomLine, elmCampDenmarkTopLine, view)
 
 import Camp23Denmark.Archive
 import Camp23Denmark.Artifacts
-import Element
+import Element exposing (Element)
 import Element.Font
-import MarkdownThemed
-import Route exposing (..)
+import Route exposing (SubPage(..))
 import Theme
+import Types exposing (FrontendMsg, LoadedModel)
 
 
+view : LoadedModel -> SubPage -> Element FrontendMsg
 view model subpage =
     Element.column
         [ Element.width Element.fill, Element.height Element.fill ]
         [ Element.column
             (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
             [ Theme.rowToColumnWhen 700
-                model
+                model.window
                 [ Element.spacing 30, Element.centerX, Element.Font.center ]
                 [ Element.image
                     [ Element.width (Element.px 300) ]
@@ -37,6 +38,7 @@ view model subpage =
         ]
 
 
+elmCampDenmarkTopLine : Element msg
 elmCampDenmarkTopLine =
     Element.row
         [ Element.centerX, Element.spacing 13 ]
@@ -51,6 +53,7 @@ elmCampDenmarkTopLine =
         ]
 
 
+elmCampDenmarkBottomLine : Element msg
 elmCampDenmarkBottomLine =
     Element.column
         [ Theme.glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]

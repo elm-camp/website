@@ -1,17 +1,13 @@
-module Camp24Devon.Tickets exposing (..)
+module Camp24Devon.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, groupRoom, includesAccom, offsite, singleRoom, viewAccom)
 
-import AssocList
 import Camp24Devon.Product as Product
-import Element exposing (..)
-import Element.Background as Background
-import Element.Border as Border
+import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
-import Env
 import Id exposing (Id)
 import MarkdownThemed
-import Money
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
+import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
 import Theme
 
@@ -136,6 +132,7 @@ accomToString accom =
             "Group Room"
 
 
+allAccommodations : List Accommodation
 allAccommodations =
     [ Offsite, Campsite, Single, Double, Group ]
 
@@ -145,6 +142,7 @@ formIncludesAccom form =
     form.accommodationBookings |> List.filter includesAccom |> List.length |> (\c -> c > 0)
 
 
+includesAccom : Accommodation -> Bool
 includesAccom accom =
     case accom of
         Offsite ->
@@ -157,7 +155,7 @@ includesAccom accom =
             True
 
 
-accommodationOptions : AssocList.Dict (Id ProductId) ( Accommodation, Ticket )
+accommodationOptions : SeqDict (Id ProductId) ( Accommodation, Ticket )
 accommodationOptions =
     allAccommodations
         |> List.map
@@ -168,14 +166,14 @@ accommodationOptions =
                 in
                 ( Id.fromString t.productId, ( a, t ) )
             )
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
-dict : AssocList.Dict (Id ProductId) Ticket
+dict : SeqDict (Id ProductId) Ticket
 dict =
     [ attendanceTicket, campingSpot, singleRoom, doubleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
-        |> AssocList.fromList
+        |> SeqDict.fromList
 
 
 viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Element msg
@@ -185,14 +183,14 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
             form.accommodationBookings |> List.filter ((==) accom) |> List.length
     in
     Theme.panel []
-        [ none
+        [ Element.none
 
         -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
-        , paragraph [ Font.semiBold, Font.size 20 ] [ text ticket.name ]
+        , Element.paragraph [ Font.semiBold, Font.size 20 ] [ Element.text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
-        , el
-            [ Font.bold, Font.size 36, alignBottom ]
-            (text (Theme.priceText price))
+        , Element.el
+            [ Font.bold, Font.size 36, Element.alignBottom ]
+            (Element.text (Theme.priceText price))
         , if ticketAvailable then
             if selectedCount > 0 then
                 Theme.numericField
@@ -202,29 +200,18 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (\_ -> addMsg)
 
             else
-                let
-                    ( text_, msg ) =
-                        if ticketAvailable then
-                            ( "Select", Just addMsg )
-
-                        else if ticket.name == "Campfire Ticket" then
-                            ( "Waitlist", Nothing )
-
-                        else
-                            ( "Waitlist", Nothing )
-                in
                 Input.button
                     (Theme.submitButtonAttributes ticketAvailable)
-                    { onPress = msg
+                    { onPress = Just addMsg
                     , label =
-                        el
-                            [ centerX, Font.semiBold, Font.color (rgb 1 1 1) ]
-                            (text text_)
+                        Element.el
+                            [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
+                            (Element.text "Select")
                     }
 
           else if ticket.name == "Campfire Ticket" then
-            text "Waitlist"
+            Element.text "Waitlist"
 
           else
-            text "Sold out!"
+            Element.text "Sold out!"
         ]

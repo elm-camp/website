@@ -1,6 +1,6 @@
-module Page.UnconferenceFormat exposing (..)
+module Page.UnconferenceFormat exposing (view)
 
-import Element exposing (..)
+import Element exposing (Element)
 import MarkdownThemed
 
 

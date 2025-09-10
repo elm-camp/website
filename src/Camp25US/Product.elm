@@ -1,8 +1,9 @@
-module Camp25US.Product exposing (..)
+module Camp25US.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket, year)
 
 import Env
 
 
+year : String
 year =
     "2025"
 
@@ -56,6 +57,7 @@ type alias Sponsorship =
     { name : String, price : Int, productId : String, description : String, features : List String }
 
 
+sponsorshipItems : List Sponsorship
 sponsorshipItems =
     [ { name = "Silver"
       , price = 100000

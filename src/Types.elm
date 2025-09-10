@@ -1,31 +1,44 @@
-module Types exposing (..)
+module Types exposing
+    ( BackendModel
+    , BackendMsg(..)
+    , CityCode
+    , EmailResult(..)
+    , FrontendModel(..)
+    , FrontendMsg(..)
+    , InitData2
+    , LoadedModel
+    , LoadingModel
+    , Order
+    , OrderStatus(..)
+    , PendingOrder
+    , Price2
+    , Product(..)
+    , Sponsorship(..)
+    , StripePaymentId(..)
+    , TicketAvailability
+    , TicketsEnabled(..)
+    , ToBackend(..)
+    , ToFrontend(..)
+    , maxSlotsAvailable
+    )
 
-import AssocList
-import Audio
-import Browser exposing (UrlRequest)
-import Browser.Dom
-import Browser.Navigation exposing (Key)
-import Codec exposing (Codec)
-import Dict
-import Http
+import Effect.Browser exposing (UrlRequest)
+import Effect.Browser.Dom exposing (HtmlId)
+import Effect.Browser.Navigation exposing (Key)
+import Effect.Http as Http
+import Effect.Lamdera exposing (ClientId, SessionId)
+import Effect.Time as Time
 import Id exposing (Id)
-import Lamdera exposing (ClientId, SessionId)
-import LiveSchedule
-import Money
-import Postmark exposing (PostmarkSendResponse)
+import Postmark
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
+import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
-import Time
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
 
 
-type alias FrontendModel =
-    Audio.Model FrontendMsg_ FrontendModel_
-
-
-type FrontendModel_
+type FrontendModel
     = Loading LoadingModel
     | Loaded LoadedModel
 
@@ -38,7 +51,6 @@ type alias LoadingModel =
     , route : Route
     , isOrganiser : Bool
     , initData : Maybe InitData2
-    , audio : Maybe (Result Audio.LoadError Audio.Source)
     }
 
 
@@ -47,7 +59,7 @@ type alias LoadedModel =
     , now : Time.Posix
     , zone : Maybe Time.Zone
     , window : { width : Int, height : Int }
-    , prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
@@ -57,7 +69,6 @@ type alias LoadedModel =
     , isOrganiser : Bool
     , ticketsEnabled : TicketsEnabled
     , backendModel : Maybe BackendModel
-    , audio : Maybe Audio.Source
     , pressedAudioButton : Bool
     }
 
@@ -72,12 +83,13 @@ type alias TicketAvailability =
 
 
 type alias BackendModel =
-    { orders : AssocList.Dict (Id StripeSessionId) Order
-    , pendingOrder : AssocList.Dict (Id StripeSessionId) PendingOrder
-    , expiredOrders : AssocList.Dict (Id StripeSessionId) PendingOrder
-    , prices : AssocList.Dict (Id ProductId) Price2
+    { orders : SeqDict (Id StripeSessionId) Order
+    , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
+    , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
+    , prices : SeqDict (Id ProductId) Price2
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
+    , backendInitialized : Bool
     }
 
 
@@ -133,11 +145,11 @@ type alias Price2 =
 --         )
 --         Money.toString
 --         Codec.string
--- assocListCodec : Codec b -> Codec (AssocList.Dict (Id a) b)
+-- assocListCodec : Codec b -> Codec (SeqDict (Id a) b)
 -- assocListCodec codec =
 --     Codec.map
---         (\dict -> Dict.toList dict |> List.map (Tuple.mapFirst Id.fromString) |> AssocList.fromList)
---         (\assocList -> AssocList.toList assocList |> List.map (Tuple.mapFirst Id.toString) |> Dict.fromList)
+--         (\dict -> Dict.toList dict |> List.map (Tuple.mapFirst Id.fromString) |> SeqDict.fromList)
+--         (\SeqDict -> SeqDict.toList SeqDict |> List.map (Tuple.mapFirst Id.toString) |> Dict.fromList)
 --         (Codec.dict codec)
 -- idCodec : Codec (Id a)
 -- idCodec =
@@ -231,7 +243,7 @@ type alias Order =
 
 type EmailResult
     = SendingEmail
-    | EmailSuccess PostmarkSendResponse
+    | EmailSuccess
     | EmailFailed Http.Error
 
 
@@ -262,11 +274,7 @@ type alias CityCode =
     String
 
 
-type alias FrontendMsg =
-    Audio.Msg FrontendMsg_
-
-
-type FrontendMsg_
+type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
     | Tick Time.Posix
@@ -283,9 +291,7 @@ type FrontendMsg_
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
     | SetViewport
-    | LoadedMusic (Result Audio.LoadError Audio.Source)
-    | LiveScheduleMsg LiveSchedule.Msg
-    | SetViewPortForElement String
+    | SetViewPortForElement HtmlId
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | Noop
@@ -303,12 +309,12 @@ type BackendMsg
     | OnConnected SessionId ClientId
     | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
-    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error PostmarkSendResponse)
-    | ErrorEmailSent (Result Http.Error PostmarkSendResponse)
+    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error ())
+    | ErrorEmailSent (Result Postmark.SendEmailError ())
 
 
 type alias InitData2 =
-    { prices : AssocList.Dict (Id ProductId) { priceId : Id PriceId, price : Price }
+    { prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , slotsRemaining : TicketAvailability
     , ticketsEnabled : TicketsEnabled
     }
@@ -327,5 +333,6 @@ type TicketsEnabled
     | TicketsDisabled { adminMessage : String }
 
 
+maxSlotsAvailable : number
 maxSlotsAvailable =
     50
