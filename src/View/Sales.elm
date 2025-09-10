@@ -33,7 +33,7 @@ import Camp25US.Product as Product
 import Camp25US.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
-import Effect.Time
+import Effect.Time as Time
 import Element exposing (Color, Element)
 import Element.Background as Background
 import Element.Border as Border
@@ -61,9 +61,9 @@ year =
     "2025"
 
 
-ticketSalesOpen : Effect.Time.Posix
+ticketSalesOpen : Time.Posix
 ticketSalesOpen =
-    (TimeFormat.certain "2025-04-04T19:00" Effect.Time.utc).time
+    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
 view : LoadedModel -> Element FrontendMsg

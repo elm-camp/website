@@ -81,7 +81,21 @@ config =
     , NoInconsistentAliases.config
         [ ( "Json.Decode", "D" )
         , ( "Json.Encode", "E" )
+        , ( "Effect.Browser.Dom", "Dom" )
+        , ( "Effect.Browser.Navigation", "Navigation" )
+        , ( "Effect.Command", "Command" )
+        , ( "Effect.Http", "Http" )
+        , ( "Http", "HttpCore" )
+        , ( "Effect.Lamdera", "Lamdera" )
+        , ( "Effect.Subscription", "Subscription" )
+        , ( "Effect.Task", "Task" )
+        , ( "Task", "TaskCore" )
+        , ( "Effect.Test", "T" )
+        , ( "Effect.Time", "Time" )
+        , ( "Effect.WebGL.Settings.Blend", "Blend" )
+        , ( "Lamdera", "LamderaCore" )
         ]
+        |> NoInconsistentAliases.noMissingAliases
         |> NoInconsistentAliases.rule
         |> defaultIgnore
     , NoModuleOnExposedNames.rule |> defaultIgnore

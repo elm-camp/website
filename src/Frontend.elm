@@ -12,23 +12,25 @@ import Camp25US.Tickets as Tickets
 import Dict
 import Duration
 import Effect.Browser
-import Effect.Browser.Dom exposing (HtmlId)
+import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Browser.Events
-import Effect.Browser.Navigation
+import Effect.Browser.Navigation as Navigation
 import Effect.Command as Command exposing (Command, FrontendOnly)
-import Effect.Lamdera
+import Effect.Http as Http exposing (Error(..), Response(..))
+import Effect.Lamdera as Lamdera
 import Effect.Subscription as Subscription exposing (Subscription)
-import Effect.Task
-import Effect.Time
+import Effect.Task as Task exposing (Task)
+import Effect.Time as Time
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Font as Font
 import EmailAddress exposing (EmailAddress)
 import Env
 import ICalendar exposing (IcsFile)
-import Json.Decode
-import Json.Encode
-import Lamdera
+import Json.Decode as D
+import Json.Encode as E
+import Lamdera as LamderaCore
+import Lamdera.Wire3 as Wire3
 import LamderaRPC
 import List.Extra as List
 import MarkdownThemed
@@ -38,7 +40,7 @@ import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValid
 import Route exposing (Route(..), SubPage(..))
 import SeqDict
 import Stripe
-import Task
+import Task as TaskCore
 import Theme exposing (normalButtonAttributes)
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Untrusted
@@ -58,11 +60,11 @@ app :
     , onUrlChange : Url.Url -> FrontendMsg
     }
 app =
-    Effect.Lamdera.frontend Lamdera.sendToBackend app_
+    Lamdera.frontend LamderaCore.sendToBackend app_
 
 
 app_ :
-    { init : Url.Url -> Effect.Browser.Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+    { init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
     , onUrlRequest : Effect.Browser.UrlRequest -> FrontendMsg
     , onUrlChange : Url.Url -> FrontendMsg
     , update : FrontendMsg -> FrontendModel -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
@@ -85,8 +87,8 @@ subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
 subscriptions _ =
     Subscription.batch
         [ Effect.Browser.Events.onResize GotWindowSize
-        , Effect.Browser.Events.onMouseUp (Json.Decode.succeed MouseDown)
-        , Effect.Time.every Duration.second Tick
+        , Effect.Browser.Events.onMouseUp (D.succeed MouseDown)
+        , Time.every Duration.second Tick
         ]
 
 
@@ -95,7 +97,7 @@ queryBool name =
     Query.enum name (Dict.fromList [ ( "true", True ), ( "false", False ) ])
 
 
-init : Url.Url -> Effect.Browser.Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
+init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 init url key =
     let
         route =
@@ -111,7 +113,7 @@ init url key =
     in
     ( Loading
         { key = key
-        , now = Effect.Time.millisToPosix 0
+        , now = Time.millisToPosix 0
         , zone = Nothing
         , window = Nothing
         , initData = Nothing
@@ -119,18 +121,18 @@ init url key =
         , isOrganiser = isOrganiser
         }
     , Command.batch
-        [ Effect.Browser.Dom.getViewport
-            |> Effect.Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
-        , Effect.Time.now |> Effect.Task.perform Tick
-        , Effect.Time.here |> Effect.Task.perform GotZone
+        [ Dom.getViewport
+            |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
+        , Time.now |> Task.perform Tick
+        , Time.here |> Task.perform GotZone
         , case route of
             PaymentCancelRoute ->
-                Effect.Lamdera.sendToBackend CancelPurchaseRequest
+                Lamdera.sendToBackend CancelPurchaseRequest
 
             AdminRoute passM ->
                 case passM of
                     Just pass ->
-                        Effect.Lamdera.sendToBackend (AdminInspect pass)
+                        Lamdera.sendToBackend (AdminInspect pass)
 
                     Nothing ->
                         Command.none
@@ -198,12 +200,12 @@ updateLoaded msg model =
             case urlRequest of
                 Browser.Internal url ->
                     ( model
-                    , Effect.Browser.Navigation.pushUrl model.key (Route.decode url |> Route.encode)
+                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode)
                     )
 
                 Browser.External url ->
                     ( model
-                    , Effect.Browser.Navigation.load url
+                    , Navigation.load url
                     )
 
         UrlChanged url ->
@@ -280,7 +282,7 @@ updateLoaded msg model =
             case ( form.submitStatus, PurchaseForm.validateForm form ) of
                 ( NotSubmitted _, Just purchaseFormValidated ) ->
                     ( { model | form = { form | submitStatus = Submitting } }
-                    , Effect.Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
                     )
 
                 ( NotSubmitted _, Nothing ) ->
@@ -301,9 +303,9 @@ updateLoaded msg model =
 
         PressedCancelForm ->
             ( { model | selectedTicket = Nothing }
-            , Effect.Browser.Dom.getElement View.Sales.ticketsHtmlId
-                |> Effect.Task.andThen (\{ element } -> Effect.Browser.Dom.setViewport 0 element.y)
-                |> Effect.Task.attempt (\_ -> SetViewport)
+            , Dom.getElement View.Sales.ticketsHtmlId
+                |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
+                |> Task.attempt (\_ -> SetViewport)
             )
 
         PressedShowCarbonOffsetTooltip ->
@@ -317,13 +319,12 @@ updateLoaded msg model =
 
         AdminPullBackendModel ->
             ( model
-            , LamderaRPC.postJsonBytes
+            , postJsonBytes
                 Types.w3_decode_BackendModel
                 -- (Json.Encode.string Env.adminPassword)
-                (Json.Encode.string "adjust me when developing locally")
+                (E.string "adjust me when developing locally")
                 "http://localhost:8001/https://elm.camp/_r/backend-model"
                 |> Task.attempt AdminPullBackendModelResponse
-                |> Command.fromCmd "AdminPullBackendModel"
             )
 
         AdminPullBackendModelResponse res ->
@@ -342,9 +343,49 @@ updateLoaded msg model =
             ( model, Command.none )
 
 
+{-| Copied from LamderaRPC.elm and made program-test compatible
+-}
+postJsonBytes : Wire3.Decoder b -> D.Value -> String -> Task r Http.Error b
+postJsonBytes decoder requestValue endpoint =
+    Http.task
+        { method = "POST"
+        , headers = []
+        , url = endpoint
+        , body = Http.jsonBody requestValue
+        , resolver =
+            Http.bytesResolver <|
+                customResolver
+                    (\metadata bytes ->
+                        Wire3.bytesDecode decoder bytes
+                            |> Result.fromMaybe (BadBody <| "Failed to decode response from " ++ endpoint)
+                    )
+        , timeout = Just (Duration.seconds 15)
+        }
+
+
+customResolver : (Http.Metadata -> responseType -> Result Http.Error b) -> Http.Response responseType -> Result Http.Error b
+customResolver fn response =
+    case response of
+        BadUrl_ urlString ->
+            Err <| BadUrl urlString
+
+        Timeout_ ->
+            Err <| Timeout
+
+        NetworkError_ ->
+            Err <| NetworkError
+
+        BadStatus_ metadata body ->
+            -- @TODO use metadata better here
+            Err <| BadStatus metadata.statusCode
+
+        GoodStatus_ metadata text ->
+            fn metadata text
+
+
 scrollToTop : Command FrontendOnly ToBackend FrontendMsg
 scrollToTop =
-    Effect.Browser.Dom.setViewport 0 0 |> Effect.Task.perform (\() -> SetViewport)
+    Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
@@ -683,9 +724,9 @@ homepageView model =
 
 jumpToId : HtmlId -> Float -> Command FrontendOnly toMsg FrontendMsg
 jumpToId id offset =
-    Effect.Browser.Dom.getElement id
-        |> Effect.Task.andThen (\el -> Effect.Browser.Dom.setViewport 0 (el.element.y - offset))
-        |> Effect.Task.attempt
+    Dom.getElement id
+        |> Task.andThen (\el -> Dom.setViewport 0 (el.element.y - offset))
+        |> Task.attempt
             (\_ -> Noop)
 
 
