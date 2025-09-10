@@ -45,7 +45,7 @@ type FrontendModel
 
 
 type alias LoadingModel =
-    { key : Effect.Browser.Navigation.Key
+    { key : Key
     , now : Effect.Time.Posix
     , zone : Maybe Effect.Time.Zone
     , window : Maybe { width : Int, height : Int }
@@ -56,7 +56,7 @@ type alias LoadingModel =
 
 
 type alias LoadedModel =
-    { key : Effect.Browser.Navigation.Key
+    { key : Key
     , now : Effect.Time.Posix
     , zone : Maybe Effect.Time.Zone
     , window : { width : Int, height : Int }
@@ -276,7 +276,7 @@ type alias CityCode =
 
 
 type FrontendMsg
-    = UrlClicked Effect.Browser.UrlRequest
+    = UrlClicked UrlRequest
     | UrlChanged Url
     | Tick Effect.Time.Posix
     | GotZone Effect.Time.Zone

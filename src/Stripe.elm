@@ -143,7 +143,7 @@ createCheckoutSession :
     , now : Effect.Time.Posix
     , expiresInMinutes : Int
     }
-    -> Effect.Task.Task restriction Effect.Http.Error (Id StripeSessionId)
+    -> Task restriction Effect.Http.Error (Id StripeSessionId)
 createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
     let
         itemToStripeAttrs i item =
@@ -208,7 +208,7 @@ cancelPath =
     "stripeCancel"
 
 
-expireSession : Id StripeSessionId -> Effect.Task.Task restriction Effect.Http.Error ()
+expireSession : Id StripeSessionId -> Task restriction Effect.Http.Error ()
 expireSession stripeSessionId =
     Effect.Http.task
         { method = "POST"

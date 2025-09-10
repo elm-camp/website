@@ -35,8 +35,7 @@ domain =
 -}
 fileRequests : Dict String String
 fileRequests =
-    []
-        |> Dict.fromList
+    Dict.empty
 
 
 handleHttpRequests : Dict String String -> Dict String Bytes -> { currentRequest : HttpRequest, data : T.Data FrontendModel BackendModel } -> HttpResponse
@@ -116,5 +115,4 @@ tests fileData =
                 ]
             )
         ]
-
     ]
