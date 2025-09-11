@@ -124,6 +124,10 @@ tests fileData =
                 , tab1.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "What happened at Elm Camp 2023" ])
                 , tab1.clickLink 100 "/24-uk"
+                , tab1.navigateBack 100
+                , tab1.clickLink 100 "/23-denmark"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Dallund Castle, Denmark" ])
                 ]
             )
         ]
