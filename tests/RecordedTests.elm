@@ -63,11 +63,7 @@ handleHttpRequests overrides fileData { currentRequest } =
             getData path
 
         _ ->
-            if currentRequest.url == "https://api.stripe.com/v1/prices" then
-                BadUrlResponse ""
-
-            else
-                UnhandledHttpRequest
+            UnhandledHttpRequest
 
 
 {-| You can change parts of this function represented with `...`.

@@ -1630,6 +1630,16 @@ type EventType toBackend frontendMsg frontendModel toFrontend backendMsg backend
     | SnapshotEvent { clientId : ClientId, name : String, isSuccessful : Bool }
     | ManuallySendToBackend { clientId : ClientId, toBackend : toBackend }
     | ManuallySendPortEvent { clientId : ClientId, portName : String, value : Json.Encode.Value, isSuccessful : Bool }
+    | EffectFailedEvent (Maybe ClientId) FailedEffect
+
+
+type FailedEffect
+    = PushUrlFailed
+    | ReplaceUrlFailed
+    | NavigationLoadFailed
+    | HttpRequestFailed
+    | FileSelectFailed
+    | FilesSelectFailed
 
 
 {-| -}
@@ -3250,13 +3260,13 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
             }
 
         NavigationPushUrl _ urlText ->
-            handleUrlChange urlText clientId state
+            handleUrlChange PushUrlFailed urlText clientId state
 
         NavigationReplaceUrl _ urlText ->
-            handleUrlChange urlText clientId state
+            handleUrlChange ReplaceUrlFailed urlText clientId state
 
         NavigationLoad urlText ->
-            handleUrlChange urlText clientId state
+            handleUrlChange NavigationLoadFailed urlText clientId state
 
         NavigationBack _ steps ->
             { state | frontends = SeqDict.updateIfExists clientId (navigateBack steps) state.frontends }
@@ -3374,7 +3384,7 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
                     handleFrontendUpdate clientId time (msg (Effect.Internal.MockFile file)) state2
 
                 UnhandledFileUpload ->
-                    addTestError FileUploadNotHandled state2
+                    addEvent (EffectFailedEvent (Just clientId) FileSelectFailed) (Just FileUploadNotHandled) state2
 
         FileSelectFiles mimeTypes msg ->
             let
@@ -3405,7 +3415,10 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
                         state2
 
                 UnhandledMultiFileUpload ->
-                    addTestError MultipleFilesUploadNotHandled state2
+                    addEvent
+                        (EffectFailedEvent (Just clientId) FileSelectFailed)
+                        (Just MultipleFilesUploadNotHandled)
+                        state2
 
         Broadcast _ ->
             state
@@ -3452,11 +3465,12 @@ getWindowResizeSubscriptions subscription =
 
 {-| -}
 handleUrlChange :
-    String
+    FailedEffect
+    -> String
     -> ClientId
     -> State toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
     -> State toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-handleUrlChange urlText clientId state =
+handleUrlChange effect urlText clientId state =
     case normalizeUrl state.domain urlText of
         Just url ->
             let
@@ -3477,7 +3491,7 @@ handleUrlChange urlText clientId state =
             }
 
         Nothing ->
-            addTestError (InvalidBrowserNavigationUrl urlText) state
+            addEvent (EffectFailedEvent (Just clientId) effect) (InvalidBrowserNavigationUrl urlText |> Just) state
 
 
 {-| -}
@@ -3930,17 +3944,12 @@ handleHttpResponseWithTestError :
 handleHttpResponseWithTestError maybeClientId request httpRequest error state =
     runTask
         maybeClientId
-        (addTestError (error request) { state | httpRequests = request :: state.httpRequests })
+        (addEvent
+            (EffectFailedEvent maybeClientId HttpRequestFailed)
+            (error request |> Just)
+            { state | httpRequests = request :: state.httpRequests }
+        )
         (httpRequest.onRequestComplete Http.NetworkError_)
-
-
-{-| -}
-addTestError :
-    TestError
-    -> State toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-    -> State toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-addTestError error state =
-    { state | testErrors = state.testErrors ++ [ error ] }
 
 
 {-| -}
@@ -4754,6 +4763,14 @@ eventTypeToTimelineType eventType =
         ManuallySendPortEvent data ->
             FrontendTimeline data.clientId
 
+        EffectFailedEvent maybeClientId _ ->
+            case maybeClientId of
+                Just clientId ->
+                    FrontendTimeline clientId
+
+                Nothing ->
+                    BackendTimeline
+
 
 {-| -}
 isSkippable : EventType toBackend frontendMsg frontendModel toFrontend backendMsg backendModel -> Bool
@@ -4793,6 +4810,9 @@ isSkippable eventType =
             True
 
         ManuallySendPortEvent _ ->
+            True
+
+        EffectFailedEvent clientId _ ->
             True
 
 
@@ -5008,6 +5028,9 @@ checkCachedElmValueHelper event state =
                     Nothing
 
                 ManuallySendPortEvent _ ->
+                    Nothing
+
+                EffectFailedEvent clientId _ ->
                     Nothing
     }
 
@@ -5586,6 +5609,20 @@ currentStepText currentStep testView_ =
 
                 ManuallySendPortEvent data ->
                     "Manually triggered \"" ++ data.portName ++ "\" port: " ++ Json.Encode.encode 0 data.value
+
+                EffectFailedEvent clientId effect ->
+                    case effect of
+                        PushUrlFailed ->
+                            "Browser.Navigation.pushUrl error"
+
+                        ReplaceUrlFailed ->
+                            "Browser.Navigation.replaceUrl error"
+
+                        NavigationLoadFailed ->
+                            "Browser.Navigation.load error"
+
+                        HttpRequestFailed ->
+                            "Http request error"
     in
     Html.div
         [ Html.Attributes.style "padding" "4px", Html.Attributes.title fullMsg ]
@@ -5711,6 +5748,9 @@ addTimelineEvent currentTimelineIndex { previousStep, currentStep } event state 
                     []
 
                 ManuallySendPortEvent _ ->
+                    []
+
+                EffectFailedEvent clientId _ ->
                     []
     in
     { columnIndex = state.columnIndex + 1
@@ -6251,6 +6291,11 @@ eventIcon color eventType columnIndex rowIndex =
 
         ManuallySendPortEvent _ ->
             [ circleHelper "big-circle" ]
+
+        EffectFailedEvent clientId _ ->
+            [ circleHelper "circle"
+            , xSvg "red" (columnIndex * timelineColumnWidth) (rowIndex * timelineRowHeight)
+            ]
 
 
 {-| -}
