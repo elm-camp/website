@@ -933,6 +933,8 @@ type alias FrontendState toBackend frontendMsg frontendModel toFrontend =
     , toFrontend : List (ToFrontendData toFrontend)
     , timers : SeqDict Duration { startTime : Time.Posix }
     , url : String
+    , backUrls : List String
+    , forwardUrls : List String
     , windowSize : { width : Int, height : Int }
     }
 
@@ -1192,6 +1194,8 @@ type alias FrontendActions toBackend frontendMsg frontendModel toFrontend backen
         -> String
         -> Json.Encode.Value
         -> Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+    , navigateBack : DelayInMs -> Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+    , navigateForward : DelayInMs -> Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
     }
 
 
@@ -1512,6 +1516,8 @@ connectFrontend delay sessionId url windowSize andThenFunc =
                                             , toFrontend = []
                                             , timers = getTimers subscriptions |> SeqDict.map (\_ _ -> { startTime = currentTime state })
                                             , url = url
+                                            , backUrls = []
+                                            , forwardUrls = []
                                             , windowSize = windowSize
                                             }
                                             state.frontends
@@ -1573,6 +1579,8 @@ connectFrontend delay sessionId url windowSize andThenFunc =
                                     , checkModel = checkFrontend clientId
                                     , custom = custom clientId
                                     , portEvent = portEvent clientId
+                                    , navigateForward = navigateForwardAction clientId
+                                    , navigateBack = navigateBackAction clientId
                                     }
                         in
                         getClientConnectSubs (state2.backendApp.subscriptions state2.model)
@@ -2367,6 +2375,34 @@ custom clientId delay htmlId eventName value =
     userEvent delay (UserCustomEvent htmlId value) clientId htmlId ( eventName, value )
 
 
+navigateForwardAction : ClientId -> DelayInMs -> Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+navigateForwardAction clientId delay =
+    Action
+        (\instructions ->
+            wait (Duration.milliseconds delay) instructions
+                |> NextStep
+                    (\state ->
+                        { state
+                            | frontends = SeqDict.updateIfExists clientId (navigateForward 1) state.frontends
+                        }
+                    )
+        )
+
+
+navigateBackAction : ClientId -> DelayInMs -> Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+navigateBackAction clientId delay =
+    Action
+        (\instructions ->
+            wait (Duration.milliseconds delay) instructions
+                |> NextStep
+                    (\state ->
+                        { state
+                            | frontends = SeqDict.updateIfExists clientId (navigateBack 1) state.frontends
+                        }
+                    )
+        )
+
+
 portEvent :
     ClientId
     -> DelayInMs
@@ -3135,11 +3171,57 @@ clearFrontendEffects :
 clearFrontendEffects clientId state =
     { state
         | frontends =
-            SeqDict.update
+            SeqDict.updateIfExists
                 clientId
-                (Maybe.map (\frontend -> { frontend | pendingEffects = Array.empty }))
+                (\frontend -> { frontend | pendingEffects = Array.empty })
                 state.frontends
     }
+
+
+navigateBack :
+    Int
+    -> FrontendState toBackend frontendMsg frontendModel toFrontend
+    -> FrontendState toBackend frontendMsg frontendModel toFrontend
+navigateBack steps frontend =
+    if steps > 0 then
+        case frontend.backUrls of
+            head :: rest ->
+                navigateBack
+                    (steps - 1)
+                    { frontend
+                        | url = head
+                        , backUrls = rest
+                        , forwardUrls = head :: frontend.forwardUrls
+                    }
+
+            [] ->
+                frontend
+
+    else
+        frontend
+
+
+navigateForward :
+    Int
+    -> FrontendState toBackend frontendMsg frontendModel toFrontend
+    -> FrontendState toBackend frontendMsg frontendModel toFrontend
+navigateForward steps frontend =
+    if steps > 0 then
+        case frontend.forwardUrls of
+            head :: rest ->
+                navigateForward
+                    (steps - 1)
+                    { frontend
+                        | url = head
+                        , forwardUrls = rest
+                        , backUrls = head :: frontend.backUrls
+                    }
+
+            [] ->
+                frontend
+
+    else
+        frontend
 
 
 {-| -}
@@ -3176,13 +3258,11 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
         NavigationLoad urlText ->
             handleUrlChange urlText clientId state
 
-        NavigationBack _ _ ->
-            -- TODO
-            state
+        NavigationBack _ steps ->
+            { state | frontends = SeqDict.updateIfExists clientId (navigateBack steps) state.frontends }
 
-        NavigationForward _ _ ->
-            -- TODO
-            state
+        NavigationForward _ steps ->
+            { state | frontends = SeqDict.updateIfExists clientId (navigateForward steps) state.frontends }
 
         NavigationReload ->
             -- TODO
@@ -3386,7 +3466,14 @@ handleUrlChange urlText clientId state =
             in
             { state2
                 | frontends =
-                    SeqDict.update clientId (Maybe.map (\newFrontend -> { newFrontend | url = Url.toString url })) state2.frontends
+                    SeqDict.updateIfExists clientId
+                        (\frontend ->
+                            { frontend
+                                | url = Url.toString url
+                                , backUrls = frontend.url :: frontend.backUrls
+                            }
+                        )
+                        state2.frontends
             }
 
         Nothing ->
@@ -3421,16 +3508,14 @@ runBackendEffects stepIndex effect state =
         SendToFrontend (Effect.Internal.ClientId clientId) toFrontend ->
             { state
                 | frontends =
-                    SeqDict.update
+                    SeqDict.updateIfExists
                         (Effect.Lamdera.clientIdFromString clientId)
-                        (Maybe.map
-                            (\frontend ->
-                                { frontend
-                                    | toFrontend =
-                                        frontend.toFrontend
-                                            ++ [ { toFrontend = toFrontend, stepIndex = stepIndex } ]
-                                }
-                            )
+                        (\frontend ->
+                            { frontend
+                                | toFrontend =
+                                    frontend.toFrontend
+                                        ++ [ { toFrontend = toFrontend, stepIndex = stepIndex } ]
+                            }
                         )
                         state.frontends
             }
