@@ -3376,7 +3376,7 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
                             SeqDict.updateIfExists
                                 clientId
                                 (\frontend2 -> { frontend2 | navigation = navigation })
-                                state.frontends
+                                state2.frontends
                     }
 
                 Nothing ->
@@ -3403,7 +3403,7 @@ runFrontendEffects sessionId clientId stepIndex effectsToPerform state =
                             SeqDict.updateIfExists
                                 clientId
                                 (\frontend2 -> { frontend2 | navigation = navigation })
-                                state.frontends
+                                state2.frontends
                     }
 
                 Nothing ->
