@@ -18,9 +18,9 @@ module Stripe exposing
     )
 
 import Effect.Command as Command exposing (Command, FrontendOnly)
-import Effect.Http
+import Effect.Http as Http
 import Effect.Task exposing (Task)
-import Effect.Time
+import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
 import HttpHelpers
@@ -70,16 +70,16 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Effect.Time.Posix }
+    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
 
 
-getPrices : Task restriction Effect.Http.Error (List PriceData)
+getPrices : Task restriction Http.Error (List PriceData)
 getPrices =
-    Effect.Http.task
+    Http.task
         { method = "GET"
         , headers = headers
         , url = "https://api.stripe.com/v1/prices"
-        , body = Effect.Http.emptyBody
+        , body = Http.emptyBody
         , resolver = HttpHelpers.jsonResolver decodePrices
         , timeout = Nothing
         }
@@ -106,7 +106,7 @@ decodePrice =
         |> Json.Decode.Pipeline.optional "unit_amount" D.int 0
         |> Json.Decode.Pipeline.required "product" Id.decoder
         |> Json.Decode.Pipeline.required "active" D.bool
-        |> Json.Decode.Pipeline.required "created" (D.map Effect.Time.millisToPosix D.int)
+        |> Json.Decode.Pipeline.required "created" (D.map Time.millisToPosix D.int)
 
 
 decodeCurrency : D.Decoder Money.Currency
@@ -140,10 +140,10 @@ type CheckoutItem
 createCheckoutSession :
     { items : List CheckoutItem
     , emailAddress : EmailAddress
-    , now : Effect.Time.Posix
+    , now : Time.Posix
     , expiresInMinutes : Int
     }
-    -> Effect.Task.Task restriction Effect.Http.Error (Id StripeSessionId)
+    -> Task restriction Http.Error (Id StripeSessionId)
 createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
     let
         itemToStripeAttrs i item =
@@ -165,7 +165,7 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
             , ( "allow_promotion_codes", "true" )
 
             -- Stripe expects seconds since epoch
-            , ( "expires_at", String.fromInt ((Effect.Time.posixToMillis now // 1000) + (expiresInMinutes * 60)) )
+            , ( "expires_at", String.fromInt ((Time.posixToMillis now // 1000) + (expiresInMinutes * 60)) )
             , ( "success_url"
               , Url.Builder.crossOrigin
                     Env.domain
@@ -178,7 +178,7 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
                 ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
                 |> formBody
     in
-    Effect.Http.task
+    Http.task
         { method = "POST"
         , headers = headers
         , url = "https://api.stripe.com/v1/checkout/sessions"
@@ -208,9 +208,9 @@ cancelPath =
     "stripeCancel"
 
 
-expireSession : Id StripeSessionId -> Effect.Task.Task restriction Effect.Http.Error ()
+expireSession : Id StripeSessionId -> Task restriction Http.Error ()
 expireSession stripeSessionId =
-    Effect.Http.task
+    Http.task
         { method = "POST"
         , headers = headers
         , url =
@@ -218,7 +218,7 @@ expireSession stripeSessionId =
                 "https://api.stripe.com"
                 [ "v1", "checkout", "sessions", Id.toString stripeSessionId, "expire" ]
                 []
-        , body = Effect.Http.emptyBody
+        , body = Http.emptyBody
         , resolver = HttpHelpers.jsonResolver (D.succeed ())
         , timeout = Nothing
         }
@@ -243,9 +243,9 @@ decodeSession =
     D.field "id" Id.decoder
 
 
-headers : List Effect.Http.Header
+headers : List Http.Header
 headers =
-    [ Effect.Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey) ]
+    [ Http.header "Authorization" ("Bearer " ++ Env.stripePrivateApiKey) ]
 
 
 
@@ -291,6 +291,6 @@ cgiParameters parameters =
 {-| Put some key-value pairs in the body of your `Request`. This will automatically
 add the `Content-Type: application/x-www-form-urlencoded` header.
 -}
-formBody : List ( String, String ) -> Effect.Http.Body
+formBody : List ( String, String ) -> Http.Body
 formBody parameters =
-    cgiParameters parameters |> Effect.Http.stringBody "application/x-www-form-urlencoded"
+    cgiParameters parameters |> Http.stringBody "application/x-www-form-urlencoded"

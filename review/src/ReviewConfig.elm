@@ -49,7 +49,7 @@ config =
         |> defaultIgnore
 
     --, NoUnusedFields.rule |> defaultIgnore
-    , NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
+    --, NoUnused.CustomTypeConstructors.rule [] |> defaultIgnore
     , NoUnused.Patterns.rule |> defaultIgnore
     , Docs.ReviewAtDocs.rule |> defaultIgnore
     , NoConfusingPrefixOperator.rule |> defaultIgnore
@@ -63,9 +63,9 @@ config =
     , NoSimpleLetBody.rule |> defaultIgnore
 
     --, NoUnused.Dependencies.rule |> defaultIgnore
-    , NoUnused.Exports.rule |> defaultIgnore
-    , NoUnused.Modules.rule |> defaultIgnore
-    , NoUnused.Parameters.rule |> defaultIgnore
+    --, NoUnused.Exports.rule |> defaultIgnore
+    --, NoUnused.Modules.rule |> defaultIgnore
+    --, NoUnused.Parameters.rule |> Review.Rule.ignoreErrorsForFiles [ "src/Unsafe.elm" ] |> defaultIgnore
     , ReviewPipelineStyles.rule
         [ ReviewPipelineStyles.forbid ReviewPipelineStyles.leftPizzaPipelines
             |> ReviewPipelineStyles.andTryToFixThemBy ReviewPipelineStyles.Fixes.convertingToParentheticalApplication
@@ -81,20 +81,36 @@ config =
     , NoInconsistentAliases.config
         [ ( "Json.Decode", "D" )
         , ( "Json.Encode", "E" )
+        , ( "Effect.Browser.Dom", "Dom" )
+        , ( "Effect.Browser.Navigation", "Navigation" )
+        , ( "Effect.Command", "Command" )
+        , ( "Effect.Http", "Http" )
+        , ( "Http", "HttpCore" )
+        , ( "Effect.Lamdera", "Lamdera" )
+        , ( "Effect.Subscription", "Subscription" )
+        , ( "Effect.Task", "Task" )
+        , ( "Task", "TaskCore" )
+        , ( "Effect.Test", "T" )
+        , ( "Effect.Time", "Time" )
+        , ( "Effect.WebGL.Settings.Blend", "Blend" )
+        , ( "Lamdera", "LamderaCore" )
         ]
+        |> NoInconsistentAliases.noMissingAliases
         |> NoInconsistentAliases.rule
         |> defaultIgnore
     , NoModuleOnExposedNames.rule |> defaultIgnore
-    , NoMissingTypeConstructor.rule |> defaultIgnore
-    , NoUnused.Variables.rule
-        |> Review.Rule.ignoreErrorsForDirectories
-            (List.map
-                (\v -> "src/Evergreen/V" ++ String.fromInt v)
-                (List.range 1 1000)
-            )
-        |> Review.Rule.ignoreErrorsForFiles
-            [ "src/LamderaRPC.elm"
-            ]
+
+    --, NoMissingTypeConstructor.rule |> defaultIgnore
+    --, NoUnused.Variables.rule
+    --    |> Review.Rule.ignoreErrorsForDirectories
+    --        (List.map
+    --            (\v -> "src/Evergreen/V" ++ String.fromInt v)
+    --            (List.range 1 1000)
+    --        )
+    --    |> Review.Rule.ignoreErrorsForFiles
+    --        [ "src/LamderaRPC.elm"
+    --        ]
+    --    |> Review.Rule.ignoreErrorsForDirectories [ "vendored" ]
     , NoBrokenParserFunctions.rule
     , BackendOnly.rule
         { functions =

@@ -14,10 +14,10 @@ import Email.Html as Html
 import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
 import Env
-import Http
+import Http as HttpCore
 import Id
-import Json.Decode
-import Json.Encode
+import Json.Decode as D
+import Json.Encode as E
 import Lamdera exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
@@ -37,7 +37,7 @@ backendModelEndpoint : SessionId -> BackendModel -> HttpRequest -> ( RPCResult, 
 backendModelEndpoint _ model request =
     case request.body of
         BodyJson json ->
-            case Json.Decode.decodeValue Json.Decode.string json of
+            case D.decodeValue D.string json of
                 Ok ok ->
                     if ok == Env.adminPassword then
                         ( ResultBytes (Wire3.intListFromBytes (Wire3.bytesEncode (Types.w3_encode_BackendModel model))), model, Cmd.none )
@@ -62,17 +62,17 @@ purchaseCompletedEndpoint :
     -> BackendModel
     -> Headers
     -> Json.Value
-    -> ( Result Http.Error Json.Value, BackendModel, Cmd BackendMsg )
+    -> ( Result HttpCore.Error Json.Value, BackendModel, Cmd BackendMsg )
 purchaseCompletedEndpoint _ model headers json =
     let
         response =
             if Env.isProduction then
-                Ok (Json.Encode.string "prod")
+                Ok (E.string "prod")
 
             else
-                Ok (Json.Encode.string "dev")
+                Ok (E.string "dev")
     in
-    case Json.Decode.decodeValue Stripe.decodeWebhook json of
+    case D.decodeValue Stripe.decodeWebhook json of
         Ok webhook ->
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
@@ -138,15 +138,15 @@ purchaseCompletedEndpoint _ model headers json =
                                     "Stripe session not found: stripeSessionId: "
                                         ++ Id.toString stripeSessionId
                             in
-                            ( Err (Http.BadBody error), model, Backend.errorEmail error )
+                            ( Err (HttpCore.BadBody error), model, Backend.errorEmail error )
 
         Err error ->
             let
                 errorText =
                     "Failed to decode webhook: "
-                        ++ Json.Decode.errorToString error
+                        ++ D.errorToString error
             in
-            ( Err (Http.BadBody errorText), model, Backend.errorEmail errorText )
+            ( Err (HttpCore.BadBody errorText), model, Backend.errorEmail errorText )
 
 
 confirmationEmail : Tickets.Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
@@ -195,7 +195,7 @@ confirmationEmail ticket =
 -- Things that should be auto-generated in future
 
 
-requestPurchaseCompletedEndpoint : String -> Task Http.Error String
+requestPurchaseCompletedEndpoint : String -> Task HttpCore.Error String
 requestPurchaseCompletedEndpoint value =
     LamderaRPC.asTask Wire3.encodeString Wire3.decodeString value "purchaseCompletedEndpoint"
 

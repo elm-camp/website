@@ -4,11 +4,13 @@ import Backend
 import Bytes exposing (Bytes)
 import Dict exposing (Dict)
 import Effect.Browser.Dom as Dom
-import Effect.Lamdera
+import Effect.Lamdera as Lamdera
 import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..), MultipleFilesUpload(..), PointerOptions(..))
 import Frontend
 import Json.Decode
 import Json.Encode
+import Test.Html.Query
+import Test.Html.Selector
 import Time
 import Types exposing (BackendModel, BackendMsg, FrontendModel, FrontendMsg, ToBackend, ToFrontend)
 import Unsafe
@@ -35,8 +37,7 @@ domain =
 -}
 fileRequests : Dict String String
 fileRequests =
-    []
-        |> Dict.fromList
+    Dict.empty
 
 
 handleHttpRequests : Dict String String -> Dict String Bytes -> { currentRequest : HttpRequest, data : T.Data FrontendModel BackendModel } -> HttpResponse
@@ -94,20 +95,30 @@ tests fileData =
                 domain
     in
     [ T.start
-        "new test"
+        "Links are reachable"
         (Time.millisToPosix 1757440953858)
         config
         [ T.connectFrontend
             0
-            (Effect.Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             { width = 881, height = 1312 }
             (\tab1 ->
                 [ tab1.clickLink 100 "/code-of-conduct"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Code of Conduct" ])
                 , tab1.clickLink 100 "/unconference-format"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Unconference Format" ])
                 , tab1.clickLink 100 "/venue-and-access"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "The venue and access" ])
                 , tab1.clickLink 100 "/organisers"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Organisers" ])
                 , tab1.clickLink 100 "/elm-camp-archive"
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "What happened at Elm Camp 2023" ])
                 , tab1.clickLink 100 "/24-uk"
                 , tab1.navigateBack 100
                 , tab1.clickLink 100 "/23-denmark"
