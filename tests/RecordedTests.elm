@@ -104,7 +104,7 @@ tests fileData =
         [ T.connectFrontend
             0
             (Effect.Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
-            "/"
+            "https://abc.com/"
             { width = 881, height = 1312 }
             (\tab1 ->
                 [ tab1.clickLink 100 "/code-of-conduct"
@@ -116,5 +116,4 @@ tests fileData =
                 ]
             )
         ]
-
     ]

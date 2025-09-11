@@ -766,13 +766,13 @@ testErrorToString error =
             string
 
         InvalidLinkUrl url ->
-            url ++ " is not a valid internal url. Make sure it's an absolute path such as \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
+            url ++ " is not an absolute path. Make sure it looks like \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
 
         InvalidFrontendConnectUrl url ->
-            url ++ " is not a valid internal url. Make sure it's an absolute path such as \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
+            url ++ " is not an absolute path. Make sure it looks like \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
 
         InvalidBrowserNavigationUrl url ->
-            url ++ " is not a valid internal url. Make sure it's an absolute path such as \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
+            url ++ " is not an absolute path. Make sure it looks like \"/\" or \"/homepage\" and not \"https://domain.com/homepage\" or \"homepage\"."
 
         FileUploadNotHandled ->
             "A client tried uploading a file but it wasn't handled by Config.handleFileUpload"
@@ -1524,15 +1524,13 @@ connectFrontend delay sessionId url windowSize andThenFunc =
                                             , isSuccessful = maybeUrl /= Nothing
                                             }
                                         )
-                                        Nothing
-                                    |> (\a ->
-                                            case maybeUrl of
-                                                Just _ ->
-                                                    a
+                                        (case maybeUrl of
+                                            Just _ ->
+                                                Nothing
 
-                                                Nothing ->
-                                                    addTestError (InvalidFrontendConnectUrl url) a
-                                       )
+                                            Nothing ->
+                                                InvalidFrontendConnectUrl url |> Just
+                                        )
 
                             list :
                                 List
