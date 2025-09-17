@@ -7,13 +7,10 @@ module Camp24Uk exposing
     , organisers
     , sponsors
     , venueAccessContent
-    , venueImage
-    , venuePictures
     , view
     )
 
 import Camp
-import Camp24Uk.Archive
 import Camp24Uk.Artifacts
 import Element exposing (Element, Length)
 import Element.Font as Font
@@ -53,7 +50,13 @@ view model subpage =
                 ]
             , case subpage of
                 Home ->
-                    Camp24Uk.Archive.view model
+                    Camp.viewArchive
+                        { images = images
+                        , organisers = organisers |> MarkdownThemed.renderFull
+                        , sponsors = sponsors model.window
+                        , conferenceSummary = conferenceSummary
+                        }
+                        model.window
 
                 Artifacts ->
                     Camp24Uk.Artifacts.view model
@@ -115,37 +118,14 @@ conferenceSummary =
         |> MarkdownThemed.renderFull
 
 
-venuePictures : LoadedModel -> Element msg
-venuePictures model =
-    let
-        prefix =
-            "24-colehayes/colehayes-"
-    in
-    if model.window.width > 950 then
-        [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-            |> Element.wrappedRow
-                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
-
-    else
-        [ [ "image1.webp", "image2.webp" ]
-        , [ "image3.webp", "image4.webp" ]
-        , [ "image5.webp", "image6.webp" ]
-        ]
-            |> List.map
-                (\paths ->
-                    Element.row
-                        [ Element.spacing 10, Element.width Element.fill ]
-                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
-                )
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
-
-
-venueImage : Length -> String -> Element msg
-venueImage width path =
-    Element.image
-        [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
+images : List { src : String, description : String }
+images =
+    List.range 1 6
+        |> List.map (\ix ->
+                { src = "/24-colehayes/image" ++ String.fromInt ix ++ ".webp"
+                , description = "Photo of part of Colehayes Park"
+                }
+        )
 
 
 organisers : String
