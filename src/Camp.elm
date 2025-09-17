@@ -1,9 +1,10 @@
-module Camp exposing (Meta, viewArchive)
+module Camp exposing (Meta, elmCampTopLine, elmCampBottomLine, ArchiveContents, viewArchive)
 
 {-| Shared definition for all camp years.
 -}
 
 import Element exposing (Element)
+import Element.Font as Font
 import MarkdownThemed
 import Theme
 
@@ -14,6 +15,30 @@ type alias Meta =
     , dates : String
     , artifactPicture : { src : String, description : String }
     }
+
+
+elmCampTopLine : Meta -> Element msg
+elmCampTopLine meta =
+    Element.row
+        [ Element.centerX, Element.spacing 13 ]
+        [ Element.image [ Element.width (Element.px 49) ] meta.logo
+        , Element.column
+            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
+            [ Element.el [ Theme.glow ] (Element.text "Unconference")
+            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
+            ]
+        ]
+
+
+elmCampBottomLine : Meta -> Element msg
+elmCampBottomLine meta =
+    Element.column
+        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
+        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
+        , Element.text meta.location
+        ]
+
+
 
 type alias ArchiveContents msg =
     { conferenceSummary : Element msg

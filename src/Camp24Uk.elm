@@ -1,8 +1,6 @@
 module Camp24Uk exposing
     ( conferenceSummary
     , contactDetails
-    , elmCampBottomLine
-    , elmCampTopLine
     , meta
     , organisers
     , sponsors
@@ -44,8 +42,8 @@ view model subpage =
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
                     [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
-                    , elmCampTopLine
-                    , elmCampBottomLine
+                    , Camp.elmCampTopLine meta
+                    , Camp.elmCampBottomLine meta
                     ]
                 ]
             , case subpage of
@@ -62,28 +60,6 @@ view model subpage =
                     Camp24Uk.Artifacts.view model
             ]
         , Theme.footer
-        ]
-
-
-elmCampTopLine : Element msg
-elmCampTopLine =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image [ Element.width (Element.px 49) ] meta.logo
-        , Element.column
-            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
-            ]
-        ]
-
-
-elmCampBottomLine : Element msg
-elmCampBottomLine =
-    Element.column
-        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
-        , Element.text meta.location
         ]
 
 

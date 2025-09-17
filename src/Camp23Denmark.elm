@@ -1,5 +1,6 @@
-module Camp23Denmark exposing (elmCampDenmarkBottomLine, elmCampDenmarkTopLine, view)
+module Camp23Denmark exposing (view)
 
+import Camp
 import Camp23Denmark.Archive
 import Camp23Denmark.Artifacts
 import Element exposing (Element)
@@ -8,6 +9,14 @@ import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 
+meta : Camp.Meta
+meta =
+    { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+    , tag = "Europe 2023"
+    , location = "🇩🇰 Dallund Castle, Denmark"
+    , dates = "Wed 28th - Fri 30th June"
+    , artifactPicture = { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
+    }
 
 view : LoadedModel -> SubPage -> Element FrontendMsg
 view model subpage =
@@ -23,8 +32,8 @@ view model subpage =
                     { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
                     [ Element.paragraph [ Element.Font.size 50, Element.Font.center ] [ Element.text "Archive" ]
-                    , elmCampDenmarkTopLine
-                    , elmCampDenmarkBottomLine
+                    , Camp.elmCampTopLine meta
+                    , Camp.elmCampBottomLine meta
                     ]
                 ]
             , case subpage of
@@ -35,28 +44,4 @@ view model subpage =
                     Camp23Denmark.Artifacts.view model
             ]
         , Theme.footer
-        ]
-
-
-elmCampDenmarkTopLine : Element msg
-elmCampDenmarkTopLine =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image
-            [ Element.width (Element.px 49) ]
-            { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-        , Element.column
-            [ Element.spacing 2, Element.Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Element.Font.extraBold, Element.Font.color Theme.lightTheme.elmText ] (Element.text "Europe 2023")
-            ]
-        ]
-
-
-elmCampDenmarkBottomLine : Element msg
-elmCampDenmarkBottomLine =
-    Element.column
-        [ Theme.glow, Element.Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Element.Font.bold, Element.centerX ] (Element.text "Wed 28th - Fri 30th June")
-        , Element.text "🇩🇰 Dallund Castle, Denmark"
         ]
