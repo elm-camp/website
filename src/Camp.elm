@@ -42,6 +42,7 @@ elmCampBottomLine meta =
 
 type alias ArchiveContents msg =
     { conferenceSummary : Element msg
+    , schedule : Maybe (Element msg)
     , organisers : Element msg
     , sponsors : Element msg
     , images : List { src : String, description : String }
@@ -69,6 +70,15 @@ viewArchive contents window =
                             (List.map (Element.image [ Element.width Element.fill ]) row)
                     )
                 |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+        , contents.schedule
+              |> Maybe.map (\schedule ->
+                    Element.column
+                        Theme.contentAttributes
+                        [ MarkdownThemed.renderFull "# Schedule"
+                        , schedule
+                        ]
+                )
+              |> Maybe.withDefault Element.none
         , Element.column
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Our sponsors"

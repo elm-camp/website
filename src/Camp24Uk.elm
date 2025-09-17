@@ -53,6 +53,7 @@ view model subpage =
                         , organisers = organisers |> MarkdownThemed.renderFull
                         , sponsors = sponsors model.window
                         , conferenceSummary = conferenceSummary
+                        , schedule = Nothing
                         }
                         model.window
 
