@@ -1,20 +1,14 @@
 module Camp24Uk exposing
     ( conferenceSummary
-    , contactDetails
-    , elmCampDenmarkBottomLine
-    , elmCampDenmarkTopLine
     , meta
     , organisers
     , sponsors
     , venueAccessContent
-    , venueImage
-    , venuePictures
     , view
     )
 
-import Camp24Uk.Archive
+import Camp
 import Camp24Uk.Artifacts
-import Camp25US exposing (Meta)
 import Element exposing (Element, Length)
 import Element.Font as Font
 import Html
@@ -25,13 +19,13 @@ import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 
 
-meta : Meta
+meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Europe 2024"
     , location = "🇬🇧 Colehayes Park, Devon"
     , dates = "Tues 18th — Fri 21st June"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
+    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolor drawing of Colehayes Park" }
     }
 
 
@@ -47,13 +41,21 @@ view model subpage =
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
                     [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
-                    , elmCampDenmarkTopLine
-                    , elmCampDenmarkBottomLine
+                    , Camp.elmCampTopLine meta
+                    , Camp.elmCampBottomLine meta
                     ]
                 ]
             , case subpage of
                 Home ->
-                    Camp24Uk.Archive.view model
+                    Camp.viewArchive
+                        { images = images
+                        , organisers = organisers |> MarkdownThemed.renderFull
+                        , sponsors = sponsors model.window
+                        , conferenceSummary = conferenceSummary
+                        , schedule = Nothing
+                        , venue = Just venueAccessContent
+                        }
+                        model.window
 
                 Artifacts ->
                     Camp24Uk.Artifacts.view model
@@ -62,34 +64,9 @@ view model subpage =
         ]
 
 
-elmCampDenmarkTopLine : Element msg
-elmCampDenmarkTopLine =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image [ Element.width (Element.px 49) ] meta.logo
-        , Element.column
-            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
-            ]
-        ]
-
-
-elmCampDenmarkBottomLine : Element msg
-elmCampDenmarkBottomLine =
-    Element.column
-        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
-        , Element.text meta.location
-        ]
-
-
 conferenceSummary : Element msg
 conferenceSummary =
     """
-
-# Unconference
-
 - Arrive anytime on Tue 18th June 2024
 
 - Depart 10am Fri 21st June 2024
@@ -107,45 +84,19 @@ conferenceSummary =
 - Full and exclusive access to the Park grounds and facilities
 
 - 60+ attendees
-
-
-**NOTE.** We will announce arrangements to get you from Exeter to Colehayes Park by shuttle closer to the event.  Exeter is easily accessible by train from London, Bristol, Birmingham and other major cities.
-
 """
         |> MarkdownThemed.renderFull
 
 
-venuePictures : LoadedModel -> Element msg
-venuePictures model =
-    let
-        prefix =
-            "24-colehayes/colehayes-"
-    in
-    if model.window.width > 950 then
-        [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-            |> Element.wrappedRow
-                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
-
-    else
-        [ [ "image1.webp", "image2.webp" ]
-        , [ "image3.webp", "image4.webp" ]
-        , [ "image5.webp", "image6.webp" ]
-        ]
-            |> List.map
-                (\paths ->
-                    Element.row
-                        [ Element.spacing 10, Element.width Element.fill ]
-                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
-                )
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
-
-
-venueImage : Length -> String -> Element msg
-venueImage width path =
-    Element.image
-        [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of Colehayes Park" }
+images : List { src : String, description : String }
+images =
+    List.range 1 6
+        |> List.map
+            (\ix ->
+                { src = "/24-colehayes/image" ++ String.fromInt ix ++ ".webp"
+                , description = "Photo of part of Colehayes Park"
+                }
+            )
 
 
 organisers : String
@@ -165,13 +116,7 @@ organisers =
 
 venueAccessContent : Element msg
 venueAccessContent =
-    Element.column
-        []
-        [ """
-# The venue and access
-
-## The venue
-
+    """
 **Colehayes Park**<br/>
 Haytor Road<br/>
 Bovey Tracey<br/>
@@ -264,33 +209,8 @@ Please ask if you require step free accommodation. There is one bedroom on the g
 * The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
 * We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
 * We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-
-## Contacting the organisers
-
-If you have questions or concerns about this website or attending Elm Camp, please get in touch
-
     """
-            ++ contactDetails
-            |> MarkdownThemed.renderFull
-        , Html.iframe
-            [ Html.Attributes.src "/map.html"
-            , Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "auto"
-            , Html.Attributes.style "aspect-ratio" "21 / 9"
-            , Html.Attributes.style "border" "none"
-            ]
-            []
-            |> Element.html
-        ]
-
-
-contactDetails : String
-contactDetails =
-    """
-* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM katjam_
-* Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam
-"""
+        |> MarkdownThemed.renderFull
 
 
 sponsors : { window | width : Int } -> Element msg

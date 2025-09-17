@@ -345,7 +345,7 @@ updateLoaded msg model =
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
 -}
-postJsonBytes : Wire3.Decoder b -> D.Value -> String -> Task r Http.Error b
+postJsonBytes : Wire3.Decoder b -> D.Value -> String -> Task r Error b
 postJsonBytes decoder requestValue endpoint =
     Http.task
         { method = "POST"
@@ -353,31 +353,32 @@ postJsonBytes decoder requestValue endpoint =
         , url = endpoint
         , body = Http.jsonBody requestValue
         , resolver =
-            Http.bytesResolver <|
-                customResolver
+            Http.bytesResolver
+                (customResolver
                     (\metadata bytes ->
                         Wire3.bytesDecode decoder bytes
-                            |> Result.fromMaybe (BadBody <| "Failed to decode response from " ++ endpoint)
+                            |> Result.fromMaybe (BadBody ("Failed to decode response from " ++ endpoint))
                     )
+                )
         , timeout = Just (Duration.seconds 15)
         }
 
 
-customResolver : (Http.Metadata -> responseType -> Result Http.Error b) -> Http.Response responseType -> Result Http.Error b
+customResolver : (Http.Metadata -> responseType -> Result Error b) -> Response responseType -> Result Error b
 customResolver fn response =
     case response of
         BadUrl_ urlString ->
-            Err <| BadUrl urlString
+            Err (BadUrl urlString)
 
         Timeout_ ->
-            Err <| Timeout
+            Err Timeout
 
         NetworkError_ ->
-            Err <| NetworkError
+            Err NetworkError
 
-        BadStatus_ metadata body ->
+        BadStatus_ metadata _ ->
             -- @TODO use metadata better here
-            Err <| BadStatus metadata.statusCode
+            Err (BadStatus metadata.statusCode)
 
         GoodStatus_ metadata text ->
             fn metadata text

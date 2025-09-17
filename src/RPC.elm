@@ -18,7 +18,7 @@ import Http as HttpCore
 import Id
 import Json.Decode as D
 import Json.Encode as E
-import Lamdera exposing (SessionId)
+import Lamdera as LamderaCore exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
 import LamderaRPC exposing (Headers, HttpBody(..), HttpRequest, RPCResult(..), StatusCode(..))
@@ -212,7 +212,7 @@ lamdera_handleEndpoints reqRaw req model =
         "tickets-enabled" ->
             ( LamderaRPC.ResultString "enabled"
             , { model | ticketsEnabled = TicketsEnabled }
-            , Lamdera.broadcast (TicketsEnabledChanged TicketsEnabled)
+            , LamderaCore.broadcast (TicketsEnabledChanged TicketsEnabled)
             )
 
         "tickets-disabled" ->
@@ -222,7 +222,7 @@ lamdera_handleEndpoints reqRaw req model =
             in
             ( LamderaRPC.ResultString "enabled"
             , { model | ticketsEnabled = ticketStatus }
-            , Lamdera.broadcast (TicketsEnabledChanged ticketStatus)
+            , LamderaCore.broadcast (TicketsEnabledChanged ticketStatus)
             )
 
         _ ->
