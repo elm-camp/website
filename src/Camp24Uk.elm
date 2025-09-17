@@ -67,9 +67,6 @@ view model subpage =
 conferenceSummary : Element msg
 conferenceSummary =
     """
-
-# Unconference
-
 - Arrive anytime on Tue 18th June 2024
 
 - Depart 10am Fri 21st June 2024
@@ -87,10 +84,6 @@ conferenceSummary =
 - Full and exclusive access to the Park grounds and facilities
 
 - 60+ attendees
-
-
-**NOTE.** We will announce arrangements to get you from Exeter to Colehayes Park by shuttle closer to the event.  Exeter is easily accessible by train from London, Bristol, Birmingham and other major cities.
-
 """
         |> MarkdownThemed.renderFull
 

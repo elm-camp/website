@@ -48,13 +48,17 @@ type alias ArchiveContents msg =
     , images : List { src : String, description : String }
     }
 
+{-| View an archive page for a past year of Elm Camp.
+-}
 viewArchive : ArchiveContents msg -> { a | width : Int } -> Element msg
 viewArchive contents window =
     Element.column
         [ Element.width Element.fill, Element.spacing 40 ]
         [ Element.column
             Theme.contentAttributes
-            [ contents.conferenceSummary ]
+            [ MarkdownThemed.renderFull "# Unconference"
+            , contents.conferenceSummary
+            ]
         , if window.width > 950 then
             contents.images
                 |> List.map (Element.image [ Element.width (Element.px 288) ])
