@@ -1,6 +1,5 @@
 module Camp24Uk exposing
     ( conferenceSummary
-    , contactDetails
     , meta
     , organisers
     , sponsors
@@ -54,6 +53,7 @@ view model subpage =
                         , sponsors = sponsors model.window
                         , conferenceSummary = conferenceSummary
                         , schedule = Nothing
+                        , venue = Just venueAccessContent
                         }
                         model.window
 
@@ -115,13 +115,7 @@ organisers =
 
 venueAccessContent : Element msg
 venueAccessContent =
-    Element.column
-        []
-        [ """
-# The venue and access
-
-## The venue
-
+     """
 **Colehayes Park**<br/>
 Haytor Road<br/>
 Bovey Tracey<br/>
@@ -214,33 +208,8 @@ Please ask if you require step free accommodation. There is one bedroom on the g
 * The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
 * We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
 * We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-
-## Contacting the organisers
-
-If you have questions or concerns about this website or attending Elm Camp, please get in touch
-
     """
-            ++ contactDetails
-            |> MarkdownThemed.renderFull
-        , Html.iframe
-            [ Html.Attributes.src "/map.html"
-            , Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "auto"
-            , Html.Attributes.style "aspect-ratio" "21 / 9"
-            , Html.Attributes.style "border" "none"
-            ]
-            []
-            |> Element.html
-        ]
-
-
-contactDetails : String
-contactDetails =
-    """
-* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM katjam_
-* Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam
-"""
+        |> MarkdownThemed.renderFull
 
 
 sponsors : { window | width : Int } -> Element msg
