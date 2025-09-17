@@ -12,9 +12,9 @@ module Camp24Uk exposing
     , view
     )
 
+import Camp
 import Camp24Uk.Archive
 import Camp24Uk.Artifacts
-import Camp25US exposing (Meta)
 import Element exposing (Element, Length)
 import Element.Font as Font
 import Html
@@ -25,7 +25,7 @@ import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 
 
-meta : Meta
+meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Europe 2024"

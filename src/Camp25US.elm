@@ -1,6 +1,5 @@
 module Camp25US exposing
-    ( Meta
-    , conferenceSummary
+    ( conferenceSummary
     , contactDetails
     , elmBottomLine
     , elmTopLine
@@ -13,6 +12,7 @@ module Camp25US exposing
     , view
     )
 
+import Camp
 import Camp25US.Archive
 import Camp25US.Artifacts
 import Element exposing (Element, Length)
@@ -25,16 +25,7 @@ import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 
 
-type alias Meta =
-    { logo : { src : String, description : String }
-    , tag : String
-    , location : String
-    , dates : String
-    , artifactPicture : { src : String, description : String }
-    }
-
-
-meta : Meta
+meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Michigan, US 2025"
