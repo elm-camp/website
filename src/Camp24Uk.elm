@@ -1,8 +1,8 @@
 module Camp24Uk exposing
     ( conferenceSummary
     , contactDetails
-    , elmCampDenmarkBottomLine
-    , elmCampDenmarkTopLine
+    , elmCampBottomLine
+    , elmCampTopLine
     , meta
     , organisers
     , sponsors
@@ -28,7 +28,7 @@ meta =
     , tag = "Europe 2024"
     , location = "🇬🇧 Colehayes Park, Devon"
     , dates = "Tues 18th — Fri 21st June"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
+    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolor drawing of Colehayes Park" }
     }
 
 
@@ -44,8 +44,8 @@ view model subpage =
                 [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
                 , Element.column [ Element.width Element.fill, Element.spacing 20 ]
                     [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
-                    , elmCampDenmarkTopLine
-                    , elmCampDenmarkBottomLine
+                    , elmCampTopLine
+                    , elmCampBottomLine
                     ]
                 ]
             , case subpage of
@@ -65,8 +65,8 @@ view model subpage =
         ]
 
 
-elmCampDenmarkTopLine : Element msg
-elmCampDenmarkTopLine =
+elmCampTopLine : Element msg
+elmCampTopLine =
     Element.row
         [ Element.centerX, Element.spacing 13 ]
         [ Element.image [ Element.width (Element.px 49) ] meta.logo
@@ -78,8 +78,8 @@ elmCampDenmarkTopLine =
         ]
 
 
-elmCampDenmarkBottomLine : Element msg
-elmCampDenmarkBottomLine =
+elmCampBottomLine : Element msg
+elmCampBottomLine =
     Element.column
         [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
         [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
