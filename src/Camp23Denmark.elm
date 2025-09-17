@@ -9,6 +9,7 @@ import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 
+
 meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
@@ -18,14 +19,16 @@ meta =
     , artifactPicture = { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
     }
 
+
 images : List { src : String, description : String }
 images =
     List.range 1 6
-        |> List.map (\ix ->
+        |> List.map
+            (\ix ->
                 { src = "/23-denmark/image" ++ String.fromInt ix ++ ".webp"
                 , description = "Photo of part of Dallund Castle"
                 }
-        )
+            )
 
 
 view : LoadedModel -> SubPage -> Element FrontendMsg
@@ -136,7 +139,7 @@ unconferenceBulletPoints =
 
 schedule : Element msg
 schedule =
-        """
+    """
 ## Wed 28th June
 
 * 3pm - Arrivals & halls officially open
@@ -182,7 +185,7 @@ All meals are organic or biodynamic and the venue can accommodate individual all
 
 organisers : Element msg
 organisers =
-        """
+    """
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
 🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club

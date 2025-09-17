@@ -1,4 +1,4 @@
-module Camp exposing (Meta, elmCampTopLine, elmCampBottomLine, ArchiveContents, viewArchive)
+module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, viewArchive)
 
 {-| Shared definition for all camp years.
 -}
@@ -7,6 +7,7 @@ import Element exposing (Element)
 import Element.Font as Font
 import MarkdownThemed
 import Theme
+
 
 type alias Meta =
     { logo : { src : String, description : String }
@@ -39,7 +40,6 @@ elmCampBottomLine meta =
         ]
 
 
-
 type alias ArchiveContents msg =
     { conferenceSummary : Element msg
     , schedule : Maybe (Element msg)
@@ -48,6 +48,7 @@ type alias ArchiveContents msg =
     , sponsors : Element msg
     , images : List { src : String, description : String }
     }
+
 
 {-| View an archive page for a past year of Elm Camp.
 -}
@@ -76,23 +77,25 @@ viewArchive contents window =
                     )
                 |> Element.column [ Element.spacing 10, Element.width Element.fill ]
         , contents.schedule
-              |> Maybe.map (\schedule ->
+            |> Maybe.map
+                (\schedule ->
                     Element.column
                         Theme.contentAttributes
                         [ MarkdownThemed.renderFull "# Schedule"
                         , schedule
                         ]
                 )
-              |> Maybe.withDefault Element.none
+            |> Maybe.withDefault Element.none
         , contents.venue
-              |> Maybe.map (\venue ->
+            |> Maybe.map
+                (\venue ->
                     Element.column
                         Theme.contentAttributes
                         [ MarkdownThemed.renderFull "# Travel & Venue"
                         , venue
                         ]
                 )
-              |> Maybe.withDefault Element.none
+            |> Maybe.withDefault Element.none
         , Element.column
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Our sponsors"
@@ -106,6 +109,7 @@ viewArchive contents window =
             , Element.el Theme.contentAttributes contents.organisers
             ]
         ]
+
 
 groupsOfTwo : List a -> List (List a)
 groupsOfTwo list =

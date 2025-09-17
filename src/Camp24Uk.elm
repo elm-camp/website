@@ -91,11 +91,12 @@ conferenceSummary =
 images : List { src : String, description : String }
 images =
     List.range 1 6
-        |> List.map (\ix ->
+        |> List.map
+            (\ix ->
                 { src = "/24-colehayes/image" ++ String.fromInt ix ++ ".webp"
                 , description = "Photo of part of Colehayes Park"
                 }
-        )
+            )
 
 
 organisers : String
@@ -115,7 +116,7 @@ organisers =
 
 venueAccessContent : Element msg
 venueAccessContent =
-     """
+    """
 **Colehayes Park**<br/>
 Haytor Road<br/>
 Bovey Tracey<br/>
