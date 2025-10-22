@@ -9,7 +9,7 @@ on:
   pull_request:
 
 jobs:
-  linting:
+  elm-review:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,12 +23,28 @@ jobs:
 
       - name: Install Elm tools
         run: |
-          npm install -g elm elm-format elm-review
-
-      - name: Check Elm formatting
-        run: |
-          elm-format --validate .
+          npm install -g elm elm-review
 
       - name: Run elm-review
         run: |
           npx elm-review
+
+  elm-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Elm tools
+        run: |
+          npm install -g elm-format
+
+      - name: Check Elm formatting
+        run: |
+          elm-format --validate .
