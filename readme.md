@@ -16,6 +16,15 @@ Features:
 #### Troubleshooting
 - To fix `resource busy (file is locked)` error, run `lamdera reset`
 
+### Contributing
+
+Contributions should conform with
+
+- `elm-format`
+- `elm-review` (try `elm-review --fix-all` if there are issues)
+
+Both are checked by GitHub Actions runners for all PRs.
+
 ## Todos for tickets live
 - [ ] Check ticket types and product ids are being fetched correctly
 - [ ] Update Ticket type explain text
@@ -28,4 +37,3 @@ Features:
 - [x] Update Venue and Access route info and uncomment the link in the footer or other places
 - [x] Update Grant contribution slider from GBP
 
-## General todos
