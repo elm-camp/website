@@ -1,4 +1,12 @@
-module Camp26Czech.Inventory exposing (allSoldOut, caseof, extract, maxAttendees, maxForAccommodationType, purchaseable, slotsRemaining)
+module Camp26Czech.Inventory exposing
+    ( allSoldOut
+    , caseof
+    , extract
+    , maxAttendees
+    , maxForAccommodationType
+    , purchaseable
+    , slotsRemaining
+    )
 
 {-
    TODO for Camp25US:

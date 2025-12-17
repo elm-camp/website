@@ -17,6 +17,7 @@ import Camp25US.Archive
 import Camp25US.Artifacts
 import Element exposing (Element, Length)
 import Element.Font as Font
+import Helpers
 import Html
 import Html.Attributes
 import MarkdownThemed
@@ -234,7 +235,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
 contactDetails : String
 contactDetails =
     """
-* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM katjam_
+* Elmcraft Discord: [#elm-camp-24](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """

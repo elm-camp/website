@@ -17,6 +17,7 @@ import Camp26Czech.Archive
 import Camp26Czech.Artifacts
 import Element exposing (Element, Length)
 import Element.Font as Font
+import Helpers
 import Html
 import Html.Attributes
 import MarkdownThemed
@@ -28,9 +29,9 @@ import Types exposing (FrontendMsg, LoadedModel)
 meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-    , tag = "Michigan, US 2025"
+    , tag = "Michigan, US 2026"
     , location = "🇺🇸 Watervliet, Michigan"
-    , dates = "Tues 24th - Fri 27th June 2025"
+    , dates = "Tues 24th - Fri 27th June 2026"
     , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
 
@@ -91,8 +92,8 @@ conferenceSummary =
 # The Unconference
 
 ## Ronora Lodge and Retreat Center - Watervliet, Michigan
-### Arrive anytime on Tues 24th June 2025
-### Depart 10am on Fri 27th June 2025
+### Arrive anytime on Tues 24th June 2026
+### Depart 10am on Fri 27th June 2026
 #### 2 full days of talks
 #### 40+ attendees
 
@@ -169,17 +170,19 @@ organisers =
 
 🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
 
+🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
+
 🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
 
-🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
+🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
 
-🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
+🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
 
 🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
 
-🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family.
+🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
 
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr.
+🇺🇸 Wolfgang Schuster – Author of Elm Weekly.
 """
 
 
@@ -234,7 +237,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
 contactDetails : String
 contactDetails =
     """
-* Elmcraft Discord: [#elm-camp-24](https://discord.gg/QeZDXJrN78) channel or DM katjam_
+* Elmcraft Discord: [#elm-camp-26](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
 * Email: [team@elm.camp](mailto:team@elm.camp)
 * Elm Slack: @katjam
 """

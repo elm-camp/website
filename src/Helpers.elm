@@ -1,4 +1,4 @@
-module Helpers exposing (isJust, justs)
+module Helpers exposing (discordInviteLink, isJust, justs)
 
 
 justs : List (Maybe a) -> List a
@@ -23,3 +23,8 @@ isJust r =
 
         _ ->
             False
+
+
+discordInviteLink : String
+discordInviteLink =
+    "https://discord.gg/QeZDXJrN78"

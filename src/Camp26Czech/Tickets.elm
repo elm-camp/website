@@ -1,18 +1,38 @@
-module Camp26Czech.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, formIncludesRoom, groupRoom, includesAccom, includesRoom, offsite, singleRoom, viewAccom)
+module Camp26Czech.Tickets exposing
+    ( Ticket
+    , accomToString
+    , accomToTicket
+    , accommodationOptions
+    , allAccommodations
+    , attendanceTicket
+    , campfireTicket
+    , campingSpot
+    , dict
+    , doubleRoom
+    , formIncludesAccom
+    , formIncludesRoom
+    , groupRoom
+    , includesAccom
+    , includesRoom
+    , offsite
+    , singleRoom
+    , viewAccom
+    )
 
 {-
-   TODO for Camp25US Tickets:
-   - Revise accommodation types based on Ronora Lodge facilities
+   TODO for Camp26US Tickets:
+   - Revise accommodation types based on Park Hotel
    - Verify product IDs match those in Product.elm after they're updated
 -}
 
-import Camp25US.Product as Product
+import Camp26Czech.Product as Product
 import Element exposing (Element)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Env
+import Helpers
 import Id exposing (Id)
 import MarkdownThemed
 import Money
@@ -97,7 +117,7 @@ campfireTicket =
 Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to park grounds & activities. No accommodation included.
 
 • [Nearby accommodation options](/venue-and-access)
-• [Coordinate with other attendees](https://discord.gg/QeZDXJrN78)
+• [Coordinate with other attendees](""" ++ Helpers.discordInviteLink ++ """)
 """
     , image = "/product1.webp"
     , productId = Product.ticket.singleRoom

@@ -4,6 +4,7 @@ import Camp24Devon.Product as Product
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Input as Input
+import Helpers
 import Id exposing (Id)
 import MarkdownThemed
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
@@ -87,7 +88,7 @@ campfireTicket =
 Ticket for 1 Person including: breakfast, lunch, tea & dinners included. Access to park grounds & activities. No accommodation included.
 
 • [Nearby accommodation options](/venue-and-access)
-• [Coordinate with other attendees](https://discord.gg/QeZDXJrN78)
+• [Coordinate with other attendees](""" ++ Helpers.discordInviteLink ++ """)
 """
     , image = "/product1.webp"
     , productId = Product.ticket.singleRoom
