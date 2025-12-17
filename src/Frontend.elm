@@ -9,6 +9,7 @@ import Camp24Uk
 import Camp25US
 import Camp25US.Inventory as Inventory
 import Camp25US.Tickets as Tickets
+import Camp26Czech
 import Dict
 import Duration
 import Effect.Browser
@@ -671,6 +672,9 @@ loadedView model =
 
         Camp25US subpage ->
             Camp25US.view model subpage
+
+        Camp26Czech subpage ->
+            Camp26Czech.view model subpage
 
 
 downloadTicketSalesReminder : Command FrontendOnly toMsg msg
