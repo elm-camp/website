@@ -89,7 +89,7 @@ subscriptions _ =
 update : BackendMsg -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 update msg model =
     (case msg of
-        GotTime time ->
+        GotTime _ ->
             ( model, Command.none )
 
         --let
