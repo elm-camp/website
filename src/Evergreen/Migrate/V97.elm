@@ -31,7 +31,7 @@ frontendModel old =
 
 backendModel : Evergreen.V94.Types.BackendModel -> ModelMigration Evergreen.V97.Types.BackendModel Evergreen.V97.Types.BackendMsg
 backendModel old =
-    ModelUnchanged
+    ModelReset
 
 
 frontendMsg : Evergreen.V94.Types.FrontendMsg -> MsgMigration Evergreen.V97.Types.FrontendMsg Evergreen.V97.Types.FrontendMsg
@@ -51,4 +51,4 @@ backendMsg old =
 
 toFrontend : Evergreen.V94.Types.ToFrontend -> MsgMigration Evergreen.V97.Types.ToFrontend Evergreen.V97.Types.FrontendMsg
 toFrontend old =
-    MsgUnchanged
+    MsgOldValueIgnored
