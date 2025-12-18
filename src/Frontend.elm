@@ -439,9 +439,6 @@ updateFromBackendLoaded msg model =
 header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg
 header config =
     let
-        illustrationAltText =
-            "Illustration of a small camp site in a richly green forest"
-
         titleSize =
             if config.window.width < 800 then
                 64
@@ -474,33 +471,20 @@ header config =
                 , Element.column
                     [ Element.moveRight 0, Element.spacing 2, Font.size 18, Element.moveUp 1 ]
                     [ Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "")
-                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "🇨🇿 Olomouc, Czechia")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text Camp26Czech.location)
                     , Element.el
                         [ Font.bold, Font.color Theme.lightTheme.defaultText ]
                         ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/)" |> MarkdownThemed.renderFull)
                     , Element.el
                         [ Font.bold, Font.color Theme.lightTheme.defaultText ]
-                        (Element.text "Tuesday 24th - Friday 27th June 2026")
+                        (Element.text "Monday 15th - Thursday 18th June 2026")
                     ]
                 ]
-
-        imageMaxWidth =
-            300
-
-        eventImage =
-            Element.image
-                [ Element.width (Element.maximum imageMaxWidth Element.fill), Theme.attr "fetchpriority" "high" ]
-                { src = "/logo-26.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
         Element.column
             [ Element.padding 30, Element.spacing 20, Element.centerX ]
-            [ if config.isCompact then
-                Element.none
-
-              else
-                eventImage
-            , Element.column
+            [ Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
@@ -510,8 +494,7 @@ header config =
     else
         Element.row
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
-            [ eventImage
-            , Element.column
+            [ Element.column
                 [ Element.spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
@@ -721,10 +704,11 @@ homepageView model =
                   Element.column Theme.contentAttributes [ elmCampOverview ]
                 , Element.column Theme.contentAttributes
                     [ Camp26Czech.venuePictures model
-                    , Camp26Czech.conferenceSummary
-                    ]
-                , Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
 
+                    --, Camp26Czech.conferenceSummary
+                    ]
+
+                --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
                 --, View.Sales.view model
                 ]
             ]
@@ -854,6 +838,7 @@ Did you attend Elm Camp 2023? We're [open to contributions on Github](https://gi
 
 [Archive: Elm Camp 2024 - UK website](/24-uk)
 
+[Archive: Elm Camp 2025 - US website](/25-us)
         """
             |> MarkdownThemed.renderFull
         ]

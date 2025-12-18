@@ -3,6 +3,7 @@ module Camp26Czech exposing
     , contactDetails
     , elmBottomLine
     , elmTopLine
+    , location
     , meta
     , organisers
     , sponsors
@@ -30,10 +31,15 @@ meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
     , tag = "Michigan, US 2026"
-    , location = "🇺🇸 Watervliet, Michigan"
-    , dates = "Tues 24th - Fri 27th June 2026"
+    , location = location
+    , dates = "Mon 15th - Thur 18th June 2026"
     , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
+
+
+location : String
+location =
+    "🇨🇿 Olomouc, Czechia"
 
 
 view : LoadedModel -> SubPage -> Element FrontendMsg
@@ -134,33 +140,23 @@ venuePictures : LoadedModel -> Element msg
 venuePictures model =
     let
         prefix =
-            "25-ronora/"
+            "/26-park-hotel/"
     in
-    if model.window.width > 950 then
-        [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-            |> Element.wrappedRow
-                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
-
-    else
-        [ [ "image1.webp", "image2.webp" ]
-        , [ "image3.webp", "image4.webp" ]
-        , [ "image5.webp", "image6.webp" ]
-        ]
-            |> List.map
-                (\paths ->
-                    Element.row
-                        [ Element.spacing 10, Element.width Element.fill ]
-                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
-                )
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+    [ [ "image1.jpg" ]
+    , [ "image3.jpg", "image2.jpg" ]
+    ]
+        |> List.map
+            (\paths ->
+                Element.row
+                    [ Element.spacing 10, Element.width Element.fill ]
+                    (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
+            )
+        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
 
 
 venueImage : Length -> String -> Element msg
 venueImage width path =
-    Element.image
-        [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
+    Element.image [ Element.width width ] { src = path, description = "Photo of Park Hotel" }
 
 
 organisers : String
@@ -200,14 +196,7 @@ venueAccessContent =
 Watervliet, Michigan 49098<br/>
 USA
 
-[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
-
 [https://www.ronoralodge.com](https://www.ronoralodge.com/)
-
-### Open water & rough ground
-
-* The house is set in landscaped grounds, there are paths and rough bits.
-* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
 
 ## Participating in conversations
 
@@ -222,15 +211,17 @@ If you have questions or concerns about this website or attending Elm Camp, plea
     """
             ++ contactDetails
             |> MarkdownThemed.renderFull
-        , Html.iframe
-            [ Html.Attributes.src "/map.html"
-            , Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "auto"
-            , Html.Attributes.style "aspect-ratio" "21 / 9"
-            , Html.Attributes.style "border" "none"
-            ]
-            []
-            |> Element.html
+
+        --
+        --, Html.iframe
+        --    [ Html.Attributes.src "/map.html"
+        --    , Html.Attributes.style "width" "100%"
+        --    , Html.Attributes.style "height" "auto"
+        --    , Html.Attributes.style "aspect-ratio" "21 / 9"
+        --    , Html.Attributes.style "border" "none"
+        --    ]
+        --    []
+        --    |> Element.html
         ]
 
 
@@ -239,8 +230,7 @@ contactDetails =
     """
 * Elmcraft Discord: [#elm-camp-26](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
 * Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam
-"""
+* Elm Slack: @katjam"""
 
 
 sponsors : { window | width : Int } -> Element msg
