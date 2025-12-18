@@ -36,7 +36,7 @@ backendModel old =
 
 frontendMsg : Evergreen.V94.Types.FrontendMsg -> MsgMigration Evergreen.V97.Types.FrontendMsg Evergreen.V97.Types.FrontendMsg
 frontendMsg old =
-    MsgUnchanged
+    MsgOldValueIgnored
 
 
 toBackend : Evergreen.V94.Types.ToBackend -> MsgMigration Evergreen.V97.Types.ToBackend Evergreen.V97.Types.BackendMsg
@@ -46,7 +46,7 @@ toBackend old =
 
 backendMsg : Evergreen.V94.Types.BackendMsg -> MsgMigration Evergreen.V97.Types.BackendMsg Evergreen.V97.Types.BackendMsg
 backendMsg old =
-    MsgUnchanged
+    MsgOldValueIgnored
 
 
 toFrontend : Evergreen.V94.Types.ToFrontend -> MsgMigration Evergreen.V97.Types.ToFrontend Evergreen.V97.Types.FrontendMsg
