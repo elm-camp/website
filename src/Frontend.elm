@@ -7,8 +7,9 @@ import Camp23Denmark
 import Camp23Denmark.Artifacts
 import Camp24Uk
 import Camp25US
-import Camp25US.Inventory as Inventory
-import Camp25US.Tickets as Tickets
+import Camp26Czech
+import Camp26Czech.Inventory as Inventory
+import Camp26Czech.Tickets as Tickets
 import Dict
 import Duration
 import Effect.Browser
@@ -26,6 +27,7 @@ import Element.Background as Background
 import Element.Font as Font
 import EmailAddress exposing (EmailAddress)
 import Env
+import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
 import Json.Encode as E
@@ -437,9 +439,6 @@ updateFromBackendLoaded msg model =
 header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg
 header config =
     let
-        illustrationAltText =
-            "Illustration of a small camp site in a richly green forest"
-
         titleSize =
             if config.window.width < 800 then
                 64
@@ -465,36 +464,27 @@ header config =
                         [ Element.column
                             [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
                             [ Element.el [ Theme.glow ] (Element.text "Unconference")
-                            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text "2025")
+                            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text "2026")
                             ]
                         ]
                     ]
                 , Element.column
                     [ Element.moveRight 0, Element.spacing 2, Font.size 18, Element.moveUp 1 ]
                     [ Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "")
-                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "🇺🇸 Watervliet, Michigan")
-                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] ("[Ronora Lodge & Retreat Center](https://www.ronoralodge.com)" |> MarkdownThemed.renderFull)
-                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "Tuesday 24th - Friday 27th June 2025")
+                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text Camp26Czech.location)
+                    , Element.el
+                        [ Font.bold, Font.color Theme.lightTheme.defaultText ]
+                        ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/)" |> MarkdownThemed.renderFull)
+                    , Element.el
+                        [ Font.bold, Font.color Theme.lightTheme.defaultText ]
+                        (Element.text "Monday 15th - Thursday 18th June 2026")
                     ]
                 ]
-
-        imageMaxWidth =
-            300
-
-        eventImage =
-            Element.image
-                [ Element.width (Element.maximum imageMaxWidth Element.fill), Theme.attr "fetchpriority" "high" ]
-                { src = "/logo-25.webp", description = illustrationAltText }
     in
     if config.window.width < 1000 || config.isCompact then
         Element.column
             [ Element.padding 30, Element.spacing 20, Element.centerX ]
-            [ if config.isCompact then
-                Element.none
-
-              else
-                eventImage
-            , Element.column
+            [ Element.column
                 [ Element.spacing 24, Element.centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
@@ -504,8 +494,7 @@ header config =
     else
         Element.row
             [ Element.padding 30, Element.spacing 40, Element.centerX ]
-            [ eventImage
-            , Element.column
+            [ Element.column
                 [ Element.spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
@@ -585,7 +574,7 @@ loadedView model =
                 [ header { window = model.window, isCompact = True }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
-                    [ Camp25US.venueAccessContent
+                    [ Camp26Czech.venueAccessContent
                     ]
                 , Theme.footer
                 ]
@@ -608,7 +597,7 @@ loadedView model =
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
-                    , Camp25US.organisers |> MarkdownThemed.renderFull
+                    , Camp26Czech.organisers |> MarkdownThemed.renderFull
                     ]
                 , Theme.footer
                 ]
@@ -672,6 +661,9 @@ loadedView model =
         Camp25US subpage ->
             Camp25US.view model subpage
 
+        Camp26Czech subpage ->
+            Camp26Czech.view model subpage
+
 
 downloadTicketSalesReminder : Command FrontendOnly toMsg msg
 downloadTicketSalesReminder =
@@ -711,11 +703,12 @@ homepageView model =
                 [ --View.Sales.ticketSalesOpenCountdown model
                   Element.column Theme.contentAttributes [ elmCampOverview ]
                 , Element.column Theme.contentAttributes
-                    [ Camp25US.venuePictures model
-                    , Camp25US.conferenceSummary
-                    ]
-                , Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp25US.sponsors model.window ]
+                    [ Camp26Czech.venuePictures model
 
+                    --, Camp26Czech.conferenceSummary
+                    ]
+
+                --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
                 --, View.Sales.view model
                 ]
             ]
@@ -734,9 +727,9 @@ jumpToId id offset =
 elmCampOverview : Element msg
 elmCampOverview =
     """
-# Elm Camp 2025 - Michigan, US
+# Elm Camp 2026 - Olomouc, Czechia
 
-Elm Camp returns for its 3rd year, this time in Watervliet, Michigan!
+Elm Camp returns for its 4th year, this time in Olomouc, Czechia!
 
 ---
 
@@ -802,7 +795,9 @@ If you have any concerns when planning, during or after your session, please get
 If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
 
 * Email the organiser team: [team@elm.camp](mailto:team@elm.camp)
-* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord](https://discord.gg/QeZDXJrN78): katjam_
+* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord]("""
+        ++ Helpers.discordInviteLink
+        ++ """): katjam_
 
 ## How we handle Code of Conduct issues
 
@@ -843,6 +838,7 @@ Did you attend Elm Camp 2023? We're [open to contributions on Github](https://gi
 
 [Archive: Elm Camp 2024 - UK website](/24-uk)
 
+[Archive: Elm Camp 2025 - US website](/25-us)
         """
             |> MarkdownThemed.renderFull
         ]

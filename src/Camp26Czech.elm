@@ -1,8 +1,9 @@
-module Camp25US exposing
+module Camp26Czech exposing
     ( conferenceSummary
     , contactDetails
     , elmBottomLine
     , elmTopLine
+    , location
     , meta
     , organisers
     , sponsors
@@ -13,8 +14,8 @@ module Camp25US exposing
     )
 
 import Camp
-import Camp25US.Archive
-import Camp25US.Artifacts
+import Camp26Czech.Archive
+import Camp26Czech.Artifacts
 import Element exposing (Element, Length)
 import Element.Font as Font
 import Helpers
@@ -29,11 +30,16 @@ import Types exposing (FrontendMsg, LoadedModel)
 meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-    , tag = "Michigan, US 2025"
-    , location = "🇺🇸 Watervliet, Michigan"
-    , dates = "Tues 24th - Fri 27th June 2025"
+    , tag = "Michigan, US 2026"
+    , location = location
+    , dates = "Mon 15th - Thur 18th June 2026"
     , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
+
+
+location : String
+location =
+    "🇨🇿 Olomouc, Czechia"
 
 
 view : LoadedModel -> SubPage -> Element FrontendMsg
@@ -54,10 +60,10 @@ view model subpage =
                 ]
             , case subpage of
                 Home ->
-                    Camp25US.Archive.view model
+                    Camp26Czech.Archive.view model
 
                 Artifacts ->
-                    Camp25US.Artifacts.view model
+                    Camp26Czech.Artifacts.view model
             ]
         , Theme.footer
         ]
@@ -92,8 +98,8 @@ conferenceSummary =
 # The Unconference
 
 ## Ronora Lodge and Retreat Center - Watervliet, Michigan
-### Arrive anytime on Tues 24th June 2025
-### Depart 10am on Fri 27th June 2025
+### Arrive anytime on Tues 24th June 2026
+### Depart 10am on Fri 27th June 2026
 #### 2 full days of talks
 #### 40+ attendees
 
@@ -134,33 +140,23 @@ venuePictures : LoadedModel -> Element msg
 venuePictures model =
     let
         prefix =
-            "25-ronora/"
+            "/26-park-hotel/"
     in
-    if model.window.width > 950 then
-        [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-            |> Element.wrappedRow
-                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
-
-    else
-        [ [ "image1.webp", "image2.webp" ]
-        , [ "image3.webp", "image4.webp" ]
-        , [ "image5.webp", "image6.webp" ]
-        ]
-            |> List.map
-                (\paths ->
-                    Element.row
-                        [ Element.spacing 10, Element.width Element.fill ]
-                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
-                )
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+    [ [ "image1.jpg" ]
+    , [ "image3.jpg", "image2.jpg" ]
+    ]
+        |> List.map
+            (\paths ->
+                Element.row
+                    [ Element.spacing 10, Element.width Element.fill ]
+                    (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
+            )
+        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
 
 
 venueImage : Length -> String -> Element msg
 venueImage width path =
-    Element.image
-        [ Element.width width ]
-        { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
+    Element.image [ Element.width width ] { src = path, description = "Photo of Park Hotel" }
 
 
 organisers : String
@@ -170,17 +166,19 @@ organisers =
 
 🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
 
+🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
+
 🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
 
-🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
+🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
 
-🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
+🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
 
 🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
 
-🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family.
+🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
 
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr.
+🇺🇸 Wolfgang Schuster – Author of Elm Weekly.
 """
 
 
@@ -193,19 +191,12 @@ venueAccessContent =
 
 ## The venue
 
-**Ronora Lodge & Retreat Center**<br/>
-9325 Dwight Boyer Road<br/>
-Watervliet, Michigan 49098<br/>
-USA
+**Hotel Prachárna**<br/>
+Křelovská 91, 779 00 Olomouc 9<br/>
+Řepčín, Česko<br/>
+Czechia
 
-[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
-
-[https://www.ronoralodge.com](https://www.ronoralodge.com/)
-
-### Open water & rough ground
-
-* The house is set in landscaped grounds, there are paths and rough bits.
-* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
+[https://www.hotel-pracharna.cz/](https://www.hotel-pracharna.cz/)
 
 ## Participating in conversations
 
@@ -220,25 +211,26 @@ If you have questions or concerns about this website or attending Elm Camp, plea
     """
             ++ contactDetails
             |> MarkdownThemed.renderFull
-        , Html.iframe
-            [ Html.Attributes.src "/map.html"
-            , Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "auto"
-            , Html.Attributes.style "aspect-ratio" "21 / 9"
-            , Html.Attributes.style "border" "none"
-            ]
-            []
-            |> Element.html
+
+        --
+        --, Html.iframe
+        --    [ Html.Attributes.src "/map.html"
+        --    , Html.Attributes.style "width" "100%"
+        --    , Html.Attributes.style "height" "auto"
+        --    , Html.Attributes.style "aspect-ratio" "21 / 9"
+        --    , Html.Attributes.style "border" "none"
+        --    ]
+        --    []
+        --    |> Element.html
         ]
 
 
 contactDetails : String
 contactDetails =
     """
-* Elmcraft Discord: [#elm-camp-24](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
+* Elmcraft Discord: [#elm-camp-26](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
 * Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam
-"""
+* Elm Slack: @katjam"""
 
 
 sponsors : { window | width : Int } -> Element msg

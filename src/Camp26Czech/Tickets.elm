@@ -1,12 +1,41 @@
-module Camp24Devon.Tickets exposing (Ticket, accomToString, accomToTicket, accommodationOptions, allAccommodations, attendanceTicket, campfireTicket, campingSpot, dict, doubleRoom, formIncludesAccom, groupRoom, includesAccom, offsite, singleRoom, viewAccom)
+module Camp26Czech.Tickets exposing
+    ( Ticket
+    , accomToString
+    , accomToTicket
+    , accommodationOptions
+    , allAccommodations
+    , attendanceTicket
+    , campfireTicket
+    , campingSpot
+    , dict
+    , doubleRoom
+    , formIncludesAccom
+    , formIncludesRoom
+    , groupRoom
+    , includesAccom
+    , includesRoom
+    , offsite
+    , singleRoom
+    , viewAccom
+    )
 
-import Camp24Devon.Product as Product
+{-
+   TODO for Camp26US Tickets:
+   - Revise accommodation types based on Park Hotel
+   - Verify product IDs match those in Product.elm after they're updated
+-}
+
+import Camp26Czech.Product as Product
 import Element exposing (Element)
+import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Env
 import Helpers
 import Id exposing (Id)
 import MarkdownThemed
+import Money
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
@@ -30,7 +59,7 @@ type alias Ticket =
 attendanceTicket : Ticket
 attendanceTicket =
     { name = "Campfire Ticket"
-    , description = "Attendee ticket for one person. Full access to the event 18th - 21st June, breakfast, lunch, tea & dinner included as per schedule"
+    , description = "Attendee ticket for one person. Full access to the event 24th - 27th June, breakfast, lunch, tea & dinner included as per schedule"
     , image = ""
     , productId = Product.ticket.attendanceTicket
     }
@@ -74,8 +103,8 @@ doubleRoom =
 
 groupRoom : Ticket
 groupRoom =
-    { name = "Group Room"
-    , description = "Suitable for up to 4 people for 3 nights. Can be stretched up to 7 people –\u{00A0}contact us!"
+    { name = "Shared Room"
+    , description = "Suitable for couples or up to 4 people for 3 nights. Purchase 1 `Shared Room` ticket per person and let us know who you are sharing with."
     , image = ""
     , productId = Product.ticket.groupRoom
     }
@@ -130,17 +159,22 @@ accomToString accom =
             "Double Room"
 
         Group ->
-            "Group Room"
+            "Shared Room"
 
 
 allAccommodations : List Accommodation
 allAccommodations =
-    [ Offsite, Campsite, Single, Double, Group ]
+    [ Offsite, Campsite, Single, Group ]
 
 
 formIncludesAccom : PurchaseForm -> Bool
 formIncludesAccom form =
     form.accommodationBookings |> List.filter includesAccom |> List.length |> (\c -> c > 0)
+
+
+formIncludesRoom : PurchaseForm -> Bool
+formIncludesRoom form =
+    form.accommodationBookings |> List.filter includesRoom |> List.length |> (\c -> c > 0)
 
 
 includesAccom : Accommodation -> Bool
@@ -149,7 +183,17 @@ includesAccom accom =
         Offsite ->
             False
 
+        _ ->
+            True
+
+
+includesRoom : Accommodation -> Bool
+includesRoom accom =
+    case accom of
         Campsite ->
+            False
+
+        Offsite ->
             False
 
         _ ->
@@ -172,7 +216,7 @@ accommodationOptions =
 
 dict : SeqDict (Id ProductId) Ticket
 dict =
-    [ attendanceTicket, campingSpot, singleRoom, doubleRoom, groupRoom ]
+    [ offsite, campingSpot, singleRoom, groupRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
         |> SeqDict.fromList
 
@@ -201,13 +245,17 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (\_ -> addMsg)
 
             else
+                let
+                    ( text_, msg ) =
+                        ( "Select", Just addMsg )
+                in
                 Input.button
                     (Theme.submitButtonAttributes ticketAvailable)
-                    { onPress = Just addMsg
+                    { onPress = msg
                     , label =
                         Element.el
                             [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
-                            (Element.text "Select")
+                            (Element.text text_)
                     }
 
           else if ticket.name == "Campfire Ticket" then

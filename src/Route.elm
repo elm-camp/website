@@ -22,6 +22,7 @@ type Route
     | Camp23Denmark SubPage
     | Camp24Uk SubPage
     | Camp25US SubPage
+    | Camp26Czech SubPage
 
 
 type SubPage
@@ -131,6 +132,14 @@ encode route =
 
                     Artifacts ->
                         [ "25-us", "artifacts" ]
+
+            Camp26Czech subPage ->
+                case subPage of
+                    Home ->
+                        [ "26-czech" ]
+
+                    Artifacts ->
+                        [ "26-czech", "artifacts" ]
         )
         (case route of
             HomepageRoute ->
@@ -182,6 +191,14 @@ encode route =
                         []
 
             Camp25US subPage ->
+                case subPage of
+                    Home ->
+                        []
+
+                    Artifacts ->
+                        []
+
+            Camp26Czech subPage ->
                 case subPage of
                     Home ->
                         []
