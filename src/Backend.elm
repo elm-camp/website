@@ -90,29 +90,30 @@ update : BackendMsg -> BackendModel -> ( BackendModel, Command BackendOnly ToFro
 update msg model =
     (case msg of
         GotTime time ->
-            let
-                ( expiredOrders, remainingOrders ) =
-                    SeqDict.partition
-                        (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
-                        model.pendingOrder
-            in
-            ( { model
-                | time = time
-                , pendingOrder = remainingOrders
-                , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
-              }
-            , Command.batch
-                [ Stripe.getPrices |> Task.attempt GotPrices
-                , List.map
-                    (\stripeSessionId ->
-                        Stripe.expireSession stripeSessionId
-                            |> Task.attempt (ExpiredStripeSession stripeSessionId)
-                    )
-                    (SeqDict.keys expiredOrders)
-                    |> Command.batch
-                ]
-            )
+            ( model, Command.none )
 
+        --let
+        --    ( expiredOrders, remainingOrders ) =
+        --        SeqDict.partition
+        --            (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
+        --            model.pendingOrder
+        --in
+        --( { model
+        --    | time = time
+        --    , pendingOrder = remainingOrders
+        --    , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
+        --  }
+        --, Command.batch
+        --    [ Stripe.getPrices |> Task.attempt GotPrices
+        --    , List.map
+        --        (\stripeSessionId ->
+        --            Stripe.expireSession stripeSessionId
+        --                |> Task.attempt (ExpiredStripeSession stripeSessionId)
+        --        )
+        --        (SeqDict.keys expiredOrders)
+        --        |> Command.batch
+        --    ]
+        --)
         GotPrices result ->
             case result of
                 Ok prices ->
@@ -139,29 +140,39 @@ update msg model =
                     )
 
         OnConnected _ clientId ->
-            ( { model | backendInitialized = True }
-            , Command.batch
-                [ Lamdera.sendToFrontend
-                    clientId
-                    (InitData
-                        { prices = model.prices
-                        , slotsRemaining = Inventory.slotsRemaining model
-                        , ticketsEnabled = model.ticketsEnabled
-                        }
-                    )
-                , if model.backendInitialized then
-                    Command.none
-
-                  else
-                    Command.batch
-                        [ Time.now |> Task.perform GotTime
-                        , Effect.Process.sleep Duration.second
-                            |> Task.andThen (\() -> Stripe.getPrices)
-                            |> Task.attempt GotPrices
-                        ]
-                ]
+            ( model
+            , Lamdera.sendToFrontend
+                clientId
+                (InitData
+                    { prices = model.prices
+                    , slotsRemaining = Inventory.slotsRemaining model
+                    , ticketsEnabled = model.ticketsEnabled
+                    }
+                )
             )
 
+        --( { model | backendInitialized = True }
+        --, Command.batch
+        --    [ Lamdera.sendToFrontend
+        --        clientId
+        --        (InitData
+        --            { prices = model.prices
+        --            , slotsRemaining = Inventory.slotsRemaining model
+        --            , ticketsEnabled = model.ticketsEnabled
+        --            }
+        --        )
+        --    , if model.backendInitialized then
+        --        Command.none
+        --
+        --      else
+        --        Command.batch
+        --            [ Time.now |> Task.perform GotTime
+        --            , Effect.Process.sleep Duration.second
+        --                |> Task.andThen (\() -> Stripe.getPrices)
+        --                |> Task.attempt GotPrices
+        --            ]
+        --    ]
+        --)
         CreatedCheckoutSession sessionId clientId purchaseForm result ->
             case result of
                 Ok ( stripeSessionId, submitTime ) ->
