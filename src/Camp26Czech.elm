@@ -191,12 +191,12 @@ venueAccessContent =
 
 ## The venue
 
-**Ronora Lodge & Retreat Center**<br/>
-9325 Dwight Boyer Road<br/>
-Watervliet, Michigan 49098<br/>
-USA
+**Hotel Prachárna**<br/>
+Křelovská 91, 779 00 Olomouc 9<br/>
+Řepčín, Česko<br/>
+Czechia
 
-[https://www.ronoralodge.com](https://www.ronoralodge.com/)
+[https://www.hotel-pracharna.cz/](https://www.hotel-pracharna.cz/)
 
 ## Participating in conversations
 
