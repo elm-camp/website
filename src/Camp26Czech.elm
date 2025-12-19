@@ -178,8 +178,7 @@ organisers =
 
 🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
 
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly.
-"""
+🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
 
 
 venueAccessContent : Element msg
