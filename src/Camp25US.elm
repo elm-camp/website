@@ -144,18 +144,19 @@ images =
     [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
         |> List.map
             (\image ->
-                { src = "/23-denmark/" ++ image
-                , description = ""
+                { src = "/" ++ prefix ++ image
+                , description = "Photo of part of Ronora Lodge"
                 }
             )
 
 
+prefix : String
+prefix =
+    "25-ronora/"
+
+
 venuePictures : LoadedModel -> Element msg
 venuePictures model =
-    let
-        prefix =
-            "25-ronora/"
-    in
     if model.window.width > 950 then
         [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
             |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
