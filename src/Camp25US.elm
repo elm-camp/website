@@ -98,8 +98,6 @@ conferenceSummary : Element msg
 conferenceSummary =
     """
 
-# The Unconference
-
 ## Ronora Lodge and Retreat Center - Watervliet, Michigan
 ### Arrive anytime on Tues 24th June 2025
 ### Depart 10am on Fri 27th June 2025
@@ -210,8 +208,6 @@ venueAccessContent =
     Element.column
         []
         [ """
-# The venue and access
-
 ## The venue
 
 **Ronora Lodge & Retreat Center**<br/>
