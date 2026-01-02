@@ -54,8 +54,17 @@ view model subpage =
                 ]
             , case subpage of
                 Home ->
-                    Camp25US.Archive.view model
+                    Camp.viewArchive
+                        { images = images
+                        , organisers = organisers |> MarkdownThemed.renderFull
+                        , sponsors = sponsors model.window
+                        , conferenceSummary = conferenceSummary
+                        , schedule = Nothing
+                        , venue = Just venueAccessContent
+                        }
+                        model.window
 
+                --Camp25US.Archive.view model
                 Artifacts ->
                     Camp25US.Artifacts.view model
             ]
@@ -128,6 +137,17 @@ conferenceSummary =
 
 """
         |> MarkdownThemed.renderFull
+
+
+images : List { src : String, description : String }
+images =
+    [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
+        |> List.map
+            (\image ->
+                { src = "/23-denmark/" ++ image
+                , description = ""
+                }
+            )
 
 
 venuePictures : LoadedModel -> Element msg
