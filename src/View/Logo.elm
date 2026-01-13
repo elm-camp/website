@@ -1,10 +1,9 @@
-module Camp26Czech.Logo exposing (Model, Msg, init, update, view)
+module View.Logo exposing (ConfigZipper, Model, Msg, init, update, view)
 
 import Html exposing (Html, div)
-import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 import Svg exposing (Svg, g, polygon, svg)
-import Svg.Attributes exposing (fill, points, stroke, strokeWidth, style, transform, viewBox)
+import Svg.Attributes exposing (fill, points, stroke, strokeWidth, transform, viewBox)
 
 
 type alias ConfigZipper =
@@ -73,14 +72,17 @@ type alias Triangle =
     }
 
 
+transition : Svg.Attribute msg
 transition =
     Svg.Attributes.style "transition: transform 0.4s ease-in-out"
 
 
+strokeW : Svg.Attribute msg
 strokeW =
     strokeWidth "12"
 
 
+strokeColor : Svg.Attribute msg
 strokeColor =
     stroke "#ffffff"
 
@@ -196,6 +198,7 @@ parallelogram shape =
         ]
 
 
+elmLogo : List (Svg svg)
 elmLogo =
     [ largeTriangle { color = "#1d322d", x = 65, y = 370, rotation = -90, scale = 1.7 }
     , largeTriangle { color = "#5db17e", x = 350, y = 448, rotation = 180, scale = 1.7 }
@@ -207,6 +210,7 @@ elmLogo =
     ]
 
 
+tent : List (Svg svg)
 tent =
     [ largeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 510, y = 266, rotation = 270, scale = 1.0 }
@@ -218,6 +222,7 @@ tent =
     ]
 
 
+lake : List (Svg svg)
 lake =
     [ largeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 180, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 60, y = 416, rotation = 0, scale = 1.0 }
@@ -229,6 +234,7 @@ lake =
     ]
 
 
+byTheRiver : List (Svg svg)
 byTheRiver =
     [ largeTriangle { color = "#5fb5cc", x = 415, y = 360, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#5fb5cc", x = 340, y = 436, rotation = 180, scale = 1.0 }
@@ -240,6 +246,7 @@ byTheRiver =
     ]
 
 
+tents : List (Svg svg)
 tents =
     [ largeTriangle { color = "#5db17e", x = 370, y = 40, rotation = 180, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 50, y = 136, rotation = 180, scale = 1.0 }
@@ -251,6 +258,7 @@ tents =
     ]
 
 
+fireplace : List (Svg svg)
 fireplace =
     [ largeTriangle { color = "#ff8000", x = 200, y = 320, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#ff8000", x = 360, y = 290, rotation = 270, scale = 1.0 }
@@ -262,6 +270,7 @@ fireplace =
     ]
 
 
+configurations : List (List (Svg msg))
 configurations =
     [ elmLogo
     , fireplace
@@ -276,7 +285,7 @@ view : Model -> Html Msg
 view model =
     div []
         [ svg
-            [ viewBox "0 40 800 600"
+            [ viewBox "40 40 700 600"
             , onClick ToggleConfig
             ]
             model.configs.current
