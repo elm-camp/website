@@ -198,7 +198,7 @@ parallelogram shape =
         ]
 
 
-elmLogo : List (Svg svg)
+elmLogo : List (Svg Msg)
 elmLogo =
     [ largeTriangle { color = "#1d322d", x = 65, y = 370, rotation = -90, scale = 1.7 }
     , largeTriangle { color = "#5db17e", x = 350, y = 448, rotation = 180, scale = 1.7 }
@@ -210,7 +210,7 @@ elmLogo =
     ]
 
 
-tent : List (Svg svg)
+tent : List (Svg Msg)
 tent =
     [ largeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 510, y = 266, rotation = 270, scale = 1.0 }
@@ -222,7 +222,7 @@ tent =
     ]
 
 
-lake : List (Svg svg)
+lake : List (Svg Msg)
 lake =
     [ largeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 180, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 60, y = 416, rotation = 0, scale = 1.0 }
@@ -234,7 +234,7 @@ lake =
     ]
 
 
-byTheRiver : List (Svg svg)
+byTheRiver : List (Svg Msg)
 byTheRiver =
     [ largeTriangle { color = "#5fb5cc", x = 415, y = 360, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#5fb5cc", x = 340, y = 436, rotation = 180, scale = 1.0 }
@@ -246,7 +246,7 @@ byTheRiver =
     ]
 
 
-tents : List (Svg svg)
+tents : List (Svg Msg)
 tents =
     [ largeTriangle { color = "#5db17e", x = 370, y = 40, rotation = 180, scale = 1.0 }
     , largeTriangle { color = "#1d322d", x = 50, y = 136, rotation = 180, scale = 1.0 }
@@ -258,7 +258,7 @@ tents =
     ]
 
 
-fireplace : List (Svg svg)
+fireplace : List (Svg Msg)
 fireplace =
     [ largeTriangle { color = "#ff8000", x = 200, y = 320, rotation = 90, scale = 1.0 }
     , largeTriangle { color = "#ff8000", x = 360, y = 290, rotation = 270, scale = 1.0 }
@@ -270,7 +270,7 @@ fireplace =
     ]
 
 
-configurations : List (List (Svg msg))
+configurations : List (List (Svg Msg))
 configurations =
     [ elmLogo
     , fireplace
