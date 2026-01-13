@@ -36,6 +36,7 @@ import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
+import View.Logo
 
 
 type FrontendModel
@@ -69,6 +70,7 @@ type alias LoadedModel =
     , isOrganiser : Bool
     , ticketsEnabled : TicketsEnabled
     , backendModel : Maybe BackendModel
+    , logoModel : View.Logo.Model
     , pressedAudioButton : Bool
     }
 
@@ -294,6 +296,7 @@ type FrontendMsg
     | SetViewPortForElement HtmlId
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
+    | LogoMsg View.Logo.Msg
     | Noop
 
 

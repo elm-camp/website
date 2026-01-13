@@ -49,6 +49,7 @@ import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
+import View.Logo
 import View.Sales
 
 
@@ -186,6 +187,7 @@ tryLoading loadingModel =
                 , ticketsEnabled = ticketsEnabled
                 , backendModel = Nothing
                 , pressedAudioButton = False
+                , logoModel = View.Logo.init
                 }
             , Command.none
             )
@@ -341,6 +343,9 @@ updateLoaded msg model =
                     in
                     ( model, Command.none )
 
+        Types.LogoMsg logoMsg ->
+            ( { model | logoModel = View.Logo.update logoMsg model.logoModel }, Command.none )
+
         Noop ->
             ( model, Command.none )
 
@@ -436,7 +441,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Command.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool } -> Element FrontendMsg
+header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Element FrontendMsg
 header config =
     let
         titleSize =
@@ -457,9 +462,7 @@ header config =
             Element.column [ Element.spacing 30 ]
                 [ Element.row
                     [ Element.centerX, Element.spacing 13 ]
-                    [ Element.image
-                        [ Element.width (Element.px 49) ]
-                        { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
+                    [ Element.el [ Element.width (Element.px 80) ] (Element.html (View.Logo.view config.logoModel)) |> Element.map Types.LogoMsg
                     , Element.column []
                         [ Element.column
                             [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
@@ -560,7 +563,7 @@ loadedView model =
         UnconferenceFormatRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { window = model.window, isCompact = True }
+                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ Page.UnconferenceFormat.view
@@ -571,7 +574,7 @@ loadedView model =
         VenueAndAccessRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { window = model.window, isCompact = True }
+                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ Camp26Czech.venueAccessContent
@@ -582,7 +585,7 @@ loadedView model =
         CodeOfConductRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { window = model.window, isCompact = True }
+                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
@@ -593,7 +596,7 @@ loadedView model =
         OrganisersRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { window = model.window, isCompact = True }
+                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
@@ -605,7 +608,7 @@ loadedView model =
         ElmCampArchiveRoute ->
             Element.column
                 [ Element.width Element.fill, Element.height Element.fill ]
-                [ header { window = model.window, isCompact = True }
+                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ elmCampArchiveContent model ]
@@ -697,7 +700,7 @@ homepageView model =
             , Element.width Element.fill
             , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
             ]
-            [ header { window = model.window, isCompact = False }
+            [ header { window = model.window, isCompact = False, logoModel = model.logoModel }
             , Element.column
                 [ Element.width Element.fill, Element.spacing 40 ]
                 [ --View.Sales.ticketSalesOpenCountdown model
