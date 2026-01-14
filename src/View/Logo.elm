@@ -1,8 +1,10 @@
-module View.Logo exposing (ConfigZipper, Model, Msg, PieceConfig, Tangram, TangramPiece(..), init, update, view)
+module View.Logo exposing (Model, Msg, PieceConfig, Tangram, TangramPiece(..), init, update, view)
 
 import Effect.Test exposing (Button(..))
 import Html exposing (Html, div)
 import Html.Events exposing (onClick)
+import List.Extra
+import List.Nonempty exposing (Nonempty(..))
 import Svg exposing (Svg, g, polygon, svg)
 import Svg.Attributes exposing (fill, points, stroke, strokeWidth, transform, viewBox)
 
@@ -23,61 +25,24 @@ type alias Tangram =
     List TangramPiece
 
 
-type alias ConfigZipper =
-    { prev : List Tangram
-    , current : Tangram
-    , next : List Tangram
-    }
-
-
 type alias Model =
-    { configs : ConfigZipper
-    }
+    { index : Int }
 
 
 type Msg
     = ToggleConfig
 
 
-initZipper : List Tangram -> ConfigZipper
-initZipper configs =
-    case configs of
-        [] ->
-            { prev = [], current = [], next = [] }
-
-        first :: rest ->
-            { prev = [], current = first, next = rest }
-
-
-moveNext : ConfigZipper -> ConfigZipper
-moveNext zipper =
-    case zipper.next of
-        [] ->
-            -- Cycle to beginning
-            case List.reverse (zipper.current :: zipper.prev) of
-                [] ->
-                    zipper
-
-                first :: rest ->
-                    { prev = [], current = first, next = rest }
-
-        nextConfig :: remainingNext ->
-            { prev = zipper.current :: zipper.prev
-            , current = nextConfig
-            , next = remainingNext
-            }
-
-
 init : Model
 init =
-    { configs = initZipper configurations }
+    { index = 0 }
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         ToggleConfig ->
-            { model | configs = moveNext model.configs }
+            { model | index = model.index + 1 }
 
 
 transition : Svg.Attribute msg
@@ -97,7 +62,17 @@ strokeColor =
 
 transformValue_ : PieceConfig -> String -> String
 transformValue_ triangle center =
-    "translate(" ++ String.fromFloat triangle.x ++ "," ++ String.fromFloat triangle.y ++ ") rotate(" ++ String.fromFloat triangle.rotation ++ " " ++ center ++ ") scale(" ++ String.fromFloat triangle.scale ++ ")"
+    "translate("
+        ++ String.fromFloat triangle.x
+        ++ ","
+        ++ String.fromFloat triangle.y
+        ++ ") rotate("
+        ++ String.fromFloat triangle.rotation
+        ++ " "
+        ++ center
+        ++ ") scale("
+        ++ String.fromFloat triangle.scale
+        ++ ")"
 
 
 largeTriangle : PieceConfig -> Svg Msg
@@ -278,15 +253,16 @@ fireplace =
     ]
 
 
-configurations : List Tangram
+configurations : Nonempty Tangram
 configurations =
-    [ elmLogo
-    , fireplace
-    , tents
-    , tent
-    , lake
-    , byTheRiver
-    ]
+    Nonempty
+        elmLogo
+        [ fireplace
+        , tents
+        , tent
+        , lake
+        , byTheRiver
+        ]
 
 
 viewTangramPiece : TangramPiece -> Svg Msg
@@ -319,4 +295,4 @@ viewTangram tangram =
 
 view : Model -> Html Msg
 view model =
-    div [] [ viewTangram model.configs.current ]
+    div [] [ viewTangram (List.Nonempty.get model.index configurations) ]
