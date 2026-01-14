@@ -1,4 +1,4 @@
-module View.Logo exposing (ConfigZipper, Model, Msg, Tangram, TangramPiece(..), init, update, view)
+module View.Logo exposing (ConfigZipper, Model, Msg, PieceConfig, Tangram, TangramPiece(..), init, update, view)
 
 import Effect.Test exposing (Button(..))
 import Html exposing (Html, div)
