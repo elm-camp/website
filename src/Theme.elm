@@ -272,17 +272,23 @@ attr name value =
 
 glow : Ui.Attribute msg
 glow =
-    Ui.Shadow.font { offset = ( 0, 0 ), color = colorWithAlpha 0.25 lightTheme.defaultText, blur = 4 }
+    Ui.Shadow.font { offset = ( 1, 1 ), color = colorWithAlpha 0.25 lightTheme.defaultText, blur = 2 }
+
+
+footerButton : Route -> String -> Ui.Element msg
+footerButton route label =
+    Ui.el
+        [ Ui.link (Route.encode route)
+        , Ui.background (Ui.rgb 12 109 82)
+        , Ui.paddingXY 16 10
+        , Ui.rounded 10
+        , Ui.width Ui.shrink
+        ]
+        (Ui.text label)
 
 
 footer : Ui.Element msg
 footer =
-    let
-        btn route label =
-            Ui.el
-                [ Ui.link (Route.encode route), Ui.background (Ui.rgb 12 109 82), Ui.paddingXY 10 10, Ui.rounded 10 ]
-                (Ui.text label)
-    in
     Ui.el
         [ Ui.paddingXY 24 16
         , Ui.alignBottom
@@ -295,11 +301,11 @@ footer =
              ]
                 ++ contentAttributes
             )
-            [ btn CodeOfConductRoute "Code of Conduct"
-            , btn UnconferenceFormatRoute "Unconference Guidelines"
-            , btn VenueAndAccessRoute "Venue & Access"
-            , btn OrganisersRoute "Organisers"
-            , btn ElmCampArchiveRoute "Elm Camp Archives"
+            [ footerButton CodeOfConductRoute "Code of Conduct"
+            , footerButton UnconferenceFormatRoute "Unconference Guidelines"
+            , footerButton VenueAndAccessRoute "Venue & Access"
+            , footerButton OrganisersRoute "Organisers"
+            , footerButton ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )
 

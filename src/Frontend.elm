@@ -457,23 +457,35 @@ header config =
         elmCampTitle =
             Ui.el
                 [ Ui.link (Route.encode Route.HomepageRoute) ]
-                (Ui.el [ Ui.width Ui.shrink, Ui.Font.size titleSize, Theme.glow, Ui.paddingXY 0 8 ] (Ui.text "Elm Camp"))
+                (Ui.el
+                    [ Ui.width Ui.shrink
+                    , Ui.Font.size titleSize
+                    , Theme.glow
+                    , Ui.paddingXY 0 8
+                    , Ui.Font.lineHeight 1.1
+                    ]
+                    (Ui.text "Elm Camp")
+                )
 
         elmCampNextTopLine =
             Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
                 [ Ui.row
                     [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.el [ Ui.width (Ui.px 80) ] (Ui.html (View.Logo.view config.logoModel)) |> Ui.map Types.LogoMsg
-                    , Ui.column [ Ui.width Ui.shrink ]
-                        [ Ui.column
-                            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
-                            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text "2026")
+                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
+                    , Ui.column
+                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
+                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
+                        , Ui.el
+                            [ Ui.width Ui.shrink
+                            , Ui.Font.weight 800
+                            , Ui.Font.color Theme.lightTheme.elmText
+                            , Ui.Font.lineHeight 1
                             ]
+                            (Ui.text "2026")
                         ]
                     ]
                 , Ui.column
-                    [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 18, Ui.move { x = 0, y = -1, z = 0 } ]
+                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18, Ui.move { x = 0, y = -1, z = 0 } ]
                     [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text "")
                     , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
                     , Ui.el
@@ -487,7 +499,7 @@ header config =
     in
     if config.window.width < 1000 || config.isCompact then
         Ui.column
-            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.width Ui.shrink, Ui.paddingXY 0 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ elmCampTitle
