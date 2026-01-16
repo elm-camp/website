@@ -125,6 +125,7 @@ init url key =
         , initData = Nothing
         , route = route
         , isOrganiser = isOrganiser
+        , elmUiState = Ui.Anim.init
         }
     , Command.batch
         [ Dom.getViewport
@@ -191,6 +192,7 @@ tryLoading loadingModel =
                 , backendModel = Nothing
                 , pressedAudioButton = False
                 , logoModel = View.Logo.init
+                , elmUiState = loadingModel.elmUiState
                 }
             , Command.none
             )
@@ -351,6 +353,9 @@ updateLoaded msg model =
 
         Noop ->
             ( model, Command.none )
+
+        ElmUiMsg elmUiMsg ->
+            ( { model | elmUiState = Ui.Anim.update elmUiMsg model.elmUiState }, Command.none )
 
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
@@ -527,7 +532,18 @@ view model =
         -- , W.Styles.globalStyles
         -- , W.Styles.baseTheme
         , Ui.layout
-            Ui.default
+            (Ui.withAnimation
+                { toMsg = ElmUiMsg
+                , state =
+                    case model of
+                        Loading loading ->
+                            loading.elmUiState
+
+                        Loaded loaded ->
+                            loaded.elmUiState
+                }
+                Ui.default
+            )
             [ Ui.Font.color Theme.lightTheme.defaultText
             , Ui.Font.family [ Ui.Font.typeface "Open Sans" ]
             , Ui.Font.size 16

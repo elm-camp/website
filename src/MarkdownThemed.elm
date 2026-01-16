@@ -180,8 +180,7 @@ renderer theme =
             Ui.image
                 (case title of
                     Just title2 ->
-                        [ Ui.htmlAttribute (Html.Attributes.attribute "title" title2)
-                        ]
+                        [ Ui.htmlAttribute (Html.Attributes.attribute "title" title2) ]
 
                     Nothing ->
                         []

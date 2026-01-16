@@ -671,7 +671,7 @@ mapAttribute =
 
 
 {-| -}
-update : (Ui.Msg -> msg) -> Ui.Msg -> Ui.State -> ( Ui.State, Cmd msg )
+update : Ui.Msg -> Ui.State -> Ui.State
 update =
     Two.update
 

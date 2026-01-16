@@ -59,30 +59,28 @@ type alias Box =
     }
 
 
-update : (Msg -> msg) -> Msg -> State -> ( State, Cmd msg )
-update toAppMsg msg ((State details) as unchanged) =
+update : Msg -> State -> State
+update msg ((State details) as unchanged) =
     case msg of
         Tick _ ->
-            ( unchanged, Cmd.none )
+            unchanged
 
         Teleported trigger teleported ->
             let
-                ( updated, cmds ) =
+                updated =
                     List.foldl
                         (applyTeleported teleported)
-                        ( unchanged, [] )
+                        unchanged
                         teleported.data
             in
-            ( updated
-            , Cmd.map toAppMsg (Cmd.batch cmds)
-            )
+            updated
 
 
-addChildReactions : Teleport.ParentTriggerDetails -> List Teleport.CssAnimation -> State -> ( State, List (Cmd Msg) )
+addChildReactions : Teleport.ParentTriggerDetails -> List Teleport.CssAnimation -> State -> State
 addChildReactions parent anims ((State state) as untouched) =
     case anims of
         [] ->
-            ( untouched, [] )
+            untouched
 
         css :: remaining ->
             if Set.member css.hash state.added then
@@ -122,15 +120,15 @@ addChildReactions parent anims ((State state) as untouched) =
                     )
 
 
-applyTeleported : Teleport.Event -> Teleport.Data -> ( State, List (Cmd Msg) ) -> ( State, List (Cmd Msg) )
-applyTeleported event data ( (State state) as untouched, cmds ) =
+applyTeleported : Teleport.Event -> Teleport.Data -> State -> State
+applyTeleported event data ((State state) as untouched) =
     case data of
         Teleport.ParentTrigger parentTrigger ->
             addChildReactions parentTrigger parentTrigger.children untouched
 
         Teleport.Css css ->
             if Set.member css.hash state.added then
-                ( untouched, cmds )
+                untouched
 
             else
                 let
@@ -148,7 +146,7 @@ applyTeleported event data ( (State state) as untouched, cmds ) =
                             state.keyframes
                                 |> addRule css.keyframes
                 in
-                ( State
+                State
                     { state
                         | rules =
                             state.rules
@@ -160,8 +158,6 @@ applyTeleported event data ( (State state) as untouched, cmds ) =
                                 |> Set.insert css.hash
                                 |> Set.insert css.keyframesHash
                     }
-                , cmds
-                )
 
 
 addRule : String -> List String -> List String
