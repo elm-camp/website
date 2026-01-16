@@ -181,11 +181,10 @@ renderer theme =
                 (case title of
                     Just title2 ->
                         [ Ui.htmlAttribute (Html.Attributes.attribute "title" title2)
-                        , Ui.paddingXY 0 16
                         ]
 
                     Nothing ->
-                        [ Ui.paddingXY 0 16 ]
+                        []
                 )
                 { source = src
                 , description = alt

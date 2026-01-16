@@ -35,6 +35,6 @@ media =
     """
 ## Media
 
-<img src="/23-denmark/elm-camp-23-attendees.jpeg" width="100%" />
+![Denmark attendees](/23-denmark/elm-camp-23-attendees.jpeg)
 
 """
