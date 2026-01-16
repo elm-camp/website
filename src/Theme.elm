@@ -416,7 +416,7 @@ heading2Attrs theme =
     [ Ui.Font.color theme.elmText
     , Ui.Font.size 24
     , Ui.Font.weight 800
-    , Ui.paddingWith { top = 0, right = 0, bottom = 20, left = 0 }
+    , Ui.paddingWith { top = 16, right = 0, bottom = 20, left = 0 }
     , Ui.Accessibility.h2
     ]
 
@@ -426,7 +426,7 @@ heading3Attrs theme =
     [ Ui.Font.color theme.defaultText
     , Ui.Font.size 18
     , Ui.Font.weight 500
-    , Ui.paddingWith { top = 0, right = 0, bottom = 10, left = 0 }
+    , Ui.paddingWith { top = 8, right = 0, bottom = 16, left = 0 }
     , Ui.Font.bold
     , Ui.Accessibility.h3
     ]

@@ -76,7 +76,7 @@ renderer theme =
                 , Ui.borderWith { bottom = 0, left = 4, right = 0, top = 0 }
                 , Ui.borderColor theme.grey
                 , Ui.Font.color theme.mutedText
-                , Ui.padding 10
+                , Ui.paddingWith { left = 10, right = 10, top = 18, bottom = 0 }
                 ]
                 children
     , html =
@@ -154,7 +154,7 @@ renderer theme =
             , Markdown.Html.tag "br" (\_ -> Ui.html (Html.br [] []))
             , Markdown.Html.tag "red" (\children -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.color Theme.colors.red ] children)
             ]
-    , text = \s -> Ui.el [ Ui.width Ui.shrink ] (Ui.text s)
+    , text = Ui.text
     , codeSpan =
         \content -> Ui.html (Html.code [] [ Html.text content ])
     , strong = \list -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.bold ] list
@@ -162,28 +162,31 @@ renderer theme =
     , hardLineBreak = Ui.html (Html.br [] [])
     , link =
         \{ title, destination } list ->
-            Ui.el
+            Ui.Prose.paragraph
                 [ Ui.link destination
                 , Ui.Font.underline
                 , Ui.Font.color theme.link
+                , Ui.width Ui.shrink
                 ]
                 (case title of
                     Maybe.Just title_ ->
-                        Ui.text title_
+                        [ Ui.text title_ ]
 
                     Maybe.Nothing ->
-                        Ui.Prose.paragraph [ Ui.width Ui.shrink ] list
+                        list
                 )
     , image =
         \{ alt, src, title } ->
-            let
-                attrs =
-                    [ title |> Maybe.map (\title_ -> Ui.htmlAttribute (Html.Attributes.attribute "title" title_)) ]
-                        |> justs
-            in
             Ui.image
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                attrs
+                (case title of
+                    Just title2 ->
+                        [ Ui.htmlAttribute (Html.Attributes.attribute "title" title2)
+                        , Ui.paddingXY 0 16
+                        ]
+
+                    Nothing ->
+                        [ Ui.paddingXY 0 16 ]
+                )
                 { source = src
                 , description = alt
                 , onLoad = Nothing
@@ -192,24 +195,17 @@ renderer theme =
         \items ->
             Ui.column
                 [ Ui.spacing 15
-                , Ui.paddingWith { top = 0, right = 0, bottom = 40, left = 0 }
+                , Ui.paddingWith { top = 0, right = 0, bottom = 40, left = 8 }
                 ]
-                (items
-                    |> List.map
-                        (\listItem ->
-                            case listItem of
-                                ListItem _ children ->
-                                    Ui.row
-                                        [ Ui.wrap
-                                        , Ui.contentTop
-                                        , Ui.spacing 5
-                                        , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
-                                        ]
-                                        [ Ui.Prose.paragraph
-                                            [ Ui.width Ui.shrink, Ui.alignTop ]
-                                            (Ui.text " • " :: children)
-                                        ]
-                        )
+                (List.map
+                    (\listItem ->
+                        case listItem of
+                            ListItem _ children ->
+                                Ui.Prose.paragraph
+                                    []
+                                    (Ui.text " • " :: children)
+                    )
+                    items
                 )
     , orderedList =
         \startingIndex items ->

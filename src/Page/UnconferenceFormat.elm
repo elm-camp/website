@@ -17,14 +17,13 @@ view =
 
 <br/>
 
-> <br/>
 > You know how at a conference, the best discussions often occur when people are relaxed during coffee breaks? That's the whole idea of an unconference: it's like a long, informal coffee break where everyone can contribute to the conversation. The participants drive the agenda. Any structure that exists at an unconference is just there to kick things off and to help the conversations flow smoothly, not to restrict or dictate the topics.
 
 <br/>
 <br/>
 
 ## We are doing this together.
-## The following is intended as a collective starting point.
+### The following is intended as a collective starting point.
 
 # Plan
 
