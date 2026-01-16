@@ -19,8 +19,8 @@ import Theme
 import Ui
 import Ui.Anim
 import Ui.Events
-import Ui.Font as Font
-import Ui.Input as Input
+import Ui.Font
+import Ui.Input
 import Ui.Layout
 import Ui.Prose
 
@@ -214,7 +214,7 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
         [ Ui.none
 
         -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.semiBold, Ui.Font.size 20 ] [ Ui.text ticket.name ]
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
         , Ui.el
             [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
@@ -228,19 +228,12 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (\_ -> addMsg)
 
             else
-                let
-                    ( text_, msg ) =
-                        ( "Select", Just addMsg )
-                in
-                Ui.Input.button
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    (Theme.submitButtonAttributes ticketAvailable)
-                    { onPress = msg
-                    , label =
-                        Ui.el
-                            [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.semiBold, Ui.Font.color (Ui.rgb 255 255 255) ]
-                            (Ui.text text_)
-                    }
+                Ui.el
+                    (Theme.submitButtonAttributes addMsg ticketAvailable)
+                    (Ui.el
+                        [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+                        (Ui.text "Select")
+                    )
 
           else if ticket.name == "Campfire Ticket" then
             Ui.text "Waitlist"

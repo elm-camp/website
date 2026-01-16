@@ -24,7 +24,7 @@ import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
 import Ui.Anim
-import Ui.Font as Font
+import Ui.Font
 import Ui.Layout
 import Ui.Prose
 
@@ -49,7 +49,7 @@ view model subpage =
             [ Theme.rowToColumnWhen 700
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
-                [ Ui.image [ Ui.width (Ui.px 300) ] meta.artifactPicture
+                [ Ui.image [ Ui.width (Ui.px 300) ] { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
                 , Ui.column [ Ui.spacing 20 ]
                     [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , elmTopLine
@@ -80,11 +80,11 @@ elmTopLine : Ui.Element msg
 elmTopLine =
     Ui.row
         [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-        [ Ui.image [ Ui.width (Ui.px 49) ] meta.logo
+        [ Ui.image [ Ui.width (Ui.px 49) ] { source = meta.logo.src, description = meta.logo.description, onLoad = Nothing }
         , Ui.column
-            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.up 1 ]
+            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
             [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
-            , Ui.el [ Ui.width Ui.shrink, Ui.Font.extraBold, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
+            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
             ]
         ]
 
@@ -162,8 +162,7 @@ venuePictures model =
     if model.window.width > 950 then
         [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
             |> List.map (\image -> venueImage (Ui.px 288) (prefix ++ image))
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) }
-                [ Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
 
     else
         [ [ "image1.webp", "image2.webp" ]
@@ -183,7 +182,7 @@ venueImage : Ui.Length -> String -> Ui.Element msg
 venueImage width path =
     Ui.image
         [ Ui.width width ]
-        { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
+        { source = "/" ++ path, description = "Photo of part of Ronora Lodge", onLoad = Nothing }
 
 
 organisers : String
@@ -279,14 +278,14 @@ sponsors window =
                             )
                         )
                     ]
-                    { description = url, src = "/sponsors/" ++ image }
+                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
                 )
     in
     Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
           , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
           , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
           , Ui.el
@@ -303,10 +302,10 @@ sponsors window =
                                 )
                             )
                         ]
-                        { description = "https://www.elmweekly.nl", src = "/sponsors/" ++ "elm-weekly.svg" }
+                        { description = "https://www.elmweekly.nl", source = "/sponsors/" ++ "elm-weekly.svg", onLoad = Nothing }
                     , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
                     ]
                 )
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         ]

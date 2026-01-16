@@ -50,10 +50,11 @@ import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
 import Ui.Anim
 import Ui.Events
-import Ui.Font as Font
-import Ui.Input as Input
+import Ui.Font
+import Ui.Input
 import Ui.Layout
 import Ui.Prose
+import Ui.Shadow
 import View.Countdown
 
 
@@ -177,12 +178,9 @@ ticketSalesOpenCountdown model =
 
                 _ ->
                     Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "nozone")
-            , Ui.Input.button
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                (Theme.submitButtonAttributes True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
-                { onPress = Just DownloadTicketSalesReminder
-                , label = Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar")
-                }
+            , Ui.el
+                (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
+                (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
             , Ui.text " "
             ]
         )
@@ -195,12 +193,9 @@ ticketSalesHtmlId =
 
 goToTicketSales : Ui.Element FrontendMsg
 goToTicketSales =
-    Ui.Input.button
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        showyButtonAttributes
-        { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
-        , label = Ui.text "Tickets on sale now! ⬇️"
-        }
+    Ui.el
+        (showyButtonAttributes (SetViewPortForElement ticketSalesHtmlId))
+        (Ui.text "Tickets on sale now! ⬇️")
 
 
 
@@ -492,39 +487,36 @@ formView model productId priceId ticket =
             model.form
 
         submitButton hasAttendeesAndAccommodation =
-            Ui.Input.button
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                (Theme.submitButtonAttributes (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining))
-                { onPress = Just PressedSubmitForm
-                , label =
-                    Ui.Prose.paragraph
-                        [ Ui.width Ui.shrink, Ui.Font.center ]
-                        [ Ui.text
-                            (if Inventory.purchaseable ticket.productId model.slotsRemaining then
-                                "Purchase "
+            Ui.el
+                (Theme.submitButtonAttributes
+                    PressedSubmitForm
+                    (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining)
+                )
+                (Ui.Prose.paragraph
+                    [ Ui.width Ui.shrink, Ui.Font.center ]
+                    [ Ui.text
+                        (if Inventory.purchaseable ticket.productId model.slotsRemaining then
+                            "Purchase "
 
-                             else
-                                "Waitlist"
-                            )
-                        , case form.submitStatus of
-                            NotSubmitted _ ->
-                                Ui.none
+                         else
+                            "Waitlist"
+                        )
+                    , case form.submitStatus of
+                        NotSubmitted _ ->
+                            Ui.none
 
-                            Submitting ->
-                                Ui.el [ Ui.width Ui.shrink, Ui.down 5 ] Theme.spinnerWhite
+                        Submitting ->
+                            Ui.el [ Ui.width Ui.shrink, Ui.move { x = 0, y = 5, z = 0 } ] Theme.spinnerWhite
 
-                            SubmitBackendError _ ->
-                                Ui.none
-                        ]
-                }
+                        SubmitBackendError _ ->
+                            Ui.none
+                    ]
+                )
 
         cancelButton =
-            Ui.Input.button
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                normalButtonAttributes
-                { onPress = Just PressedCancelForm
-                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel")
-                }
+            Ui.el
+                (normalButtonAttributes PressedCancelForm)
+                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
 
         includesAccom =
             Tickets.formIncludesAccom form
@@ -617,14 +609,11 @@ attendeeForm model i attendee =
                 0
 
         removeButton =
-            Ui.Input.button
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                (normalButtonAttributes ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.down removeButtonAlignment ])
-                { onPress =
-                    Just
-                        (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
-                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove")
-                }
+            Ui.el
+                (normalButtonAttributes (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
+                    ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.move { x = 0, y = removeButtonAlignment, z = 0 } ]
+                )
+                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
     in
     Theme.rowToColumnWhen columnWhen
         model.window
@@ -693,7 +682,7 @@ opportunityGrant form =
                             [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
                             , Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ] (Ui.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
                             ]
-                        , Ui.Input.slider
+                        , Ui.Input.sliderHorizontal
                             [ Ui.width Ui.shrink
                             , Ui.behindContent
                                 (Ui.el
@@ -710,7 +699,7 @@ opportunityGrant form =
                             , min = 0
                             , max = 75000
                             , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
-                            , thumb = Ui.Input.defaultThumb
+                            , thumb = Nothing
                             , step = Just 1000
                             }
                         , Ui.row [ Ui.width (Ui.portion 3) ]
@@ -755,7 +744,7 @@ sponsorshipOption model form s =
                 [ Ui.borderColor (Ui.rgb 94 176 125), Ui.border 3 ]
 
             else
-                [ Ui.borderColor (Ui.rgba255 0 0 0 0), Ui.border 3 ]
+                [ Ui.borderColor (Ui.rgba 0 0 0 0), Ui.border 3 ]
 
         priceDisplay =
             Theme.priceText { currency = displayCurrency, amount = s.price }
@@ -769,33 +758,31 @@ sponsorshipOption model form s =
         , s.features
             |> List.map (\point -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 12 ] [ Ui.text ("• " ++ point) ])
             |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 5 ]
-        , Ui.Input.button
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            (Theme.submitButtonAttributes True)
-            { onPress =
-                Just
-                    (FormChanged
-                        { form
-                            | sponsorship =
-                                if selected then
-                                    Nothing
+        , Ui.el
+            (Theme.submitButtonAttributes
+                (FormChanged
+                    { form
+                        | sponsorship =
+                            if selected then
+                                Nothing
 
-                                else
-                                    Just s.productId
-                        }
-                    )
-            , label =
-                Ui.el
-                    [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.semiBold, Ui.Font.color (Ui.rgb 255 255 255) ]
-                    (Ui.text
-                        (if selected then
-                            "Un-select"
+                            else
+                                Just s.productId
+                    }
+                )
+                True
+            )
+            (Ui.el
+                [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+                (Ui.text
+                    (if selected then
+                        "Un-select"
 
-                         else
-                            "Select"
-                        )
+                     else
+                        "Select"
                     )
-            }
+                )
+            )
         ]
 
 
@@ -918,8 +905,7 @@ carbonOffsetForm showCarbonOffsetTooltip form =
                 Ui.none
               )
                 |> Ui.below
-            , Ui.up 20
-            , Ui.right 8
+            , Ui.move { x = 8, y = -20, z = 0 }
             , Ui.background Theme.lightTheme.background
             ]
             (Ui.el
@@ -936,7 +922,7 @@ carbonOffsetForm showCarbonOffsetTooltip form =
         , Ui.column
             [ Ui.width Ui.shrink, Ui.spacing 8 ]
             [ Ui.Prose.paragraph
-                [ Ui.width Ui.shrink, Ui.Font.semiBold ]
+                [ Ui.width Ui.shrink, Ui.Font.weight 600 ]
                 [ Ui.text "What will be your primary method of travelling to the event?" ]
 
             -- , TravelMode.all
@@ -985,14 +971,19 @@ radioButton groupName text isChecked =
 
 textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
 textInput form onChange title validator text =
+    let
+        label =
+            Ui.Input.label ("textInput_" ++ title) [ Ui.width Ui.shrink, Ui.Font.weight 600 ] (Ui.text title)
+    in
     Ui.column
         [ Ui.spacing 4, Ui.alignTop ]
-        [ Ui.Input.text
+        [ label.element
+        , Ui.Input.text
             [ Ui.width Ui.shrink, Ui.rounded 8 ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing
-            , label = Ui.Input.labelAbove [ Ui.width Ui.shrink, Ui.Font.semiBold ] (Ui.text title)
+            , label = label.id
             }
         , case ( form.submitStatus, validator text ) of
             ( NotSubmitted PressedSubmit, Err error ) ->
@@ -1031,6 +1022,6 @@ tooltip text =
         [ Ui.paddingXY 12 8
         , Ui.background (Ui.rgb 255 255 255)
         , Ui.width (Ui.px 300)
-        , Ui.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 }
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
         ]
         [ Ui.text text ]

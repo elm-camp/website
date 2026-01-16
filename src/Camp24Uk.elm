@@ -17,7 +17,7 @@ import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
 import Ui.Anim
-import Ui.Font as Font
+import Ui.Font
 import Ui.Layout
 import Ui.Prose
 
@@ -42,7 +42,7 @@ view model subpage =
             [ Theme.rowToColumnWhen 700
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
-                [ Ui.image [ Ui.width (Ui.px 300) ] meta.artifactPicture
+                [ Ui.image [ Ui.width (Ui.px 300) ] { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
                 , Ui.column [ Ui.spacing 20 ]
                     [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , Camp.elmCampTopLine meta
@@ -234,21 +234,21 @@ sponsors window =
                             )
                         )
                     ]
-                    { description = url, src = "/sponsors/" ++ image }
+                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
                 )
     in
     Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         [ [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 350 }
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "ambue-logo.png", url = "https://www.ambue.com/", width = 220 }
           , asImg { image = "nlx-logo.svg", url = "https://nlx.ai", width = 110 }
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 200 }
           , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 160 }
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 100 }
           , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 100 }
           , Ui.el
@@ -265,11 +265,11 @@ sponsors window =
                                 )
                             )
                         ]
-                        { description = "https://www.elmweekly.nl", src = "/sponsors/" ++ "elm-weekly.svg" }
+                        { description = "https://www.elmweekly.nl", source = "/sponsors/" ++ "elm-weekly.svg", onLoad = Nothing }
                     , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
                     ]
                 )
           , asImg { image = "cookiewolf-logo.png", url = "", width = 120 }
           ]
-            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         ]

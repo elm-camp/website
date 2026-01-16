@@ -31,8 +31,8 @@ import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, Price2, Ticke
 import Ui
 import Ui.Anim
 import Ui.Events
-import Ui.Font as Font
-import Ui.Input as Input
+import Ui.Font
+import Ui.Input
 import Ui.Layout
 import Ui.Prose
 
@@ -76,12 +76,9 @@ viewAdmin backendModel =
         , Ui.spacing 40
         ]
         [ if Env.mode == Env.Development then
-            Ui.Input.button
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                Theme.normalButtonAttributes
-                { onPress = Just AdminPullBackendModel
-                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Pull Backend Model from prod")
-                }
+            Ui.el
+                (Theme.normalButtonAttributes AdminPullBackendModel)
+                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Pull Backend Model from prod"))
 
           else
             Ui.none

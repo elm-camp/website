@@ -44,9 +44,10 @@ import Theme exposing (normalButtonAttributes)
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
-import Ui.Font as Font
+import Ui.Font
 import Ui.Layout
 import Ui.Prose
+import Ui.Shadow
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
@@ -465,14 +466,14 @@ header config =
                     [ Ui.el [ Ui.width (Ui.px 80) ] (Ui.html (View.Logo.view config.logoModel)) |> Ui.map Types.LogoMsg
                     , Ui.column [ Ui.width Ui.shrink ]
                         [ Ui.column
-                            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.up 1 ]
+                            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
                             [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.Font.extraBold, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text "2026")
+                            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text "2026")
                             ]
                         ]
                     ]
                 , Ui.column
-                    [ Ui.width Ui.shrink, Ui.right 0, Ui.spacing 2, Ui.Font.size 18, Ui.up 1 ]
+                    [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 18, Ui.move { x = 0, y = -1, z = 0 } ]
                     [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text "")
                     , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
                     , Ui.el
@@ -514,10 +515,11 @@ view model =
         -- , W.Styles.globalStyles
         -- , W.Styles.baseTheme
         , Ui.layout
-            [ Ui.width Ui.fill
-            , Ui.Font.color Theme.lightTheme.defaultText
+            Ui.default
+            [ Ui.Font.color Theme.lightTheme.defaultText
+            , Ui.Font.family [ Ui.Font.typeface "Open Sans" ]
             , Ui.Font.size 16
-            , Ui.Font.medium
+            , Ui.Font.weight 500
             , Ui.background Theme.lightTheme.background
             , (case model of
                 Loading _ ->
@@ -531,7 +533,7 @@ view model =
                         TicketsDisabled { adminMessage } ->
                             Ui.Prose.paragraph
                                 [ Ui.Font.color (Ui.rgb 255 255 255)
-                                , Ui.Font.medium
+                                , Ui.Font.weight 500
                                 , Ui.Font.size 20
                                 , Ui.background (Ui.rgb 128 0 0)
                                 , Ui.padding 8
@@ -633,18 +635,13 @@ loadedView model =
                         Just emailAddress ->
                             EmailAddress.toString emailAddress
                                 |> Ui.text
-                                |> Ui.el [ Ui.width Ui.shrink, Ui.Font.semiBold ]
+                                |> Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 600 ]
 
                         Nothing ->
                             Ui.text "your email address"
                     , Ui.text " with additional information."
                     ]
-                , Ui.link
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    normalButtonAttributes
-                    { url = Route.encode HomepageRoute
-                    , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Return to homepage")
-                    }
+                , returnToHomepageButton
                 ]
 
         PaymentCancelRoute ->
@@ -653,12 +650,7 @@ loadedView model =
                 [ Ui.Prose.paragraph
                     [ Ui.width Ui.shrink, Ui.Font.size 20 ]
                     [ Ui.text "You cancelled your ticket purchase" ]
-                , Ui.link
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    normalButtonAttributes
-                    { url = Route.encode HomepageRoute
-                    , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Return to homepage")
-                    }
+                , returnToHomepageButton
                 ]
 
         Camp23Denmark subpage ->
@@ -672,6 +664,22 @@ loadedView model =
 
         Camp26Czech subpage ->
             Camp26Czech.view model subpage
+
+
+returnToHomepageButton : Ui.Element msg
+returnToHomepageButton =
+    Ui.el
+        [ Ui.background (Ui.rgb 255 255 255)
+        , Ui.padding 16
+        , Ui.rounded 8
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.width Ui.shrink
+        , Ui.link (Route.encode HomepageRoute)
+        , Ui.contentCenterX
+        ]
+        (Ui.text "Return to homepage")
 
 
 downloadTicketSalesReminder : Command FrontendOnly toMsg msg

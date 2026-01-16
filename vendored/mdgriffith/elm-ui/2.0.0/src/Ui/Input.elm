@@ -133,7 +133,7 @@ Here are some alternatives to think about that don't involve explicitly disablin
 
 **Disabled Buttons** - Change the `Msg` it fires, the text that is rendered, and optionally set a `Region.description` which will be available to screen readers.
 
-    import Ui.Input as Input
+    import Ui.Input
     import Ui.Region as Region
 
     myButton ready =

@@ -39,6 +39,7 @@ import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
 import Ui
+import Ui.Accessibility
 import Ui.Anim
 import Ui.Events
 import Ui.Font
@@ -189,9 +190,9 @@ panel attrs x =
         x
 
 
-submitButtonAttributes : Bool -> List (Ui.Attribute msg)
-submitButtonAttributes isEnabled =
-    [ Ui.width Ui.fill
+submitButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
+submitButtonAttributes onPress isEnabled =
+    [ Ui.width Ui.shrink
     , Ui.background
         (if isEnabled then
             Ui.rgb 92 176 126
@@ -205,6 +206,7 @@ submitButtonAttributes isEnabled =
     , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
     , Ui.Font.weight 600
     , Ui.Font.color (Ui.rgb 255 255 255)
+    , Ui.Input.button onPress
     ]
 
 
@@ -336,19 +338,19 @@ numericField title value downMsg upMsg =
 
 normalButtonAttributes : msg -> List (Ui.Attribute msg)
 normalButtonAttributes onPress =
-    [ Ui.width Ui.fill
-    , Ui.background (Ui.rgb 255 255 255)
+    [ Ui.background (Ui.rgb 255 255 255)
     , Ui.padding 16
     , Ui.rounded 8
     , Ui.alignBottom
     , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
     , Ui.Font.weight 600
     , Ui.Input.button onPress
+    , Ui.width Ui.shrink
     ]
 
 
-showyButtonAttributes : List (Ui.Attribute msg)
-showyButtonAttributes =
+showyButtonAttributes : msg -> List (Ui.Attribute msg)
+showyButtonAttributes onPress =
     [ Ui.width Ui.fill
     , Ui.background (Ui.rgb 255 172 98)
     , Ui.padding 16
@@ -357,6 +359,7 @@ showyButtonAttributes =
     , Ui.alignBottom
     , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
     , Ui.Font.weight 600
+    , Ui.Input.button onPress
     ]
 
 
@@ -395,9 +398,10 @@ h4 t =
 heading1Attrs : Theme -> List (Ui.Attribute msg)
 heading1Attrs theme =
     [ Ui.Font.size 36
-    , Ui.Font.semiBold
+    , Ui.Font.weight 600
     , Ui.Font.color lightTheme.defaultText
     , Ui.paddingWith { top = 40, right = 0, bottom = 30, left = 0 }
+    , Ui.Accessibility.h1
     ]
 
 
@@ -405,8 +409,9 @@ heading2Attrs : Theme -> List (Ui.Attribute msg)
 heading2Attrs theme =
     [ Ui.Font.color theme.elmText
     , Ui.Font.size 24
-    , Ui.Font.extraBold
+    , Ui.Font.weight 800
     , Ui.paddingWith { top = 0, right = 0, bottom = 20, left = 0 }
+    , Ui.Accessibility.h2
     ]
 
 
@@ -414,9 +419,10 @@ heading3Attrs : Theme -> List (Ui.Attribute msg)
 heading3Attrs theme =
     [ Ui.Font.color theme.defaultText
     , Ui.Font.size 18
-    , Ui.Font.medium
+    , Ui.Font.weight 500
     , Ui.paddingWith { top = 0, right = 0, bottom = 10, left = 0 }
     , Ui.Font.bold
+    , Ui.Accessibility.h3
     ]
 
 
@@ -424,6 +430,7 @@ heading4Attrs : Theme -> List (Ui.Attribute msg)
 heading4Attrs theme =
     [ Ui.Font.color theme.defaultText
     , Ui.Font.size 16
-    , Ui.Font.medium
+    , Ui.Font.weight 500
     , Ui.paddingWith { top = 0, right = 0, bottom = 10, left = 0 }
+    , Ui.Accessibility.h4
     ]

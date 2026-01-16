@@ -7,7 +7,7 @@ import Theme
 import TimeFormat exposing (Zoned)
 import Ui
 import Ui.Anim
-import Ui.Font as Font
+import Ui.Font
 import Ui.Layout
 import Ui.Prose
 

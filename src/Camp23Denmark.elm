@@ -46,7 +46,7 @@ view model subpage =
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image
                     [ Ui.width (Ui.px 300) ]
-                    meta.artifactPicture
+                    { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
                 , Ui.column [ Ui.spacing 20 ]
                     [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , Camp.elmCampTopLine meta
@@ -89,7 +89,7 @@ sponsors window =
                             )
                         )
                     ]
-                    { description = url, src = "/sponsors/" ++ image }
+                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
                 )
     in
     [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
@@ -112,14 +112,14 @@ sponsors window =
                         )
                     )
                 ]
-                { description = "https://www.elmweekly.nl", src = "/sponsors/" ++ "elm-weekly.svg" }
+                { description = "https://www.elmweekly.nl", source = "/sponsors/" ++ "elm-weekly.svg", onLoad = Nothing }
             , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
             ]
         )
     , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
     ]
         -- |> List.map asImg
-        |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.spacing 32 ]
+        |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
 unconferenceBulletPoints : Ui.Element msg

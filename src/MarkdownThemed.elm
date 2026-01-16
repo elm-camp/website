@@ -11,7 +11,7 @@ import Theme
 import Ui
 import Ui.Accessibility
 import Ui.Anim
-import Ui.Font as Font
+import Ui.Font
 import Ui.Layout
 import Ui.Prose
 
@@ -51,8 +51,10 @@ render chosenRenderer markdownBody =
 
 bulletPoint : List (Ui.Element msg) -> Ui.Element msg
 bulletPoint children =
-    Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) }
+    Ui.row
         [ Ui.spacing 5
+        , Ui.contentTop
+        , Ui.wrap
         , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
         ]
         [ Ui.Prose.paragraph
@@ -80,15 +82,18 @@ renderer theme =
     , html =
         Markdown.Html.oneOf
             [ Markdown.Html.tag "img"
-                (\src width_ maxWidth_ bg_ content ->
+                (\src width_ maxWidth bg_ content ->
                     let
                         attrs =
-                            case maxWidth_ of
-                                Just maxWidth ->
-                                    [ maxWidth
-                                        |> String.toInt
-                                        |> Maybe.map (\w -> Ui.width (Ui.fill |> Ui.maximum w))
-                                        |> Maybe.withDefault (Ui.width Ui.fill)
+                            case maxWidth of
+                                Just maxWidth2 ->
+                                    [ case String.toInt maxWidth2 of
+                                        Just maxWidth3 ->
+                                            Ui.widthMax maxWidth3
+
+                                        Nothing ->
+                                            Ui.noAttr
+                                    , Ui.width Ui.fill
                                     , Ui.centerX
                                     ]
 
@@ -106,14 +111,14 @@ renderer theme =
                                 (Ui.image
                                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                                     attrs
-                                    { src = src, description = "" }
+                                    { source = src, description = "", onLoad = Nothing }
                                 )
 
                         Nothing ->
                             Ui.image
                                 -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                                 attrs
-                                { src = src, description = "" }
+                                { source = src, description = "", onLoad = Nothing }
                 )
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withOptionalAttribute "width"
@@ -159,8 +164,8 @@ renderer theme =
         \{ title, destination } list ->
             Ui.el
                 [ Ui.link destination
-                , Font.underline
-                , Font.color theme.link
+                , Ui.Font.underline
+                , Ui.Font.color theme.link
                 ]
                 (case title of
                     Maybe.Just title_ ->
@@ -179,8 +184,9 @@ renderer theme =
             Ui.image
                 -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 attrs
-                { src = src
+                { source = src
                 , description = alt
+                , onLoad = Nothing
                 }
     , unorderedList =
         \items ->
@@ -193,8 +199,10 @@ renderer theme =
                         (\listItem ->
                             case listItem of
                                 ListItem _ children ->
-                                    Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) }
-                                        [ Ui.spacing 5
+                                    Ui.row
+                                        [ Ui.wrap
+                                        , Ui.contentTop
+                                        , Ui.spacing 5
                                         , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
                                         ]
                                         [ Ui.Prose.paragraph
@@ -209,8 +217,10 @@ renderer theme =
                 (items
                     |> List.indexedMap
                         (\index itemBlocks ->
-                            Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) }
-                                [ Ui.spacing 5
+                            Ui.row
+                                [ Ui.wrap
+                                , Ui.contentTop
+                                , Ui.spacing 5
                                 , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
                                 ]
                                 [ Ui.Prose.paragraph
@@ -227,7 +237,7 @@ renderer theme =
                 , Ui.rounded 5
                 , Ui.padding 10
                 , Ui.htmlAttribute (Html.Attributes.class "preserve-white-space")
-                , Ui.scrollbarX
+                , Ui.scrollableX
                 ]
                 [ Ui.html (Html.text body)
                 ]
@@ -252,31 +262,37 @@ heading : Theme.Theme -> { level : HeadingLevel, rawText : String, children : Li
 heading theme { level, rawText, children } =
     Ui.Prose.paragraph
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        ((case Markdown.Block.headingLevelToInt level of
-            1 ->
+        ((case level of
+            Markdown.Block.H1 ->
                 Theme.heading1Attrs theme
 
-            2 ->
+            Markdown.Block.H2 ->
                 Theme.heading2Attrs theme
 
-            3 ->
+            Markdown.Block.H3 ->
                 Theme.heading3Attrs theme
 
-            4 ->
+            Markdown.Block.H4 ->
                 Theme.heading4Attrs theme
 
-            _ ->
+            Markdown.Block.H5 ->
                 [ Ui.Font.size 12
-                , Ui.Font.medium
+                , Ui.Font.weight 500
                 , Ui.Font.center
                 , Ui.paddingXY 0 20
+                , Ui.Accessibility.h5
+                ]
+
+            Markdown.Block.H6 ->
+                [ Ui.Font.size 12
+                , Ui.Font.weight 500
+                , Ui.Font.center
+                , Ui.paddingXY 0 20
+                , Ui.Accessibility.h6
                 ]
          )
-            ++ [ Ui.Accessibility.heading (Markdown.Block.headingLevelToInt level)
-               , Ui.htmlAttribute
-                    (Html.Attributes.attribute "name" (rawTextToId rawText))
-               , Ui.htmlAttribute
-                    (Html.Attributes.id (rawTextToId rawText))
+            ++ [ Ui.htmlAttribute (Html.Attributes.attribute "name" (rawTextToId rawText))
+               , Ui.htmlAttribute (Html.Attributes.id (rawTextToId rawText))
                ]
         )
         children
