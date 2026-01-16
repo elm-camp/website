@@ -22,9 +22,6 @@ import Effect.Lamdera as Lamdera
 import Effect.Subscription as Subscription exposing (Subscription)
 import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
-import Element exposing (Element)
-import Element.Background as Background
-import Element.Font as Font
 import EmailAddress exposing (EmailAddress)
 import Env
 import Helpers
@@ -45,6 +42,11 @@ import Stripe
 import Task as TaskCore
 import Theme exposing (normalButtonAttributes)
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Ui
+import Ui.Anim
+import Ui.Font as Font
+import Ui.Layout
+import Ui.Prose
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
@@ -441,7 +443,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Command.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Element FrontendMsg
+header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Ui.Element FrontendMsg
 header config =
     let
         titleSize =
@@ -452,53 +454,51 @@ header config =
                 80
 
         elmCampTitle =
-            Element.link
-                []
-                { url = Route.encode HomepageRoute
-                , label = Element.el [ Font.size titleSize, Theme.glow, Element.paddingXY 0 8 ] (Element.text "Elm Camp")
-                }
+            Ui.el
+                [ Ui.link (Route.encode Route.HomepageRoute) ]
+                (Ui.el [ Ui.width Ui.shrink, Ui.Font.size titleSize, Theme.glow, Ui.paddingXY 0 8 ] (Ui.text "Elm Camp"))
 
         elmCampNextTopLine =
-            Element.column [ Element.spacing 30 ]
-                [ Element.row
-                    [ Element.centerX, Element.spacing 13 ]
-                    [ Element.el [ Element.width (Element.px 80) ] (Element.html (View.Logo.view config.logoModel)) |> Element.map Types.LogoMsg
-                    , Element.column []
-                        [ Element.column
-                            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-                            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-                            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text "2026")
+            Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
+                [ Ui.row
+                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
+                    [ Ui.el [ Ui.width (Ui.px 80) ] (Ui.html (View.Logo.view config.logoModel)) |> Ui.map Types.LogoMsg
+                    , Ui.column [ Ui.width Ui.shrink ]
+                        [ Ui.column
+                            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.up 1 ]
+                            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
+                            , Ui.el [ Ui.width Ui.shrink, Ui.Font.extraBold, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text "2026")
                             ]
                         ]
                     ]
-                , Element.column
-                    [ Element.moveRight 0, Element.spacing 2, Font.size 18, Element.moveUp 1 ]
-                    [ Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text "")
-                    , Element.el [ Font.bold, Font.color Theme.lightTheme.defaultText ] (Element.text Camp26Czech.location)
-                    , Element.el
-                        [ Font.bold, Font.color Theme.lightTheme.defaultText ]
+                , Ui.column
+                    [ Ui.width Ui.shrink, Ui.right 0, Ui.spacing 2, Ui.Font.size 18, Ui.up 1 ]
+                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text "")
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
+                    , Ui.el
+                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/)" |> MarkdownThemed.renderFull)
-                    , Element.el
-                        [ Font.bold, Font.color Theme.lightTheme.defaultText ]
-                        (Element.text "Monday 15th - Thursday 18th June 2026")
+                    , Ui.el
+                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
+                        (Ui.text "Monday 15th - Thursday 18th June 2026")
                     ]
                 ]
     in
     if config.window.width < 1000 || config.isCompact then
-        Element.column
-            [ Element.padding 30, Element.spacing 20, Element.centerX ]
-            [ Element.column
-                [ Element.spacing 24, Element.centerX ]
+        Ui.column
+            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.column
+                [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
             ]
 
     else
-        Element.row
-            [ Element.padding 30, Element.spacing 40, Element.centerX ]
-            [ Element.column
-                [ Element.spacing 24 ]
+        Ui.row
+            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 40, Ui.centerX ]
+            [ Ui.column
+                [ Ui.width Ui.shrink, Ui.spacing 24 ]
                 [ elmCampTitle
                 , elmCampNextTopLine
                 ]
@@ -513,38 +513,37 @@ view model =
 
         -- , W.Styles.globalStyles
         -- , W.Styles.baseTheme
-        , Element.layout
-            [ Element.width Element.fill
-            , Font.color Theme.lightTheme.defaultText
-            , Font.size 16
-            , Font.medium
-            , Background.color Theme.lightTheme.background
+        , Ui.layout
+            [ Ui.width Ui.fill
+            , Ui.Font.color Theme.lightTheme.defaultText
+            , Ui.Font.size 16
+            , Ui.Font.medium
+            , Ui.background Theme.lightTheme.background
             , (case model of
                 Loading _ ->
-                    Element.none
+                    Ui.none
 
                 Loaded loaded ->
                     case loaded.ticketsEnabled of
                         TicketsEnabled ->
-                            Element.none
+                            Ui.none
 
                         TicketsDisabled { adminMessage } ->
-                            Element.paragraph
-                                [ Font.color (Element.rgb 1 1 1)
-                                , Font.medium
-                                , Font.size 20
-                                , Background.color (Element.rgb 0.5 0 0)
-                                , Element.padding 8
-                                , Element.width Element.fill
+                            Ui.Prose.paragraph
+                                [ Ui.Font.color (Ui.rgb 255 255 255)
+                                , Ui.Font.medium
+                                , Ui.Font.size 20
+                                , Ui.background (Ui.rgb 128 0 0)
+                                , Ui.padding 8
                                 ]
-                                [ Element.text adminMessage ]
+                                [ Ui.text adminMessage ]
               )
-                |> Element.inFront
+                |> Ui.inFront
             ]
             (case model of
                 Loading _ ->
-                    Element.column [ Element.width Element.fill, Element.padding 20 ]
-                        [ Element.el [ Element.centerX ] (Element.text "Loading...")
+                    Ui.column [ Ui.padding 20 ]
+                        [ Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Loading...")
                         ]
 
                 Loaded loaded ->
@@ -554,51 +553,55 @@ view model =
     }
 
 
-loadedView : LoadedModel -> Element FrontendMsg
+loadedView : LoadedModel -> Ui.Element FrontendMsg
 loadedView model =
     case model.route of
         HomepageRoute ->
             homepageView model
 
         UnconferenceFormatRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            Ui.column
+                [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    (Ui.padding 20 :: Theme.contentAttributes)
                     [ Page.UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
 
         VenueAndAccessRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            Ui.column
+                [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    (Ui.padding 20 :: Theme.contentAttributes)
                     [ Camp26Czech.venueAccessContent
                     ]
                 , Theme.footer
                 ]
 
         CodeOfConductRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            Ui.column
+                [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    (Ui.padding 20 :: Theme.contentAttributes)
                     [ codeOfConductContent
                     ]
                 , Theme.footer
                 ]
 
         OrganisersRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            Ui.column
+                [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    (Ui.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
                     , Camp26Czech.organisers
                     ]
@@ -606,11 +609,12 @@ loadedView model =
                 ]
 
         ElmCampArchiveRoute ->
-            Element.column
-                [ Element.width Element.fill, Element.height Element.fill ]
+            Ui.column
+                [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Element.column
-                    (Element.padding 20 :: Theme.contentAttributes)
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    (Ui.padding 20 :: Theme.contentAttributes)
                     [ elmCampArchiveContent model ]
                 , Theme.footer
                 ]
@@ -619,39 +623,41 @@ loadedView model =
             Admin.view model
 
         PaymentSuccessRoute maybeEmailAddress ->
-            Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
-                [ Element.paragraph [ Font.size 20, Font.center ] [ Element.text "Your ticket purchase was successful!" ]
-                , Element.paragraph
-                    [ Element.width (Element.px 420) ]
-                    [ Element.text "An email has been sent to "
+            Ui.column
+                [ Ui.width Ui.shrink, Ui.centerX, Ui.centerY, Ui.padding 24, Ui.spacing 16 ]
+                [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.center ] [ Ui.text "Your ticket purchase was successful!" ]
+                , Ui.Prose.paragraph
+                    [ Ui.width (Ui.px 420) ]
+                    [ Ui.text "An email has been sent to "
                     , case maybeEmailAddress of
                         Just emailAddress ->
                             EmailAddress.toString emailAddress
-                                |> Element.text
-                                |> Element.el [ Font.semiBold ]
+                                |> Ui.text
+                                |> Ui.el [ Ui.width Ui.shrink, Ui.Font.semiBold ]
 
                         Nothing ->
-                            Element.text "your email address"
-                    , Element.text " with additional information."
+                            Ui.text "your email address"
+                    , Ui.text " with additional information."
                     ]
-                , Element.link
+                , Ui.link
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
+                    , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Return to homepage")
                     }
                 ]
 
         PaymentCancelRoute ->
-            Element.column
-                [ Element.centerX, Element.centerY, Element.padding 24, Element.spacing 16 ]
-                [ Element.paragraph
-                    [ Font.size 20 ]
-                    [ Element.text "You cancelled your ticket purchase" ]
-                , Element.link
+            Ui.column
+                [ Ui.width Ui.shrink, Ui.centerX, Ui.centerY, Ui.padding 24, Ui.spacing 16 ]
+                [ Ui.Prose.paragraph
+                    [ Ui.width Ui.shrink, Ui.Font.size 20 ]
+                    [ Ui.text "You cancelled your ticket purchase" ]
+                , Ui.link
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     normalButtonAttributes
                     { url = Route.encode HomepageRoute
-                    , label = Element.el [ Element.centerX ] (Element.text "Return to homepage")
+                    , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Return to homepage")
                     }
                 ]
 
@@ -683,7 +689,7 @@ downloadTicketSalesReminder =
         }
 
 
-homepageView : LoadedModel -> Element FrontendMsg
+homepageView : LoadedModel -> Ui.Element FrontendMsg
 homepageView model =
     let
         sidePadding =
@@ -693,19 +699,23 @@ homepageView model =
             else
                 60
     in
-    Element.column
-        [ Element.width Element.fill ]
-        [ Element.column
-            [ Element.spacing 50
-            , Element.width Element.fill
-            , Element.paddingEach { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+    Ui.column
+        []
+        [ Ui.column
+            [ Ui.spacing 50
+            , Ui.paddingWith { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
             ]
             [ header { window = model.window, isCompact = False, logoModel = model.logoModel }
-            , Element.column
-                [ Element.width Element.fill, Element.spacing 40 ]
+            , Ui.column
+                [ Ui.spacing 40 ]
                 [ --View.Sales.ticketSalesOpenCountdown model
-                  Element.column Theme.contentAttributes [ elmCampOverview ]
-                , Element.column Theme.contentAttributes
+                  Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    Theme.contentAttributes
+                    [ elmCampOverview ]
+                , Ui.column
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    Theme.contentAttributes
                     [ Camp26Czech.venuePictures model
 
                     --, Camp26Czech.conferenceSummary
@@ -727,7 +737,7 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-elmCampOverview : Element msg
+elmCampOverview : Ui.Element msg
 elmCampOverview =
     """
 # Elm Camp 2026 - Olomouc, Czechia
@@ -748,7 +758,7 @@ We find great potential for progress and innovation in a creative, focused, in-p
         |> MarkdownThemed.renderFull
 
 
-codeOfConductContent : Element msg
+codeOfConductContent : Ui.Element msg
 codeOfConductContent =
     """
 # Code of Conduct
@@ -823,9 +833,9 @@ This code of conduct was inspired by the [!!Con code of conduct](https://bangban
         |> MarkdownThemed.renderFull
 
 
-elmCampArchiveContent : LoadedModel -> Element msg
+elmCampArchiveContent : LoadedModel -> Ui.Element msg
 elmCampArchiveContent model =
-    Element.column []
+    Ui.column [ Ui.width Ui.shrink ]
         [ """
 # What happened at Elm Camp 2023
 

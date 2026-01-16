@@ -15,8 +15,6 @@ module Camp25US exposing
 import Camp
 import Camp25US.Archive
 import Camp25US.Artifacts
-import Element exposing (Element, Length)
-import Element.Font as Font
 import Helpers
 import Html
 import Html.Attributes
@@ -24,6 +22,11 @@ import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
+import Ui
+import Ui.Anim
+import Ui.Font as Font
+import Ui.Layout
+import Ui.Prose
 
 
 meta : Camp.Meta
@@ -36,18 +39,19 @@ meta =
     }
 
 
-view : LoadedModel -> SubPage -> Element FrontendMsg
+view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
 view model subpage =
-    Element.column
-        [ Element.width Element.fill, Element.height Element.fill ]
-        [ Element.column
-            (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
+    Ui.column
+        [ Ui.height Ui.fill ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
             [ Theme.rowToColumnWhen 700
                 model.window
-                [ Element.spacing 30, Element.centerX, Font.center ]
-                [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
-                , Element.column [ Element.width Element.fill, Element.spacing 20 ]
-                    [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
+                [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
+                [ Ui.image [ Ui.width (Ui.px 300) ] meta.artifactPicture
+                , Ui.column [ Ui.spacing 20 ]
+                    [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , elmTopLine
                     , elmBottomLine
                     ]
@@ -72,29 +76,29 @@ view model subpage =
         ]
 
 
-elmTopLine : Element msg
+elmTopLine : Ui.Element msg
 elmTopLine =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image [ Element.width (Element.px 49) ] meta.logo
-        , Element.column
-            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
+    Ui.row
+        [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
+        [ Ui.image [ Ui.width (Ui.px 49) ] meta.logo
+        , Ui.column
+            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.up 1 ]
+            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
+            , Ui.el [ Ui.width Ui.shrink, Ui.Font.extraBold, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
             ]
         ]
 
 
-elmBottomLine : Element msg
+elmBottomLine : Ui.Element msg
 elmBottomLine =
-    Element.column
-        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
-        , Element.text meta.location
+    Ui.column
+        [ Ui.width Ui.shrink, Theme.glow, Ui.Font.size 16, Ui.centerX, Ui.spacing 2 ]
+        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
+        , Ui.text meta.location
         ]
 
 
-conferenceSummary : Element msg
+conferenceSummary : Ui.Element msg
 conferenceSummary =
     """
 
@@ -153,13 +157,13 @@ prefix =
     "25-ronora/"
 
 
-venuePictures : LoadedModel -> Element msg
+venuePictures : LoadedModel -> Ui.Element msg
 venuePictures model =
     if model.window.width > 950 then
         [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Element.px 288) (prefix ++ image))
-            |> Element.wrappedRow
-                [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+            |> List.map (\image -> venueImage (Ui.px 288) (prefix ++ image))
+            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) }
+                [ Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
 
     else
         [ [ "image1.webp", "image2.webp" ]
@@ -168,17 +172,17 @@ venuePictures model =
         ]
             |> List.map
                 (\paths ->
-                    Element.row
-                        [ Element.spacing 10, Element.width Element.fill ]
-                        (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
+                    Ui.row
+                        [ Ui.spacing 10 ]
+                        (List.map (\image -> venueImage Ui.fill (prefix ++ image)) paths)
                 )
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+            |> Ui.column [ Ui.spacing 10 ]
 
 
-venueImage : Length -> String -> Element msg
+venueImage : Ui.Length -> String -> Ui.Element msg
 venueImage width path =
-    Element.image
-        [ Element.width width ]
+    Ui.image
+        [ Ui.width width ]
         { src = "/" ++ path, description = "Photo of part of Ronora Lodge" }
 
 
@@ -203,10 +207,10 @@ organisers =
 """
 
 
-venueAccessContent : Element msg
+venueAccessContent : Ui.Element msg
 venueAccessContent =
-    Element.column
-        []
+    Ui.column
+        [ Ui.width Ui.shrink ]
         [ """
 ## The venue
 
@@ -245,7 +249,7 @@ If you have questions or concerns about this website or attending Elm Camp, plea
             , Html.Attributes.style "border" "none"
             ]
             []
-            |> Element.html
+            |> Ui.html
         ]
 
 
@@ -258,55 +262,51 @@ contactDetails =
 """
 
 
-sponsors : { window | width : Int } -> Element msg
+sponsors : { window | width : Int } -> Ui.Element msg
 sponsors window =
     let
         asImg { image, url, width } =
-            Element.newTabLink
-                [ Element.width Element.fill ]
-                { url = url
-                , label =
-                    Element.image
-                        [ Element.width
-                            (Element.px
-                                (if window.width < 800 then
-                                    toFloat width * 0.7 |> round
+            Ui.el
+                [ Ui.linkNewTab url, Ui.width Ui.fill ]
+                (Ui.image
+                    [ Ui.width
+                        (Ui.px
+                            (if window.width < 800 then
+                                Basics.toFloat width * 0.7 |> Basics.round
 
-                                 else
-                                    width
-                                )
+                             else
+                                width
                             )
-                        ]
-                        { src = "/sponsors/" ++ image, description = url }
-                }
+                        )
+                    ]
+                    { description = url, src = "/sponsors/" ++ image }
+                )
     in
-    Element.column [ Element.centerX, Element.spacing 32 ]
+    Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
           , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
           ]
-            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
+            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
           , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , Element.newTabLink
-                [ Element.width Element.fill ]
-                { url = "https://www.elmweekly.nl"
-                , label =
-                    Element.row [ Element.spacing 10, Element.width (Element.px 180) ]
-                        [ Element.image
-                            [ Element.width
-                                (Element.px
-                                    (if window.width < 800 then
-                                        50 * 0.7 |> round
+          , Ui.el
+                [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
+                (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 180) ]
+                    [ Ui.image
+                        [ Ui.width
+                            (Ui.px
+                                (if window.width < 800 then
+                                    50 * 0.7 |> Basics.round
 
-                                     else
-                                        50
-                                    )
+                                 else
+                                    50
                                 )
-                            ]
-                            { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                        , Element.el [ Font.size 24 ] (Element.text "Elm Weekly")
+                            )
                         ]
-                }
+                        { description = "https://www.elmweekly.nl", src = "/sponsors/" ++ "elm-weekly.svg" }
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
+                    ]
+                )
           ]
-            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
+            |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         ]

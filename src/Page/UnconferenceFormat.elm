@@ -1,10 +1,13 @@
 module Page.UnconferenceFormat exposing (view)
 
-import Element exposing (Element)
 import MarkdownThemed
+import Ui
+import Ui.Anim
+import Ui.Layout
+import Ui.Prose
 
 
-view : Element msg
+view : Ui.Element msg
 view =
     """
 # Unconference Format

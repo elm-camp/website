@@ -17,9 +17,6 @@ module Admin exposing
     )
 
 import Effect.Command as Command exposing (Command)
-import Element exposing (Element)
-import Element.Font as Font
-import Element.Input as Input
 import EmailAddress
 import Env
 import Html
@@ -31,19 +28,26 @@ import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
 import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, Price2, TicketsEnabled(..))
+import Ui
+import Ui.Anim
+import Ui.Events
+import Ui.Font as Font
+import Ui.Input as Input
+import Ui.Layout
+import Ui.Prose
 
 
-view : LoadedModel -> Element FrontendMsg
+view : LoadedModel -> Ui.Element FrontendMsg
 view model =
     case model.backendModel of
         Just backendModel ->
             viewAdmin backendModel
 
         Nothing ->
-            Element.text "loading"
+            Ui.text "loading"
 
 
-viewAdmin : BackendModel -> Element FrontendMsg
+viewAdmin : BackendModel -> Ui.Element FrontendMsg
 viewAdmin backendModel =
     -- type alias BackendModel =
     --     { orders : SeqDict (Id StripeSessionId) Order
@@ -67,22 +71,22 @@ viewAdmin backendModel =
             "Orders (completed, pending, expired): "
                 ++ (List.map String.fromInt [ numberOfOrders, numberOfPendingOrders, numberOfExpiredOrders ] |> String.join ", ")
     in
-    Element.column
-        [ Element.width Element.fill
-        , Element.padding 24
-        , Element.spacing 40
+    Ui.column
+        [ Ui.padding 24
+        , Ui.spacing 40
         ]
         [ if Env.mode == Env.Development then
-            Input.button
+            Ui.Input.button
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.normalButtonAttributes
                 { onPress = Just AdminPullBackendModel
-                , label = Element.el [ Element.centerX ] (Element.text "Pull Backend Model from prod")
+                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Pull Backend Model from prod")
                 }
 
           else
-            Element.none
-        , Element.el [ Font.size 18 ] (Element.text "Admin")
-        , Element.el [ Font.size 18 ] (Element.text info)
+            Ui.none
+        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
+        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
         , viewOrders backendModel.orders
 
         -- , viewExpiredOrders2 backendModel.expiredOrders
@@ -95,56 +99,52 @@ viewAdmin backendModel =
         ]
 
 
-viewTicketsEnabled : TicketsEnabled -> Element msg
+viewTicketsEnabled : TicketsEnabled -> Ui.Element msg
 viewTicketsEnabled ticketsEnabled =
-    Element.column
-        [ Element.width Element.fill
-        ]
-        [ Element.text "TicketsEnabled:"
+    Ui.column
+        []
+        [ Ui.text "TicketsEnabled:"
         , case ticketsEnabled of
             TicketsEnabled ->
-                Element.text "TicketsEnabled"
+                Ui.text "TicketsEnabled"
 
             TicketsDisabled d ->
-                Element.text ("TicketsDisabled" ++ d.adminMessage)
+                Ui.text ("TicketsDisabled" ++ d.adminMessage)
         ]
 
 
-viewPrices : SeqDict (Id ProductId) Price2 -> Element msg
+viewPrices : SeqDict (Id ProductId) Price2 -> Ui.Element msg
 viewPrices prices =
-    Element.column
-        [ Element.width Element.fill
-        ]
-        [ Element.text "Prices TODO"
+    Ui.column
+        []
+        [ Ui.text "Prices TODO"
 
         -- , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> Element.text
         ]
 
 
-viewOrders : SeqDict (Id StripeSessionId) Types.Order -> Element msg
+viewOrders : SeqDict (Id StripeSessionId) Types.Order -> Ui.Element msg
 viewOrders orders =
     let
         n =
             orders |> SeqDict.toList |> List.length
     in
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacing 12
+    Ui.column
+        [ Ui.spacing 12
         ]
         (orders |> SeqDict.toList |> List.indexedMap viewOrder)
 
 
-viewExpiredOrders : SeqDict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders : SeqDict (Id StripeSessionId) Types.PendingOrder -> Ui.Element msg
 viewExpiredOrders orders =
     let
         n =
             orders |> SeqDict.toList |> List.length
     in
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacing 12
+    Ui.column
+        [ Ui.spacing 12
         ]
-        ([ Element.el [] (Element.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
+        ([ Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
          , quickTable (orders |> SeqDict.values)
             [ \order -> attendeesPending order |> String.join ", "
             , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
@@ -160,7 +160,7 @@ viewExpiredOrders orders =
         )
 
 
-quickTable : List a -> List (a -> String) -> Element msg
+quickTable : List a -> List (a -> String) -> Ui.Element msg
 quickTable collection fns =
     -- Because Element.table copy/paste doesn't do table formatting in GDocs
     collection
@@ -174,10 +174,10 @@ quickTable collection fns =
                     |> Html.tr []
             )
         |> Html.table []
-        |> Element.html
+        |> Ui.html
 
 
-viewExpiredOrders2 : SeqDict (Id StripeSessionId) Types.PendingOrder -> Element msg
+viewExpiredOrders2 : SeqDict (Id StripeSessionId) Types.PendingOrder -> Ui.Element msg
 viewExpiredOrders2 orders =
     let
         ordersCleaned : List String
@@ -188,28 +188,27 @@ viewExpiredOrders2 orders =
                 |> List.Extra.unique
                 |> List.sort
     in
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacing 8
+    Ui.column
+        [ Ui.spacing 8
         ]
-        (Element.el [] (Element.text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> Element.row [ Font.size 14, Element.spacing 8 ] [ Element.text (String.fromInt (k + 1)), Element.text s ])))
+        (Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> Ui.row [ Ui.width Ui.shrink, Ui.Font.size 14, Ui.spacing 8 ] [ Ui.text (String.fromInt (k + 1)), Ui.text s ])))
 
 
-viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Element msg
+viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Ui.Element msg
 viewOrder idx ( id, order ) =
-    Element.row
-        [ Element.width Element.fill, Font.size 14, Element.spacing 12 ]
-        [ Element.el [] (Element.text (String.fromInt idx))
-        , Element.el [] (Element.text (String.join ", " (attendees order)))
+    Ui.row
+        [ Ui.Font.size 14, Ui.spacing 12 ]
+        [ Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.fromInt idx))
+        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (attendees order)))
         ]
 
 
-viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Element msg
+viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Ui.Element msg
 viewPendingOrder idx ( id, order ) =
-    Element.row
-        [ Element.width Element.fill, Font.size 14, Element.spacing 12 ]
-        [ Element.el [] (Element.text (String.fromInt (idx + 1)))
-        , Element.el [] (Element.text (String.join ", " (attendeesPending order)))
+    Ui.row
+        [ Ui.Font.size 14, Ui.spacing 12 ]
+        [ Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.fromInt (idx + 1)))
+        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (attendeesPending order)))
 
         -- , Element.text <| Debug.toString order
         ]

@@ -3,13 +3,16 @@ module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, 
 import Date
 import DateFormat
 import Effect.Time as Time
-import Element exposing (Element)
-import Element.Font as Font
 import Theme
 import TimeFormat exposing (Zoned)
+import Ui
+import Ui.Anim
+import Ui.Font as Font
+import Ui.Layout
+import Ui.Prose
 
 
-ui : String -> String -> { model | now : Time.Posix } -> Element msg
+ui : String -> String -> { model | now : Time.Posix } -> Ui.Element msg
 ui t description model =
     let
         target =
@@ -19,7 +22,10 @@ ui t description model =
             model.now
                 |> Time.posixToMillis
     in
-    Element.el Theme.contentAttributes (Element.el [ Element.centerX ] (Theme.h2 (asTimeToGo target model.now)))
+    Ui.el
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        Theme.contentAttributes
+        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Theme.h2 (asTimeToGo target model.now)))
 
 
 ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
@@ -38,7 +44,7 @@ ticketSalesLive t model =
     (Time.posixToMillis model.now == 0) || secondsRemaining < 0
 
 
-detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Element msg
+detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Ui.Element msg
 detailedCountdown t description model =
     let
         target =
@@ -89,10 +95,13 @@ detailedCountdown t description model =
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
     if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        Element.none
+        Ui.none
 
     else
-        Element.paragraph (Theme.contentAttributes ++ [ Font.center ]) [ Theme.h2 (output ++ " " ++ description) ]
+        Ui.Prose.paragraph
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            (Theme.contentAttributes ++ [ Ui.Font.center ])
+            [ Theme.h2 (output ++ " " ++ description) ]
 
 
 

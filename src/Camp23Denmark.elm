@@ -2,12 +2,15 @@ module Camp23Denmark exposing (view)
 
 import Camp
 import Camp23Denmark.Artifacts
-import Element exposing (Element)
-import Element.Font
 import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
+import Ui
+import Ui.Anim
+import Ui.Font
+import Ui.Layout
+import Ui.Prose
 
 
 meta : Camp.Meta
@@ -31,20 +34,21 @@ images =
             )
 
 
-view : LoadedModel -> SubPage -> Element FrontendMsg
+view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
 view model subpage =
-    Element.column
-        [ Element.width Element.fill, Element.height Element.fill ]
-        [ Element.column
-            (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
+    Ui.column
+        [ Ui.height Ui.fill ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
             [ Theme.rowToColumnWhen 700
                 model.window
-                [ Element.spacing 30, Element.centerX, Element.Font.center ]
-                [ Element.image
-                    [ Element.width (Element.px 300) ]
+                [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
+                [ Ui.image
+                    [ Ui.width (Ui.px 300) ]
                     meta.artifactPicture
-                , Element.column [ Element.width Element.fill, Element.spacing 20 ]
-                    [ Element.paragraph [ Element.Font.size 50, Element.Font.center ] [ Element.text "Archive" ]
+                , Ui.column [ Ui.spacing 20 ]
+                    [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , Camp.elmCampTopLine meta
                     , Camp.elmCampBottomLine meta
                     ]
@@ -68,27 +72,25 @@ view model subpage =
         ]
 
 
-sponsors : { window | width : Int } -> Element msg
+sponsors : { window | width : Int } -> Ui.Element msg
 sponsors window =
     let
         asImg { image, url, width } =
-            Element.newTabLink
-                [ Element.width Element.fill ]
-                { url = url
-                , label =
-                    Element.image
-                        [ Element.width
-                            (Element.px
-                                (if window.width < 800 then
-                                    toFloat width * 0.7 |> round
+            Ui.el
+                [ Ui.linkNewTab url, Ui.width Ui.fill ]
+                (Ui.image
+                    [ Ui.width
+                        (Ui.px
+                            (if window.width < 800 then
+                                Basics.toFloat width * 0.7 |> Basics.round
 
-                                 else
-                                    width
-                                )
+                             else
+                                width
                             )
-                        ]
-                        { src = "/sponsors/" ++ image, description = url }
-                }
+                        )
+                    ]
+                    { description = url, src = "/sponsors/" ++ image }
+                )
     in
     [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
     , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
@@ -96,48 +98,46 @@ sponsors window =
     , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
     , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
     , asImg { image = "bekk.svg", url = "https://www.bekk.no/", width = 200 }
-    , Element.newTabLink
-        [ Element.width Element.fill ]
-        { url = "https://www.elmweekly.nl"
-        , label =
-            Element.row [ Element.spacing 10, Element.width (Element.px 200) ]
-                [ Element.image
-                    [ Element.width
-                        (Element.px
-                            (if window.width < 800 then
-                                60 * 0.7 |> round
+    , Ui.el
+        [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
+        (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 200) ]
+            [ Ui.image
+                [ Ui.width
+                    (Ui.px
+                        (if window.width < 800 then
+                            60 * 0.7 |> Basics.round
 
-                             else
-                                60
-                            )
+                         else
+                            60
                         )
-                    ]
-                    { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                , Element.el [ Element.Font.size 24 ] (Element.text "Elm Weekly")
+                    )
                 ]
-        }
+                { description = "https://www.elmweekly.nl", src = "/sponsors/" ++ "elm-weekly.svg" }
+            , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
+            ]
+        )
     , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
     ]
         -- |> List.map asImg
-        |> Element.wrappedRow [ Element.spacing 32 ]
+        |> Ui.Layout.row { wrap = True, align = ( Ui.Layout.left, Ui.Layout.top ) } [ Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
-unconferenceBulletPoints : Element msg
+unconferenceBulletPoints : Ui.Element msg
 unconferenceBulletPoints =
-    [ Element.text "Arrive 3pm Wed 28 June"
-    , Element.text "Depart 4pm Fri 30 June"
-    , Element.text "Dallund Castle, Denmark"
-    , Element.text "Daily opener un-keynote"
-    , Element.text "Collaborative session creation throughout"
-    , Element.text "Countless hallway conversations and mealtime connections"
-    , Element.text "Access to full castle grounds including lake swimming"
-    , Element.text "50 attendees"
+    [ Ui.text "Arrive 3pm Wed 28 June"
+    , Ui.text "Depart 4pm Fri 30 June"
+    , Ui.text "Dallund Castle, Denmark"
+    , Ui.text "Daily opener un-keynote"
+    , Ui.text "Collaborative session creation throughout"
+    , Ui.text "Countless hallway conversations and mealtime connections"
+    , Ui.text "Access to full castle grounds including lake swimming"
+    , Ui.text "50 attendees"
     ]
         |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
-        |> Element.column [ Element.spacing 15 ]
+        |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 15 ]
 
 
-schedule : Element msg
+schedule : Ui.Element msg
 schedule =
     """
 ## Wed 28th June
@@ -169,7 +169,7 @@ schedule =
         |> MarkdownThemed.renderFull
 
 
-venue : Element msg
+venue : Ui.Element msg
 venue =
     """
 Elm Camp takes place at Dallund Castle near Odense in Denmark.
@@ -183,7 +183,7 @@ All meals are organic or biodynamic and the venue can accommodate individual all
         |> MarkdownThemed.renderFull
 
 
-organisers : Element msg
+organisers : Ui.Element msg
 organisers =
     """
 Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.

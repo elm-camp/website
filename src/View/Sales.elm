@@ -33,11 +33,6 @@ import Camp25US.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
-import Element exposing (Color, Element)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
 import Html
 import Html.Attributes
 import Html.Events
@@ -52,6 +47,13 @@ import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
 import TimeFormat
 import Types exposing (FrontendMsg(..), LoadedModel)
+import Ui
+import Ui.Anim
+import Ui.Events
+import Ui.Font as Font
+import Ui.Input as Input
+import Ui.Layout
+import Ui.Prose
 import View.Countdown
 
 
@@ -65,7 +67,7 @@ ticketSalesOpen =
     (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
 
 
-view : LoadedModel -> Element FrontendMsg
+view : LoadedModel -> Ui.Element FrontendMsg
 view model =
     let
         ticketsAreLive =
@@ -76,35 +78,51 @@ view model =
                 v
 
             else
-                Element.none
+                Ui.none
 
         beforeTicketsAreLive v =
             if ticketsAreLive then
-                Element.none
+                Ui.none
 
             else
                 v
     in
-    Element.column Theme.contentAttributes
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive
-            (Element.column Theme.contentAttributes
+            (Ui.column
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                Theme.contentAttributes
                 [ ticketInfo model
                 ]
             )
-        , Element.column
-            [ Element.width Element.fill
-            , Element.spacing 60
-            , Element.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
+        , Ui.column
+            [ Ui.spacing 60
+            , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
-            [ Element.el Theme.contentAttributes opportunityGrantInfo
+            [ Ui.el
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                Theme.contentAttributes
+                opportunityGrantInfo
             , grantApplicationCopy
                 |> MarkdownThemed.renderFull
-                |> Element.el Theme.contentAttributes
-            , Element.el Theme.contentAttributes organisersInfo
+                |> Ui.el
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    Theme.contentAttributes
+            , Ui.el
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                Theme.contentAttributes
+                organisersInfo
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive (Element.el Theme.contentAttributes (MarkdownThemed.renderFull "# Attend Elm Camp"))
+            , afterTicketsAreLive
+                (Ui.el
+                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                    Theme.contentAttributes
+                    (MarkdownThemed.renderFull "# Attend Elm Camp")
+                )
             , afterTicketsAreLive (ticketsView model)
             , afterTicketsAreLive (accommodationView model)
             , afterTicketsAreLive
@@ -119,15 +137,17 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg
+ticketSalesOpenCountdown : LoadedModel -> Ui.Element FrontendMsg
 ticketSalesOpenCountdown model =
     let
         ticketsAreLive =
             View.Countdown.ticketSalesLive ticketSalesOpen model
     in
-    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         (if ticketsAreLive then
-            [ Element.el [ Font.size 20, Element.centerX ] goToTicketSales ]
+            [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
 
          else
             [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
@@ -147,21 +167,23 @@ ticketSalesOpenCountdown model =
                         zone
                         ticketSalesOpen
                         |> (\t ->
-                                Element.el
-                                    [ Element.centerX
-                                    , Element.paddingEach { bottom = 10, top = 10, left = 0, right = 0 }
+                                Ui.el
+                                    [ Ui.width Ui.shrink
+                                    , Ui.centerX
+                                    , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
                                     ]
-                                    (Element.text t)
+                                    (Ui.text t)
                            )
 
                 _ ->
-                    Element.el [ Element.centerX ] (Element.text "nozone")
-            , Input.button
-                (Theme.submitButtonAttributes True ++ [ Element.width (Element.px 200), Element.centerX ])
+                    Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "nozone")
+            , Ui.Input.button
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                (Theme.submitButtonAttributes True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
                 { onPress = Just DownloadTicketSalesReminder
-                , label = Element.el [ Font.center, Element.centerX ] (Element.text "Add to calendar")
+                , label = Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar")
                 }
-            , Element.text " "
+            , Ui.text " "
             ]
         )
 
@@ -171,11 +193,13 @@ ticketSalesHtmlId =
     Dom.id "ticket-sales"
 
 
-goToTicketSales : Element FrontendMsg
+goToTicketSales : Ui.Element FrontendMsg
 goToTicketSales =
-    Input.button showyButtonAttributes
+    Ui.Input.button
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        showyButtonAttributes
         { onPress = Just (SetViewPortForElement ticketSalesHtmlId)
-        , label = Element.text "Tickets on sale now! ⬇️"
+        , label = Ui.text "Tickets on sale now! ⬇️"
         }
 
 
@@ -185,7 +209,7 @@ goToTicketSales =
 --}
 
 
-ticketInfo : LoadedModel -> Element msg
+ticketInfo : LoadedModel -> Ui.Element msg
 ticketInfo model =
     let
         -- Get prices for each ticket type
@@ -323,7 +347,7 @@ All applicants and grant recipients will remain confidential. In the unlikely ca
 """
 
 
-opportunityGrantInfo : Element msg
+opportunityGrantInfo : Ui.Element msg
 opportunityGrantInfo =
     """
 # 🫶 Opportunity grant
@@ -334,7 +358,7 @@ Last year, we were able to offer opportunity grants to cover both ticket and tra
         |> MarkdownThemed.renderFull
 
 
-organisersInfo : Element msg
+organisersInfo : Ui.Element msg
 organisersInfo =
     """
 
@@ -346,7 +370,7 @@ Elm Camp is a community-driven non-profit initiative, organised by enthusiastic 
         |> MarkdownThemed.renderFull
 
 
-ticketsView : LoadedModel -> Element FrontendMsg
+ticketsView : LoadedModel -> Ui.Element FrontendMsg
 ticketsView model =
     let
         attendanceTicketPriceText =
@@ -358,18 +382,19 @@ ticketsView model =
                 Nothing ->
                     " - Price not available"
     in
-    Element.column Theme.contentAttributes
-        [ Element.row
-            [ Element.width Element.fill
-            , Element.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        Theme.contentAttributes
+        [ Ui.row
+            [ Ui.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
             ]
-            [ Element.column [ Element.width Element.fill ]
+            [ Ui.column []
                 [ """## 🎟️ Attendee Details
 Please enter details for each person attending Elm camp, then select your accommodation below.
                 """
                     |> MarkdownThemed.renderFull
                 ]
-            , Element.column []
+            , Ui.column [ Ui.width Ui.shrink ]
                 [ Theme.numericField
                     "Tickets"
                     (List.length model.form.attendees)
@@ -401,15 +426,15 @@ Please enter details for each person attending Elm camp, then select your accomm
             ]
         , case model.form.attendees of
             [] ->
-                Element.none
+                Ui.none
 
             _ ->
-                Element.column [ Element.width Element.fill, Element.spacing 20 ]
-                    [ Element.el [ Font.size 20 ] (Element.text "Attendees")
-                    , Element.column
-                        [ Element.spacing 16, Element.width Element.fill ]
+                Ui.column [ Ui.spacing 20 ]
+                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
+                    , Ui.column
+                        [ Ui.spacing 16 ]
                         (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
-                    , Element.paragraph [] [ Element.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
+                    , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
 
                     -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
                     ]
@@ -422,10 +447,12 @@ Please enter details for each person attending Elm camp, then select your accomm
 --}
 
 
-accommodationView : LoadedModel -> Element FrontendMsg
+accommodationView : LoadedModel -> Ui.Element FrontendMsg
 accommodationView model =
-    Element.column [ Element.width Element.fill, Element.spacing 20 ]
-        [ Element.column Theme.contentAttributes
+    Ui.column [ Ui.spacing 20 ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
             , """
 Please select one accommodation option per attendee.
@@ -452,26 +479,27 @@ The facilities for those who wish to bring a tent or campervan and camp are exce
                                 ticket
 
                         Nothing ->
-                            Element.text "No ticket prices found"
+                            Ui.text "No ticket prices found"
                 )
-            |> Theme.rowToColumnWhen 1200 model.window [ Element.spacing 16 ]
+            |> Theme.rowToColumnWhen 1200 model.window [ Ui.spacing 16 ]
         ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Element FrontendMsg
+formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Ui.Element FrontendMsg
 formView model productId priceId ticket =
     let
         form =
             model.form
 
         submitButton hasAttendeesAndAccommodation =
-            Input.button
+            Ui.Input.button
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 (Theme.submitButtonAttributes (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining))
                 { onPress = Just PressedSubmitForm
                 , label =
-                    Element.paragraph
-                        [ Font.center ]
-                        [ Element.text
+                    Ui.Prose.paragraph
+                        [ Ui.width Ui.shrink, Ui.Font.center ]
+                        [ Ui.text
                             (if Inventory.purchaseable ticket.productId model.slotsRemaining then
                                 "Purchase "
 
@@ -480,21 +508,22 @@ formView model productId priceId ticket =
                             )
                         , case form.submitStatus of
                             NotSubmitted _ ->
-                                Element.none
+                                Ui.none
 
                             Submitting ->
-                                Element.el [ Element.moveDown 5 ] Theme.spinnerWhite
+                                Ui.el [ Ui.width Ui.shrink, Ui.down 5 ] Theme.spinnerWhite
 
                             SubmitBackendError _ ->
-                                Element.none
+                                Ui.none
                         ]
                 }
 
         cancelButton =
-            Input.button
+            Ui.Input.button
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 normalButtonAttributes
                 { onPress = Just PressedCancelForm
-                , label = Element.el [ Element.centerX ] (Element.text "Cancel")
+                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel")
                 }
 
         includesAccom =
@@ -519,23 +548,24 @@ formView model productId priceId ticket =
             else
                 ""
     in
-    Element.column
-        [ Element.width Element.fill, Element.spacing 60 ]
-        [ Element.none
+    Ui.column
+        [ Ui.spacing 60 ]
+        [ Ui.none
 
         -- , carbonOffsetForm model.showCarbonOffsetTooltip form
         , opportunityGrant form
 
         --, sponsorships model form
         , summary model
-        , Element.column
+        , Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Theme.contentAttributes
-                ++ [ Element.spacing 24
+                ++ [ Ui.spacing 24
 
                    --    , padding 16
                    ]
             )
-            [ Element.none
+            [ Ui.none
             , MarkdownThemed.renderFull orderNotes
             , textInput
                 model.form
@@ -545,31 +575,31 @@ formView model productId priceId ticket =
                 form.billingEmail
             , case form.submitStatus of
                 NotSubmitted _ ->
-                    Element.none
+                    Ui.none
 
                 Submitting ->
                     -- @TODO spinner
-                    Element.none
+                    Ui.none
 
                 SubmitBackendError err ->
-                    Element.paragraph [] [ Element.text err ]
+                    Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text err ]
             , """
 Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
 
 By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
 """ |> MarkdownThemed.renderFull
             , if model.window.width > 600 then
-                Element.row [ Element.width Element.fill, Element.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
+                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
-                Element.column [ Element.width Element.fill, Element.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
+                Ui.column [ Ui.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
             , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
                 |> MarkdownThemed.renderFull
             ]
         ]
 
 
-attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
 attendeeForm model i attendee =
     let
         form =
@@ -587,17 +617,18 @@ attendeeForm model i attendee =
                 0
 
         removeButton =
-            Input.button
-                (normalButtonAttributes ++ [ Element.width (Element.px 100), Element.alignTop, Element.moveDown removeButtonAlignment ])
+            Ui.Input.button
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                (normalButtonAttributes ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.down removeButtonAlignment ])
                 { onPress =
                     Just
                         (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
-                , label = Element.el [ Element.centerX ] (Element.text "Remove")
+                , label = Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove")
                 }
     in
     Theme.rowToColumnWhen columnWhen
         model.window
-        [ Element.width Element.fill, Element.spacing 16 ]
+        [ Ui.width Ui.fill, Ui.spacing 16 ]
         [ textInput
             model.form
             (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
@@ -640,49 +671,51 @@ attendeeForm model i attendee =
         ]
 
 
-opportunityGrant : PurchaseForm -> Element FrontendMsg
+opportunityGrant : PurchaseForm -> Ui.Element FrontendMsg
 opportunityGrant form =
-    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         [ Theme.h2 "🫶 Opportunity grants"
-        , Element.paragraph [] [ Element.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
-            [ Element.column []
-                [ Element.paragraph [] [ Element.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
-                , Element.row [ Element.width Element.fill, Element.spacing 30 ]
-                    [ Element.column [ Element.width (Element.fillPortion 1) ]
-                        [ Element.row []
-                            [ Element.text "$ "
+            [ Ui.column [ Ui.width Ui.shrink ]
+                [ Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                , Ui.row [ Ui.spacing 30 ]
+                    [ Ui.column [ Ui.width (Ui.portion 1) ]
+                        [ Ui.row [ Ui.width Ui.shrink ]
+                            [ Ui.text "$ "
                             , textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
                             ]
                         ]
-                    , Element.column [ Element.width (Element.fillPortion 3) ]
-                        [ Element.row [ Element.width (Element.fillPortion 3) ]
-                            [ Element.el [ Element.paddingXY 0 10 ] (Element.text "0")
-                            , Element.el [ Element.paddingXY 0 10, Element.alignRight ] (Element.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
+                    , Ui.column [ Ui.width (Ui.portion 3) ]
+                        [ Ui.row [ Ui.width (Ui.portion 3) ]
+                            [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
+                            , Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ] (Ui.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
                             ]
-                        , Input.slider
-                            [ Element.behindContent
-                                (Element.el
-                                    [ Element.width Element.fill
-                                    , Element.height (Element.px 5)
-                                    , Element.centerY
-                                    , Background.color (Element.rgb255 94 176 125)
-                                    , Border.rounded 2
+                        , Ui.Input.slider
+                            [ Ui.width Ui.shrink
+                            , Ui.behindContent
+                                (Ui.el
+                                    [ Ui.height (Ui.px 5)
+                                    , Ui.centerY
+                                    , Ui.background (Ui.rgb 94 176 125)
+                                    , Ui.rounded 2
                                     ]
-                                    Element.none
+                                    Ui.none
                                 )
                             ]
                             { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
-                            , label = Input.labelHidden "Opportunity grant contribution value selection slider"
+                            , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
                             , min = 0
                             , max = 75000
                             , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
-                            , thumb = Input.defaultThumb
+                            , thumb = Ui.Input.defaultThumb
                             , step = Just 1000
                             }
-                        , Element.row [ Element.width (Element.fillPortion 3) ]
-                            [ Element.el [ Element.paddingXY 0 10 ] (Element.text "No contribution")
-                            , Element.el [ Element.paddingXY 0 10, Element.alignRight ] (Element.text "Donate full attendance")
+                        , Ui.row [ Ui.width (Ui.portion 3) ]
+                            [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "No contribution")
+                            , Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ] (Ui.text "Donate full attendance")
                             ]
                         ]
                     ]
@@ -691,18 +724,20 @@ opportunityGrant form =
         ]
 
 
-sponsorships : LoadedModel -> PurchaseForm -> Element FrontendMsg
+sponsorships : LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
 sponsorships model form =
-    Element.column (Theme.contentAttributes ++ [ Element.spacing 20 ])
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , Element.paragraph [] [ Element.text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
-            |> Theme.rowToColumnWhen 700 model.window [ Element.spacing 20, Element.width Element.fill ]
+            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]
         ]
 
 
-sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Element FrontendMsg
+sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Ui.Element FrontendMsg
 sponsorshipOption model form s =
     let
         displayCurrency =
@@ -717,10 +752,10 @@ sponsorshipOption model form s =
 
         attrs =
             if selected then
-                [ Border.color (Element.rgb255 94 176 125), Border.width 3 ]
+                [ Ui.borderColor (Ui.rgb 94 176 125), Ui.border 3 ]
 
             else
-                [ Border.color (Element.rgba255 0 0 0 0), Border.width 3 ]
+                [ Ui.borderColor (Ui.rgba255 0 0 0 0), Ui.border 3 ]
 
         priceDisplay =
             Theme.priceText { currency = displayCurrency, amount = s.price }
@@ -728,13 +763,14 @@ sponsorshipOption model form s =
         -- Fallback to hardcoded price if not in model.prices
     in
     Theme.panel attrs
-        [ Element.el [ Font.size 20, Font.bold ] (Element.text s.name)
-        , Element.el [ Font.size 30, Font.bold ] (Element.text priceDisplay)
-        , Element.paragraph [] [ Element.text s.description ]
+        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.bold ] (Ui.text s.name)
+        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 30, Ui.Font.bold ] (Ui.text priceDisplay)
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text s.description ]
         , s.features
-            |> List.map (\point -> Element.paragraph [ Font.size 12 ] [ Element.text ("• " ++ point) ])
-            |> Element.column [ Element.spacing 5 ]
-        , Input.button
+            |> List.map (\point -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 12 ] [ Ui.text ("• " ++ point) ])
+            |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 5 ]
+        , Ui.Input.button
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Theme.submitButtonAttributes True)
             { onPress =
                 Just
@@ -749,9 +785,9 @@ sponsorshipOption model form s =
                         }
                     )
             , label =
-                Element.el
-                    [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
-                    (Element.text
+                Ui.el
+                    [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.semiBold, Ui.Font.color (Ui.rgb 255 255 255) ]
+                    (Ui.text
                         (if selected then
                             "Un-select"
 
@@ -763,7 +799,7 @@ sponsorshipOption model form s =
         ]
 
 
-summary : LoadedModel -> Element msg
+summary : LoadedModel -> Ui.Element msg
 summary model =
     let
         grantTotal =
@@ -816,26 +852,28 @@ summary model =
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
     in
-    Element.column (Theme.contentAttributes ++ [ Element.spacing 10 ])
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (Theme.contentAttributes ++ [ Ui.spacing 10 ])
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> Element.text ("Attendees x " ++ String.fromInt num))
+        , model.form.attendees |> List.length |> (\num -> Ui.text ("Attendees x " ++ String.fromInt num))
         , if List.isEmpty model.form.accommodationBookings then
-            Element.text "No accommodation bookings"
+            Ui.text "No accommodation bookings"
 
           else
             model.form.accommodationBookings
                 |> List.group
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
-                |> Element.column []
+                |> Ui.column [ Ui.width Ui.shrink ]
         , Theme.viewIf (model.form.grantContribution /= "0")
-            (Element.text
+            (Ui.text
                 ("Opportunity grant: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
                 )
             )
         , Theme.viewIf (sponsorshipTotal > 0)
-            (Element.text
+            (Ui.text
                 ("Sponsorship: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
                 )
@@ -844,7 +882,7 @@ summary model =
         ]
 
 
-summaryAccommodation : LoadedModel -> ( PurchaseForm.Accommodation, List PurchaseForm.Accommodation ) -> Money.Currency -> Element msg
+summaryAccommodation : LoadedModel -> ( PurchaseForm.Accommodation, List PurchaseForm.Accommodation ) -> Money.Currency -> Ui.Element msg
 summaryAccommodation model ( accom, items ) displayCurrency =
     model.form.accommodationBookings
         |> List.filter ((==) accom)
@@ -860,49 +898,46 @@ summaryAccommodation model ( accom, items ) displayCurrency =
                 in
                 Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
            )
-        |> Element.text
+        |> Ui.text
 
 
-carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg
+carbonOffsetForm : Bool -> PurchaseForm -> Ui.Element FrontendMsg
 carbonOffsetForm showCarbonOffsetTooltip form =
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacing 24
-        , Element.paddingEach { left = 16, right = 16, top = 32, bottom = 16 }
-        , Border.width 2
-        , Border.color (Element.rgb255 94 176 125)
-        , Border.rounded 12
-        , Element.el
-            [ (if showCarbonOffsetTooltip then
+    Ui.column
+        [ Ui.spacing 24
+        , Ui.paddingWith { left = 16, right = 16, top = 32, bottom = 16 }
+        , Ui.border 2
+        , Ui.borderColor (Ui.rgb 94 176 125)
+        , Ui.rounded 12
+        , Ui.el
+            [ Ui.width Ui.shrink
+            , (if showCarbonOffsetTooltip then
                 tooltip "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)"
 
                else
-                Element.none
+                Ui.none
               )
-                |> Element.below
-            , Element.moveUp 20
-            , Element.moveRight 8
-            , Background.color Theme.lightTheme.background
+                |> Ui.below
+            , Ui.up 20
+            , Ui.right 8
+            , Ui.background Theme.lightTheme.background
             ]
-            (Input.button
-                [ Element.padding 8 ]
-                { onPress = Just PressedShowCarbonOffsetTooltip
-                , label =
-                    Element.row
-                        []
-                        [ Element.el [ Font.size 20 ] (Element.text "🌲 Carbon offsetting ")
-                        , Element.el [ Font.size 12 ] (Element.text "ℹ️")
-                        ]
-                }
+            (Ui.el
+                [ Ui.Events.onClick Types.PressedShowCarbonOffsetTooltip, Ui.padding 8 ]
+                (Ui.row [ Ui.width Ui.shrink ]
+                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "🌲 Carbon offsetting ")
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 12 ] (Ui.text "ℹ️")
+                    ]
+                )
             )
-            |> Element.inFront
+            |> Ui.inFront
         ]
-        [ Element.none
-        , Element.column
-            [ Element.spacing 8 ]
-            [ Element.paragraph
-                [ Font.semiBold ]
-                [ Element.text "What will be your primary method of travelling to the event?" ]
+        [ Ui.none
+        , Ui.column
+            [ Ui.width Ui.shrink, Ui.spacing 8 ]
+            [ Ui.Prose.paragraph
+                [ Ui.width Ui.shrink, Ui.Font.semiBold ]
+                [ Ui.text "What will be your primary method of travelling to the event?" ]
 
             -- , TravelMode.all
             --     |> List.map
@@ -926,7 +961,7 @@ carbonOffsetForm showCarbonOffsetTooltip form =
         ]
 
 
-radioButton : String -> String -> Bool -> Element ()
+radioButton : String -> String -> Bool -> Ui.Element ()
 radioButton groupName text isChecked =
     Html.label
         [ Html.Attributes.style "padding" "6px"
@@ -944,27 +979,27 @@ radioButton groupName text isChecked =
             []
         , Html.text text
         ]
-        |> Element.html
-        |> Element.el []
+        |> Ui.html
+        |> Ui.el [ Ui.width Ui.shrink ]
 
 
-textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
+textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
 textInput form onChange title validator text =
-    Element.column
-        [ Element.spacing 4, Element.width Element.fill, Element.alignTop ]
-        [ Input.text
-            [ Border.rounded 8 ]
+    Ui.column
+        [ Ui.spacing 4, Ui.alignTop ]
+        [ Ui.Input.text
+            [ Ui.width Ui.shrink, Ui.rounded 8 ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing
-            , label = Input.labelAbove [ Font.semiBold ] (Element.text title)
+            , label = Ui.Input.labelAbove [ Ui.width Ui.shrink, Ui.Font.semiBold ] (Ui.text title)
             }
         , case ( form.submitStatus, validator text ) of
             ( NotSubmitted PressedSubmit, Err error ) ->
                 errorText error
 
             _ ->
-                Element.none
+                Ui.none
         ]
 
 
@@ -980,21 +1015,22 @@ errorHtmlId =
     Dom.id "error"
 
 
-errorText : String -> Element msg
+errorText : String -> Ui.Element msg
 errorText error =
-    Element.paragraph
-        [ Font.color (Element.rgb255 172 0 0)
-        , Element.htmlAttribute (Dom.idToAttribute errorHtmlId)
+    Ui.Prose.paragraph
+        [ Ui.width Ui.shrink
+        , Ui.Font.color (Ui.rgb 172 0 0)
+        , Ui.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
-        [ Element.text ("🚨 " ++ error) ]
+        [ Ui.text ("🚨 " ++ error) ]
 
 
-tooltip : String -> Element msg
+tooltip : String -> Ui.Element msg
 tooltip text =
-    Element.paragraph
-        [ Element.paddingXY 12 8
-        , Background.color (Element.rgb 1 1 1)
-        , Element.width (Element.px 300)
-        , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
+    Ui.Prose.paragraph
+        [ Ui.paddingXY 12 8
+        , Ui.background (Ui.rgb 255 255 255)
+        , Ui.width (Ui.px 300)
+        , Ui.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 }
         ]
-        [ Element.text text ]
+        [ Ui.text text ]
