@@ -341,10 +341,9 @@ organisersInfo =
 
 # Organisers
 
-Elm Camp is a community-driven non-profit initiative, organised by [enthusiastic members of the Elm community](/organisers).
+Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
 """
-        -- ++ organisers2024
         |> MarkdownThemed.renderFull
 
 

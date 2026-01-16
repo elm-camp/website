@@ -600,7 +600,7 @@ loadedView model =
                 , Element.column
                     (Element.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
-                    , Camp26Czech.organisers |> MarkdownThemed.renderFull
+                    , Camp26Czech.organisers
                     ]
                 , Theme.footer
                 ]

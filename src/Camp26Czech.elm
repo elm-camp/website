@@ -159,26 +159,57 @@ venueImage width path =
     Element.image [ Element.width width ] { src = path, description = "Photo of Park Hotel" }
 
 
-organisers : String
+organisers : Element msg
 organisers =
-    """
-🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
+    [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
+      , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }
+      , { country = "🇩🇪", name = "Johannes Emerich", description = "Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps." }
+      , { country = "🇺🇸", name = "John Pavlick", description = "Professional combinator enthusiast at AppyPeople. Mostly harmless." }
+      , { country = "🇬🇧", name = "Katja Mordaunt", description = "Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club" }
+      ]
+    , [ { country = "🇦🇺", name = "Mario Rogic", description = "Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." }
+      , { country = "🇨🇿", name = "Martin Janiczek", description = "Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." }
+      , { country = "🇸🇪", name = "Martin Stewart", description = "Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm." }
+      , { country = "🇺🇸", name = "Wolfgang Schuster", description = "Author of Elm Weekly." }
+      ]
+    ]
+        |> List.map
+            (\column ->
+                List.map
+                    (\person ->
+                        Element.column
+                            [ Element.spacing 8 ]
+                            [ Element.text person.country
+                            , Element.paragraph [ Themes.greenTheme.header ] [ Element.text person.name ]
+                            , Element.paragraph [] [ Element.text person.description ]
+                            ]
+                    )
+                    column
+                    |> Element.column [ Element.width Element.fill, Element.alignTop, Element.spacing 16 ]
+            )
+        |> Element.row [ Element.spacing 32 ]
 
-🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
 
-🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
 
-🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
-
-🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
-
-🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
-
-🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
-
-🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
-
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
+--        """
+--🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
+--
+--🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
+--
+--🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
+--
+--🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
+--
+--🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
+--
+--🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
+--
+--🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
+--
+--🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
+--
+--🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
+--        |> MarkdownThemed.renderFull
 
 
 venueAccessContent : Element msg
