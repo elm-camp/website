@@ -8,6 +8,7 @@ module Theme exposing
     , fontFace
     , footer
     , glow
+    , greenTheme
     , h1
     , h2
     , h3
@@ -50,6 +51,7 @@ type alias Theme =
     , lightGrey : Element.Color
     , link : Element.Color
     , elmText : Element.Color
+    , background : Element.Color
     }
 
 
@@ -61,6 +63,19 @@ lightTheme =
     , lightGrey = Element.rgb255 220 240 255
     , grey = Element.rgb255 200 220 240
     , elmText = Element.rgb255 92 176 126
+    , background = Element.rgb255 255 244 225
+    }
+
+
+greenTheme : Theme
+greenTheme =
+    { defaultText = Element.rgb255 73 80 96
+    , mutedText = Element.rgb255 74 94 122
+    , link = Element.rgb255 12 109 82
+    , lightGrey = Element.rgb255 220 240 255
+    , grey = Element.rgb255 200 220 240
+    , elmText = Element.rgb255 13 109 82
+    , background = Element.rgb255 255 253 244
     }
 
 

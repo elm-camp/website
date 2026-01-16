@@ -1,7 +1,6 @@
 module View.Sales exposing
     ( accommodationView
     , attendeeForm
-    , backgroundColor
     , carbonOffsetForm
     , errorHtmlId
     , errorText
@@ -864,11 +863,6 @@ summaryAccommodation model ( accom, items ) displayCurrency =
         |> Element.text
 
 
-backgroundColor : Color
-backgroundColor =
-    Element.rgb255 255 244 225
-
-
 carbonOffsetForm : Bool -> PurchaseForm -> Element FrontendMsg
 carbonOffsetForm showCarbonOffsetTooltip form =
     Element.column
@@ -888,7 +882,7 @@ carbonOffsetForm showCarbonOffsetTooltip form =
                 |> Element.below
             , Element.moveUp 20
             , Element.moveRight 8
-            , Background.color backgroundColor
+            , Background.color Theme.lightTheme.background
             ]
             (Input.button
                 [ Element.padding 8 ]

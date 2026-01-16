@@ -1,4 +1,4 @@
-module MarkdownThemed exposing (bulletPoint, renderFull)
+module MarkdownThemed exposing (bulletPoint, newThemeRenderFull, renderFull)
 
 import Element exposing (Element)
 import Element.Background as Background
@@ -18,6 +18,11 @@ import Theme
 renderFull : String -> Element msg
 renderFull markdownBody =
     render (renderer Theme.lightTheme) markdownBody
+
+
+newThemeRenderFull : String -> Element msg
+newThemeRenderFull markdownBody =
+    render (renderer Theme.greenTheme) markdownBody
 
 
 render : Markdown.Renderer.Renderer (Element msg) -> String -> Element msg

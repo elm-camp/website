@@ -171,6 +171,7 @@ organisers =
       , { country = "🇨🇿", name = "Martin Janiczek", description = "Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." }
       , { country = "🇸🇪", name = "Martin Stewart", description = "Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm." }
       , { country = "🇺🇸", name = "Wolfgang Schuster", description = "Author of Elm Weekly." }
+      , { country = "🇨🇿", name = "Tomáš Látal", description = "Author of elm-debug-helper and several unfinished projects. Don’t ask him about Elm or Coderetreat, he will be talking about it for hours." }
       ]
     ]
         |> List.map
@@ -178,14 +179,17 @@ organisers =
                 List.map
                     (\person ->
                         Element.column
-                            [ Element.spacing 8 ]
-                            [ Element.text person.country
-                            , Element.paragraph [ Themes.greenTheme.header ] [ Element.text person.name ]
+                            [ Element.spacing 4 ]
+                            [ Element.row
+                                [ Element.spacing 8 ]
+                                [ Element.el [ Font.size 32 ] (Element.text person.country)
+                                , Element.paragraph [ Font.size 20, Font.color Theme.greenTheme.elmText ] [ Element.text person.name ]
+                                ]
                             , Element.paragraph [] [ Element.text person.description ]
                             ]
                     )
                     column
-                    |> Element.column [ Element.width Element.fill, Element.alignTop, Element.spacing 16 ]
+                    |> Element.column [ Element.width Element.fill, Element.alignTop, Element.spacing 24 ]
             )
         |> Element.row [ Element.spacing 32 ]
 

@@ -518,7 +518,7 @@ view model =
             , Font.color Theme.lightTheme.defaultText
             , Font.size 16
             , Font.medium
-            , Background.color View.Sales.backgroundColor
+            , Background.color Theme.lightTheme.background
             , (case model of
                 Loading _ ->
                     Element.none
