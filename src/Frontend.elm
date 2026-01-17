@@ -504,7 +504,7 @@ header config =
     in
     if config.window.width < 1000 || config.isCompact then
         Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 0 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.width Ui.shrink, Ui.paddingXY 16 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ elmCampTitle
