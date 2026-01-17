@@ -1,10 +1,13 @@
 module Camp23Denmark.Artifacts exposing (media, posts, view)
 
-import Element exposing (Element)
 import MarkdownThemed
+import Ui
+import Ui.Anim
+import Ui.Layout
+import Ui.Prose
 
 
-view : a -> Element msg
+view : a -> Ui.Element msg
 view model =
     """
 This page is [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm).
@@ -32,6 +35,6 @@ media =
     """
 ## Media
 
-<img src="/23-denmark/elm-camp-23-attendees.jpeg" width="100%" />
+![Denmark attendees](/23-denmark/elm-camp-23-attendees.jpeg)
 
 """

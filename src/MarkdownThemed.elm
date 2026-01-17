@@ -1,10 +1,5 @@
-module MarkdownThemed exposing (bulletPoint, renderFull)
+module MarkdownThemed exposing (bulletPoint, newThemeRenderFull, renderFull)
 
-import Element exposing (Element)
-import Element.Background as Background
-import Element.Border
-import Element.Font as Font
-import Element.Region
 import Helpers exposing (justs)
 import Html
 import Html.Attributes
@@ -13,14 +8,25 @@ import Markdown.Html
 import Markdown.Parser
 import Markdown.Renderer
 import Theme
+import Ui
+import Ui.Accessibility
+import Ui.Anim
+import Ui.Font
+import Ui.Layout
+import Ui.Prose
 
 
-renderFull : String -> Element msg
+renderFull : String -> Ui.Element msg
 renderFull markdownBody =
     render (renderer Theme.lightTheme) markdownBody
 
 
-render : Markdown.Renderer.Renderer (Element msg) -> String -> Element msg
+newThemeRenderFull : String -> Ui.Element msg
+newThemeRenderFull markdownBody =
+    render (renderer Theme.greenTheme) markdownBody
+
+
+render : Markdown.Renderer.Renderer (Ui.Element msg) -> String -> Ui.Element msg
 render chosenRenderer markdownBody =
     Markdown.Parser.parse markdownBody
         -- @TODO show markdown parsing errors, i.e. malformed html?
@@ -34,74 +40,85 @@ render chosenRenderer markdownBody =
                                     elements
 
                                 Err err ->
-                                    [ Element.text "Something went wrong rendering this page"
-                                    , Element.text err
+                                    [ Ui.text "Something went wrong rendering this page"
+                                    , Ui.text err
                                     ]
                        )
-                    |> Element.column
-                        [ Element.width Element.fill
-                        ]
+                    |> Ui.column
+                        []
            )
 
 
-bulletPoint : List (Element msg) -> Element msg
+bulletPoint : List (Ui.Element msg) -> Ui.Element msg
 bulletPoint children =
-    Element.wrappedRow
-        [ Element.spacing 5
-        , Element.paddingEach { top = 0, right = 0, bottom = 0, left = 20 }
-        , Element.width Element.fill
+    Ui.row
+        [ Ui.spacing 5
+        , Ui.contentTop
+        , Ui.wrap
+        , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
         ]
-        [ Element.paragraph
-            [ Element.alignTop ]
-            (Element.text " • " :: children)
+        [ Ui.Prose.paragraph
+            [ Ui.width Ui.shrink, Ui.alignTop ]
+            (Ui.text " • " :: children)
         ]
 
 
-renderer : Theme.Theme -> Markdown.Renderer.Renderer (Element msg)
+renderer : Theme.Theme -> Markdown.Renderer.Renderer (Ui.Element msg)
 renderer theme =
-    { heading = \data -> Element.row [] [ heading theme data ]
-    , paragraph = Element.paragraph [ Element.paddingEach { left = 0, right = 0, top = 0, bottom = 20 } ]
+    { heading = \data -> Ui.row [ Ui.width Ui.shrink ] [ heading theme data ]
+    , paragraph = Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.paddingWith { left = 0, right = 0, top = 0, bottom = 20 } ]
     , blockQuote =
         \children ->
-            Element.column
-                [ Font.size 20
-                , Font.italic
-                , Element.Border.widthEach { bottom = 0, left = 4, right = 0, top = 0 }
-                , Element.Border.color theme.grey
-                , Font.color theme.mutedText
-                , Element.padding 10
+            Ui.column
+                [ Ui.width Ui.shrink
+                , Ui.Font.size 20
+                , Ui.Font.italic
+                , Ui.borderWith { bottom = 0, left = 4, right = 0, top = 0 }
+                , Ui.borderColor theme.grey
+                , Ui.Font.color theme.mutedText
+                , Ui.paddingWith { left = 10, right = 10, top = 18, bottom = 0 }
                 ]
                 children
     , html =
         Markdown.Html.oneOf
             [ Markdown.Html.tag "img"
-                (\src width_ maxWidth_ bg_ content ->
+                (\src width_ maxWidth bg_ content ->
                     let
                         attrs =
-                            case maxWidth_ of
-                                Just maxWidth ->
-                                    [ maxWidth
-                                        |> String.toInt
-                                        |> Maybe.map (\w -> Element.width (Element.fill |> Element.maximum w))
-                                        |> Maybe.withDefault (Element.width Element.fill)
-                                    , Element.centerX
+                            case maxWidth of
+                                Just maxWidth2 ->
+                                    [ case String.toInt maxWidth2 of
+                                        Just maxWidth3 ->
+                                            Ui.widthMax maxWidth3
+
+                                        Nothing ->
+                                            Ui.noAttr
+                                    , Ui.width Ui.fill
+                                    , Ui.centerX
                                     ]
 
                                 Nothing ->
                                     [ width_
                                         |> Maybe.andThen String.toInt
-                                        |> Maybe.map (\w -> Element.width (Element.px w))
-                                        |> Maybe.withDefault (Element.width Element.fill)
+                                        |> Maybe.map (\w -> Ui.width (Ui.px w))
+                                        |> Maybe.withDefault (Ui.width Ui.fill)
                                     ]
                     in
                     case bg_ of
                         Just _ ->
-                            Element.el
-                                [ Element.Border.rounded 10, Element.padding 20 ]
-                                (Element.image attrs { src = src, description = "" })
+                            Ui.el
+                                [ Ui.width Ui.shrink, Ui.rounded 10, Ui.padding 20 ]
+                                (Ui.image
+                                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                                    attrs
+                                    { source = src, description = "", onLoad = Nothing }
+                                )
 
                         Nothing ->
-                            Element.image attrs { src = src, description = "" }
+                            Ui.image
+                                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                                attrs
+                                { source = src, description = "", onLoad = Nothing }
                 )
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withOptionalAttribute "width"
@@ -109,7 +126,7 @@ renderer theme =
                 |> Markdown.Html.withOptionalAttribute "bg"
             , Markdown.Html.tag "iframe"
                 (\src ratio title_ content ->
-                    Element.html
+                    Ui.html
                         (Html.div
                             [ Html.Attributes.style "position" "relative"
                             , Html.Attributes.style "width" "100%"
@@ -134,140 +151,142 @@ renderer theme =
                 |> Markdown.Html.withAttribute "src"
                 |> Markdown.Html.withAttribute "ratio"
                 |> Markdown.Html.withAttribute "title"
-            , Markdown.Html.tag "br" (\_ -> Element.html (Html.br [] []))
-            , Markdown.Html.tag "red" (\children -> Element.paragraph [ Font.color Theme.colors.red ] children)
+            , Markdown.Html.tag "br" (\_ -> Ui.html (Html.br [] []))
+            , Markdown.Html.tag "red" (\children -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.color Theme.colors.red ] children)
             ]
-    , text = \s -> Element.el [] (Element.text s)
+    , text = Ui.text
     , codeSpan =
-        \content -> Element.html (Html.code [] [ Html.text content ])
-    , strong = \list -> Element.paragraph [ Font.bold ] list
-    , emphasis = \list -> Element.paragraph [ Font.italic ] list
-    , hardLineBreak = Element.html (Html.br [] [])
+        \content -> Ui.html (Html.code [] [ Html.text content ])
+    , strong = \list -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.bold ] list
+    , emphasis = \list -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.italic ] list
+    , hardLineBreak = Ui.html (Html.br [] [])
     , link =
         \{ title, destination } list ->
-            Element.link
-                [ Font.underline
-                , Font.color theme.link
+            Ui.Prose.paragraph
+                [ Ui.link destination
+                , Ui.Font.underline
+                , Ui.Font.color theme.link
+                , Ui.width Ui.shrink
                 ]
-                { url = destination
-                , label =
-                    case title of
-                        Just title_ ->
-                            Element.text title_
+                (case title of
+                    Maybe.Just title_ ->
+                        [ Ui.text title_ ]
 
-                        Nothing ->
-                            Element.paragraph [] list
-                }
+                    Maybe.Nothing ->
+                        list
+                )
     , image =
         \{ alt, src, title } ->
-            let
-                attrs =
-                    [ title |> Maybe.map (\title_ -> Element.htmlAttribute (Html.Attributes.attribute "title" title_)) ]
-                        |> justs
-            in
-            Element.image
-                attrs
-                { src = src
+            Ui.image
+                (case title of
+                    Just title2 ->
+                        [ Ui.htmlAttribute (Html.Attributes.attribute "title" title2) ]
+
+                    Nothing ->
+                        []
+                )
+                { source = src
                 , description = alt
+                , onLoad = Nothing
                 }
     , unorderedList =
         \items ->
-            Element.column
-                [ Element.spacing 15
-                , Element.width Element.fill
-                , Element.paddingEach { top = 0, right = 0, bottom = 40, left = 0 }
+            Ui.column
+                [ Ui.spacing 15
+                , Ui.paddingWith { top = 0, right = 0, bottom = 40, left = 8 }
                 ]
-                (items
-                    |> List.map
-                        (\listItem ->
-                            case listItem of
-                                ListItem _ children ->
-                                    Element.wrappedRow
-                                        [ Element.spacing 5
-                                        , Element.paddingEach { top = 0, right = 0, bottom = 0, left = 20 }
-                                        , Element.width Element.fill
-                                        ]
-                                        [ Element.paragraph
-                                            [ Element.alignTop ]
-                                            (Element.text " • " :: children)
-                                        ]
-                        )
+                (List.map
+                    (\listItem ->
+                        case listItem of
+                            ListItem _ children ->
+                                Ui.Prose.paragraph
+                                    []
+                                    (Ui.text " • " :: children)
+                    )
+                    items
                 )
     , orderedList =
         \startingIndex items ->
-            Element.column [ Element.spacing 15, Element.width Element.fill ]
+            Ui.column [ Ui.spacing 15 ]
                 (items
                     |> List.indexedMap
                         (\index itemBlocks ->
-                            Element.wrappedRow
-                                [ Element.spacing 5
-                                , Element.paddingEach { top = 0, right = 0, bottom = 0, left = 20 }
-                                , Element.width Element.fill
+                            Ui.row
+                                [ Ui.wrap
+                                , Ui.contentTop
+                                , Ui.spacing 5
+                                , Ui.paddingWith { top = 0, right = 0, bottom = 0, left = 20 }
                                 ]
-                                [ Element.paragraph
-                                    [ Element.alignTop ]
-                                    (Element.text (String.fromInt (startingIndex + index) ++ ". ") :: itemBlocks)
+                                [ Ui.Prose.paragraph
+                                    [ Ui.width Ui.shrink, Ui.alignTop ]
+                                    (Ui.text (String.fromInt (startingIndex + index) ++ ". ") :: itemBlocks)
                                 ]
                         )
                 )
     , codeBlock =
         \{ body } ->
-            Element.column
-                [ Font.family [ Font.monospace ]
-                , Background.color theme.lightGrey
-                , Element.Border.rounded 5
-                , Element.padding 10
-                , Element.width Element.fill
-                , Element.htmlAttribute (Html.Attributes.class "preserve-white-space")
-                , Element.scrollbarX
+            Ui.column
+                [ Ui.Font.family [ Ui.Font.monospace ]
+                , Ui.background theme.lightGrey
+                , Ui.rounded 5
+                , Ui.padding 10
+                , Ui.htmlAttribute (Html.Attributes.class "preserve-white-space")
+                , Ui.scrollableX
                 ]
-                [ Element.html (Html.text body)
+                [ Ui.html (Html.text body)
                 ]
     , thematicBreak =
-        Element.el
-            [ Element.paddingEach { top = 0, left = 0, right = 0, bottom = 20 }, Element.width Element.fill ]
-            (Element.el
-                [ Element.width Element.fill, Element.height (Element.px 2), Background.color Theme.colors.green ]
-                Element.none
+        Ui.el
+            [ Ui.paddingWith { top = 0, left = 0, right = 0, bottom = 20 } ]
+            (Ui.el
+                [ Ui.height (Ui.px 2), Ui.background Theme.colors.green ]
+                Ui.none
             )
-    , table = \children -> Element.column [ Element.width Element.fill ] children
-    , tableHeader = \children -> Element.column [] children
-    , tableBody = \children -> Element.column [] children
-    , tableRow = \children -> Element.row [ Element.width Element.fill ] children
-    , tableCell = \_ children -> Element.column [ Element.width Element.fill ] children
-    , tableHeaderCell = \_ children -> Element.column [ Element.width Element.fill ] children
-    , strikethrough = \children -> Element.paragraph [ Font.strike ] children
+    , table = \children -> Ui.column [] children
+    , tableHeader = \children -> Ui.column [ Ui.width Ui.shrink ] children
+    , tableBody = \children -> Ui.column [ Ui.width Ui.shrink ] children
+    , tableRow = \children -> Ui.row [] children
+    , tableCell = \_ children -> Ui.column [] children
+    , tableHeaderCell = \_ children -> Ui.column [] children
+    , strikethrough = \children -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.strike ] children
     }
 
 
-heading : Theme.Theme -> { level : HeadingLevel, rawText : String, children : List (Element msg) } -> Element msg
+heading : Theme.Theme -> { level : HeadingLevel, rawText : String, children : List (Ui.Element msg) } -> Ui.Element msg
 heading theme { level, rawText, children } =
-    Element.paragraph
-        ((case Markdown.Block.headingLevelToInt level of
-            1 ->
+    Ui.Prose.paragraph
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        ((case level of
+            Markdown.Block.H1 ->
                 Theme.heading1Attrs theme
 
-            2 ->
+            Markdown.Block.H2 ->
                 Theme.heading2Attrs theme
 
-            3 ->
+            Markdown.Block.H3 ->
                 Theme.heading3Attrs theme
 
-            4 ->
+            Markdown.Block.H4 ->
                 Theme.heading4Attrs theme
 
-            _ ->
-                [ Font.size 12
-                , Font.medium
-                , Font.center
-                , Element.paddingXY 0 20
+            Markdown.Block.H5 ->
+                [ Ui.Font.size 12
+                , Ui.Font.weight 500
+                , Ui.Font.center
+                , Ui.paddingXY 0 20
+                , Ui.Accessibility.h5
+                ]
+
+            Markdown.Block.H6 ->
+                [ Ui.Font.size 12
+                , Ui.Font.weight 500
+                , Ui.Font.center
+                , Ui.paddingXY 0 20
+                , Ui.Accessibility.h6
                 ]
          )
-            ++ [ Element.Region.heading (Markdown.Block.headingLevelToInt level)
-               , Element.htmlAttribute
-                    (Html.Attributes.attribute "name" (rawTextToId rawText))
-               , Element.htmlAttribute
-                    (Html.Attributes.id (rawTextToId rawText))
+            ++ [ Ui.htmlAttribute (Html.Attributes.attribute "name" (rawTextToId rawText))
+               , Ui.htmlAttribute (Html.Attributes.id (rawTextToId rawText))
                ]
         )
         children

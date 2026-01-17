@@ -2,11 +2,12 @@ module View.Logo exposing (Model, Msg, PieceConfig, Tangram, TangramPiece(..), i
 
 import Effect.Test exposing (Button(..))
 import Html exposing (Html, div)
+import Html.Attributes
 import Html.Events exposing (onClick)
 import List.Extra
 import List.Nonempty exposing (Nonempty(..))
-import Svg exposing (Svg, g, polygon, svg)
-import Svg.Attributes exposing (fill, points, stroke, strokeWidth, transform, viewBox)
+import Svg exposing (Svg)
+import Svg.Attributes
 
 
 type TangramPiece
@@ -52,12 +53,12 @@ transition =
 
 strokeW : Svg.Attribute msg
 strokeW =
-    strokeWidth "12"
+    Svg.Attributes.strokeWidth "12"
 
 
 strokeColor : Svg.Attribute msg
 strokeColor =
-    stroke "#ffffff"
+    Svg.Attributes.stroke "#ffffff"
 
 
 transformValue_ : PieceConfig -> String -> String
@@ -81,13 +82,13 @@ largeTriangle config =
         transformValue =
             transformValue_ config "150 75"
     in
-    g
-        [ transform transformValue
+    Svg.g
+        [ Svg.Attributes.transform transformValue
         , transition
         ]
-        [ polygon
-            [ points "0,0 300,0 150,150"
-            , fill config.color
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 300,0 150,150"
+            , Svg.Attributes.fill config.color
             , strokeColor
             , strokeW
             , Svg.Attributes.strokeOpacity "1"
@@ -103,13 +104,13 @@ smallTriangle config =
         transformValue =
             transformValue_ config "75 37.5"
     in
-    g
-        [ transform transformValue
+    Svg.g
+        [ Svg.Attributes.transform transformValue
         , transition
         ]
-        [ polygon
-            [ points "0,0 150,0 75,75"
-            , fill config.color
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 150,0 75,75"
+            , Svg.Attributes.fill config.color
             , strokeColor
             , strokeW
             , Svg.Attributes.strokeLinejoin "round"
@@ -124,13 +125,13 @@ mediumTriangle config =
         transformValue =
             transformValue_ config "106.08 53.04"
     in
-    g
-        [ transform transformValue
+    Svg.g
+        [ Svg.Attributes.transform transformValue
         , transition
         ]
-        [ polygon
-            [ points "0,0 212.13,0 106.08,106.08"
-            , fill config.color
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 212.13,0 106.08,106.08"
+            , Svg.Attributes.fill config.color
             , strokeColor
             , strokeW
             , Svg.Attributes.strokeLinejoin "round"
@@ -145,13 +146,13 @@ square config =
         transformValue =
             transformValue_ config "53.04 53.04"
     in
-    g
-        [ transform transformValue
+    Svg.g
+        [ Svg.Attributes.transform transformValue
         , transition
         ]
-        [ polygon
-            [ points "0,0 106.08,0 106.08,106.08 0,106.08"
-            , fill config.color
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 106.08,0 106.08,106.08 0,106.08"
+            , Svg.Attributes.fill config.color
             , strokeColor
             , strokeW
             , Svg.Attributes.strokeLinejoin "round"
@@ -166,13 +167,13 @@ parallelogram config =
         transformValue =
             transformValue_ config "106.08 53.04"
     in
-    g
-        [ transform transformValue
+    Svg.g
+        [ Svg.Attributes.transform transformValue
         , transition
         ]
-        [ polygon
-            [ points "0,0 106.08,0 0,106.08 -106.08,106.08"
-            , fill config.color
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 106.08,0 0,106.08 -106.08,106.08"
+            , Svg.Attributes.fill config.color
             , strokeColor
             , strokeW
             , Svg.Attributes.strokeLinejoin "round"
@@ -286,13 +287,15 @@ viewTangramPiece piece =
 
 viewTangram : Tangram -> Svg Msg
 viewTangram tangram =
-    svg
-        [ viewBox "40 40 700 600"
+    Svg.svg
+        [ Svg.Attributes.viewBox "40 40 700 600"
         , onClick ToggleConfig
+        , Html.Attributes.style "cursor" "pointer"
+        , Html.Attributes.style "width" "80px"
         ]
         (List.map viewTangramPiece tangram)
 
 
 view : Model -> Html Msg
 view model =
-    div [] [ viewTangram (List.Nonempty.get model.index configurations) ]
+    viewTangram (List.Nonempty.get model.index configurations)

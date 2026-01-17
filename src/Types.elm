@@ -34,6 +34,7 @@ import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
+import Ui
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
 import View.Logo
@@ -52,6 +53,7 @@ type alias LoadingModel =
     , route : Route
     , isOrganiser : Bool
     , initData : Maybe InitData2
+    , elmUiState : Ui.State
     }
 
 
@@ -72,6 +74,7 @@ type alias LoadedModel =
     , backendModel : Maybe BackendModel
     , logoModel : View.Logo.Model
     , pressedAudioButton : Bool
+    , elmUiState : Ui.State
     }
 
 
@@ -298,6 +301,7 @@ type FrontendMsg
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | LogoMsg View.Logo.Msg
     | Noop
+    | ElmUiMsg Ui.Msg
 
 
 type ToBackend

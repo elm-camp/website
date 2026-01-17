@@ -1,10 +1,13 @@
 module Camp26Czech.Artifacts exposing (view)
 
-import Element exposing (Element)
 import MarkdownThemed
+import Ui
+import Ui.Anim
+import Ui.Layout
+import Ui.Prose
 
 
-view : a -> Element msg
+view : a -> Ui.Element msg
 view _ =
     """
 

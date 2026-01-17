@@ -16,8 +16,6 @@ module Camp26Czech exposing
 import Camp
 import Camp26Czech.Archive
 import Camp26Czech.Artifacts
-import Element exposing (Element, Length)
-import Element.Font as Font
 import Helpers
 import Html
 import Html.Attributes
@@ -25,6 +23,11 @@ import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
+import Ui
+import Ui.Anim
+import Ui.Font
+import Ui.Layout
+import Ui.Prose
 
 
 meta : Camp.Meta
@@ -42,18 +45,21 @@ location =
     "🇨🇿 Olomouc, Czechia"
 
 
-view : LoadedModel -> SubPage -> Element FrontendMsg
+view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
 view model subpage =
-    Element.column
-        [ Element.width Element.fill, Element.height Element.fill ]
-        [ Element.column
-            (Element.padding 20 :: Theme.contentAttributes ++ [ Element.spacing 50 ])
+    Ui.column
+        [ Ui.height Ui.fill ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
             [ Theme.rowToColumnWhen 700
                 model.window
-                [ Element.spacing 30, Element.centerX, Font.center ]
-                [ Element.image [ Element.width (Element.px 300) ] meta.artifactPicture
-                , Element.column [ Element.width Element.fill, Element.spacing 20 ]
-                    [ Element.paragraph [ Font.size 50, Font.center ] [ Element.text "Archive" ]
+                [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
+                [ Ui.image
+                    [ Ui.width (Ui.px 300) ]
+                    { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
+                , Ui.column [ Ui.spacing 20 ]
+                    [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , elmTopLine
                     , elmBottomLine
                     ]
@@ -69,29 +75,29 @@ view model subpage =
         ]
 
 
-elmTopLine : Element msg
+elmTopLine : Ui.Element msg
 elmTopLine =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image [ Element.width (Element.px 49) ] meta.logo
-        , Element.column
-            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
+    Ui.row
+        [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
+        [ Ui.image [ Ui.width (Ui.px 49) ] { source = meta.logo.src, description = meta.logo.description, onLoad = Nothing }
+        , Ui.column
+            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
+            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
+            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
             ]
         ]
 
 
-elmBottomLine : Element msg
+elmBottomLine : Ui.Element msg
 elmBottomLine =
-    Element.column
-        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
-        , Element.text meta.location
+    Ui.column
+        [ Ui.width Ui.shrink, Theme.glow, Ui.Font.size 16, Ui.centerX, Ui.spacing 2 ]
+        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
+        , Ui.text meta.location
         ]
 
 
-conferenceSummary : Element msg
+conferenceSummary : Ui.Element msg
 conferenceSummary =
     """
 
@@ -136,7 +142,7 @@ conferenceSummary =
         |> MarkdownThemed.renderFull
 
 
-venuePictures : LoadedModel -> Element msg
+venuePictures : LoadedModel -> Ui.Element msg
 venuePictures model =
     let
         prefix =
@@ -147,44 +153,86 @@ venuePictures model =
     ]
         |> List.map
             (\paths ->
-                Element.row
-                    [ Element.spacing 10, Element.width Element.fill ]
-                    (List.map (\image -> venueImage Element.fill (prefix ++ image)) paths)
+                Ui.row
+                    [ Ui.spacing 10 ]
+                    (List.map (\image -> venueImage Ui.fill (prefix ++ image)) paths)
             )
-        |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+        |> Ui.column [ Ui.spacing 10 ]
 
 
-venueImage : Length -> String -> Element msg
+venueImage : Ui.Length -> String -> Ui.Element msg
 venueImage width path =
-    Element.image [ Element.width width ] { src = path, description = "Photo of Park Hotel" }
+    Ui.image [ Ui.width width ] { source = path, description = "Photo of Park Hotel", onLoad = Nothing }
 
 
-organisers : String
-organisers =
-    """
-🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
+organisers : Int -> Ui.Element msg
+organisers windowWidth =
+    [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
+      , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }
+      , { country = "🇩🇪", name = "Johannes Emerich", description = "Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps." }
+      , { country = "🇺🇸", name = "John Pavlick", description = "Professional combinator enthusiast at AppyPeople. Mostly harmless." }
+      , { country = "🇬🇧", name = "Katja Mordaunt", description = "Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club" }
+      ]
+    , [ { country = "🇦🇺", name = "Mario Rogic", description = "Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." }
+      , { country = "🇨🇿", name = "Martin Janiczek", description = "Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." }
+      , { country = "🇸🇪", name = "Martin Stewart", description = "Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm." }
+      , { country = "🇺🇸", name = "Wolfgang Schuster", description = "Author of Elm Weekly." }
+      , { country = "🇨🇿", name = "Tomáš Látal", description = "Author of elm-debug-helper and several unfinished projects. Don’t ask him about Elm or Coderetreat, he will be talking about it for hours." }
+      ]
+    ]
+        |> (\list2 ->
+                if windowWidth < 1000 then
+                    [ List.concat list2 ]
 
-🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
+                else
+                    list2
+           )
+        |> List.map
+            (\column ->
+                List.map
+                    (\person ->
+                        Ui.column
+                            [ Ui.width Ui.shrink, Ui.spacing 4 ]
+                            [ Ui.row
+                                [ Ui.width Ui.shrink, Ui.spacing 8 ]
+                                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 32 ] (Ui.text person.country)
+                                , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.color Theme.greenTheme.elmText ] [ Ui.text person.name ]
+                                ]
+                            , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text person.description ]
+                            ]
+                    )
+                    column
+                    |> Ui.column [ Ui.alignTop, Ui.spacing 24 ]
+            )
+        |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
 
-🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
-
-🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
-
-🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
-
-🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
-
-🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
-
-🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
-
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
 
 
-venueAccessContent : Element msg
+--        """
+--🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
+--
+--🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
+--
+--🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
+--
+--🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
+--
+--🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
+--
+--🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
+--
+--🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
+--
+--🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
+--
+--🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
+--        |> MarkdownThemed.renderFull
+
+
+venueAccessContent : Ui.Element msg
 venueAccessContent =
-    Element.column
-        []
+    Ui.column
+        [ Ui.width Ui.shrink ]
         [ """
 # The venue and access
 
@@ -232,55 +280,54 @@ contactDetails =
 * Elm Slack: @katjam"""
 
 
-sponsors : { window | width : Int } -> Element msg
+sponsors : { window | width : Int } -> Ui.Element msg
 sponsors window =
     let
         asImg { image, url, width } =
-            Element.newTabLink
-                [ Element.width Element.fill ]
-                { url = url
-                , label =
-                    Element.image
-                        [ Element.width
-                            (Element.px
-                                (if window.width < 800 then
-                                    toFloat width * 0.7 |> round
+            Ui.el
+                [ Ui.linkNewTab url, Ui.width Ui.fill ]
+                (Ui.image
+                    [ Ui.width
+                        (Ui.px
+                            (if window.width < 800 then
+                                Basics.toFloat width * 0.7 |> Basics.round
 
-                                 else
-                                    width
-                                )
+                             else
+                                width
                             )
-                        ]
-                        { src = "/sponsors/" ++ image, description = url }
-                }
+                        )
+                    ]
+                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
+                )
     in
-    Element.column [ Element.centerX, Element.spacing 32 ]
+    Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
           , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
           ]
-            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
+            |> Ui.row [ Ui.contentTop, Ui.wrap, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
           , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , Element.newTabLink
-                [ Element.width Element.fill ]
-                { url = "https://www.elmweekly.nl"
-                , label =
-                    Element.row [ Element.spacing 10, Element.width (Element.px 180) ]
-                        [ Element.image
-                            [ Element.width
-                                (Element.px
-                                    (if window.width < 800 then
-                                        50 * 0.7 |> round
+          , Ui.el
+                [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
+                (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 180) ]
+                    [ Ui.image
+                        [ Ui.width
+                            (Ui.px
+                                (if window.width < 800 then
+                                    50 * 0.7 |> Basics.round
 
-                                     else
-                                        50
-                                    )
+                                 else
+                                    50
                                 )
-                            ]
-                            { src = "/sponsors/" ++ "elm-weekly.svg", description = "https://www.elmweekly.nl" }
-                        , Element.el [ Font.size 24 ] (Element.text "Elm Weekly")
+                            )
                         ]
-                }
+                        { description = "https://www.elmweekly.nl"
+                        , source = "/sponsors/" ++ "elm-weekly.svg"
+                        , onLoad = Nothing
+                        }
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
+                    ]
+                )
           ]
-            |> Element.wrappedRow [ Element.centerX, Element.spacing 32 ]
+            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
         ]

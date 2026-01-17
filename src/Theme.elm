@@ -8,6 +8,7 @@ module Theme exposing
     , fontFace
     , footer
     , glow
+    , greenTheme
     , h1
     , h2
     , h3
@@ -31,42 +32,63 @@ module Theme exposing
     , viewIf
     )
 
-import Element exposing (Element)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
+import Color
 import Html exposing (Html)
 import Html.Attributes
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
+import Ui
+import Ui.Accessibility
+import Ui.Anim
+import Ui.Events
+import Ui.Font
+import Ui.Input
+import Ui.Layout
+import Ui.Prose
+import Ui.Shadow
 
 
 type alias Theme =
-    { defaultText : Element.Color
-    , mutedText : Element.Color
-    , grey : Element.Color
-    , lightGrey : Element.Color
-    , link : Element.Color
-    , elmText : Element.Color
+    { defaultText : Ui.Color
+    , mutedText : Ui.Color
+    , grey : Ui.Color
+    , lightGrey : Ui.Color
+    , link : Ui.Color
+    , elmText : Ui.Color
+    , background : Ui.Color
     }
 
 
 lightTheme : Theme
 lightTheme =
-    { defaultText = Element.rgb255 30 50 46
-    , mutedText = Element.rgb255 74 94 122
-    , link = Element.rgb255 12 109 82
-    , lightGrey = Element.rgb255 220 240 255
-    , grey = Element.rgb255 200 220 240
-    , elmText = Element.rgb255 92 176 126
+    { defaultText = Ui.rgb 30 50 46
+    , mutedText = Ui.rgb 74 94 122
+    , link = Ui.rgb 12 109 82
+    , lightGrey = Ui.rgb 220 240 255
+    , grey = Ui.rgb 200 220 240
+    , elmText = Ui.rgb 92 176 126
+    , background = Ui.rgb 255 244 225
     }
 
 
-contentAttributes : List (Element.Attribute msg)
+greenTheme : Theme
+greenTheme =
+    { defaultText = Ui.rgb 73 80 96
+    , mutedText = Ui.rgb 74 94 122
+    , link = Ui.rgb 12 109 82
+    , lightGrey = Ui.rgb 220 240 255
+    , grey = Ui.rgb 200 220 240
+    , elmText = Ui.rgb 13 109 82
+    , background = Ui.rgb 255 253 244
+    }
+
+
+contentAttributes : List (Ui.Attribute msg)
 contentAttributes =
-    [ Element.width (Element.maximum 800 Element.fill), Element.centerX ]
+    [ Ui.widthMax 800
+    , Ui.centerX
+    ]
 
 
 css : Html msg
@@ -99,22 +121,22 @@ css =
         ]
 
 
-colors : { green : Element.Color, lightGrey : Element.Color, white : Element.Color, red : Element.Color }
+colors : { green : Ui.Color, lightGrey : Ui.Color, white : Ui.Color, red : Ui.Color }
 colors =
-    { green = Element.rgb255 92 176 126
-    , lightGrey = Element.rgb255 200 200 200
-    , white = Element.rgb255 255 255 255
-    , red = Element.rgb255 234 87 59
+    { green = Ui.rgb 92 176 126
+    , lightGrey = Ui.rgb 200 200 200
+    , white = Ui.rgb 255 255 255
+    , red = Ui.rgb 234 87 59
     }
 
 
-colorWithAlpha : Float -> Element.Color -> Element.Color
+colorWithAlpha : Float -> Ui.Color -> Ui.Color
 colorWithAlpha alpha color =
     let
         { red, green, blue } =
-            Element.toRgb color
+            Color.toRgba color
     in
-    Element.rgba red green blue alpha
+    Color.rgba red green blue alpha
 
 
 fontFace : Int -> String -> String -> String
@@ -131,13 +153,13 @@ fontFace weight name fontFamilyName =
 }"""
 
 
-viewIf : Bool -> Element msg -> Element msg
+viewIf : Bool -> Ui.Element msg -> Ui.Element msg
 viewIf condition view =
     if condition then
         view
 
     else
-        Element.none
+        Ui.none
 
 
 priceText : Price -> String
@@ -150,237 +172,271 @@ priceAmount { amount } =
     toFloat amount
 
 
-panel : List (Element.Attribute msg) -> List (Element msg) -> Element msg
+panel : List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 panel attrs x =
-    Element.column
-        ([ Element.width Element.fill
-         , Element.alignTop
-         , Element.spacing 16
-         , Background.color (Element.rgb 1 1 1)
-         , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 4, color = Element.rgba 0 0 0 0.25 }
-         , Element.height Element.fill
-         , Border.rounded 16
-         , Element.padding 16
+    Ui.column
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        ([ Ui.width Ui.fill
+         , Ui.alignTop
+         , Ui.spacing 16
+         , Ui.background (Ui.rgb 255 255 255)
+         , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
+         , Ui.height Ui.fill
+         , Ui.rounded 16
+         , Ui.padding 16
          ]
             ++ attrs
         )
         x
 
 
-submitButtonAttributes : Bool -> List (Element.Attribute msg)
-submitButtonAttributes isEnabled =
-    [ Element.width Element.fill
-    , Background.color
+submitButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
+submitButtonAttributes onPress isEnabled =
+    [ Ui.width Ui.shrink
+    , Ui.background
         (if isEnabled then
-            Element.rgb255 92 176 126
+            Ui.rgb 92 176 126
 
          else
-            Element.rgb255 137 141 137
+            Ui.rgb 137 141 137
         )
-    , Element.padding 16
-    , Border.rounded 8
-    , Element.alignBottom
-    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Font.semiBold
-    , Font.color (Element.rgb 1 1 1)
+    , Ui.padding 16
+    , Ui.rounded 8
+    , Ui.alignBottom
+    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+    , Ui.Font.weight 600
+    , Ui.Font.color (Ui.rgb 255 255 255)
+    , Ui.Input.button onPress
     ]
 
 
-toggleButton : String -> Bool -> Maybe msg -> Element msg
+toggleButton : String -> Bool -> msg -> Ui.Element msg
 toggleButton label isActive onPress =
-    Input.button
-        (toggleButtonAttributes isActive)
-        { onPress = onPress
-        , label = Element.el [ Element.centerX ] (Element.text label)
-        }
+    Ui.el
+        (toggleButtonAttributes onPress isActive)
+        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text label))
 
 
-toggleButtonAttributes : Bool -> List (Element.Attribute msg)
-toggleButtonAttributes isActive =
-    [ Background.color
+toggleButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
+toggleButtonAttributes onPress isActive =
+    [ Ui.background
         (if isActive then
             colors.green
 
          else
             colors.lightGrey
         )
-    , Element.padding 16
-    , Border.rounded 8
-    , Element.alignBottom
-    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Font.semiBold
-    , Font.color (Element.rgb 1 1 1)
+    , Ui.padding 16
+    , Ui.rounded 8
+    , Ui.width Ui.shrink
+    , Ui.alignBottom
+    , Ui.Input.button onPress
+    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+    , Ui.Font.weight 600
+    , Ui.Font.color (Ui.rgb 255 255 255)
     ]
 
 
-rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Element.Attribute msg) -> List (Element msg) -> Element msg
+rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 rowToColumnWhen width window attrs children =
     if window.width > width then
-        Element.row attrs children
+        Ui.row
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            attrs
+            children
 
     else
-        Element.column attrs children
+        Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            attrs
+            children
 
 
-spinnerWhite : Element msg
+spinnerWhite : Ui.Element msg
 spinnerWhite =
-    Element.el
-        [ Element.width (Element.px 16)
-        , Element.height (Element.px 16)
-        , Element.htmlAttribute (Html.Attributes.class "spin")
+    Ui.el
+        [ Ui.width (Ui.px 16)
+        , Ui.height (Ui.px 16)
+        , Ui.htmlAttribute (Html.Attributes.class "spin")
         , attr "border" "2px solid #fff"
         , attr "border-top-color" "transparent"
         , attr "border-radius" "50px"
         ]
-        Element.none
+        Ui.none
 
 
-attr : String -> String -> Element.Attribute msg
+attr : String -> String -> Ui.Attribute msg
 attr name value =
-    Element.htmlAttribute (Html.Attributes.style name value)
+    Ui.htmlAttribute (Html.Attributes.style name value)
 
 
-glow : Element.Attr decorative msg
+glow : Ui.Attribute msg
 glow =
-    Font.glow (colorWithAlpha 0.25 lightTheme.defaultText) 4
+    Ui.Shadow.font { offset = ( 1, 1 ), color = colorWithAlpha 0.25 lightTheme.defaultText, blur = 2 }
 
 
-footer : Element msg
-footer =
-    let
-        btn route label =
-            Element.link
-                [ Background.color (Element.rgb255 12 109 82), Element.paddingXY 10 10, Border.rounded 10 ]
-                { url = Route.encode route, label = Element.text label }
-    in
-    Element.el
-        [ Element.paddingXY 24 16
-        , Element.width Element.fill
-        , Element.alignBottom
+footerButton : Route -> String -> Ui.Element msg
+footerButton route label =
+    Ui.el
+        [ Ui.link (Route.encode route)
+        , Ui.background (Ui.rgb 12 109 82)
+        , Ui.paddingXY 16 10
+        , Ui.rounded 10
+        , Ui.width Ui.shrink
         ]
-        (Element.wrappedRow
-            ([ Element.spacing 10
-             , Font.color (Element.rgb 1 1 1)
+        (Ui.text label)
+
+
+footer : Ui.Element msg
+footer =
+    Ui.el
+        [ Ui.paddingXY 24 16
+        , Ui.alignBottom
+        ]
+        (Ui.row
+            ([ Ui.spacing 10
+             , Ui.Font.color (Ui.rgb 255 255 255)
+             , Ui.wrap
+             , Ui.contentTop
              ]
                 ++ contentAttributes
             )
-            [ btn CodeOfConductRoute "Code of Conduct"
-            , btn UnconferenceFormatRoute "Unconference Guidelines"
-            , btn VenueAndAccessRoute "Venue & Access"
-            , btn OrganisersRoute "Organisers"
-            , btn ElmCampArchiveRoute "Elm Camp Archives"
+            [ footerButton CodeOfConductRoute "Code of Conduct"
+            , footerButton UnconferenceFormatRoute "Unconference Guidelines"
+            , footerButton VenueAndAccessRoute "Venue & Access"
+            , footerButton OrganisersRoute "Organisers"
+            , footerButton ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )
 
 
-numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Element msg
+numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Ui.Element msg
 numericField title value downMsg upMsg =
-    Element.row [ Element.spacing 5, Element.width Element.fill ]
-        [ Input.button
-            (normalButtonAttributes
-                ++ [ Background.color colors.green
-                   , Font.color colors.white
-                   , Element.width (Element.px 50)
+    Ui.row [ Ui.spacing 5 ]
+        [ Ui.el
+            (normalButtonAttributes (downMsg (value - 1))
+                ++ [ Ui.background colors.green
+                   , Ui.Font.color colors.white
+                   , Ui.width (Ui.px 50)
                    ]
             )
-            { onPress = Just (downMsg (value - 1))
-            , label = Element.el [ Element.centerX ] (Element.text "-")
-            }
-        , Input.button
-            normalButtonAttributes
-            { onPress = Nothing
-            , label = Element.text (String.fromInt value)
-            }
-        , Input.button
-            (normalButtonAttributes
-                ++ [ Background.color colors.green
-                   , Font.color colors.white
-                   , Element.width (Element.px 50)
+            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "-"))
+        , Ui.el
+            [ Ui.width Ui.fill
+            , Ui.background (Ui.rgb 255 255 255)
+            , Ui.padding 16
+            , Ui.rounded 8
+            , Ui.alignBottom
+            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+            , Ui.Font.weight 600
+            ]
+            (Ui.text (String.fromInt value))
+        , Ui.el
+            (normalButtonAttributes (upMsg (value + 1))
+                ++ [ Ui.background colors.green
+                   , Ui.Font.color colors.white
+                   , Ui.width (Ui.px 50)
                    ]
             )
-            { onPress = Just (upMsg (value + 1))
-            , label = Element.el [ Element.centerX ] (Element.text "+")
-            }
+            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "+"))
         ]
 
 
-normalButtonAttributes : List (Element.Attribute msg)
-normalButtonAttributes =
-    [ Element.width Element.fill
-    , Background.color (Element.rgb255 255 255 255)
-    , Element.padding 16
-    , Border.rounded 8
-    , Element.alignBottom
-    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Font.semiBold
+normalButtonAttributes : msg -> List (Ui.Attribute msg)
+normalButtonAttributes onPress =
+    [ Ui.background (Ui.rgb 255 255 255)
+    , Ui.padding 16
+    , Ui.rounded 8
+    , Ui.alignBottom
+    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+    , Ui.Font.weight 600
+    , Ui.Input.button onPress
+    , Ui.width Ui.shrink
     ]
 
 
-showyButtonAttributes : List (Element.Attribute msg)
-showyButtonAttributes =
-    [ Element.width Element.fill
-    , Background.color (Element.rgb255 255 172 98)
-    , Element.padding 16
-    , Border.rounded 8
-    , Font.color (Element.rgb 0 0 0)
-    , Element.alignBottom
-    , Border.shadow { offset = ( 0, 1 ), size = 0, blur = 2, color = Element.rgba 0 0 0 0.1 }
-    , Font.semiBold
+showyButtonAttributes : msg -> List (Ui.Attribute msg)
+showyButtonAttributes onPress =
+    [ Ui.width Ui.fill
+    , Ui.background (Ui.rgb 255 172 98)
+    , Ui.padding 16
+    , Ui.rounded 8
+    , Ui.Font.color (Ui.rgb 0 0 0)
+    , Ui.alignBottom
+    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+    , Ui.Font.weight 600
+    , Ui.Input.button onPress
     ]
 
 
-h1 : String -> Element msg
+h1 : String -> Ui.Element msg
 h1 t =
-    Element.el (heading1Attrs lightTheme) (Element.text t)
+    Ui.el
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (heading1Attrs lightTheme)
+        (Ui.text t)
 
 
-h2 : String -> Element msg
+h2 : String -> Ui.Element msg
 h2 t =
-    Element.el (heading2Attrs lightTheme) (Element.text t)
+    Ui.el
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (heading2Attrs lightTheme)
+        (Ui.text t)
 
 
-h3 : String -> Element msg
+h3 : String -> Ui.Element msg
 h3 t =
-    Element.el (heading3Attrs lightTheme) (Element.text t)
+    Ui.el
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (heading3Attrs lightTheme)
+        (Ui.text t)
 
 
-h4 : String -> Element msg
+h4 : String -> Ui.Element msg
 h4 t =
-    Element.el (heading4Attrs lightTheme) (Element.text t)
+    Ui.el
+        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+        (heading4Attrs lightTheme)
+        (Ui.text t)
 
 
-heading1Attrs : Theme -> List (Element.Attr () msg)
+heading1Attrs : Theme -> List (Ui.Attribute msg)
 heading1Attrs theme =
-    [ Font.size 36
-    , Font.semiBold
-    , Font.color lightTheme.defaultText
-    , Element.paddingEach { top = 40, right = 0, bottom = 30, left = 0 }
+    [ Ui.Font.size 36
+    , Ui.Font.weight 600
+    , Ui.Font.color lightTheme.defaultText
+    , Ui.paddingWith { top = 40, right = 0, bottom = 30, left = 0 }
+    , Ui.Accessibility.h1
     ]
 
 
-heading2Attrs : Theme -> List (Element.Attr () msg)
+heading2Attrs : Theme -> List (Ui.Attribute msg)
 heading2Attrs theme =
-    [ Font.color theme.elmText
-    , Font.size 24
-    , Font.extraBold
-    , Element.paddingEach { top = 0, right = 0, bottom = 20, left = 0 }
+    [ Ui.Font.color theme.elmText
+    , Ui.Font.size 24
+    , Ui.Font.weight 800
+    , Ui.paddingWith { top = 16, right = 0, bottom = 20, left = 0 }
+    , Ui.Accessibility.h2
     ]
 
 
-heading3Attrs : Theme -> List (Element.Attr () msg)
+heading3Attrs : Theme -> List (Ui.Attribute msg)
 heading3Attrs theme =
-    [ Font.color theme.defaultText
-    , Font.size 18
-    , Font.medium
-    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
-    , Font.bold
+    [ Ui.Font.color theme.defaultText
+    , Ui.Font.size 18
+    , Ui.Font.weight 500
+    , Ui.paddingWith { top = 8, right = 0, bottom = 16, left = 0 }
+    , Ui.Font.bold
+    , Ui.Accessibility.h3
     ]
 
 
-heading4Attrs : Theme -> List (Element.Attr () msg)
+heading4Attrs : Theme -> List (Ui.Attribute msg)
 heading4Attrs theme =
-    [ Font.color theme.defaultText
-    , Font.size 16
-    , Font.medium
-    , Element.paddingEach { top = 0, right = 0, bottom = 10, left = 0 }
+    [ Ui.Font.color theme.defaultText
+    , Ui.Font.size 16
+    , Ui.Font.weight 500
+    , Ui.paddingWith { top = 0, right = 0, bottom = 10, left = 0 }
+    , Ui.Accessibility.h4
     ]

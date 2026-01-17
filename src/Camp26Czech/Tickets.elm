@@ -26,11 +26,6 @@ module Camp26Czech.Tickets exposing
 -}
 
 import Camp26Czech.Product as Product
-import Element exposing (Element)
-import Element.Background as Background
-import Element.Border as Border
-import Element.Font as Font
-import Element.Input as Input
 import Env
 import Helpers
 import Id exposing (Id)
@@ -40,6 +35,13 @@ import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
 import Theme
+import Ui
+import Ui.Anim
+import Ui.Events
+import Ui.Font
+import Ui.Input
+import Ui.Layout
+import Ui.Prose
 
 
 
@@ -221,21 +223,21 @@ dict =
         |> SeqDict.fromList
 
 
-viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Element msg
+viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Ui.Element msg
 viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
     let
         selectedCount =
             form.accommodationBookings |> List.filter ((==) accom) |> List.length
     in
     Theme.panel []
-        [ Element.none
+        [ Ui.none
 
         -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
-        , Element.paragraph [ Font.semiBold, Font.size 20 ] [ Element.text ticket.name ]
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket.name ]
         , MarkdownThemed.renderFull ticket.description
-        , Element.el
-            [ Font.bold, Font.size 36, Element.alignBottom ]
-            (Element.text (Theme.priceText price))
+        , Ui.el
+            [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
+            (Ui.text (Theme.priceText price))
         , if ticketAvailable then
             if selectedCount > 0 then
                 Theme.numericField
@@ -245,22 +247,16 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
                     (\_ -> addMsg)
 
             else
-                let
-                    ( text_, msg ) =
-                        ( "Select", Just addMsg )
-                in
-                Input.button
-                    (Theme.submitButtonAttributes ticketAvailable)
-                    { onPress = msg
-                    , label =
-                        Element.el
-                            [ Element.centerX, Font.semiBold, Font.color (Element.rgb 1 1 1) ]
-                            (Element.text text_)
-                    }
+                Ui.el
+                    (Theme.submitButtonAttributes addMsg ticketAvailable)
+                    (Ui.el
+                        [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+                        (Ui.text "Select")
+                    )
 
           else if ticket.name == "Campfire Ticket" then
-            Element.text "Waitlist"
+            Ui.text "Waitlist"
 
           else
-            Element.text "Sold out!"
+            Ui.text "Sold out!"
         ]

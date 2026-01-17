@@ -1,30 +1,34 @@
 module Camp26Czech.Archive exposing (view)
 
-import Element exposing (Element)
 import MarkdownThemed
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
+import Ui
+import Ui.Anim
+import Ui.Layout
+import Ui.Prose
 
 
-view : LoadedModel -> Element FrontendMsg
+view : LoadedModel -> Ui.Element FrontendMsg
 view model =
-    Element.column
-        [ Element.width Element.fill, Element.spacing 40 ]
-        [ Element.column
+    Ui.column
+        [ Ui.spacing 40 ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ content1, unconferenceBulletPoints model ]
         , []
-            |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+            |> Ui.column [ Ui.spacing 10 ]
         ]
 
 
-content1 : Element msg
+content1 : Ui.Element msg
 content1 =
     "# Archive"
         |> MarkdownThemed.renderFull
 
 
-unconferenceBulletPoints : LoadedModel -> Element FrontendMsg
+unconferenceBulletPoints : LoadedModel -> Ui.Element FrontendMsg
 unconferenceBulletPoints model =
     []
-        |> Element.column [ Element.spacing 15 ]
+        |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 15 ]

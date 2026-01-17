@@ -3,10 +3,13 @@ module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, 
 {-| Shared definition for all camp years.
 -}
 
-import Element exposing (Element)
-import Element.Font as Font
 import MarkdownThemed
 import Theme
+import Ui
+import Ui.Anim
+import Ui.Font
+import Ui.Layout
+import Ui.Prose
 
 
 type alias Meta =
@@ -18,95 +21,110 @@ type alias Meta =
     }
 
 
-elmCampTopLine : Meta -> Element msg
+elmCampTopLine : Meta -> Ui.Element msg
 elmCampTopLine meta =
-    Element.row
-        [ Element.centerX, Element.spacing 13 ]
-        [ Element.image [ Element.width (Element.px 49) ] meta.logo
-        , Element.column
-            [ Element.spacing 2, Font.size 24, Element.moveUp 1 ]
-            [ Element.el [ Theme.glow ] (Element.text "Unconference")
-            , Element.el [ Font.extraBold, Font.color Theme.lightTheme.elmText ] (Element.text meta.tag)
+    Ui.row
+        [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
+        [ Ui.image [ Ui.width (Ui.px 49) ] { source = meta.logo.src, description = meta.logo.description, onLoad = Nothing }
+        , Ui.column
+            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
+            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
+            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
             ]
         ]
 
 
-elmCampBottomLine : Meta -> Element msg
+elmCampBottomLine : Meta -> Ui.Element msg
 elmCampBottomLine meta =
-    Element.column
-        [ Theme.glow, Font.size 16, Element.centerX, Element.spacing 2 ]
-        [ Element.el [ Font.bold, Element.centerX ] (Element.text meta.dates)
-        , Element.text meta.location
+    Ui.column
+        [ Ui.width Ui.shrink, Theme.glow, Ui.Font.size 16, Ui.centerX, Ui.spacing 2 ]
+        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
+        , Ui.text meta.location
         ]
 
 
 type alias ArchiveContents msg =
-    { conferenceSummary : Element msg
-    , schedule : Maybe (Element msg)
-    , venue : Maybe (Element msg)
-    , organisers : Element msg
-    , sponsors : Element msg
+    { conferenceSummary : Ui.Element msg
+    , schedule : Maybe (Ui.Element msg)
+    , venue : Maybe (Ui.Element msg)
+    , organisers : Ui.Element msg
+    , sponsors : Ui.Element msg
     , images : List { src : String, description : String }
     }
 
 
 {-| View an archive page for a past year of Elm Camp.
 -}
-viewArchive : ArchiveContents msg -> { a | width : Int } -> Element msg
+viewArchive : ArchiveContents msg -> { a | width : Int } -> Ui.Element msg
 viewArchive contents window =
-    Element.column
-        [ Element.width Element.fill, Element.spacing 40 ]
-        [ Element.column
+    Ui.column
+        [ Ui.spacing 40 ]
+        [ Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Unconference"
             , contents.conferenceSummary
             ]
         , if window.width > 950 then
             contents.images
-                |> List.map (Element.image [ Element.width (Element.px 288) ])
-                |> Element.wrappedRow
-                    [ Element.spacing 10, Element.width (Element.px 900), Element.centerX ]
+                |> List.map
+                    (\image ->
+                        Ui.image
+                            [ Ui.width (Ui.px 288) ]
+                            { source = image.src, description = image.description, onLoad = Nothing }
+                    )
+                |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
 
           else
             groupsOfTwo contents.images
                 |> List.map
                     (\row ->
-                        Element.row
-                            [ Element.spacing 10, Element.width Element.fill ]
-                            (List.map (Element.image [ Element.width Element.fill ]) row)
+                        Ui.row
+                            [ Ui.spacing 10 ]
+                            (List.map
+                                (\image ->
+                                    Ui.image [] { source = image.src, description = image.description, onLoad = Nothing }
+                                )
+                                row
+                            )
                     )
-                |> Element.column [ Element.spacing 10, Element.width Element.fill ]
+                |> Ui.column [ Ui.spacing 10 ]
         , contents.schedule
             |> Maybe.map
                 (\schedule ->
-                    Element.column
+                    Ui.column
+                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                         Theme.contentAttributes
                         [ MarkdownThemed.renderFull "# Schedule"
                         , schedule
                         ]
                 )
-            |> Maybe.withDefault Element.none
+            |> Maybe.withDefault Ui.none
         , contents.venue
             |> Maybe.map
                 (\venue ->
-                    Element.column
+                    Ui.column
+                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                         Theme.contentAttributes
                         [ MarkdownThemed.renderFull "# Travel & Venue"
                         , venue
                         ]
                 )
-            |> Maybe.withDefault Element.none
-        , Element.column
+            |> Maybe.withDefault Ui.none
+        , Ui.column
+            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Our sponsors"
             , contents.sponsors
             ]
-        , Element.column
-            [ Element.width Element.fill
-            , Element.spacing 24
+        , Ui.column
+            [ Ui.spacing 24
             ]
             [ MarkdownThemed.renderFull "# Organisers"
-            , Element.el Theme.contentAttributes contents.organisers
+            , Ui.el
+                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+                Theme.contentAttributes
+                contents.organisers
             ]
         ]
 
