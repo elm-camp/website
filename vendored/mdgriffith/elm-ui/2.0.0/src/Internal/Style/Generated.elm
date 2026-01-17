@@ -1,6 +1,7 @@
-module Internal.Style.Generated exposing (Var(..), classes, vars, stylesheet, lineHeightAdjustment)
+module Internal.Style.Generated exposing (Var(..), classes, lineHeightAdjustment, stylesheet, vars)
 
-{-| This file is generated via 'npm run stylesheet' in the elm-ui repository -}
+{-| This file is generated via 'npm run stylesheet' in the elm-ui repository
+-}
 
 {- BEGIN COPY -}
 
@@ -197,9 +198,9 @@ lineHeightAdjustment i =
     "-" ++ offsetString ++ "lh"
 
 
-
 stylesheet : String
-stylesheet = """input[type="search"],
+stylesheet =
+    """input[type="search"],
 input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
