@@ -243,7 +243,7 @@ Křelovská 91, 779 00 Olomouc 9<br/>
 Řepčín, Česko<br/>
 Czechia
 
-[https://www.hotel-pracharna.cz/](https://www.hotel-pracharna.cz/)
+[https://www.hotel-pracharna.cz/en/](https://www.hotel-pracharna.cz/en/)
 
 ## Participating in conversations
 
