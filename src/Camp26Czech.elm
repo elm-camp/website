@@ -165,8 +165,8 @@ venueImage width path =
     Ui.image [ Ui.width width ] { source = path, description = "Photo of Park Hotel", onLoad = Nothing }
 
 
-organisers : Ui.Element msg
-organisers =
+organisers : Int -> Ui.Element msg
+organisers windowWidth =
     [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
       , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }
       , { country = "🇩🇪", name = "Johannes Emerich", description = "Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps." }
@@ -180,6 +180,13 @@ organisers =
       , { country = "🇨🇿", name = "Tomáš Látal", description = "Author of elm-debug-helper and several unfinished projects. Don’t ask him about Elm or Coderetreat, he will be talking about it for hours." }
       ]
     ]
+        |> (\list2 ->
+                if windowWidth < 1000 then
+                    [ List.concat list2 ]
+
+                else
+                    list2
+           )
         |> List.map
             (\column ->
                 List.map

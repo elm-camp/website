@@ -504,7 +504,7 @@ header config =
     in
     if config.window.width < 1000 || config.isCompact then
         Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 16 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ elmCampTitle
@@ -633,7 +633,7 @@ loadedView model =
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ View.Sales.organisersInfo
-                    , Camp26Czech.organisers
+                    , Camp26Czech.organisers model.window.width
                     ]
                 , Theme.footer
                 ]
