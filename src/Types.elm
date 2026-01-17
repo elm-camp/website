@@ -37,7 +37,7 @@ import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Ui
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
-import View.Logo2
+import View.Logo
 
 
 type FrontendModel
@@ -72,7 +72,7 @@ type alias LoadedModel =
     , isOrganiser : Bool
     , ticketsEnabled : TicketsEnabled
     , backendModel : Maybe BackendModel
-    , logoModel : View.Logo2.Model
+    , logoModel : View.Logo.Model
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
     }
@@ -299,7 +299,7 @@ type FrontendMsg
     | SetViewPortForElement HtmlId
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
-    | LogoMsg View.Logo2.Msg
+    | LogoMsg View.Logo.Msg
     | Noop
     | ElmUiMsg Ui.Msg
 

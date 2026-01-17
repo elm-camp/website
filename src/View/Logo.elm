@@ -1,260 +1,166 @@
-module View.Logo exposing (Model, Msg, PieceConfig, Tangram, TangramPiece(..), init, update, view)
+module View.Logo exposing
+    ( Model
+    , Msg(..)
+    , byTheRiver
+    , configurations
+    , elmLogo
+    , fireplace
+    , init
+    , lake
+    , needsAnimationFrame
+    , tent
+    , tents
+    , update
+    , view
+    )
 
-import Effect.Test exposing (Button(..))
+import Animator
+import Animator.Timeline exposing (Timeline)
+import Color exposing (Color)
 import Html exposing (Html, div)
 import Html.Attributes
-import Html.Events exposing (onClick)
-import List.Extra
 import List.Nonempty exposing (Nonempty(..))
 import Svg exposing (Svg)
-import Svg.Attributes
-
-
-type TangramPiece
-    = LargeTriangle PieceConfig
-    | MediumTriangle PieceConfig
-    | SmallTriangle PieceConfig
-    | Square PieceConfig
-    | Parallelogram PieceConfig
-
-
-type alias PieceConfig =
-    { color : String, x : Float, y : Float, rotation : Float, scale : Float }
-
-
-type alias Tangram =
-    List TangramPiece
+import Time
+import View.Tangram as Tangram
 
 
 type alias Model =
-    { index : Int }
+    { index : Int
+    , timeline : Timeline Tangram.Tangram
+    }
 
 
 type Msg
     = ToggleConfig
+    | Tick Time.Posix
 
 
 init : Model
 init =
-    { index = 0 }
+    { index = 0
+    , timeline = Animator.Timeline.init elmLogo
+    }
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         ToggleConfig ->
-            { model | index = model.index + 1 }
+            let
+                newIndex =
+                    model.index + 1
+
+                newTangram =
+                    List.Nonempty.get newIndex configurations
+
+                _ =
+                    Debug.log "new tangram" newTangram
+            in
+            { model
+                | index = newIndex
+                , timeline = Animator.Timeline.to (Animator.ms 500) newTangram model.timeline
+            }
+
+        Tick time ->
+            { model | timeline = Animator.Timeline.update time model.timeline }
 
 
-transition : Svg.Attribute msg
-transition =
-    Svg.Attributes.style "transition: transform 0.4s ease-in-out"
+needsAnimationFrame : Model -> Bool
+needsAnimationFrame model =
+    Animator.Timeline.isRunning model.timeline
 
 
-strokeW : Svg.Attribute msg
-strokeW =
-    Svg.Attributes.strokeWidth "12"
-
-
-strokeColor : Svg.Attribute msg
-strokeColor =
-    Svg.Attributes.stroke "#ffffff"
-
-
-transformValue_ : PieceConfig -> String -> String
-transformValue_ triangle center =
-    "translate("
-        ++ String.fromFloat triangle.x
-        ++ ","
-        ++ String.fromFloat triangle.y
-        ++ ") rotate("
-        ++ String.fromFloat triangle.rotation
-        ++ " "
-        ++ center
-        ++ ") scale("
-        ++ String.fromFloat triangle.scale
-        ++ ")"
-
-
-largeTriangle : PieceConfig -> Svg Msg
-largeTriangle config =
-    let
-        transformValue =
-            transformValue_ config "150 75"
-    in
-    Svg.g
-        [ Svg.Attributes.transform transformValue
-        , transition
-        ]
-        [ Svg.polygon
-            [ Svg.Attributes.points "0,0 300,0 150,150"
-            , Svg.Attributes.fill config.color
-            , strokeColor
-            , strokeW
-            , Svg.Attributes.strokeOpacity "1"
-            , Svg.Attributes.strokeLinejoin "round"
-            ]
-            []
+view : Model -> Html Msg
+view model =
+    div [ Html.Attributes.style "width" "100px" ]
+        [ Tangram.viewAnimatedTangram model.timeline ToggleConfig
         ]
 
 
-smallTriangle : PieceConfig -> Svg Msg
-smallTriangle config =
-    let
-        transformValue =
-            transformValue_ config "75 37.5"
-    in
-    Svg.g
-        [ Svg.Attributes.transform transformValue
-        , transition
-        ]
-        [ Svg.polygon
-            [ Svg.Attributes.points "0,0 150,0 75,75"
-            , Svg.Attributes.fill config.color
-            , strokeColor
-            , strokeW
-            , Svg.Attributes.strokeLinejoin "round"
-            ]
-            []
-        ]
+
+-- TANGRAM DEFINITIONS
 
 
-mediumTriangle : PieceConfig -> Svg Msg
-mediumTriangle config =
-    let
-        transformValue =
-            transformValue_ config "106.08 53.04"
-    in
-    Svg.g
-        [ Svg.Attributes.transform transformValue
-        , transition
-        ]
-        [ Svg.polygon
-            [ Svg.Attributes.points "0,0 212.13,0 106.08,106.08"
-            , Svg.Attributes.fill config.color
-            , strokeColor
-            , strokeW
-            , Svg.Attributes.strokeLinejoin "round"
-            ]
-            []
-        ]
-
-
-square : PieceConfig -> Svg Msg
-square config =
-    let
-        transformValue =
-            transformValue_ config "53.04 53.04"
-    in
-    Svg.g
-        [ Svg.Attributes.transform transformValue
-        , transition
-        ]
-        [ Svg.polygon
-            [ Svg.Attributes.points "0,0 106.08,0 106.08,106.08 0,106.08"
-            , Svg.Attributes.fill config.color
-            , strokeColor
-            , strokeW
-            , Svg.Attributes.strokeLinejoin "round"
-            ]
-            []
-        ]
-
-
-parallelogram : PieceConfig -> Svg Msg
-parallelogram config =
-    let
-        transformValue =
-            transformValue_ config "106.08 53.04"
-    in
-    Svg.g
-        [ Svg.Attributes.transform transformValue
-        , transition
-        ]
-        [ Svg.polygon
-            [ Svg.Attributes.points "0,0 106.08,0 0,106.08 -106.08,106.08"
-            , Svg.Attributes.fill config.color
-            , strokeColor
-            , strokeW
-            , Svg.Attributes.strokeLinejoin "round"
-            ]
-            []
-        ]
-
-
-elmLogo : Tangram
+elmLogo : Tangram.Tangram
 elmLogo =
-    [ LargeTriangle { color = "#1d322d", x = 65, y = 370, rotation = -90, scale = 1.7 }
-    , LargeTriangle { color = "#5db17e", x = 350, y = 448, rotation = 180, scale = 1.7 }
-    , SmallTriangle { color = "#0c6d51", x = 535, y = 378, rotation = 90, scale = 1.7 }
-    , Square { color = "#a9c589", x = 468, y = 235, rotation = 45, scale = 1.7 }
-    , SmallTriangle { color = "#0c6d51", x = 265, y = 210, rotation = 0, scale = 1.7 }
-    , Parallelogram { color = "#a9c589", x = 335, y = 145, rotation = 45, scale = 1.7 }
-    , MediumTriangle { color = "#5db17e", x = 505, y = 175, rotation = -135, scale = 1.7 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 29 50 45, x = 154, y = 328, rotation = -90 }
+    , secondLargeTriangle = { color = Color.rgb255 93 177 126, x = 439, y = 406, rotation = 180 }
+    , firstSmallTriangle = { color = Color.rgb255 12 109 81, x = 627, y = 339, rotation = 90 }
+    , square = { color = Color.rgb255 169 197 137, x = 558, y = 194, rotation = 45 }
+    , secondSmallTriangle = { color = Color.rgb255 12 109 81, x = 354, y = 168, rotation = 0 }
+    , parallelogram = { color = Color.rgb255 169 197 137, x = 416, y = 103, rotation = 45 }
+    , mediumTriangle = { color = Color.rgb255 93 177 126, x = 596, y = 133, rotation = -135 }
+    , scale = 1.7
+    }
 
 
-tent : Tangram
+tent : Tangram.Tangram
 tent =
-    [ LargeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 90, scale = 1.0 }
-    , LargeTriangle { color = "#1d322d", x = 510, y = 266, rotation = 270, scale = 1.0 }
-    , SmallTriangle { color = "#0c6d51", x = 280, y = 378, rotation = 135, scale = 1.0 }
-    , Square { color = "#f0ac01", x = 381, y = 100, rotation = 45, scale = 1.0 }
-    , SmallTriangle { color = "#0c6d51", x = 333, y = 323, rotation = -45, scale = 1.0 }
-    , Parallelogram { color = "#a9c589", x = 383, y = 226, rotation = 270, scale = 1.0 }
-    , MediumTriangle { color = "#5db17e", x = 330, y = 388, rotation = 180, scale = 1.0 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = -7, y = 239, rotation = 90 }
+    , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 480, y = 297, rotation = 270 }
+    , firstSmallTriangle = { color = Color.rgb255 12 109 81, x = 230, y = 386, rotation = 135 }
+    , square = { color = Color.rgb255 240 172 1, x = 333, y = 61, rotation = -135 }
+    , secondSmallTriangle = { color = Color.rgb255 12 109 81, x = 263, y = 331, rotation = -45 }
+    , parallelogram = { color = Color.rgb255 169 197 137, x = 333, y = 237, rotation = 270 }
+    , mediumTriangle = { color = Color.rgb255 93 177 126, x = 300, y = 419, rotation = 180 }
+    , scale = 1.2
+    }
 
 
-lake : Tangram
+lake : Tangram.Tangram
 lake =
-    [ LargeTriangle { color = "#5db17e", x = 60, y = 266, rotation = 180, scale = 1.0 }
-    , LargeTriangle { color = "#1d322d", x = 60, y = 416, rotation = 0, scale = 1.0 }
-    , SmallTriangle { color = "#0c6d51", x = 380, y = 340, rotation = 180, scale = 1.0 }
-    , Square { color = "#f0ac01", x = 315, y = 260, rotation = 45, scale = 1.0 }
-    , SmallTriangle { color = "#1d322d", x = 380, y = 415, rotation = 0, scale = 1.0 }
-    , Parallelogram { color = "#5fb5cc", x = 330, y = 136, rotation = 225, scale = 1.0 }
-    , MediumTriangle { color = "#f0ac01", x = 263, y = 445, rotation = 180, scale = 1.0 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = 145, y = 196, rotation = 180 }
+    , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 25, y = 346, rotation = 0 }
+    , firstSmallTriangle = { color = Color.rgb255 12 109 81, x = 560, y = 275, rotation = 180 }
+    , square = { color = Color.rgb255 240 172 1, x = 420, y = 135, rotation = 45 }
+    , secondSmallTriangle = { color = Color.rgb255 29 50 45, x = 499, y = 355, rotation = 0 }
+    , parallelogram = { color = Color.rgb255 95 181 204, x = 430, y = -4, rotation = 225 }
+    , mediumTriangle = { color = Color.rgb255 240 172 1, x = 408, y = 420, rotation = 180 }
+    , scale = 1.4
+    }
 
 
-byTheRiver : Tangram
+byTheRiver : Tangram.Tangram
 byTheRiver =
-    [ LargeTriangle { color = "#5fb5cc", x = 415, y = 360, rotation = 90, scale = 1.0 }
-    , LargeTriangle { color = "#5fb5cc", x = 340, y = 436, rotation = 180, scale = 1.0 }
-    , SmallTriangle { color = "#0c6d51", x = 180, y = 338, rotation = 135, scale = 1.0 }
-    , Square { color = "#f0ac01", x = 381, y = 100, rotation = 45, scale = 1.0 }
-    , SmallTriangle { color = "#0c6d51", x = 233, y = 283, rotation = -45, scale = 1.0 }
-    , Parallelogram { color = "#a9c589", x = 283, y = 186, rotation = 270, scale = 1.0 }
-    , MediumTriangle { color = "#5db17e", x = 230, y = 348, rotation = 180, scale = 1.0 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 95 181 204, x = 415, y = 360, rotation = 90 }
+    , secondLargeTriangle = { color = Color.rgb255 95 181 204, x = 340, y = 436, rotation = 180 }
+    , firstSmallTriangle = { color = Color.rgb255 12 109 81, x = 180, y = 338, rotation = 135 }
+    , square = { color = Color.rgb255 240 172 1, x = 381, y = 100, rotation = 45 }
+    , secondSmallTriangle = { color = Color.rgb255 12 109 81, x = 233, y = 283, rotation = -45 }
+    , parallelogram = { color = Color.rgb255 169 197 137, x = 283, y = 186, rotation = 270 }
+    , mediumTriangle = { color = Color.rgb255 93 177 126, x = 230, y = 348, rotation = 180 }
+    , scale = 1.0
+    }
 
 
-tents : Tangram
+tents : Tangram.Tangram
 tents =
-    [ LargeTriangle { color = "#5db17e", x = 370, y = 40, rotation = 180, scale = 1.0 }
-    , LargeTriangle { color = "#1d322d", x = 50, y = 136, rotation = 180, scale = 1.0 }
-    , SmallTriangle { color = "#f0ac01", x = 394, y = 336, rotation = 45, scale = 1.0 }
-    , Square { color = "#f0ac01", x = 336, y = 295, rotation = 0, scale = 1.0 }
-    , SmallTriangle { color = "#f0ac01", x = 235, y = 337, rotation = -45, scale = 1.0 }
-    , Parallelogram { color = "#f0ac01", x = 230, y = 296, rotation = 0, scale = 1.0 }
-    , MediumTriangle { color = "#f0ac01", x = 230, y = 188, rotation = 180, scale = 1.0 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = 485, y = 83, rotation = 180 }
+    , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 140, y = 201, rotation = 180 }
+    , firstSmallTriangle = { color = Color.rgb255 240 172 1, x = 488, y = 407, rotation = 45 }
+    , square = { color = Color.rgb255 240 172 1, x = 388, y = 365, rotation = 0 }
+    , secondSmallTriangle = { color = Color.rgb255 240 172 1, x = 250, y = 450, rotation = -45 }
+    , parallelogram = { color = Color.rgb255 240 172 1, x = 240, y = 366, rotation = 0 }
+    , mediumTriangle = { color = Color.rgb255 240 172 1, x = 324, y = 259, rotation = 180 }
+    , scale = 1.4
+    }
 
 
-fireplace : Tangram
+fireplace : Tangram.Tangram
 fireplace =
-    [ LargeTriangle { color = "#ff8000", x = 200, y = 320, rotation = 90, scale = 1.0 }
-    , LargeTriangle { color = "#ff8000", x = 360, y = 290, rotation = 270, scale = 1.0 }
-    , SmallTriangle { color = "#a20000", x = 400, y = 158, rotation = 90, scale = 1.0 }
-    , Square { color = "#f0ac01", x = 376, y = 360, rotation = 45, scale = 1.0 }
-    , SmallTriangle { color = "#a20000", x = 293, y = 203, rotation = 135, scale = 1.0 }
-    , Parallelogram { color = "#996e3f", x = 313, y = 526, rotation = 45, scale = 1.0 }
-    , MediumTriangle { color = "#b4814b", x = 420, y = 438, rotation = 180, scale = 1.0 }
-    ]
+    { firstLargeTriangle = { color = Color.rgb255 255 128 0, x = 200, y = 226, rotation = 90 }
+    , secondLargeTriangle = { color = Color.rgb255 255 128 0, x = 352, y = 259, rotation = 270 }
+    , firstSmallTriangle = { color = Color.rgb255 162 0 0, x = 406, y = 71, rotation = 90 }
+    , square = { color = Color.rgb255 240 172 1, x = 376, y = 320, rotation = 135 }
+    , secondSmallTriangle = { color = Color.rgb255 162 0 0, x = 263, y = 148, rotation = 135 }
+    , parallelogram = { color = Color.rgb255 153 110 63, x = 324, y = 501, rotation = 45 }
+    , mediumTriangle = { color = Color.rgb255 180 129 75, x = 419, y = 425, rotation = 180 }
+    , scale = 1.2
+    }
 
 
-configurations : Nonempty Tangram
+configurations : Nonempty Tangram.Tangram
 configurations =
     Nonempty
         elmLogo
@@ -264,38 +170,3 @@ configurations =
         , lake
         , byTheRiver
         ]
-
-
-viewTangramPiece : TangramPiece -> Svg Msg
-viewTangramPiece piece =
-    case piece of
-        LargeTriangle config ->
-            largeTriangle config
-
-        SmallTriangle config ->
-            smallTriangle config
-
-        MediumTriangle config ->
-            mediumTriangle config
-
-        Square config ->
-            square config
-
-        Parallelogram config ->
-            parallelogram config
-
-
-viewTangram : Tangram -> Svg Msg
-viewTangram tangram =
-    Svg.svg
-        [ Svg.Attributes.viewBox "40 40 700 600"
-        , onClick ToggleConfig
-        , Html.Attributes.style "cursor" "pointer"
-        , Html.Attributes.style "width" "80px"
-        ]
-        (List.map viewTangramPiece tangram)
-
-
-view : Model -> Html Msg
-view model =
-    viewTangram (List.Nonempty.get model.index configurations)

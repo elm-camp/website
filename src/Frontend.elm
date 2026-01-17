@@ -53,7 +53,6 @@ import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
 import View.Logo
-import View.Logo2
 import View.Sales
 
 
@@ -96,8 +95,8 @@ subscriptions model =
         logoSubscription =
             case model of
                 Types.Loaded loadedModel ->
-                    if View.Logo2.needsAnimationFrame loadedModel.logoModel then
-                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo2.Tick posix |> Types.LogoMsg)
+                    if View.Logo.needsAnimationFrame loadedModel.logoModel then
+                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo.Tick posix |> Types.LogoMsg)
 
                     else
                         Subscription.none
@@ -206,7 +205,7 @@ tryLoading loadingModel =
                 , ticketsEnabled = ticketsEnabled
                 , backendModel = Nothing
                 , pressedAudioButton = False
-                , logoModel = View.Logo2.init
+                , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
                 }
             , Command.none
@@ -364,7 +363,7 @@ updateLoaded msg model =
                     ( model, Command.none )
 
         Types.LogoMsg logoMsg ->
-            ( { model | logoModel = View.Logo2.update logoMsg model.logoModel }, Command.none )
+            ( { model | logoModel = View.Logo.update logoMsg model.logoModel }, Command.none )
 
         Noop ->
             ( model, Command.none )
@@ -464,7 +463,7 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Command.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo2.Model } -> Ui.Element FrontendMsg
+header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Ui.Element FrontendMsg
 header config =
     let
         titleSize =
@@ -491,7 +490,7 @@ header config =
             Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
                 [ Ui.row
                     [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.html (View.Logo2.view config.logoModel) |> Ui.map Types.LogoMsg
+                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
                     , Ui.column
                         [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
                         [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
