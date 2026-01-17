@@ -595,9 +595,8 @@ loadedView model =
                 [ Ui.height Ui.fill ]
                 [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
                 , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Page.UnconferenceFormat.view
+                    [ Formatting.view model Page.UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]

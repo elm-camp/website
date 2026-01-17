@@ -1,6 +1,5 @@
 module Camp26Czech exposing
-    ( conferenceSummary
-    , elmBottomLine
+    ( elmBottomLine
     , elmTopLine
     , location
     , meta
@@ -95,51 +94,6 @@ elmBottomLine =
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
         , Ui.text meta.location
         ]
-
-
-conferenceSummary : Ui.Element msg
-conferenceSummary =
-    """
-
-# The Unconference
-
-## Ronora Lodge and Retreat Center - Watervliet, Michigan
-### Arrive anytime on Tues 24th June 2026
-### Depart 10am on Fri 27th June 2026
-#### 2 full days of talks
-#### 40+ attendees
-
----
-## Prospective Schedule:
-
-### Tue 24th June
-  - 3pm arrivals & halls officially open
-  - Opening of session board
-  - Informal dinner
-  - Evening stroll
-
-### Wed 25th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference sessions
-  - Dinner
-  - Board Games and informal chats
-
-### Thu 26th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference Sessions
-  - Dinner
-  - Unconference wrap-up & party
-
-### Fri 27th June
-  - Grab and go breakfast
-  - Depart by 10am
-
-"""
-        |> MarkdownThemed.renderFull
 
 
 venuePictures : LoadedModel -> Ui.Element msg

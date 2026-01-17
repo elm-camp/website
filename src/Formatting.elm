@@ -28,6 +28,7 @@ type Formatting
     | Section String (List Formatting)
     | Image String (List Inline)
     | LegacyMap
+    | QuoteBlock (List Inline)
 
 
 type Inline
@@ -189,6 +190,14 @@ viewHelper shared depth item =
                 , Html.Attributes.style "border" "none"
                 ]
                 []
+
+        QuoteBlock items ->
+            Html.p
+                [ Html.Attributes.style "padding-left" "16px"
+                , colorAttribute Theme.lightTheme.mutedText
+                , Html.Attributes.style "border-left" (Color.toCssString Theme.lightTheme.grey ++ " solid 4px")
+                ]
+                (List.map (inlineView shared) items)
 
 
 inlineView : Shared b -> Inline -> Html msg
