@@ -1,13 +1,13 @@
 module View.Logo2 exposing
     ( Model
-    , Msg
+    , Msg(..)
     , byTheRiver
     , configurations
     , elmLogo
     , fireplace
     , init
     , lake
-    , subscriptions
+    , needsAnimationFrame
     , tent
     , tents
     , update
@@ -16,7 +16,6 @@ module View.Logo2 exposing
 
 import Animator
 import Animator.Timeline exposing (Timeline)
-import Browser.Events
 import Color exposing (Color)
 import Html exposing (Html, div)
 import Html.Attributes
@@ -67,13 +66,9 @@ update msg model =
             { model | timeline = Animator.Timeline.update time model.timeline }
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    if Animator.Timeline.isRunning model.timeline then
-        Browser.Events.onAnimationFrame Tick
-
-    else
-        Sub.none
+needsAnimationFrame : Model -> Bool
+needsAnimationFrame model =
+    Animator.Timeline.isRunning model.timeline
 
 
 view : Model -> Html Msg

@@ -106,9 +106,14 @@ setPieceConfig pieceId config tangram =
 
 animatePieceConfig : Timeline Tangram -> (Tangram -> PieceConfig) -> PieceConfig
 animatePieceConfig timeline getPiece =
-    { color =
-        Animator.Value.color timeline
-            (\tangram -> (getPiece tangram).color)
+    let
+        currentTangram =
+            Animator.Timeline.current timeline
+
+        currentColor =
+            (getPiece currentTangram).color
+    in
+    { color = currentColor
     , x =
         Animator.Value.float timeline
             (\tangram -> Animator.Value.to (getPiece tangram).x)
