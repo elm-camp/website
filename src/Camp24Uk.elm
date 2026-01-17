@@ -69,28 +69,23 @@ view model subpage =
         ]
 
 
-conferenceSummary : Ui.Element msg
+conferenceSummary : List Formatting
 conferenceSummary =
-    """
-- Arrive anytime on Tue 18th June 2024
-
-- Depart 10am Fri 21st June 2024
-
-- 🇬🇧 Colehayes Park, Devon UK – [Venue & Access](https://elm.camp/venue-and-access)
-
-- Collaborative session creation throughout
-
-- Periodic collective scheduling sessions
-
-- At least 3 tracks, sessions in both short and long blocks
-
-- Countless hallway conversations and mealtime connections
-
-- Full and exclusive access to the Park grounds and facilities
-
-- 60+ attendees
-"""
-        |> MarkdownThemed.renderFull
+    [ Section "Unconference"
+        [ BulletList
+            []
+            [ Paragraph [ Text "Arrive anytime on Tue 18th June 2024" ]
+            , Paragraph [ Text "Depart 10am Fri 21st June 2024" ]
+            , Paragraph [ Text "🇬🇧 Colehayes Park, Devon UK" ]
+            , Paragraph [ Text "Collaborative session creation throughout" ]
+            , Paragraph [ Text "Periodic collective scheduling sessions" ]
+            , Paragraph [ Text "At least 3 tracks, sessions in both short and long blocks" ]
+            , Paragraph [ Text "Countless hallway conversations and mealtime connections" ]
+            , Paragraph [ Text "Full and exclusive access to the Park grounds and facilities" ]
+            , Paragraph [ Text "60+ attendees" ]
+            ]
+        ]
+    ]
 
 
 images : List { src : String, description : String }

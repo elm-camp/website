@@ -45,7 +45,7 @@ elmCampBottomLine meta =
 
 
 type alias ArchiveContents msg =
-    { conferenceSummary : Ui.Element msg
+    { conferenceSummary : List Formatting
     , schedule : Maybe (Ui.Element msg)
     , venue : List Formatting
     , organisers : Ui.Element msg
@@ -62,8 +62,7 @@ viewArchive contents config =
         [ Ui.spacing 40 ]
         [ Ui.column
             Theme.contentAttributes
-            [ MarkdownThemed.renderFull "# Unconference"
-            , contents.conferenceSummary
+            [ Formatting.view config contents.conferenceSummary
             ]
         , if config.window.width > 950 then
             contents.images

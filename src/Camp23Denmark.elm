@@ -123,19 +123,22 @@ sponsors window =
         |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
-unconferenceBulletPoints : Ui.Element msg
+unconferenceBulletPoints : List Formatting
 unconferenceBulletPoints =
-    [ Ui.text "Arrive 3pm Wed 28 June"
-    , Ui.text "Depart 4pm Fri 30 June"
-    , Ui.text "Dallund Castle, Denmark"
-    , Ui.text "Daily opener un-keynote"
-    , Ui.text "Collaborative session creation throughout"
-    , Ui.text "Countless hallway conversations and mealtime connections"
-    , Ui.text "Access to full castle grounds including lake swimming"
-    , Ui.text "50 attendees"
+    [ Section "Unconference"
+        [ BulletList
+            []
+            [ Paragraph [ Text "Arrive 3pm Wed 28 June" ]
+            , Paragraph [ Text "Depart 4pm Fri 30 June" ]
+            , Paragraph [ Text "Dallund Castle, Denmark" ]
+            , Paragraph [ Text "Daily opener un-keynote" ]
+            , Paragraph [ Text "Collaborative session creation throughout" ]
+            , Paragraph [ Text "Countless hallway conversations and mealtime connections" ]
+            , Paragraph [ Text "Access to full castle grounds including lake swimming" ]
+            , Paragraph [ Text "50 attendees" ]
+            ]
+        ]
     ]
-        |> List.map (\point -> MarkdownThemed.bulletPoint [ point ])
-        |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 15 ]
 
 
 schedule : Ui.Element msg

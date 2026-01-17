@@ -99,47 +99,51 @@ elmBottomLine =
         ]
 
 
-conferenceSummary : Ui.Element msg
+conferenceSummary : List Formatting
 conferenceSummary =
-    """
-
-## Ronora Lodge and Retreat Center - Watervliet, Michigan
-### Arrive anytime on Tues 24th June 2025
-### Depart 10am on Fri 27th June 2025
-#### 2 full days of talks
-#### 40+ attendees
-
----
-## Prospective Schedule:
-
-### Tue 24th June
-  - 3pm arrivals & halls officially open
-  - Opening of session board
-  - Informal dinner
-  - Evening stroll
-
-### Wed 25th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference sessions
-  - Dinner
-  - Board Games and informal chats
-
-### Thu 26th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference Sessions
-  - Dinner
-  - Unconference wrap-up & party
-
-### Fri 27th June
-  - Grab and go breakfast
-  - Depart by 10am
-
-"""
-        |> MarkdownThemed.renderFull
+    [ Section "Unconference"
+        [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"
+            [ Paragraph [ Text "Arrive anytime on Tues 24th June 2025" ]
+            , BulletList
+                [ Text "Depart 10am on Fri 27th June 2025" ]
+                [ Paragraph [ Text "2 full days of talks" ]
+                , Paragraph [ Text "40+ attendees" ]
+                ]
+            ]
+        , Section "Prospective Schedule:"
+            [ BulletList
+                [ Bold "Tue 24th June" ]
+                [ Paragraph [ Text "3pm arrivals & halls officially open" ]
+                , Paragraph [ Text "Opening of session board" ]
+                , Paragraph [ Text "Informal dinner" ]
+                , Paragraph [ Text "Evening stroll" ]
+                ]
+            , BulletList
+                [ Bold "Wed 25th June" ]
+                [ Paragraph [ Text "Breakfast" ]
+                , Paragraph [ Text "Unconference sessions" ]
+                , Paragraph [ Text "Lunch" ]
+                , Paragraph [ Text "Unconference sessions" ]
+                , Paragraph [ Text "Dinner" ]
+                , Paragraph [ Text "Board Games and informal chats" ]
+                ]
+            , BulletList
+                [ Bold "Thu 26th June" ]
+                [ Paragraph [ Text "Breakfast" ]
+                , Paragraph [ Text "Unconference sessions" ]
+                , Paragraph [ Text "Lunch" ]
+                , Paragraph [ Text "Unconference sessions" ]
+                , Paragraph [ Text "Dinner" ]
+                , Paragraph [ Text "Unconference wrap-up & party" ]
+                ]
+            , BulletList
+                [ Bold "Thu 26th June" ]
+                [ Paragraph [ Text "Grab and go breakfast" ]
+                , Paragraph [ Text "Depart by 10am" ]
+                ]
+            ]
+        ]
+    ]
 
 
 images : List { src : String, description : String }
