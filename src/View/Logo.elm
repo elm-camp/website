@@ -1,15 +1,8 @@
 module View.Logo exposing
     ( Model
     , Msg(..)
-    , byTheRiver
-    , configurations
-    , elmLogo
-    , fireplace
     , init
-    , lake
     , needsAnimationFrame
-    , tent
-    , tents
     , update
     , view
     )
