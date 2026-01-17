@@ -53,13 +53,10 @@ update msg model =
 
                 newTangram =
                     List.Nonempty.get newIndex configurations
-
-                _ =
-                    Debug.log "new tangram" newTangram
             in
             { model
                 | index = newIndex
-                , timeline = Animator.Timeline.to (Animator.ms 500) newTangram model.timeline
+                , timeline = Animator.Timeline.to (Animator.ms 400) newTangram model.timeline
             }
 
         Tick time ->

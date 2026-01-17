@@ -12,6 +12,7 @@ module View.Tangram exposing
 
 import Animator
 import Animator.Timeline exposing (Timeline)
+import Animator.Transition
 import Animator.Value
 import Color exposing (Color)
 import Html exposing (Html)
@@ -111,18 +112,21 @@ animatePieceConfig timeline getPiece =
             Animator.Timeline.current timeline
 
         currentColor =
-            (getPiece currentTangram).color
+            Animator.Value.color timeline (\tangram -> (getPiece tangram).color)
+
+        transition =
+            Animator.Transition.spring { wobble = 0.5, quickness = 1 }
     in
     { color = currentColor
     , x =
         Animator.Value.float timeline
-            (\tangram -> Animator.Value.to (getPiece tangram).x)
+            (\tangram -> Animator.Value.to (getPiece tangram).x |> Animator.Value.withTransition transition)
     , y =
         Animator.Value.float timeline
-            (\tangram -> Animator.Value.to (getPiece tangram).y)
+            (\tangram -> Animator.Value.to (getPiece tangram).y |> Animator.Value.withTransition transition)
     , rotation =
         Animator.Value.float timeline
-            (\tangram -> Animator.Value.to (getPiece tangram).rotation)
+            (\tangram -> Animator.Value.to (getPiece tangram).rotation |> Animator.Value.withTransition transition)
     }
 
 
