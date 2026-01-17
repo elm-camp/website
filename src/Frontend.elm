@@ -24,6 +24,7 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
+import Formatting
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
@@ -608,7 +609,7 @@ loadedView model =
                 , Ui.column
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Camp26Czech.venueAccessContent
+                    [ Formatting.view model Camp26Czech.venueAccessContent
                     ]
                 , Theme.footer
                 ]

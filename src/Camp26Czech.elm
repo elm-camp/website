@@ -1,6 +1,5 @@
 module Camp26Czech exposing
     ( conferenceSummary
-    , contactDetails
     , elmBottomLine
     , elmTopLine
     , location
@@ -16,6 +15,7 @@ module Camp26Czech exposing
 import Camp
 import Camp26Czech.Archive
 import Camp26Czech.Artifacts
+import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import Html
 import Html.Attributes
@@ -207,77 +207,60 @@ organisers windowWidth =
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
-
---        """
---🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
---
---🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
---
---🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
---
---🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
---
---🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
---
---🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
---
---🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
---
---🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
---
---🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
---        |> MarkdownThemed.renderFull
-
-
-venueAccessContent : Ui.Element msg
+venueAccessContent : List Formatting
 venueAccessContent =
-    Ui.column
-        [ Ui.width Ui.shrink ]
-        [ """
-# The venue and access
-
-## The venue
-
-**Hotel Prachárna**<br/>
-Křelovská 91, 779 00 Olomouc 9<br/>
-Řepčín, Česko<br/>
-Czechia
-
-[https://www.hotel-pracharna.cz/](https://www.hotel-pracharna.cz/)
-
-## Participating in conversations
-
-* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-
-## Contacting the organisers
-
-If you have questions or concerns about this website or attending Elm Camp, please get in touch
-
-    """
-            ++ contactDetails
-            |> MarkdownThemed.renderFull
-
-        --
-        --, Html.iframe
-        --    [ Html.Attributes.src "/map.html"
-        --    , Html.Attributes.style "width" "100%"
-        --    , Html.Attributes.style "height" "auto"
-        --    , Html.Attributes.style "aspect-ratio" "21 / 9"
-        --    , Html.Attributes.style "border" "none"
-        --    ]
-        --    []
-        --    |> Element.html
+    [ Section
+        "The venue and access"
+        [ Section
+            "The venue"
+            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
+            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/" "https://www.hotel-pracharna.cz/" ]
+            ]
+        , Section
+            "Participating in conversations"
+            [ BulletList
+                []
+                [ Paragraph [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
+                , Paragraph [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
+                , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
+                ]
+            ]
+        , Section
+            "Contacting the organisers"
+            [ BulletList
+                [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch" ]
+                [ Paragraph
+                    [ Text "Elmcraft Discord: "
+                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
+                    , Text " channel or DM katjam_"
+                    ]
+                , Paragraph
+                    [ Text "Email: "
+                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp)"
+                    ]
+                , Paragraph [ Text "Elm Slack: @katjam" ]
+                ]
+            ]
         ]
+    ]
 
 
-contactDetails : String
-contactDetails =
-    """
-* Elmcraft Discord: [#elm-camp-26](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
-* Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam"""
+
+--"""
+--    ++ contactDetails
+--    |> MarkdownThemed.renderFull
+--
+----
+----, Html.iframe
+----    [ Html.Attributes.src "/map.html"
+----    , Html.Attributes.style "width" "100%"
+----    , Html.Attributes.style "height" "auto"
+----    , Html.Attributes.style "aspect-ratio" "21 / 9"
+----    , Html.Attributes.style "border" "none"
+----    ]
+----    []
+----    |> Element.html
+--]"""
 
 
 sponsors : { window | width : Int } -> Ui.Element msg
