@@ -141,36 +141,44 @@ unconferenceBulletPoints =
     ]
 
 
-schedule : Ui.Element msg
+schedule : List Formatting
 schedule =
-    """
-## Wed 28th June
-
-* 3pm - Arrivals & halls officially open
-* 6pm - Opening of session board
-* 7pm - Informal dinner
-* 8:30pm+ Evening stroll and informal chats
-* 9:57pm - 🌅Sunset
-
-## Thu 29th June
-
-* 7am-9am - Breakfast
-* 9am - Opening Unkeynote
-* 10am-12pm - Unconference sessions
-* 12-1:30pm - Lunch
-* 2pm-5pm Unconference sessions
-* 6-7:30pm Dinner
-* Onwards - Board Games and informal chats
-
-## Fri 30th June
-
-* 7am-9am - Breakfast
-* 9am - 12pm Unconference sessions
-* 12-1:30pm - Lunch
-* 2pm Closing Unkeynote
-* 3pm unconference wrap-up
-* 4pm - Departure"""
-        |> MarkdownThemed.renderFull
+    [ Section "Schedule"
+        [ Section "Wed 28th June"
+            [ BulletList
+                []
+                [ Paragraph [ Text "3pm - Arrivals & halls officially open" ]
+                , Paragraph [ Text "6pm - Opening of session board" ]
+                , Paragraph [ Text "7pm - Informal dinner" ]
+                , Paragraph [ Text "8:30pm+ Evening stroll and informal chats" ]
+                , Paragraph [ Text "9:57pm - 🌅Sunset" ]
+                ]
+            ]
+        , Section "Thu 29th June"
+            [ BulletList
+                []
+                [ Paragraph [ Text "7am-9am - Breakfast" ]
+                , Paragraph [ Text "9am - Opening Unkeynote" ]
+                , Paragraph [ Text "10am-12pm - Unconference sessions" ]
+                , Paragraph [ Text "12-1:30pm - Lunch" ]
+                , Paragraph [ Text "2pm-5pm Unconference sessions" ]
+                , Paragraph [ Text "6-7:30pm Dinner" ]
+                , Paragraph [ Text "Onwards - Board Games and informal chats" ]
+                ]
+            ]
+        , Section "Fri 30th June"
+            [ BulletList
+                []
+                [ Paragraph [ Text "7am-9am - Breakfast" ]
+                , Paragraph [ Text "9am - 12pm Unconference sessions" ]
+                , Paragraph [ Text "12-1:30pm - Lunch" ]
+                , Paragraph [ Text "2pm Closing Unkeynote" ]
+                , Paragraph [ Text "3pm unconference wrap-up" ]
+                , Paragraph [ Text "4pm - Departure" ]
+                ]
+            ]
+        ]
+    ]
 
 
 venue : List Formatting
