@@ -97,7 +97,7 @@ subscriptions model =
             case model of
                 Types.Loaded loadedModel ->
                     if View.Logo2.needsAnimationFrame loadedModel.logoModel then
-                        Effect.Browser.Events.onAnimationFrame (Types.LogoMsg << View.Logo2.Tick)
+                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo2.Tick posix |> Types.LogoMsg)
 
                     else
                         Subscription.none

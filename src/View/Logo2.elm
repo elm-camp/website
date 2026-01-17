@@ -27,7 +27,7 @@ import View.Tangram as Tangram
 
 type alias Model =
     { index : Int
-    , timeline : Animator.Timeline.Timeline Tangram.Tangram
+    , timeline : Timeline Tangram.Tangram
     }
 
 
