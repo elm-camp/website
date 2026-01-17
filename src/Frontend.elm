@@ -495,7 +495,7 @@ header config =
                     , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
                     , Ui.el
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/)" |> MarkdownThemed.renderFull)
+                        ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/en/)" |> MarkdownThemed.renderFull)
                     , Ui.el
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         (Ui.text "Monday 15th - Thursday 18th June 2026")
