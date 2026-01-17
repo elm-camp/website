@@ -1,11 +1,7 @@
 module Formatting exposing
     ( Formatting(..)
     , Inline(..)
-    , contentWidthMax
-    , downloadLink
-    , externalLink
-    , sidePaddingMobile
-    , sidePaddingNotMobile
+    , Shared
     , view
     )
 
@@ -31,6 +27,7 @@ type Formatting
     | Group (List Formatting)
     | Section String (List Formatting)
     | Image String (List Inline)
+    | LegacyMap
 
 
 type Inline
@@ -53,11 +50,6 @@ view shared list =
         [ Html.Attributes.style "line-height" "1.5", Html.Attributes.style "white-space" "pre-wrap" ]
         (List.map (viewHelper shared 0) list)
         |> Ui.html
-
-
-contentWidthMax : number
-contentWidthMax =
-    800
 
 
 viewHelper : Shared b -> Int -> Formatting -> Html msg
@@ -188,29 +180,25 @@ viewHelper shared depth item =
                     (List.map (inlineView shared) altText)
                 ]
 
-
-sidePaddingMobile : number
-sidePaddingMobile =
-    8
-
-
-sidePaddingNotMobile : number
-sidePaddingNotMobile =
-    16
+        LegacyMap ->
+            Html.iframe
+                [ Html.Attributes.src "/map.html"
+                , Html.Attributes.style "width" "100%"
+                , Html.Attributes.style "height" "auto"
+                , Html.Attributes.style "aspect-ratio" "21 / 9"
+                , Html.Attributes.style "border" "none"
+                ]
+                []
 
 
 inlineView : Shared b -> Inline -> Html msg
 inlineView shared inline =
     case inline of
         Bold text ->
-            Html.b []
-                [ Html.text text
-                ]
+            Html.b [] [ Html.text text ]
 
         Italic text ->
-            Html.i []
-                [ Html.text text
-                ]
+            Html.i [] [ Html.text text ]
 
         Link text url ->
             Html.a
@@ -254,29 +242,3 @@ externalLinkHtml text url =
         ]
         [ Html.text text
         ]
-
-
-externalLink : Int -> String -> String -> Ui.Element msg
-externalLink fontSize text url =
-    Ui.row
-        [ Ui.linkNewTab ("https://" ++ url)
-        , Ui.Font.color (Ui.rgb 20 100 255)
-        , Ui.Font.size fontSize
-        ]
-        [ Ui.text text
-        ]
-
-
-downloadLink : String -> String -> Ui.Element msg
-downloadLink text url =
-    Html.a
-        [ Html.Attributes.href url
-        , String.split "/" url
-            |> List.reverse
-            |> List.head
-            |> Maybe.withDefault url
-            |> Html.Attributes.download
-        ]
-        [ Html.text text
-        ]
-        |> Ui.html

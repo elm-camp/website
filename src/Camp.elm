@@ -3,6 +3,7 @@ module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, 
 {-| Shared definition for all camp years.
 -}
 
+import Formatting exposing (Formatting)
 import MarkdownThemed
 import Theme
 import Ui
@@ -46,7 +47,7 @@ elmCampBottomLine meta =
 type alias ArchiveContents msg =
     { conferenceSummary : Ui.Element msg
     , schedule : Maybe (Ui.Element msg)
-    , venue : Maybe (Ui.Element msg)
+    , venue : List Formatting
     , organisers : Ui.Element msg
     , sponsors : Ui.Element msg
     , images : List { src : String, description : String }
@@ -55,17 +56,16 @@ type alias ArchiveContents msg =
 
 {-| View an archive page for a past year of Elm Camp.
 -}
-viewArchive : ArchiveContents msg -> { a | width : Int } -> Ui.Element msg
-viewArchive contents window =
+viewArchive : ArchiveContents msg -> { a | window : { width : Int, height : Int } } -> Ui.Element msg
+viewArchive contents config =
     Ui.column
         [ Ui.spacing 40 ]
         [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Unconference"
             , contents.conferenceSummary
             ]
-        , if window.width > 950 then
+        , if config.window.width > 950 then
             contents.images
                 |> List.map
                     (\image ->
@@ -93,26 +93,17 @@ viewArchive contents window =
             |> Maybe.map
                 (\schedule ->
                     Ui.column
-                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                         Theme.contentAttributes
                         [ MarkdownThemed.renderFull "# Schedule"
                         , schedule
                         ]
                 )
             |> Maybe.withDefault Ui.none
-        , contents.venue
-            |> Maybe.map
-                (\venue ->
-                    Ui.column
-                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                        Theme.contentAttributes
-                        [ MarkdownThemed.renderFull "# Travel & Venue"
-                        , venue
-                        ]
-                )
-            |> Maybe.withDefault Ui.none
         , Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
+            Theme.contentAttributes
+            [ Formatting.view config contents.venue
+            ]
+        , Ui.column
             Theme.contentAttributes
             [ MarkdownThemed.renderFull "# Our sponsors"
             , contents.sponsors
@@ -122,7 +113,6 @@ viewArchive contents window =
             ]
             [ MarkdownThemed.renderFull "# Organisers"
             , Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.contentAttributes
                 contents.organisers
             ]

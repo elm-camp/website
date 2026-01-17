@@ -2,6 +2,7 @@ module Camp23Denmark exposing (view)
 
 import Camp
 import Camp23Denmark.Artifacts
+import Formatting exposing (Formatting(..), Inline(..))
 import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
@@ -60,10 +61,10 @@ view model subpage =
                         , conferenceSummary = unconferenceBulletPoints
                         , sponsors = sponsors model.window
                         , schedule = Just schedule
-                        , venue = Just venue
+                        , venue = venue
                         , organisers = organisers
                         }
-                        model.window
+                        model
 
                 Artifacts ->
                     Camp23Denmark.Artifacts.view model
@@ -169,18 +170,15 @@ schedule =
         |> MarkdownThemed.renderFull
 
 
-venue : Ui.Element msg
+venue : List Formatting
 venue =
-    """
-Elm Camp takes place at Dallund Castle near Odense in Denmark.
-
-Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations.
-
-Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense.
-
-All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option.
-"""
-        |> MarkdownThemed.renderFull
+    [ Section "Travel & Venue"
+        [ Paragraph [ Text "Elm Camp takes place at Dallund Castle near Odense in Denmark." ]
+        , Paragraph [ Text "Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations." ]
+        , Paragraph [ Text "Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense." ]
+        , Paragraph [ Text "All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option." ]
+        ]
+    ]
 
 
 organisers : Ui.Element msg

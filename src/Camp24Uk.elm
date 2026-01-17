@@ -9,6 +9,7 @@ module Camp24Uk exposing
 
 import Camp
 import Camp24Uk.Artifacts
+import Formatting exposing (Formatting(..), Inline(..))
 import Html
 import Html.Attributes
 import MarkdownThemed
@@ -57,9 +58,9 @@ view model subpage =
                         , sponsors = sponsors model.window
                         , conferenceSummary = conferenceSummary
                         , schedule = Nothing
-                        , venue = Just venueAccessContent
+                        , venue = venueAccessContent
                         }
-                        model.window
+                        model
 
                 Artifacts ->
                     Camp24Uk.Artifacts.view model
@@ -118,103 +119,239 @@ organisers =
 """
 
 
-venueAccessContent : Ui.Element msg
+venueAccessContent : List Formatting
 venueAccessContent =
-    """
-**Colehayes Park**<br/>
-Haytor Road<br/>
-Bovey Tracey<br/>
-South Devon<br/>
-TQ13 9LD<br/>
-England
-
-[Google Maps](https://goo.gl/maps/Q44YiJCJ79apMmQ8A)
-
-[https://www.colehayes.co.uk/](https://www.colehayes.co.uk/)
-
-## Getting there
-
-### via train & cab/Elm Camp shuttle
-
-* The closest train station is ([Newton Abbot station](https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot))
-  * Express direct trains from London Paddington take 2.5 – 3.5 hours (best for all London Airports)
-  * Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)
-  * From Exeter Airport a 30 minute cab/rideshare directly to the venue is best
-* Colehayes Park is then a 20 minute cab from Newton Abbot station.
-* Elm Camp will organise shuttles between Exeter or Newton Abbot and the venue at key times
-
-### via car
-
-* There is ample parking on site
-
-### via plane
-
-* The closest airport is Exeter, with [flight connections to the UK, Dublin, and Southern Spain](https://www.flightsfrom.com/EXT)
-* The next closest major airports in order of travel time are:
-  * [Bristol](https://www.flightsfrom.com/explorer/BRS?mapview) (Europe & Northern Africa)
-  * [London Heathrow](https://www.flightsfrom.com/explorer/LHR?mapview) (best International coverage)
-  * [London Gatwick](https://www.flightsfrom.com/explorer/LGW?mapview) (International)
-  * [London Stanstead](https://www.flightsfrom.com/explorer/STN?mapview) (Europe)
-  * [London Luton](https://www.flightsfrom.com/explorer/LTN?mapview)  (Europe)
-
-[Rome2Rio](https://www.rome2rio.com/s/Exeter-UK) is a useful tool for finding possible routes from your location.
-
-## Local amenities
-
-Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, nearby Bovey Tracey offers a few shops.
-
-### Supermarkets
-
-- [Tesco Express](https://www.tesco.com/store-locator/newton-abbot/47-fore-st) (7 am—11 pm), 47 Fore St
-
-### Health
-
-- Pharmacy ([Bovey Tracey Pharmacy](https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40)) (9 am—5:30 pm), near Tesco Express supermarket
-
-## Accessibility
-
-
-Attendees will be able to camp in the grounds or book a variety of rooms in the main house or the cottage.
-
-Please let us know if you have specific needs so that we can work with the venue to accommodate you.
-
-### Floor plans
-
-* [The main house](https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf)
-* [The cottage](https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf)
-
-
-### Partially step free.
-Please ask if you require step free accommodation. There is one bedroom on the ground floor.
-
-* Toilets, dining rooms and conference talk / workshop rooms can be accessed from ground level.
-
-### It's an old manor house
-
-* The house has been renovated to a high standard but there are creaky bits. We ask that you be sensible when exploring
-* There are plenty of spaces to hang out in private or in a small quiet group
-* There are a variety of seating options
-
-### Toilets
-
-* All toilets are gender neutral
-* There are blocks of toilets and showers on each floor and a couple of single units
-* There is at least one bath in the house
-* The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
-* There are also toilet and shower blocks in the garden for campers
-
-### Open water & rough ground
-
-* The house is set in landscaped grounds, there are paths and rough bits.
-* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
-
-## Participating in conversations
-
-* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-    """
-        |> MarkdownThemed.renderFull
+    --    """
+    --**Colehayes Park**<br/>
+    --Haytor Road<br/>
+    --Bovey Tracey<br/>
+    --South Devon<br/>
+    --TQ13 9LD<br/>
+    --England
+    --
+    --[Google Maps](https://goo.gl/maps/Q44YiJCJ79apMmQ8A)
+    --
+    --[https://www.colehayes.co.uk/](https://www.colehayes.co.uk/)
+    --
+    --## Getting there
+    --
+    --### via train & cab/Elm Camp shuttle
+    --
+    --* The closest train station is ([Newton Abbot station](https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot))
+    --  * Express direct trains from London Paddington take 2.5 – 3.5 hours (best for all London Airports)
+    --  * Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)
+    --  * From Exeter Airport a 30 minute cab/rideshare directly to the venue is best
+    --* Colehayes Park is then a 20 minute cab from Newton Abbot station.
+    --* Elm Camp will organise shuttles between Exeter or Newton Abbot and the venue at key times
+    --
+    --### via car
+    --
+    --* There is ample parking on site
+    --
+    --### via plane
+    --
+    --* The closest airport is Exeter, with [flight connections to the UK, Dublin, and Southern Spain](https://www.flightsfrom.com/EXT)
+    --* The next closest major airports in order of travel time are:
+    --  * [Bristol](https://www.flightsfrom.com/explorer/BRS?mapview) (Europe & Northern Africa)
+    --  * [London Heathrow](https://www.flightsfrom.com/explorer/LHR?mapview) (best International coverage)
+    --  * [London Gatwick](https://www.flightsfrom.com/explorer/LGW?mapview) (International)
+    --  * [London Stanstead](https://www.flightsfrom.com/explorer/STN?mapview) (Europe)
+    --  * [London Luton](https://www.flightsfrom.com/explorer/LTN?mapview)  (Europe)
+    --
+    --[Rome2Rio](https://www.rome2rio.com/s/Exeter-UK) is a useful tool for finding possible routes from your location.
+    --
+    --## Local amenities
+    --
+    --Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, nearby Bovey Tracey offers a few shops.
+    --
+    --### Supermarkets
+    --
+    --- [Tesco Express](https://www.tesco.com/store-locator/newton-abbot/47-fore-st) (7 am—11 pm), 47 Fore St
+    --
+    --### Health
+    --
+    --- Pharmacy ([Bovey Tracey Pharmacy](https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40)) (9 am—5:30 pm), near Tesco Express supermarket
+    --
+    --## Accessibility
+    --
+    --
+    --Attendees will be able to camp in the grounds or book a variety of rooms in the main house or the cottage.
+    --
+    --Please let us know if you have specific needs so that we can work with the venue to accommodate you.
+    --
+    --### Floor plans
+    --
+    --* [The main house](https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf)
+    --* [The cottage](https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf)
+    --
+    --
+    --### Partially step free.
+    --Please ask if you require step free accommodation. There is one bedroom on the ground floor.
+    --
+    --* Toilets, dining rooms and conference talk / workshop rooms can be accessed from ground level.
+    --
+    --### It's an old manor house
+    --
+    --* The house has been renovated to a high standard but there are creaky bits. We ask that you be sensible when exploring
+    --* There are plenty of spaces to hang out in private or in a small quiet group
+    --* There are a variety of seating options
+    --
+    --### Toilets
+    --
+    --* All toilets are gender neutral
+    --* There are blocks of toilets and showers on each floor and a couple of single units
+    --* There is at least one bath in the house
+    --* The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)
+    --* There are also toilet and shower blocks in the garden for campers
+    --
+    --### Open water & rough ground
+    --
+    --* The house is set in landscaped grounds, there are paths and rough bits.
+    --* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
+    --
+    --## Participating in conversations
+    --
+    --* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
+    --* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
+    --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
+    --    """
+    --        |> MarkdownThemed.renderFull
+    [ Section "Travel & Venue"
+        [ Paragraph
+            [ Bold "Colehayes Park"
+            , Text "\nHaytor Road\nBovey Tracey\nSouth Devon\nTQ13 9LD\nEngland"
+            ]
+        , Paragraph
+            [ ExternalLink "Google Maps" "https://goo.gl/maps/Q44YiJCJ79apMmQ8A"
+            ]
+        , Paragraph
+            [ ExternalLink "https://www.colehayes.co.uk/" "https://www.colehayes.co.uk/"
+            ]
+        , Section "Getting there"
+            [ BulletList
+                [ Bold "via train & cab/Elm Camp shuttle" ]
+                [ BulletList
+                    [ Text "The closest train station is ("
+                    , ExternalLink "Newton Abbot station" "https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot"
+                    , Text ")"
+                    ]
+                    [ Paragraph
+                        [ Text "Express direct trains from London Paddington take 2.5 – 3.5 hours (best for all London Airports)" ]
+                    , Paragraph
+                        [ Text "Express direct trains from Bristol Temple Meads take 1.5 hours (best for Bristol Airport, take A1 Airport Flyer bus)" ]
+                    , Paragraph
+                        [ Text "From Exeter Airport a 30 minute cab/rideshare directly to the venue is best" ]
+                    ]
+                , Paragraph [ Text "Colehayes Park is then a 20 minute cab from Newton Abbot station." ]
+                , Paragraph [ Text "Elm Camp will organise shuttles between Exeter or Newton Abbot and the venue at key times" ]
+                ]
+            , BulletList
+                [ Bold "via car" ]
+                [ Paragraph [ Text "There is ample parking on site" ] ]
+            , BulletList
+                [ Bold "via plane" ]
+                [ Paragraph
+                    [ Text "The closest airport is Exeter, with "
+                    , ExternalLink "flight connections to the UK, Dublin, and Southern Spain" "https://www.flightsfrom.com/EXT"
+                    ]
+                , BulletList
+                    [ Text "The next closest major airports in order of travel time are:" ]
+                    [ Paragraph
+                        [ ExternalLink "Bristol" "https://www.flightsfrom.com/explorer/BRS?mapview"
+                        , Text " (Europe & Northern Africa)"
+                        ]
+                    , Paragraph
+                        [ ExternalLink "London Heathrow" "https://www.flightsfrom.com/explorer/LHR?mapview"
+                        , Text " (best International coverage)"
+                        ]
+                    , Paragraph
+                        [ ExternalLink "London Gatwick" "https://www.flightsfrom.com/explorer/LGW?mapview"
+                        , Text " (International)"
+                        ]
+                    , Paragraph
+                        [ ExternalLink "London Stanstead" "https://www.flightsfrom.com/explorer/STN?mapview"
+                        , Text " (Europe)"
+                        ]
+                    , Paragraph
+                        [ ExternalLink "London Luton" "https://www.flightsfrom.com/explorer/LTN?mapview"
+                        , Text " (Europe)"
+                        ]
+                    ]
+                ]
+            , Paragraph
+                [ ExternalLink "Rome2Rio" "https://www.rome2rio.com/s/Exeter-UK"
+                , Text " is a useful tool for finding possible routes from your location."
+                ]
+            ]
+        , Section "Local amenities"
+            [ Paragraph
+                [ Text "Food and drinks are available on site, but if you forgot to pack a toothbrush or need that gum you like, nearby Bovey Tracey offers a few shops." ]
+            , BulletList
+                [ Bold "Supermarkets" ]
+                [ Paragraph
+                    [ ExternalLink "Tesco Express" "https://www.tesco.com/store-locator/newton-abbot/47-fore-st"
+                    , Text " (7 am—11 pm), 47 Fore St"
+                    ]
+                ]
+            , BulletList [ Bold "Health" ]
+                [ Paragraph
+                    [ Text "Pharmacy ("
+                    , ExternalLink "Bovey Tracey Pharmacy" "https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40"
+                    , Text ") (9 am—5:30 pm), near Tesco Express supermarket"
+                    ]
+                ]
+            ]
+        , Section "Accessibility"
+            [ Paragraph
+                [ Text "Attendees will be able to camp in the grounds or book a variety of rooms in the main house or the cottage." ]
+            , Paragraph
+                [ Text "Please let us know if you have specific needs so that we can work with the venue to accommodate you." ]
+            , BulletList
+                [ Bold "Floor plans" ]
+                [ Paragraph
+                    [ ExternalLink "The main house" "https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf" ]
+                , Paragraph
+                    [ ExternalLink "The cottage" "https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf" ]
+                ]
+            , BulletList
+                [ Text "Partially step free." ]
+                [ Paragraph [ Text "Please ask if you require step free accommodation. There is one bedroom on the ground floor." ]
+                , Paragraph [ Text "Toilets, dining rooms and conference talk / workshop rooms can be accessed from ground level." ]
+                ]
+            , BulletList
+                [ Bold "It's an old manor house" ]
+                [ Paragraph
+                    [ Text "The house has been renovated to a high standard but there are creaky bits. We ask that you be sensible when exploring" ]
+                , Paragraph
+                    [ Text "There are plenty of spaces to hang out in private or in a small quiet group" ]
+                , Paragraph
+                    [ Text "There are a variety of seating options" ]
+                ]
+            , BulletList
+                [ Bold "Toilets" ]
+                [ Paragraph [ Text "All toilets are gender neutral" ]
+                , Paragraph [ Text "There are blocks of toilets and showers on each floor and a couple of single units" ]
+                , Paragraph [ Text "There is at least one bath in the house" ]
+                , Paragraph [ Text "The level of accessibility of toilets needs to be confirmed (please ask if you have specific needs)" ]
+                , Paragraph [ Text "There are also toilet and shower blocks in the garden for campers" ]
+                ]
+            , BulletList
+                [ Bold "Open water & rough ground" ]
+                [ Paragraph [ Text "The house is set in landscaped grounds, there are paths and rough bits." ]
+                , Paragraph [ Text "There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced" ]
+                ]
+            ]
+        , BulletList
+            [ Bold "Participating in conversations" ]
+            [ Paragraph
+                [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
+            , Paragraph
+                [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
+            , Paragraph
+                [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
+            ]
+        ]
+    ]
 
 
 sponsors : { window | width : Int } -> Ui.Element msg

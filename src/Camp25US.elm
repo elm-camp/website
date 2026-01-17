@@ -15,6 +15,7 @@ module Camp25US exposing
 import Camp
 import Camp25US.Archive
 import Camp25US.Artifacts
+import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Helpers
 import Html
 import Html.Attributes
@@ -64,9 +65,9 @@ view model subpage =
                         , sponsors = sponsors model.window
                         , conferenceSummary = conferenceSummary
                         , schedule = Nothing
-                        , venue = Just venueAccessContent
+                        , venue = venueAccessContent
                         }
-                        model.window
+                        model
 
                 --Camp25US.Archive.view model
                 Artifacts ->
@@ -206,50 +207,69 @@ organisers =
 """
 
 
-venueAccessContent : Ui.Element msg
+venueAccessContent : List Formatting
 venueAccessContent =
-    Ui.column
-        [ Ui.width Ui.shrink ]
-        [ """
-## The venue
-
-**Ronora Lodge & Retreat Center**<br/>
-9325 Dwight Boyer Road<br/>
-Watervliet, Michigan 49098<br/>
-USA
-
-[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
-
-[https://www.ronoralodge.com](https://www.ronoralodge.com/)
-
-### Open water & rough ground
-
-* The house is set in landscaped grounds, there are paths and rough bits.
-* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
-
-## Participating in conversations
-
-* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-
-## Contacting the organisers
-
-If you have questions or concerns about this website or attending Elm Camp, please get in touch
-
-    """
-            ++ contactDetails
-            |> MarkdownThemed.renderFull
-        , Html.iframe
-            [ Html.Attributes.src "/map.html"
-            , Html.Attributes.style "width" "100%"
-            , Html.Attributes.style "height" "auto"
-            , Html.Attributes.style "aspect-ratio" "21 / 9"
-            , Html.Attributes.style "border" "none"
+    --## The venue
+    --
+    --**Ronora Lodge & Retreat Center**<br/>
+    --9325 Dwight Boyer Road<br/>
+    --Watervliet, Michigan 49098<br/>
+    --USA
+    --
+    --[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
+    --
+    --[https://www.ronoralodge.com](https://www.ronoralodge.com/)
+    --
+    --### Open water & rough ground
+    --
+    --* The house is set in landscaped grounds, there are paths and rough bits.
+    --* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
+    --
+    --## Participating in conversations
+    --
+    --* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
+    --* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
+    --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
+    --
+    --## Contacting the organisers
+    --
+    --If you have questions or concerns about this website or attending Elm Camp, please get in touch
+    --
+    --    """
+    --            ++ contactDetails
+    --            |> MarkdownThemed.renderFull
+    [ Section "Travel & Venue"
+        [ Section "The venue"
+            [ Paragraph
+                [ Bold "Ronora Lodge & Retreat Center"
+                , Text "\n9325 Dwight Boyer Road\nWatervliet, Michigan 49098\nUSA"
+                ]
+            , Paragraph
+                [ ExternalLink "Google Maps" "https://maps.app.goo.gl/ijj1F5Th3JWJt2p16"
+                ]
+            , Paragraph
+                [ ExternalLink "https://www.ronoralodge.com" "https://www.ronoralodge.com/"
+                ]
+            , BulletList
+                [ Bold "Open water & rough ground" ]
+                [ Paragraph [ Text "The house is set in landscaped grounds, there are paths and rough bits." ]
+                , Paragraph [ Text "There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced" ]
+                ]
             ]
-            []
-            |> Ui.html
+        , BulletList
+            [ Bold "Participating in conversations" ]
+            [ Paragraph [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
+            , Paragraph [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
+            , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
+            ]
+        , Section "Contacting the organisers"
+            [ Paragraph
+                [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch"
+                ]
+            ]
+        , LegacyMap
         ]
+    ]
 
 
 contactDetails : String
