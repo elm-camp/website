@@ -168,7 +168,6 @@ venueAccessContent =
         [ Section
             "The venue"
             [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
-            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/" "https://www.hotel-pracharna.cz/" ]
             ]
         , Section
             "Participating in conversations"
@@ -195,6 +194,7 @@ venueAccessContent =
                 , Paragraph [ Text "Elm Slack: @katjam" ]
                 ]
             ]
+            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
         ]
     ]
 
