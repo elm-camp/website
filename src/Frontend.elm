@@ -91,11 +91,25 @@ app_ =
 
 
 subscriptions : FrontendModel -> Subscription FrontendOnly FrontendMsg
-subscriptions _ =
+subscriptions model =
+    let
+        logoSubscription =
+            case model of
+                Types.Loaded loadedModel ->
+                    if View.Logo.needsAnimationFrame loadedModel.logoModel then
+                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo.Tick posix |> Types.LogoMsg)
+
+                    else
+                        Subscription.none
+
+                Types.Loading _ ->
+                    Subscription.none
+    in
     Subscription.batch
         [ Effect.Browser.Events.onResize GotWindowSize
         , Effect.Browser.Events.onMouseUp (D.succeed MouseDown)
         , Time.every Duration.second Tick
+        , logoSubscription
         ]
 
 
