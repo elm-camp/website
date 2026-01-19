@@ -1,11 +1,6 @@
 module Page.UnconferenceFormat exposing (view)
 
 import Formatting exposing (Formatting(..), Inline(..))
-import MarkdownThemed
-import Ui
-import Ui.Anim
-import Ui.Layout
-import Ui.Prose
 
 
 view : List Formatting

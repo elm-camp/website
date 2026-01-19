@@ -4,13 +4,9 @@ module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, 
 -}
 
 import Formatting exposing (Formatting)
-import MarkdownThemed
 import Theme
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
-import Ui.Prose
 
 
 type alias Meta =

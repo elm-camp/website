@@ -38,7 +38,6 @@ import Html.Attributes
 import Html.Events
 import Id exposing (Id)
 import List.Extra as List
-import MarkdownThemed
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import SeqDict
@@ -89,12 +88,10 @@ view model =
                 v
     in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive
             (Ui.column
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.contentAttributes
                 [ ticketInfo model
                 ]
@@ -104,22 +101,15 @@ view model =
             , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
             [ Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.contentAttributes
-                opportunityGrantInfo
-            , grantApplicationCopy
-                |> MarkdownThemed.renderFull
-                |> Ui.el
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
+                (Formatting.view model opportunityGrantInfo)
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive
-                (Ui.el
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-                    (MarkdownThemed.renderFull "# Attend Elm Camp")
-                )
+            --, afterTicketsAreLive
+            --    (Ui.el
+            --        Theme.contentAttributes
+            --        (MarkdownThemed.renderFull "# Attend Elm Camp")
+            --    )
             , afterTicketsAreLive (ticketsView model)
             , afterTicketsAreLive (accommodationView model)
             , afterTicketsAreLive
@@ -324,29 +314,21 @@ ticketsHtmlId =
     Dom.id "tickets"
 
 
-grantApplicationCopy : String
-grantApplicationCopy =
-    """
-
-## 🤗 Opportunity grant applications
-
-If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
-
-Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
-
-All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
-"""
-
-
-opportunityGrantInfo : Ui.Element msg
+opportunityGrantInfo : List Formatting
 opportunityGrantInfo =
-    """
-# 🫶 Opportunity grant
-
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
-
-"""
-        |> MarkdownThemed.renderFull
+    [ Section "🫶 Opportunity grant"
+        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
+        , Section "🤗 Opportunity grant applications"
+            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
+            , Paragraph
+                [ Text "Please apply by sending an email to "
+                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                , Text ". The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process."
+                ]
+            , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
+            ]
+        ]
+    ]
 
 
 ticketsView : LoadedModel -> Ui.Element FrontendMsg

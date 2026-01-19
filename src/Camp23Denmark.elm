@@ -2,7 +2,6 @@ module Camp23Denmark exposing (view)
 
 import Camp
 import Formatting exposing (Formatting(..), Inline(..))
-import MarkdownThemed
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui

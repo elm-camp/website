@@ -3,7 +3,6 @@ module Camp25US exposing (view)
 import Camp
 import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Helpers
-import MarkdownThemed
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -87,35 +86,6 @@ organisers =
 
 venueAccessContent : List Formatting
 venueAccessContent =
-    --## The venue
-    --
-    --**Ronora Lodge & Retreat Center**<br/>
-    --9325 Dwight Boyer Road<br/>
-    --Watervliet, Michigan 49098<br/>
-    --USA
-    --
-    --[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
-    --
-    --[https://www.ronoralodge.com](https://www.ronoralodge.com/)
-    --
-    --### Open water & rough ground
-    --
-    --* The house is set in landscaped grounds, there are paths and rough bits.
-    --* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
-    --
-    --## Participating in conversations
-    --
-    --* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-    --* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-    --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-    --
-    --## Contacting the organisers
-    --
-    --If you have questions or concerns about this website or attending Elm Camp, please get in touch
-    --
-    --    """
-    --            ++ contactDetails
-    --            |> MarkdownThemed.renderFull
     [ Section "Unconference"
         [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"
             [ Paragraph [ Text "Arrive anytime on Tues 24th June 2025" ]
@@ -210,20 +180,12 @@ venueAccessContent =
                 ]
                 [ Paragraph [ Text "Elmcraft Discord: ", ExternalLink "#elm-camp-24" Helpers.discordInviteLink, Text " channel or DM katjam_" ]
                 , Paragraph [ Text "Email: ", ExternalLink "team@elm.camp" "mailto:team@elm.camp" ]
+                , Paragraph [ Text "Elm Slack: @katjam" ]
                 ]
             ]
         , LegacyMap
         ]
     ]
-
-
-contactDetails : String
-contactDetails =
-    """
-* Elmcraft Discord: [#elm-camp-24](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
-* Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam
-"""
 
 
 sponsors : { window | width : Int } -> Ui.Element msg
