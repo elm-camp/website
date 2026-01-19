@@ -1,4 +1,4 @@
-module MarkdownThemed exposing (bulletPoint, newThemeRenderFull, renderFull)
+module MarkdownThemed exposing (bulletPoint, renderFull)
 
 import Helpers exposing (justs)
 import Html
@@ -19,11 +19,6 @@ import Ui.Prose
 renderFull : String -> Ui.Element msg
 renderFull markdownBody =
     render (renderer Theme.lightTheme) markdownBody
-
-
-newThemeRenderFull : String -> Ui.Element msg
-newThemeRenderFull markdownBody =
-    render (renderer Theme.greenTheme) markdownBody
 
 
 render : Markdown.Renderer.Renderer (Ui.Element msg) -> String -> Ui.Element msg

@@ -505,12 +505,21 @@ header config =
                         ]
                     ]
                 , Ui.column
-                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18, Ui.move { x = 0, y = -1, z = 0 } ]
-                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text "")
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
+                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18 ]
+                    [ Ui.el
+                        [ Ui.width Ui.shrink
+                        , Ui.Font.bold
+                        , Ui.Font.color Theme.lightTheme.defaultText
+                        ]
+                        (Ui.text Camp26Czech.location)
                     , Ui.el
-                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/en/)" |> MarkdownThemed.renderFull)
+                        [ Ui.width Ui.shrink
+                        , Ui.Font.bold
+                        , Ui.linkNewTab "https://www.hotel-pracharna.cz/en/"
+                        , Ui.Font.color Theme.lightTheme.link
+                        , Ui.Font.underline
+                        ]
+                        (Ui.text "Park Hotel Prachárna")
                     , Ui.el
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         (Ui.text "Monday 15th - Thursday 18th June 2026")

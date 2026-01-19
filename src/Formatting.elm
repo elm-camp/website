@@ -8,14 +8,10 @@ module Formatting exposing
 import Color exposing (Color)
 import Html exposing (Html)
 import Html.Attributes
-import Html.Events
 import Html.Lazy
-import Json.Decode
 import Route exposing (Route)
-import Set exposing (Set)
 import Theme
 import Ui
-import Ui.Font
 import Url
 
 
