@@ -2,6 +2,7 @@ module Frontend exposing (app, app_)
 
 import Admin
 import Browser
+import Browser.Dom
 import Browser.Navigation exposing (Key)
 import Camp23Denmark
 import Camp23Denmark.Artifacts
@@ -121,9 +122,6 @@ queryBool name =
 init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 init url key =
     let
-        route =
-            Route.decode url
-
         isOrganiser =
             case url |> Url.Parser.parse (Url.Parser.top <?> queryBool "organiser") of
                 Just (Just isOrganiser_) ->
@@ -138,7 +136,7 @@ init url key =
         , zone = Nothing
         , window = Nothing
         , initData = Nothing
-        , route = route
+        , url = url
         , isOrganiser = isOrganiser
         , elmUiState = Ui.Anim.init
         }
@@ -147,7 +145,7 @@ init url key =
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , Time.now |> Task.perform Tick
         , Time.here |> Task.perform GotZone
-        , case route of
+        , case Route.decode url of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
 
@@ -199,7 +197,7 @@ tryLoading loadingModel =
                 , prices = prices
                 , selectedTicket = Nothing
                 , form = PurchaseForm.init
-                , route = loadingModel.route
+                , route = Route.decode loadingModel.url
                 , showCarbonOffsetTooltip = False
                 , slotsRemaining = slotsRemaining
                 , isOrganiser = loadingModel.isOrganiser
@@ -209,7 +207,12 @@ tryLoading loadingModel =
                 , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
                 }
-            , Command.none
+            , case loadingModel.url.fragment of
+                Just fragment ->
+                    scrollToFragment (Dom.id fragment)
+
+                Nothing ->
+                    Command.none
             )
         )
         loadingModel.window
@@ -233,7 +236,19 @@ updateLoaded msg model =
                     )
 
         UrlChanged url ->
-            ( { model | route = Route.decode url }, scrollToTop )
+            let
+                route : Route
+                route =
+                    Route.decode url
+            in
+            ( { model | route = route }
+            , case url.fragment of
+                Just fragment ->
+                    scrollToFragment (Dom.id fragment)
+
+                Nothing ->
+                    scrollToTop
+            )
 
         Tick now ->
             ( { model | now = now }, Command.none )
@@ -372,6 +387,9 @@ updateLoaded msg model =
         ElmUiMsg elmUiMsg ->
             ( { model | elmUiState = Ui.Anim.update elmUiMsg model.elmUiState }, Command.none )
 
+        ScrolledToFragment ->
+            ( model, Command.none )
+
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
 -}
@@ -417,6 +435,13 @@ customResolver fn response =
 scrollToTop : Command FrontendOnly ToBackend FrontendMsg
 scrollToTop =
     Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
+
+
+scrollToFragment : HtmlId -> Command FrontendOnly toMsg FrontendMsg
+scrollToFragment fragment =
+    Dom.getElement fragment
+        |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
+        |> Task.attempt (\_ -> ScrolledToFragment)
 
 
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )

@@ -50,7 +50,7 @@ type alias LoadingModel =
     , now : Time.Posix
     , zone : Maybe Time.Zone
     , window : Maybe { width : Int, height : Int }
-    , route : Route
+    , url : Url
     , isOrganiser : Bool
     , initData : Maybe InitData2
     , elmUiState : Ui.State
@@ -302,6 +302,7 @@ type FrontendMsg
     | LogoMsg View.Logo.Msg
     | Noop
     | ElmUiMsg Ui.Msg
+    | ScrolledToFragment
 
 
 type ToBackend
