@@ -26,9 +26,9 @@ module View.Sales exposing
     , year
     )
 
-import Camp25US.Inventory as Inventory
-import Camp25US.Product as Product
-import Camp25US.Tickets as Tickets
+import Camp26Czech.Inventory as Inventory
+import Camp26Czech.Product as Product
+import Camp26Czech.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time

@@ -21,7 +21,6 @@ type Route
     | Camp23Denmark
     | Camp24Uk
     | Camp25US
-    | Camp26Czech
 
 
 decode : Url -> Route
@@ -35,12 +34,8 @@ decode url =
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
-
-        -- Previous events
         , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Denmark
         , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
-
-        -- Current event
         , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
@@ -99,9 +94,6 @@ encode fragment route =
 
             Camp25US ->
                 [ "25-us" ]
-
-            Camp26Czech ->
-                [ "26-czech" ]
         )
         (case route of
             HomepageRoute ->
@@ -140,9 +132,6 @@ encode fragment route =
                 []
 
             Camp25US ->
-                []
-
-            Camp26Czech ->
                 []
         )
         ++ (case fragment of

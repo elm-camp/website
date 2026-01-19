@@ -14,7 +14,7 @@ module PurchaseForm exposing
     , validateName
     )
 
-import Camp24Devon.Product as Product
+import Camp26Czech.Product as Product
 import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
 import Env

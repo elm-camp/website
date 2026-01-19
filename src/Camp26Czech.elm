@@ -6,11 +6,9 @@ module Camp26Czech exposing
     , organisers
     , sponsors
     , venueAccessContent
-    , view
     )
 
 import Camp
-import Camp26Czech.Archive
 import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import Theme
@@ -33,31 +31,6 @@ meta =
 location : String
 location =
     "🇨🇿 Olomouc, Czechia"
-
-
-view : LoadedModel -> Ui.Element FrontendMsg
-view model =
-    Ui.column
-        [ Ui.height Ui.fill ]
-        [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
-                model.window
-                [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
-                [ Ui.image
-                    [ Ui.width (Ui.px 300) ]
-                    { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
-                , Ui.column [ Ui.spacing 20 ]
-                    [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
-                    , elmTopLine
-                    , elmBottomLine
-                    ]
-                ]
-            , Camp26Czech.Archive.view model
-            ]
-        , Theme.footer
-        ]
 
 
 elmTopLine : Ui.Element msg
@@ -160,24 +133,6 @@ venueAccessContent =
         , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
         ]
     ]
-
-
-
---"""
---    ++ contactDetails
---    |> MarkdownThemed.renderFull
---
-----
-----, Html.iframe
-----    [ Html.Attributes.src "/map.html"
-----    , Html.Attributes.style "width" "100%"
-----    , Html.Attributes.style "height" "auto"
-----    , Html.Attributes.style "aspect-ratio" "21 / 9"
-----    , Html.Attributes.style "border" "none"
-----    ]
-----    []
-----    |> Element.html
---]"""
 
 
 sponsors : { window | width : Int } -> Ui.Element msg

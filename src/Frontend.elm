@@ -716,9 +716,6 @@ loadedView model =
         Camp25US ->
             Camp25US.view model
 
-        Camp26Czech ->
-            Camp26Czech.view model
-
 
 returnToHomepageButton : Ui.Element msg
 returnToHomepageButton =

@@ -8,7 +8,7 @@ module RPC exposing
     )
 
 import Backend
-import Camp24Devon.Tickets as Tickets
+import Camp26Czech.Tickets as Tickets
 import Codec
 import Email.Html as Html
 import Email.Html.Attributes as Attributes
