@@ -278,7 +278,7 @@ glow =
 footerButton : Route -> String -> Ui.Element msg
 footerButton route label =
     Ui.el
-        [ Ui.link (Route.encode route)
+        [ Ui.link (Route.encode Nothing route)
         , Ui.background (Ui.rgb 12 109 82)
         , Ui.paddingXY 16 10
         , Ui.rounded 10
@@ -304,7 +304,6 @@ footer =
             [ footerButton CodeOfConductRoute "Code of Conduct"
             , footerButton UnconferenceFormatRoute "Unconference Guidelines"
             , footerButton VenueAndAccessRoute "Venue & Access"
-            , footerButton OrganisersRoute "Organisers"
             , footerButton ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )

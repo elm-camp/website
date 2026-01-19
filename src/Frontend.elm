@@ -24,7 +24,7 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
-import Formatting
+import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
@@ -224,7 +224,7 @@ updateLoaded msg model =
             case urlRequest of
                 Browser.Internal url ->
                     ( model
-                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode)
+                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode url.fragment)
                     )
 
                 Browser.External url ->
@@ -476,7 +476,7 @@ header config =
 
         elmCampTitle =
             Ui.el
-                [ Ui.link (Route.encode Route.HomepageRoute) ]
+                [ Ui.link (Route.encode Nothing Route.HomepageRoute) ]
                 (Ui.el
                     [ Ui.width Ui.shrink
                     , Ui.Font.size titleSize
@@ -648,19 +648,6 @@ loadedView model =
                 , Theme.footer
                 ]
 
-        OrganisersRoute ->
-            Ui.column
-                [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ View.Sales.organisersInfo
-                    , Camp26Czech.organisers model.window.width
-                    ]
-                , Theme.footer
-                ]
-
         ElmCampArchiveRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
@@ -727,7 +714,7 @@ returnToHomepageButton =
         , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
         , Ui.Font.weight 600
         , Ui.width Ui.shrink
-        , Ui.link (Route.encode HomepageRoute)
+        , Ui.link (Route.encode Nothing HomepageRoute)
         , Ui.contentCenterX
         ]
         (Ui.text "Return to homepage")
@@ -778,6 +765,16 @@ homepageView model =
                     [ Camp26Czech.venuePictures model
 
                     --, Camp26Czech.conferenceSummary
+                    , Ui.column
+                        []
+                        [ Formatting.view
+                            model
+                            [ Section "Organisers"
+                                [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
+                                ]
+                            ]
+                        , Camp26Czech.organisers model.window.width
+                        ]
                     ]
 
                 --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]

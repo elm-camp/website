@@ -14,7 +14,6 @@ type Route
     | UnconferenceFormatRoute
     | VenueAndAccessRoute
     | CodeOfConductRoute
-    | OrganisersRoute
     | ElmCampArchiveRoute
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
@@ -45,7 +44,6 @@ decode url =
         , Url.Parser.s "unconference-format" |> Url.Parser.map UnconferenceFormatRoute
         , Url.Parser.s "venue-and-access" |> Url.Parser.map VenueAndAccessRoute
         , Url.Parser.s "code-of-conduct" |> Url.Parser.map CodeOfConductRoute
-        , Url.Parser.s "organisers" |> Url.Parser.map OrganisersRoute
         , Url.Parser.s "elm-camp-archive" |> Url.Parser.map ElmCampArchiveRoute
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
@@ -78,8 +76,8 @@ parseStripeSessionId =
     Url.Parser.Query.map (Maybe.map Id.fromString) (Url.Parser.Query.string Stripe.stripeSessionIdParameter)
 
 
-encode : Route -> String
-encode route =
+encode : Maybe String -> Route -> String
+encode fragment route =
     Url.Builder.absolute
         (case route of
             HomepageRoute ->
@@ -93,9 +91,6 @@ encode route =
 
             CodeOfConductRoute ->
                 [ "code-of-conduct" ]
-
-            OrganisersRoute ->
-                [ "organisers" ]
 
             ElmCampArchiveRoute ->
                 [ "elm-camp-archive" ]
@@ -154,9 +149,6 @@ encode route =
             CodeOfConductRoute ->
                 []
 
-            OrganisersRoute ->
-                []
-
             ElmCampArchiveRoute ->
                 []
 
@@ -206,3 +198,10 @@ encode route =
                     Artifacts ->
                         []
         )
+        ++ (case fragment of
+                Just fragment2 ->
+                    "#" ++ fragment2
+
+                Nothing ->
+                    ""
+           )

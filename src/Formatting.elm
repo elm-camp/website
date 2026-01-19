@@ -111,11 +111,12 @@ viewHelper shared depth item =
             case depth of
                 0 ->
                     Html.div
-                        [ Html.Attributes.style "padding-top" "16px" ]
+                        [ Html.Attributes.style "padding-top" "32px" ]
                         (Html.h1
                             [ Html.Attributes.id id
                             , Html.Attributes.style "size" "36px"
                             , Html.Attributes.style "font-weight" "600"
+                            , Html.Attributes.style "margin" "0"
                             ]
                             [ Html.a
                                 [ Html.Attributes.href ("#" ++ id)
@@ -129,11 +130,12 @@ viewHelper shared depth item =
 
                 1 ->
                     Html.div
-                        [ Html.Attributes.style "padding-top" "16px" ]
+                        [ Html.Attributes.style "padding-top" "24px" ]
                         (Html.h2
                             [ Html.Attributes.id id
                             , Html.Attributes.style "size" "24px"
                             , Html.Attributes.style "font-weight" "800"
+                            , Html.Attributes.style "margin" "0"
                             ]
                             [ Html.a
                                 [ Html.Attributes.href ("#" ++ id)
@@ -207,7 +209,7 @@ inlineView shared inline =
 
         Link text url ->
             Html.a
-                [ Html.Attributes.href (Route.encode url)
+                [ Html.Attributes.href (Route.encode Nothing url)
                 , colorAttribute Theme.lightTheme.link
                 ]
                 [ Html.text text ]

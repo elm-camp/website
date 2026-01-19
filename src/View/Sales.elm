@@ -9,7 +9,6 @@ module View.Sales exposing
     , grantApplicationCopy
     , opportunityGrant
     , opportunityGrantInfo
-    , organisersInfo
     , radioButton
     , sponsorshipOption
     , sponsorships
@@ -33,6 +32,7 @@ import Camp25US.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
+import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Html
 import Html.Attributes
 import Html.Events
@@ -112,10 +112,6 @@ view model =
                 |> Ui.el
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     Theme.contentAttributes
-            , Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                Theme.contentAttributes
-                organisersInfo
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
             , afterTicketsAreLive
@@ -348,18 +344,6 @@ opportunityGrantInfo =
 # 🫶 Opportunity grant
 
 Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
-
-"""
-        |> MarkdownThemed.renderFull
-
-
-organisersInfo : Ui.Element msg
-organisersInfo =
-    """
-
-# Organisers
-
-Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
 
 """
         |> MarkdownThemed.renderFull
