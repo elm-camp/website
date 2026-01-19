@@ -52,7 +52,7 @@ view model =
                 ]
             , Camp.viewArchive
                 { images = images
-                , organisers = organisers |> MarkdownThemed.renderFull
+                , organisers = organisers
                 , sponsors = sponsors model.window
                 , conferenceSummary = conferenceSummary
                 , schedule = Nothing
@@ -177,25 +177,19 @@ venueImage width path =
         { source = "/" ++ path, description = "Photo of part of Ronora Lodge", onLoad = Nothing }
 
 
-organisers : String
+organisers : List Formatting
 organisers =
-    """
-🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
-
-🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
-
-🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
-
-🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
-
-🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
-
-🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
-
-🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family.
-
-🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr.
-"""
+    [ Section "Organisers"
+        [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
+        , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
+        , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
+        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
+        , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
+        , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
+        , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
+        , Paragraph [ Text "🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr." ]
+        ]
+    ]
 
 
 venueAccessContent : List Formatting

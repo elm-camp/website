@@ -9,7 +9,6 @@ module Camp24Uk exposing
 
 import Camp
 import Formatting exposing (Formatting(..), Inline(..))
-import MarkdownThemed
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -46,7 +45,7 @@ view model =
                 ]
             , Camp.viewArchive
                 { images = images
-                , organisers = organisers |> MarkdownThemed.renderFull
+                , organisers = organisers
                 , sponsors = sponsors model.window
                 , conferenceSummary = conferenceSummary
                 , schedule = Nothing
@@ -88,19 +87,45 @@ images =
             )
 
 
-organisers : String
+organisers : List Formatting
 organisers =
-    """
-🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of [codereading.club](https://codereading.club/)
-
-🇺🇸 Jim Carlson – Developer of [Scripta.io](https://scripta.io), a web publishing platform for technical documents in mathematics, physics, and the like. Currently working for [exosphere.app](https://exosphere.app), an all-Elm cloud-computing project
-
-🇬🇧 Mario Rogic – Organiser of the [Elm London](https://meetdown.app/group/37aa26/Elm-London-Meetup) and [Elm Online](https://meetdown.app/group/10561/Elm-Online-Meetup) meetups. Groundskeeper of [Elmcraft](https://elmcraft.org/), founder of [Lamdera](https://lamdera.com/).
-
-🇺🇸 Wolfgang Schuster – Author of [Elm weekly](https://www.elmweekly.nl/), hobbyist and professional Elm developer. Currently working at [Vendr](https://www.vendr.com/).
-
-🇬🇧 Hayleigh Thompson – Terminally online in the Elm community. Competitive person-help. Developer relations engineer at [xyflow](https://www.xyflow.com/).
-"""
+    [ Section "Organisers"
+        [ Paragraph
+            [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of "
+            , ExternalLink "codereading.club" "https://codereading.club/"
+            ]
+        , Paragraph
+            [ Text "🇺🇸 Jim Carlson – Developer of "
+            , ExternalLink "Scripta.io" "https://scripta.io"
+            , Text ", a web publishing platform for technical documents in mathematics, physics, and the like. Currently working for "
+            , ExternalLink "exosphere.app" "https://exosphere.app"
+            , Text ", an all-Elm cloud-computing project"
+            ]
+        , Paragraph
+            [ Text "🇬🇧 Mario Rogic – Organiser of the "
+            , ExternalLink "Elm London" "https://meetdown.app/group/37aa26/Elm-London-Meetup"
+            , Text " and "
+            , ExternalLink "Elm Online" "https://meetdown.app/group/10561/Elm-Online-Meetup"
+            , Text " meetups. Groundskeeper of "
+            , ExternalLink "Elmcraft" "https://elmcraft.org/"
+            , Text ", founder of "
+            , ExternalLink "Lamdera" "https://lamdera.com/"
+            , Text "."
+            ]
+        , Paragraph
+            [ Text "🇺🇸 Wolfgang Schuster – Author of "
+            , ExternalLink "Elm weekly" "https://www.elmweekly.nl/"
+            , Text ", hobbyist and professional Elm developer. Currently working at "
+            , ExternalLink "Vendr" "https://www.vendr.com/"
+            , Text "."
+            ]
+        , Paragraph
+            [ Text "🇬🇧 Hayleigh Thompson – Terminally online in the Elm community. Competitive person-help. Developer relations engineer at "
+            , ExternalLink "xyflow" "https://www.xyflow.com/"
+            , Text "."
+            ]
+        ]
+    ]
 
 
 venueAccessContent : List Formatting

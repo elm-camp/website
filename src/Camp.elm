@@ -48,7 +48,7 @@ type alias ArchiveContents msg =
     { conferenceSummary : List Formatting
     , schedule : Maybe (List Formatting)
     , venue : List Formatting
-    , organisers : Ui.Element msg
+    , organisers : List Formatting
     , sponsors : Ui.Element msg
     , images : List { src : String, description : String }
     }
@@ -103,16 +103,12 @@ viewArchive contents config =
             ]
         , Ui.column
             Theme.contentAttributes
-            [ Formatting.h1 "organisers" config.window "Our sponsors" |> Ui.html
+            [ Formatting.h1 "sponsors" config.window "Our sponsors" |> Ui.html
             , contents.sponsors
             ]
         , Ui.column
-            [ Ui.spacing 24
-            ]
-            [ Formatting.h1 "organisers" config.window "Organisers" |> Ui.html
-            , Ui.el
-                Theme.contentAttributes
-                contents.organisers
+            Theme.contentAttributes
+            [ Formatting.view config contents.organisers
             ]
         ]
 
