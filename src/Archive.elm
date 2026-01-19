@@ -10,6 +10,17 @@ content =
             [ Text "Here we keep track of what has come out of past Elm Camp events. Feel free to add stuff, this page is "
             , ExternalLink "open to contributions on Github" "https://github.com/elm-camp/website/edit/main/src/Archive.elm"
             ]
+        , Section "Elm Camp 2025"
+            [ BulletList
+                [ Bold "Posts" ]
+                [ Paragraph [ ExternalLink "Elm Camp 2025" "https://jaredmsmith.com/dev/elm-camp-2025", Text " by @absynce (Blog)" ] ]
+            , BulletList
+                [ Bold "Podcasts" ]
+                [ Paragraph [ ExternalLink "Elm Town 85" "https://elm.town/episodes/elm-town-85-wander-elm-camp-2025" ] ]
+            , BulletList
+                [ Bold "Media" ]
+                [ Paragraph [ ExternalLink "Photos taken during the event" "https://drive.google.com/drive/folders/1pEXG2UULRSUkYSYA7olhx6iREJ1veJHY" ] ]
+            ]
         , Section "Elm Camp 2024"
             [ Image "/24-colehayes/elm-camp-24-attendees.jpg" []
             , BulletList

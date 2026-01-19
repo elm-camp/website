@@ -130,7 +130,15 @@ viewHelper shared depth item =
                         []
                         (Html.h1
                             [ Html.Attributes.id id
-                            , Html.Attributes.style "size" "36px"
+                            , Html.Attributes.style
+                                "font-size"
+                                (if shared.window.width < 800 then
+                                    "36px"
+
+                                 else
+                                    "48px"
+                                )
+                            , Html.Attributes.style "line-height" "1.2"
                             , Html.Attributes.style "font-weight" "600"
                             , Html.Attributes.style "margin" "0"
                             , Html.Attributes.style "padding-top" "24px"
@@ -150,7 +158,7 @@ viewHelper shared depth item =
                         []
                         (Html.h2
                             [ Html.Attributes.id id
-                            , Html.Attributes.style "size" "24px"
+                            , Html.Attributes.style "font-size" "24px"
                             , Html.Attributes.style "font-weight" "800"
                             , Html.Attributes.style "margin" "0"
                             , Html.Attributes.style "padding-top" "16px"
