@@ -27,6 +27,7 @@ type Formatting
     | LegacyMap
     | QuoteBlock (List Inline)
     | HorizontalLine
+    | YoutubeVideo String
 
 
 type Inline
@@ -181,7 +182,7 @@ viewHelper shared depth item =
 
         Image url altText ->
             Html.figure
-                [ Html.Attributes.style "padding-bottom" "16px", Html.Attributes.style "margin" "0" ]
+                [ Html.Attributes.style "margin" "0" ]
                 [ Html.img
                     [ Html.Attributes.src url
                     , Html.Attributes.style "max-width" "100%"
@@ -250,6 +251,12 @@ viewHelper shared depth item =
                 , Html.Attributes.style "border-left" (Color.toCssString Theme.lightTheme.grey ++ " solid 4px")
                 ]
                 (List.map (inlineView shared) items)
+
+        YoutubeVideo url ->
+            Html.iframe
+                [ Html.Attributes.src url
+                ]
+                []
 
 
 inlineView : Shared b -> Inline -> Html msg

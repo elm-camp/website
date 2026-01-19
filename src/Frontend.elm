@@ -1,6 +1,7 @@
 module Frontend exposing (app, app_)
 
 import Admin
+import Archive
 import Browser
 import Browser.Navigation exposing (Key)
 import Camp23Denmark
@@ -673,7 +674,7 @@ loadedView model =
                 , Ui.column
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model elmCampArchiveContent ]
+                    [ Formatting.view model Archive.content ]
                 , Theme.footer
                 ]
 
@@ -876,36 +877,6 @@ codeOfConductContent =
                 , ExternalLink "Geek Feminism Wiki" "https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources"
                 ]
             ]
-        ]
-    ]
-
-
-elmCampArchiveContent : List Formatting
-elmCampArchiveContent =
-    [ Section "What happened at Elm Camp 2023"
-        [ Paragraph [ Text "Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:" ]
-        , Section "Posts"
-            [ BulletList
-                []
-                [ Paragraph
-                    [ ExternalLink "Elm Camp June 2023 Session Overview" "https://discourse.elm-lang.org/t/elm-camp-june-2023-session-overview/9218"
-                    , Text " by @marcw (Discourse)"
-                    ]
-                , Paragraph
-                    [ ExternalLink "Elm Camp experience" "https://wolfgangschuster.wordpress.com/2023/07/10/elm-camp-%f0%9f%8f%95%ef%b8%8f/"
-                    , Text " by @wolfadex (Blog)"
-                    ]
-                , Paragraph
-                    [ ExternalLink "Elm Camp session about editors and IDE plugins" "https://discourse.elm-lang.org/t/elm-camp-session-about-editors-and-ide-plugins/9230"
-                    , Text " by @lydell (Discourse)"
-                    ]
-                , Paragraph
-                    [ ExternalLink "Worst Elm Code Possible – Or, the checklist for good Elm, and the one thing to be careful to avoid" "https://discourse.elm-lang.org/t/the-worst-elm-code-possible/9380"
-                    , Text " by @supermario (Discourse/Post)"
-                    ]
-                ]
-            ]
-        , Image "/23-denmark/elm-camp-23-attendees.jpeg" [ Text "Denmark attendees standing in the courtyard" ]
         ]
     ]
 
