@@ -20,17 +20,6 @@ meta =
     }
 
 
-images : List { src : String, description : String }
-images =
-    List.range 1 6
-        |> List.map
-            (\ix ->
-                { src = "/23-denmark/image" ++ String.fromInt ix ++ ".webp"
-                , description = "Photo of part of Dallund Castle"
-                }
-            )
-
-
 view : LoadedModel -> Ui.Element FrontendMsg
 view model =
     Ui.column
@@ -51,8 +40,7 @@ view model =
                     ]
                 ]
             , Camp.viewArchive
-                { images = images
-                , conferenceSummary = unconferenceBulletPoints
+                { conferenceSummary = unconferenceBulletPoints
                 , sponsors = sponsors model.window
                 , venue = venue
                 , organisers = organisers
@@ -133,7 +121,29 @@ unconferenceBulletPoints =
 
 venue : List Formatting
 venue =
-    [ Section "Schedule"
+    [ Images
+        [ [ { source = "/23-denmark/image1.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          , { source = "/23-denmark/image2.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          , { source = "/23-denmark/image3.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          ]
+        , [ { source = "/23-denmark/image4.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          , { source = "/23-denmark/image5.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          , { source = "/23-denmark/image6.webp"
+            , description = "Photo of part of Dallund Castle"
+            }
+          ]
+        ]
+    , Section "Schedule"
         [ Section "Wed 28th June"
             [ BulletList
                 []

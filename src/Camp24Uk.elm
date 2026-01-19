@@ -44,8 +44,7 @@ view model =
                     ]
                 ]
             , Camp.viewArchive
-                { images = images
-                , organisers = organisers
+                { organisers = organisers
                 , sponsors = sponsors model.window
                 , conferenceSummary = conferenceSummary
                 , venue = venueAccessContent
@@ -73,17 +72,6 @@ conferenceSummary =
             ]
         ]
     ]
-
-
-images : List { src : String, description : String }
-images =
-    List.range 1 6
-        |> List.map
-            (\ix ->
-                { src = "/24-colehayes/image" ++ String.fromInt ix ++ ".webp"
-                , description = "Photo of part of Colehayes Park"
-                }
-            )
 
 
 organisers : List Formatting
@@ -224,7 +212,29 @@ venueAccessContent =
     --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
     --    """
     --        |> MarkdownThemed.renderFull
-    [ Section "Travel & Venue"
+    [ Images
+        [ [ { source = "/24-colehayes/image1.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          , { source = "/24-colehayes/image2.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          , { source = "/24-colehayes/image3.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          ]
+        , [ { source = "/24-colehayes/image4.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          , { source = "/24-colehayes/image5.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          , { source = "/24-colehayes/image6.webp"
+            , description = "Photo of part of Colehayes Park"
+            }
+          ]
+        ]
+    , Section "Travel & Venue"
         [ Paragraph
             [ Bold "Colehayes Park"
             , Text "\nHaytor Road\nBovey Tracey\nSouth Devon\nTQ13 9LD\nEngland"

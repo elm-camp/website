@@ -49,7 +49,6 @@ type alias ArchiveContents msg =
     , venue : List Formatting
     , organisers : List Formatting
     , sponsors : Ui.Element msg
-    , images : List { src : String, description : String }
     }
 
 
@@ -63,30 +62,31 @@ viewArchive contents config =
             Theme.contentAttributes
             [ Formatting.view config contents.conferenceSummary
             ]
-        , if config.window.width > 950 then
-            contents.images
-                |> List.map
-                    (\image ->
-                        Ui.image
-                            [ Ui.width (Ui.px 288) ]
-                            { source = image.src, description = image.description, onLoad = Nothing }
-                    )
-                |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
 
-          else
-            groupsOfTwo contents.images
-                |> List.map
-                    (\row ->
-                        Ui.row
-                            [ Ui.spacing 10 ]
-                            (List.map
-                                (\image ->
-                                    Ui.image [] { source = image.src, description = image.description, onLoad = Nothing }
-                                )
-                                row
-                            )
-                    )
-                |> Ui.column [ Ui.spacing 10 ]
+        --, if config.window.width > 950 then
+        --    contents.images
+        --        |> List.map
+        --            (\image ->
+        --                Ui.image
+        --                    [ Ui.width (Ui.px 288) ]
+        --                    { source = image.src, description = image.description, onLoad = Nothing }
+        --            )
+        --        |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
+        --
+        --  else
+        --    groupsOfTwo contents.images
+        --        |> List.map
+        --            (\row ->
+        --                Ui.row
+        --                    [ Ui.spacing 10 ]
+        --                    (List.map
+        --                        (\image ->
+        --                            Ui.image [] { source = image.src, description = image.description, onLoad = Nothing }
+        --                        )
+        --                        row
+        --                    )
+        --            )
+        --        |> Ui.column [ Ui.spacing 10 ]
         , Ui.column
             Theme.contentAttributes
             [ Formatting.view config contents.venue

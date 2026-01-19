@@ -1,16 +1,4 @@
-module Camp25US exposing
-    ( conferenceSummary
-    , contactDetails
-    , elmBottomLine
-    , elmTopLine
-    , meta
-    , organisers
-    , sponsors
-    , venueAccessContent
-    , venueImage
-    , venuePictures
-    , view
-    )
+module Camp25US exposing (view)
 
 import Camp
 import Formatting exposing (Formatting(..), Inline(..), Shared)
@@ -51,8 +39,7 @@ view model =
                     ]
                 ]
             , Camp.viewArchive
-                { images = images
-                , organisers = organisers
+                { organisers = organisers
                 , sponsors = sponsors model.window
                 , conferenceSummary = conferenceSummary
                 , venue = venueAccessContent
@@ -132,50 +119,6 @@ conferenceSummary =
     ]
 
 
-images : List { src : String, description : String }
-images =
-    [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-        |> List.map
-            (\image ->
-                { src = "/" ++ prefix ++ image
-                , description = "Photo of part of Ronora Lodge"
-                }
-            )
-
-
-prefix : String
-prefix =
-    "25-ronora/"
-
-
-venuePictures : LoadedModel -> Ui.Element msg
-venuePictures model =
-    if model.window.width > 950 then
-        [ "image1.webp", "image2.webp", "image3.webp", "image4.webp", "image5.webp", "image6.webp" ]
-            |> List.map (\image -> venueImage (Ui.px 288) (prefix ++ image))
-            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
-
-    else
-        [ [ "image1.webp", "image2.webp" ]
-        , [ "image3.webp", "image4.webp" ]
-        , [ "image5.webp", "image6.webp" ]
-        ]
-            |> List.map
-                (\paths ->
-                    Ui.row
-                        [ Ui.spacing 10 ]
-                        (List.map (\image -> venueImage Ui.fill (prefix ++ image)) paths)
-                )
-            |> Ui.column [ Ui.spacing 10 ]
-
-
-venueImage : Ui.Length -> String -> Ui.Element msg
-venueImage width path =
-    Ui.image
-        [ Ui.width width ]
-        { source = "/" ++ path, description = "Photo of part of Ronora Lodge", onLoad = Nothing }
-
-
 organisers : List Formatting
 organisers =
     [ Section "Organisers"
@@ -222,7 +165,29 @@ venueAccessContent =
     --    """
     --            ++ contactDetails
     --            |> MarkdownThemed.renderFull
-    [ Section "Travel & Venue"
+    [ Images
+        [ [ { source = "/25-ronora/image1.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          , { source = "/25-ronora/image2.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          , { source = "/25-ronora/image3.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          ]
+        , [ { source = "/25-ronora/image4.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          , { source = "/25-ronora/image5.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          , { source = "/25-ronora/image6.webp"
+            , description = "Photo of part of Ronora Lodge"
+            }
+          ]
+        ]
+    , Section "Travel & Venue"
         [ Section "The venue"
             [ Paragraph
                 [ Bold "Ronora Lodge & Retreat Center"

@@ -1,6 +1,7 @@
 module Archive exposing (content)
 
 import Formatting exposing (Formatting(..), Inline(..))
+import Route
 
 
 content : List Formatting
@@ -20,6 +21,7 @@ content =
             , BulletList
                 [ Bold "Media" ]
                 [ Paragraph [ ExternalLink "Photos taken during the event" "https://drive.google.com/drive/folders/1pEXG2UULRSUkYSYA7olhx6iREJ1veJHY" ] ]
+            , Paragraph [ Link "Click here" Route.Camp25US, Text " to view the 2025 website" ]
             ]
         , Section "Elm Camp 2024"
             [ Image "/24-colehayes/elm-camp-24-attendees.jpg" []
@@ -35,6 +37,7 @@ content =
                 ]
             , Paragraph [ Bold "Media" ]
             , YoutubeVideo "https://www.youtube.com/embed/cBXrfI2bxnA?si=qw0ozEtDVWnRFglk"
+            , Paragraph [ Link "Click here" Route.Camp24Uk, Text " to view the 2024 website" ]
             ]
         , HorizontalLine
         , Section "Elm Camp 2023"
@@ -58,6 +61,7 @@ content =
                     , Text " by @supermario (Discourse/Post)"
                     ]
                 ]
+            , Paragraph [ Link "Click here" Route.Camp23Denmark, Text " to view the 2023 website" ]
             ]
         ]
     ]
