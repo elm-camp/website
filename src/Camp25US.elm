@@ -13,20 +13,13 @@ module Camp25US exposing
     )
 
 import Camp
-import Camp25US.Archive
-import Camp25US.Artifacts
 import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Helpers
-import Html
-import Html.Attributes
 import MarkdownThemed
-import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 
 
@@ -40,8 +33,8 @@ meta =
     }
 
 
-view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
-view model subpage =
+view : LoadedModel -> Ui.Element FrontendMsg
+view model =
     Ui.column
         [ Ui.height Ui.fill ]
         [ Ui.column
@@ -57,21 +50,15 @@ view model subpage =
                     , elmBottomLine
                     ]
                 ]
-            , case subpage of
-                Home ->
-                    Camp.viewArchive
-                        { images = images
-                        , organisers = organisers |> MarkdownThemed.renderFull
-                        , sponsors = sponsors model.window
-                        , conferenceSummary = conferenceSummary
-                        , schedule = Nothing
-                        , venue = venueAccessContent
-                        }
-                        model
-
-                --Camp25US.Archive.view model
-                Artifacts ->
-                    Camp25US.Artifacts.view model
+            , Camp.viewArchive
+                { images = images
+                , organisers = organisers |> MarkdownThemed.renderFull
+                , sponsors = sponsors model.window
+                , conferenceSummary = conferenceSummary
+                , schedule = Nothing
+                , venue = venueAccessContent
+                }
+                model
             ]
         , Theme.footer
         ]

@@ -47,11 +47,11 @@ view : Shared b -> List Formatting -> Ui.Element msg
 view shared list =
     Html.div
         [ Html.Attributes.style "line-height" "1.5", Html.Attributes.style "white-space" "pre-wrap" ]
-        (List.map (viewHelper shared 0) list)
+        (List.map (viewHelper shared []) list)
         |> Ui.html
 
 
-viewHelper : Shared b -> Int -> Formatting -> Html msg
+viewHelper : Shared b -> List String -> Formatting -> Html msg
 viewHelper shared depth item =
     case item of
         Paragraph items ->
@@ -111,14 +111,20 @@ viewHelper shared depth item =
 
         Section title formattings ->
             let
-                content =
-                    List.map (viewHelper shared (depth + 1)) formattings
+                depth2 : List String
+                depth2 =
+                    title :: depth
 
+                content : List (Html msg)
+                content =
+                    List.map (viewHelper shared depth2) formattings
+
+                id : String
                 id =
-                    Url.percentEncode title
+                    Url.percentEncode (String.join "-" depth2)
             in
             case depth of
-                0 ->
+                [] ->
                     Html.div
                         []
                         (Html.h1
@@ -126,7 +132,7 @@ viewHelper shared depth item =
                             , Html.Attributes.style "size" "36px"
                             , Html.Attributes.style "font-weight" "600"
                             , Html.Attributes.style "margin" "0"
-                            , Html.Attributes.style "padding-top" "32px"
+                            , Html.Attributes.style "padding-top" "24px"
                             ]
                             [ Html.a
                                 [ Html.Attributes.href ("#" ++ id)
@@ -138,7 +144,7 @@ viewHelper shared depth item =
                             :: content
                         )
 
-                1 ->
+                [ _ ] ->
                     Html.div
                         []
                         (Html.h2
@@ -146,7 +152,7 @@ viewHelper shared depth item =
                             , Html.Attributes.style "size" "24px"
                             , Html.Attributes.style "font-weight" "800"
                             , Html.Attributes.style "margin" "0"
-                            , Html.Attributes.style "padding-top" "24px"
+                            , Html.Attributes.style "padding-top" "16px"
                             ]
                             [ Html.a
                                 [ Html.Attributes.href ("#" ++ id)

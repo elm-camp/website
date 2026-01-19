@@ -1,4 +1,4 @@
-module Route exposing (Route(..), SubPage(..), decode, encode)
+module Route exposing (Route(..), decode, encode)
 
 import EmailAddress exposing (EmailAddress)
 import Id exposing (Id)
@@ -18,23 +18,10 @@ type Route
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
     | PaymentCancelRoute
-    | Camp23Denmark SubPage
-    | Camp24Uk SubPage
-    | Camp25US SubPage
-    | Camp26Czech SubPage
-
-
-type SubPage
-    = Home
-    | Artifacts
-
-
-subPageParser : Url.Parser.Parser (SubPage -> a) a
-subPageParser =
-    Url.Parser.oneOf
-        [ Url.Parser.s "artifacts" |> Url.Parser.map Artifacts
-        , Url.Parser.top |> Url.Parser.map Home
-        ]
+    | Camp23Denmark
+    | Camp24Uk
+    | Camp25US
+    | Camp26Czech
 
 
 decode : Url -> Route
@@ -50,11 +37,11 @@ decode url =
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
 
         -- Previous events
-        , Url.Parser.s "23-denmark" </> subPageParser |> Url.Parser.map Camp23Denmark
-        , Url.Parser.s "24-uk" </> subPageParser |> Url.Parser.map Camp24Uk
+        , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Denmark
+        , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
 
         -- Current event
-        , Url.Parser.s "25-us" </> subPageParser |> Url.Parser.map Camp25US
+        , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -104,37 +91,17 @@ encode fragment route =
             PaymentCancelRoute ->
                 [ Stripe.cancelPath ]
 
-            Camp23Denmark subPage ->
-                case subPage of
-                    Home ->
-                        [ "23-denmark" ]
+            Camp23Denmark ->
+                [ "23-denmark" ]
 
-                    Artifacts ->
-                        [ "23-denmark", "artifacts" ]
+            Camp24Uk ->
+                [ "24-uk" ]
 
-            Camp24Uk subPage ->
-                case subPage of
-                    Home ->
-                        [ "24-uk" ]
+            Camp25US ->
+                [ "25-us" ]
 
-                    Artifacts ->
-                        [ "24-uk", "artifacts" ]
-
-            Camp25US subPage ->
-                case subPage of
-                    Home ->
-                        [ "25-us" ]
-
-                    Artifacts ->
-                        [ "25-us", "artifacts" ]
-
-            Camp26Czech subPage ->
-                case subPage of
-                    Home ->
-                        [ "26-czech" ]
-
-                    Artifacts ->
-                        [ "26-czech", "artifacts" ]
+            Camp26Czech ->
+                [ "26-czech" ]
         )
         (case route of
             HomepageRoute ->
@@ -166,37 +133,17 @@ encode fragment route =
             PaymentCancelRoute ->
                 []
 
-            Camp23Denmark subPage ->
-                case subPage of
-                    Home ->
-                        []
+            Camp23Denmark ->
+                []
 
-                    Artifacts ->
-                        []
+            Camp24Uk ->
+                []
 
-            Camp24Uk subPage ->
-                case subPage of
-                    Home ->
-                        []
+            Camp25US ->
+                []
 
-                    Artifacts ->
-                        []
-
-            Camp25US subPage ->
-                case subPage of
-                    Home ->
-                        []
-
-                    Artifacts ->
-                        []
-
-            Camp26Czech subPage ->
-                case subPage of
-                    Home ->
-                        []
-
-                    Artifacts ->
-                        []
+            Camp26Czech ->
+                []
         )
         ++ (case fragment of
                 Just fragment2 ->

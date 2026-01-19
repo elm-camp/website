@@ -1,16 +1,12 @@
 module Camp23Denmark exposing (view)
 
 import Camp
-import Camp23Denmark.Artifacts
 import Formatting exposing (Formatting(..), Inline(..))
 import MarkdownThemed
-import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 
 
@@ -35,8 +31,8 @@ images =
             )
 
 
-view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
-view model subpage =
+view : LoadedModel -> Ui.Element FrontendMsg
+view model =
     Ui.column
         [ Ui.height Ui.fill ]
         [ Ui.column
@@ -54,20 +50,15 @@ view model subpage =
                     , Camp.elmCampBottomLine meta
                     ]
                 ]
-            , case subpage of
-                Home ->
-                    Camp.viewArchive
-                        { images = images
-                        , conferenceSummary = unconferenceBulletPoints
-                        , sponsors = sponsors model.window
-                        , schedule = Just schedule
-                        , venue = venue
-                        , organisers = organisers
-                        }
-                        model
-
-                Artifacts ->
-                    Camp23Denmark.Artifacts.view model
+            , Camp.viewArchive
+                { images = images
+                , conferenceSummary = unconferenceBulletPoints
+                , sponsors = sponsors model.window
+                , schedule = Just schedule
+                , venue = venue
+                , organisers = organisers
+                }
+                model
             ]
         , Theme.footer
         ]

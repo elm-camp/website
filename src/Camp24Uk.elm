@@ -8,18 +8,12 @@ module Camp24Uk exposing
     )
 
 import Camp
-import Camp24Uk.Artifacts
 import Formatting exposing (Formatting(..), Inline(..))
-import Html
-import Html.Attributes
 import MarkdownThemed
-import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 
 
@@ -33,8 +27,8 @@ meta =
     }
 
 
-view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
-view model subpage =
+view : LoadedModel -> Ui.Element FrontendMsg
+view model =
     Ui.column
         [ Ui.height Ui.fill ]
         [ Ui.column
@@ -50,20 +44,15 @@ view model subpage =
                     , Camp.elmCampBottomLine meta
                     ]
                 ]
-            , case subpage of
-                Home ->
-                    Camp.viewArchive
-                        { images = images
-                        , organisers = organisers |> MarkdownThemed.renderFull
-                        , sponsors = sponsors model.window
-                        , conferenceSummary = conferenceSummary
-                        , schedule = Nothing
-                        , venue = venueAccessContent
-                        }
-                        model
-
-                Artifacts ->
-                    Camp24Uk.Artifacts.view model
+            , Camp.viewArchive
+                { images = images
+                , organisers = organisers |> MarkdownThemed.renderFull
+                , sponsors = sponsors model.window
+                , conferenceSummary = conferenceSummary
+                , schedule = Nothing
+                , venue = venueAccessContent
+                }
+                model
             ]
         , Theme.footer
         ]

@@ -2,10 +2,8 @@ module Frontend exposing (app, app_)
 
 import Admin
 import Browser
-import Browser.Dom
 import Browser.Navigation exposing (Key)
 import Camp23Denmark
-import Camp23Denmark.Artifacts
 import Camp24Uk
 import Camp25US
 import Camp26Czech
@@ -32,22 +30,17 @@ import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
-import LamderaRPC
 import List.Extra as List
-import MarkdownThemed
 import Page.UnconferenceFormat
-import Ports
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
-import Route exposing (Route(..), SubPage(..))
+import Route exposing (Route(..))
 import SeqDict
 import Stripe
-import Task as TaskCore
-import Theme exposing (normalButtonAttributes)
+import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 import Ui.Shadow
 import Untrusted
@@ -668,7 +661,7 @@ loadedView model =
                 , Ui.column
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ codeOfConductContent
+                    [ Formatting.view model codeOfConductContent
                     ]
                 , Theme.footer
                 ]
@@ -680,7 +673,7 @@ loadedView model =
                 , Ui.column
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ elmCampArchiveContent model ]
+                    [ Formatting.view model elmCampArchiveContent ]
                 , Theme.footer
                 ]
 
@@ -716,17 +709,17 @@ loadedView model =
                 , returnToHomepageButton
                 ]
 
-        Camp23Denmark subpage ->
-            Camp23Denmark.view model subpage
+        Camp23Denmark ->
+            Camp23Denmark.view model
 
-        Camp24Uk subpage ->
-            Camp24Uk.view model subpage
+        Camp24Uk ->
+            Camp24Uk.view model
 
-        Camp25US subpage ->
-            Camp25US.view model subpage
+        Camp25US ->
+            Camp25US.view model
 
-        Camp26Czech subpage ->
-            Camp26Czech.view model subpage
+        Camp26Czech ->
+            Camp26Czech.view model
 
 
 returnToHomepageButton : Ui.Element msg
@@ -780,10 +773,8 @@ homepageView model =
             , Ui.column
                 [ Ui.spacing 40 ]
                 [ Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     Theme.contentAttributes
-                    [ --, Camp26Czech.conferenceSummary
-                      Formatting.view
+                    [ Formatting.view
                         model
                         [ Section "Elm Camp 2026 - Olomouc, Czechia"
                             [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
@@ -822,100 +813,121 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-codeOfConductContent : Ui.Element msg
+codeOfConductContent : List Formatting
 codeOfConductContent =
-    """
-# Code of Conduct
-
-Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions.
-<br/>
-## Help everyone feel welcome at Elm Camp
-
-Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds.
-
-We expect everyone here to ensure that our community is harrassment-free for everyone.
-
-### Examples of behaviours that help us to provide an an open, welcoming, diverse, inclusive, and healthy community:
-
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologising to those affected by our mistakes
-* Learning from our and others' mistakes and not repeating negative behaviour
-* Focusing on what is best for the overall community, not just ourselves as individuals
-* Consider sharing your pronouns when introducing yourself, even if you think they are obvious
-* Respect the name and pronouns others introduce themselves with
-* When discussing code, avoid criticising the person who wrote the code or referring to the quality of the code in a negative way
-* Leave silences to allow everyone a chance to speak
-* When standing around talking, leave space for new people to join your converation (sometimes referred to pacman shape)
-* If you think something you are about to say might be offensive, consider not saying it. If you need to say it, please warn people beforehand.
-
-
-### Examples of unacceptable behavior include:
-
-* Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion
-* The use of sexualised language or imagery, and sexual attention or advances of any kind
-* Interrupting people when they are speaking
-* Sharing others' private information, such as a physical or email address, without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a professional setting
-
-
-## Guidelines for running a camp session
-
-As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it.
-
-If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you.
-<br/>
-
-## Talk to us
-
-If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
-
-* Email the organiser team: [team@elm.camp](mailto:team@elm.camp)
-* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord]("""
-        ++ Helpers.discordInviteLink
-        ++ """): katjam_
-
-## How we handle Code of Conduct issues
-
-If someone makes you or anyone else feel unsafe or unwelcome, please report it as soon as possible. You can make a report personally, anonymously or ask someone to do it on your behalf.
-
-The Code of Conduct is in place to protect everyone at Elm Camp. If any participant violates these rules the organisers will take action.
-
-We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly.
-
-However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in the case that they prefer to remain anonymous.
-
-Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise.
-
-Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can't possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn't write down explicitly here.
-
-If you have any questions, concerns or suggestions regarding this policy, please get in touch.
-
-This code of conduct was inspired by the [!!Con code of conduct](https://bangbangcon.com/conduct.html) and drafted with the guidance of the [Geek Feminism Wiki](https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources)
-    """
-        |> MarkdownThemed.renderFull
-
-
-elmCampArchiveContent : LoadedModel -> Ui.Element msg
-elmCampArchiveContent model =
-    Ui.column [ Ui.width Ui.shrink ]
-        [ """
-# What happened at Elm Camp 2023
-
-Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
-
-"""
-            ++ Camp23Denmark.Artifacts.posts
-            ++ Camp23Denmark.Artifacts.media
-            ++ """
-Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
-
-[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
-
-[Archive: Elm Camp 2024 - UK website](/24-uk)
-
-[Archive: Elm Camp 2025 - US website](/25-us)
-        """
-            |> MarkdownThemed.renderFull
+    [ Section "Code of Conduct"
+        [ Paragraph [ Text "Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions." ]
+        , Section "Help everyone feel welcome at Elm Camp"
+            [ Paragraph [ Text "Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds." ]
+            , Paragraph [ Text "We expect everyone here to ensure that our community is harrassment-free for everyone." ]
+            , BulletList
+                [ Bold "Examples of behaviours that help us to provide an an open, welcoming, diverse, inclusive, and healthy community:" ]
+                [ Paragraph [ Text "Demonstrating empathy and kindness toward other people" ]
+                , Paragraph [ Text "Being respectful of differing opinions, viewpoints, and experiences" ]
+                , Paragraph [ Text "Giving and gracefully accepting constructive feedback" ]
+                , Paragraph [ Text "Accepting responsibility and apologising to those affected by our mistakes" ]
+                , Paragraph [ Text "Learning from our and others' mistakes and not repeating negative behaviour" ]
+                , Paragraph [ Text "Focusing on what is best for the overall community, not just ourselves as individuals" ]
+                , Paragraph [ Text "Consider sharing your pronouns when introducing yourself, even if you think they are obvious" ]
+                , Paragraph [ Text "Respect the name and pronouns others introduce themselves with" ]
+                , Paragraph [ Text "When discussing code, avoid criticising the person who wrote the code or referring to the quality of the code in a negative way" ]
+                , Paragraph [ Text "Leave silences to allow everyone a chance to speak" ]
+                , Paragraph [ Text "When standing around talking, leave space for new people to join your converation (sometimes referred to pacman shape)" ]
+                , Paragraph [ Text "If you think something you are about to say might be offensive, consider not saying it. If you need to say it, please warn people beforehand." ]
+                ]
+            , BulletList
+                [ Bold "Examples of unacceptable behavior include:" ]
+                [ Paragraph [ Text "Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion" ]
+                , Paragraph [ Text "The use of sexualised language or imagery, and sexual attention or advances of any kind" ]
+                , Paragraph [ Text "Interrupting people when they are speaking" ]
+                , Paragraph [ Text "Sharing others' private information, such as a physical or email address, without their explicit permission" ]
+                , Paragraph [ Text "Other conduct which could reasonably be considered inappropriate in a professional setting" ]
+                ]
+            ]
+        , Section "Guidelines for running a camp session"
+            [ Paragraph [ Text "As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it." ]
+            , Paragraph [ Text "If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you." ]
+            ]
+        , Section "Talk to us"
+            [ BulletList
+                [ Text "If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome." ]
+                [ Paragraph [ Text "Email the organiser team: ", ExternalLink "team@elm.camp" "mailto:team@elm.camp" ]
+                , Paragraph
+                    [ Text "Contact Katja on "
+                    , ExternalLink "Elm Slack" "https://elm-lang.org/community/slack"
+                    , Text ": @katjam or "
+                    , ExternalLink "Elmcraft Discord" Helpers.discordInviteLink
+                    , Text ": katjam_"
+                    ]
+                ]
+            ]
+        , Section "How we handle Code of Conduct issues"
+            [ Paragraph [ Text "If someone makes you or anyone else feel unsafe or unwelcome, please report it as soon as possible. You can make a report personally, anonymously or ask someone to do it on your behalf." ]
+            , Paragraph [ Text "The Code of Conduct is in place to protect everyone at Elm Camp. If any participant violates these rules the organisers will take action." ]
+            , Paragraph [ Text "We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly." ]
+            , Paragraph [ Text "However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in the case that they prefer to remain anonymous." ]
+            , Paragraph [ Text "Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise." ]
+            , Paragraph [ Text "Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can't possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn't write down explicitly here." ]
+            , Paragraph [ Text "If you have any questions, concerns or suggestions regarding this policy, please get in touch." ]
+            , Paragraph
+                [ Text "This code of conduct was inspired by the "
+                , ExternalLink "!!Con code of conduct" "https://bangbangcon.com/conduct.html"
+                , Text " and drafted with the guidance of the "
+                , ExternalLink "Geek Feminism Wiki" "https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources"
+                ]
+            ]
         ]
+    ]
+
+
+elmCampArchiveContent : List Formatting
+elmCampArchiveContent =
+    [ Section "What happened at Elm Camp 2023"
+        [ Paragraph [ Text "Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:" ]
+        , Section "Posts"
+            [ BulletList
+                []
+                [ Paragraph
+                    [ ExternalLink "Elm Camp June 2023 Session Overview" "https://discourse.elm-lang.org/t/elm-camp-june-2023-session-overview/9218"
+                    , Text " by @marcw (Discourse)"
+                    ]
+                , Paragraph
+                    [ ExternalLink "Elm Camp experience" "https://wolfgangschuster.wordpress.com/2023/07/10/elm-camp-%f0%9f%8f%95%ef%b8%8f/"
+                    , Text " by @wolfadex (Blog)"
+                    ]
+                , Paragraph
+                    [ ExternalLink "Elm Camp session about editors and IDE plugins" "https://discourse.elm-lang.org/t/elm-camp-session-about-editors-and-ide-plugins/9230"
+                    , Text " by @lydell (Discourse)"
+                    ]
+                , Paragraph
+                    [ ExternalLink "Worst Elm Code Possible – Or, the checklist for good Elm, and the one thing to be careful to avoid" "https://discourse.elm-lang.org/t/the-worst-elm-code-possible/9380"
+                    , Text " by @supermario (Discourse/Post)"
+                    ]
+                ]
+            ]
+        , Image "/23-denmark/elm-camp-23-attendees.jpeg" [ Text "Denmark attendees standing in the courtyard" ]
+        ]
+    ]
+
+
+
+--    Ui.column [ Ui.width Ui.shrink ]
+--        [ """
+--# What happened at Elm Camp 2023
+--
+--Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
+--
+--"""
+--            ++ Camp23Denmark.Artifacts.posts
+--            ++ Camp23Denmark.Artifacts.media
+--            ++ """
+--Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
+--
+--[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+--
+--[Archive: Elm Camp 2024 - UK website](/24-uk)
+--
+--[Archive: Elm Camp 2025 - US website](/25-us)
+--        """
+--            |> MarkdownThemed.renderFull
+--        ]

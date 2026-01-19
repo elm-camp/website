@@ -11,10 +11,8 @@ module Camp26Czech exposing
 
 import Camp
 import Camp26Czech.Archive
-import Camp26Czech.Artifacts
 import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
-import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -37,8 +35,8 @@ location =
     "🇨🇿 Olomouc, Czechia"
 
 
-view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
-view model subpage =
+view : LoadedModel -> Ui.Element FrontendMsg
+view model =
     Ui.column
         [ Ui.height Ui.fill ]
         [ Ui.column
@@ -56,12 +54,7 @@ view model subpage =
                     , elmBottomLine
                     ]
                 ]
-            , case subpage of
-                Home ->
-                    Camp26Czech.Archive.view model
-
-                Artifacts ->
-                    Camp26Czech.Artifacts.view model
+            , Camp26Czech.Archive.view model
             ]
         , Theme.footer
         ]
