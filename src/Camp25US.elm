@@ -26,7 +26,6 @@ view model =
     Ui.column
         [ Ui.height Ui.fill ]
         [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
             [ Theme.rowToColumnWhen 700
                 model.window
@@ -41,7 +40,6 @@ view model =
             , Camp.viewArchive
                 { organisers = organisers
                 , sponsors = sponsors model.window
-                , conferenceSummary = conferenceSummary
                 , venue = venueAccessContent
                 }
                 model
@@ -72,8 +70,52 @@ elmBottomLine =
         ]
 
 
-conferenceSummary : List Formatting
-conferenceSummary =
+organisers : List Formatting
+organisers =
+    [ Section "Organisers"
+        [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
+        , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
+        , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
+        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "codereading.club" ]
+        , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
+        , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
+        , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
+        , Paragraph [ Text "🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr." ]
+        ]
+    ]
+
+
+venueAccessContent : List Formatting
+venueAccessContent =
+    --## The venue
+    --
+    --**Ronora Lodge & Retreat Center**<br/>
+    --9325 Dwight Boyer Road<br/>
+    --Watervliet, Michigan 49098<br/>
+    --USA
+    --
+    --[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
+    --
+    --[https://www.ronoralodge.com](https://www.ronoralodge.com/)
+    --
+    --### Open water & rough ground
+    --
+    --* The house is set in landscaped grounds, there are paths and rough bits.
+    --* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
+    --
+    --## Participating in conversations
+    --
+    --* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
+    --* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
+    --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
+    --
+    --## Contacting the organisers
+    --
+    --If you have questions or concerns about this website or attending Elm Camp, please get in touch
+    --
+    --    """
+    --            ++ contactDetails
+    --            |> MarkdownThemed.renderFull
     [ Section "Unconference"
         [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"
             [ Paragraph [ Text "Arrive anytime on Tues 24th June 2025" ]
@@ -116,56 +158,7 @@ conferenceSummary =
                 ]
             ]
         ]
-    ]
-
-
-organisers : List Formatting
-organisers =
-    [ Section "Organisers"
-        [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
-        , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
-        , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
-        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
-        , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
-        , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
-        , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
-        , Paragraph [ Text "🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr." ]
-        ]
-    ]
-
-
-venueAccessContent : List Formatting
-venueAccessContent =
-    --## The venue
-    --
-    --**Ronora Lodge & Retreat Center**<br/>
-    --9325 Dwight Boyer Road<br/>
-    --Watervliet, Michigan 49098<br/>
-    --USA
-    --
-    --[Google Maps](https://maps.app.goo.gl/ijj1F5Th3JWJt2p16)
-    --
-    --[https://www.ronoralodge.com](https://www.ronoralodge.com/)
-    --
-    --### Open water & rough ground
-    --
-    --* The house is set in landscaped grounds, there are paths and rough bits.
-    --* There is a lake with a pier for swimming and fishing off of, right next to the house that is NOT fenced
-    --
-    --## Participating in conversations
-    --
-    --* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-    --* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-    --* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-    --
-    --## Contacting the organisers
-    --
-    --If you have questions or concerns about this website or attending Elm Camp, please get in touch
-    --
-    --    """
-    --            ++ contactDetails
-    --            |> MarkdownThemed.renderFull
-    [ Images
+    , Images
         [ [ { source = "/25-ronora/image1.webp"
             , description = "Photo of part of Ronora Lodge"
             }
@@ -194,10 +187,10 @@ venueAccessContent =
                 , Text "\n9325 Dwight Boyer Road\nWatervliet, Michigan 49098\nUSA"
                 ]
             , Paragraph
-                [ ExternalLink "Google Maps" "https://maps.app.goo.gl/ijj1F5Th3JWJt2p16"
+                [ ExternalLink "Google Maps" "maps.app.goo.gl/ijj1F5Th3JWJt2p16"
                 ]
             , Paragraph
-                [ ExternalLink "https://www.ronoralodge.com" "https://www.ronoralodge.com/"
+                [ ExternalLink "https://www.ronoralodge.com" "www.ronoralodge.com/"
                 ]
             , BulletList
                 [ Bold "Open water & rough ground" ]

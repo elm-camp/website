@@ -185,11 +185,9 @@ viewHelper shared depth item =
             List.map
                 (\row ->
                     let
-                        count =
-                            List.length row
-
+                        width : String
                         width =
-                            "calc(" ++ String.fromFloat (100 / toFloat count) ++ "% - 6px)"
+                            "calc(" ++ String.fromFloat (100 / toFloat (List.length row)) ++ "% - 6px)"
                     in
                     case row of
                         [] ->
@@ -200,6 +198,8 @@ viewHelper shared depth item =
                                 [ Html.Attributes.src head.source
                                 , Html.Attributes.style "border-radius" "6px"
                                 , Html.Attributes.style "width" width
+                                , Html.Attributes.style "vertical-align" "top"
+                                , Html.Attributes.style "margin" "6px 0 0 0"
                                 ]
                                 []
                                 :: List.map
@@ -207,8 +207,9 @@ viewHelper shared depth item =
                                         Html.img
                                             [ Html.Attributes.src image.source
                                             , Html.Attributes.style "border-radius" "4px"
-                                            , Html.Attributes.style "margin-left" "6px"
+                                            , Html.Attributes.style "margin" "6px 0 0 6px"
                                             , Html.Attributes.style "width" width
+                                            , Html.Attributes.style "vertical-align" "top"
                                             ]
                                             []
                                     )
@@ -238,7 +239,7 @@ viewHelper shared depth item =
 
         YoutubeVideo url ->
             Html.iframe
-                [ Html.Attributes.src url
+                [ Html.Attributes.src ("https://" ++ url)
                 ]
                 []
 

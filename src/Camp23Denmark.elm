@@ -40,8 +40,7 @@ view model =
                     ]
                 ]
             , Camp.viewArchive
-                { conferenceSummary = unconferenceBulletPoints
-                , sponsors = sponsors model.window
+                { sponsors = sponsors model.window
                 , venue = venue
                 , organisers = organisers
                 }
@@ -101,8 +100,8 @@ sponsors window =
         |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
-unconferenceBulletPoints : List Formatting
-unconferenceBulletPoints =
+venue : List Formatting
+venue =
     [ Section "Unconference"
         [ BulletList
             []
@@ -116,12 +115,7 @@ unconferenceBulletPoints =
             , Paragraph [ Text "50 attendees" ]
             ]
         ]
-    ]
-
-
-venue : List Formatting
-venue =
-    [ Images
+    , Images
         [ [ { source = "/23-denmark/image1.webp"
             , description = "Photo of part of Dallund Castle"
             }
@@ -192,7 +186,7 @@ organisers =
     [ Section
         "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
-        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
+        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "codereading.club" ]
         , Paragraph [ Text "🇺🇸 James Carlson – Developer of [Scripta.io](https://scripta.io), a web publishing platform for technical documents in mathematics, physics, and the like. Currently working for [exosphere.app](https://exosphere.app), an all-Elm cloud-computing project" ]
         , Paragraph [ Text "🇸🇪 Martin Stewart – Makes games and apps using Lamdera. Also runs the state-of-elm survey every year." ]
         , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
