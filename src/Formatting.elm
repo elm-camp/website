@@ -239,7 +239,7 @@ viewHelper shared depth item =
 
         YoutubeVideo url ->
             Html.iframe
-                [ Html.Attributes.src ("https://" ++ url)
+                [ Html.Attributes.src url
                 ]
                 []
 
@@ -314,7 +314,7 @@ colorAttribute color =
 externalLinkHtml : String -> String -> Html msg
 externalLinkHtml text url =
     Html.a
-        [ Html.Attributes.href ("https://" ++ url)
+        [ Html.Attributes.href url
         , Html.Attributes.target "_blank"
         , Html.Attributes.rel "noopener noreferrer"
         , colorAttribute Theme.lightTheme.link

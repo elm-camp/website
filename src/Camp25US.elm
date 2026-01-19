@@ -76,7 +76,7 @@ organisers =
         [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
         , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
         , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
-        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "codereading.club" ]
+        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
         , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
         , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
         , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
@@ -187,10 +187,10 @@ venueAccessContent =
                 , Text "\n9325 Dwight Boyer Road\nWatervliet, Michigan 49098\nUSA"
                 ]
             , Paragraph
-                [ ExternalLink "Google Maps" "maps.app.goo.gl/ijj1F5Th3JWJt2p16"
+                [ ExternalLink "Google Maps" "https://maps.app.goo.gl/ijj1F5Th3JWJt2p16"
                 ]
             , Paragraph
-                [ ExternalLink "https://www.ronoralodge.com" "www.ronoralodge.com/"
+                [ ExternalLink "https://www.ronoralodge.com" "https://www.ronoralodge.com/"
                 ]
             , BulletList
                 [ Bold "Open water & rough ground" ]
@@ -205,8 +205,11 @@ venueAccessContent =
             , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
             ]
         , Section "Contacting the organisers"
-            [ Paragraph
+            [ BulletList
                 [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch"
+                ]
+                [ Paragraph [ Text "Elmcraft Discord: ", ExternalLink "#elm-camp-24" Helpers.discordInviteLink, Text " channel or DM katjam_" ]
+                , Paragraph [ Text "Email: ", ExternalLink "team@elm.camp" "mailto:team@elm.camp" ]
                 ]
             ]
         , LegacyMap

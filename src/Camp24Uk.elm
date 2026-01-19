@@ -52,36 +52,36 @@ organisers =
     [ Section "Organisers"
         [ Paragraph
             [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of "
-            , ExternalLink "codereading.club" "codereading.club/"
+            , ExternalLink "codereading.club" "https://codereading.club/"
             ]
         , Paragraph
             [ Text "🇺🇸 Jim Carlson – Developer of "
-            , ExternalLink "Scripta.io" "scripta.io"
+            , ExternalLink "Scripta.io" "https://scripta.io"
             , Text ", a web publishing platform for technical documents in mathematics, physics, and the like. Currently working for "
-            , ExternalLink "exosphere.app" "exosphere.app"
+            , ExternalLink "exosphere.app" "https://exosphere.app"
             , Text ", an all-Elm cloud-computing project"
             ]
         , Paragraph
             [ Text "🇬🇧 Mario Rogic – Organiser of the "
-            , ExternalLink "Elm London" "meetdown.app/group/37aa26/Elm-London-Meetup"
+            , ExternalLink "Elm London" "https://meetdown.app/group/37aa26/Elm-London-Meetup"
             , Text " and "
-            , ExternalLink "Elm Online" "meetdown.app/group/10561/Elm-Online-Meetup"
+            , ExternalLink "Elm Online" "https://meetdown.app/group/10561/Elm-Online-Meetup"
             , Text " meetups. Groundskeeper of "
-            , ExternalLink "Elmcraft" "elmcraft.org/"
+            , ExternalLink "Elmcraft" "https://elmcraft.org/"
             , Text ", founder of "
-            , ExternalLink "Lamdera" "lamdera.com/"
+            , ExternalLink "Lamdera" "https://lamdera.com/"
             , Text "."
             ]
         , Paragraph
             [ Text "🇺🇸 Wolfgang Schuster – Author of "
-            , ExternalLink "Elm weekly" "www.elmweekly.nl/"
+            , ExternalLink "Elm weekly" "https://www.elmweekly.nl/"
             , Text ", hobbyist and professional Elm developer. Currently working at "
-            , ExternalLink "Vendr" "www.vendr.com/"
+            , ExternalLink "Vendr" "https://www.vendr.com/"
             , Text "."
             ]
         , Paragraph
             [ Text "🇬🇧 Hayleigh Thompson – Terminally online in the Elm community. Competitive person-help. Developer relations engineer at "
-            , ExternalLink "xyflow" "www.xyflow.com/"
+            , ExternalLink "xyflow" "https://www.xyflow.com/"
             , Text "."
             ]
         ]
@@ -227,17 +227,17 @@ venueAccessContent =
             , Text "\nHaytor Road\nBovey Tracey\nSouth Devon\nTQ13 9LD\nEngland"
             ]
         , Paragraph
-            [ ExternalLink "Google Maps" "goo.gl/maps/Q44YiJCJ79apMmQ8A"
+            [ ExternalLink "Google Maps" "https://goo.gl/maps/Q44YiJCJ79apMmQ8A"
             ]
         , Paragraph
-            [ ExternalLink "https://www.colehayes.co.uk/" "www.colehayes.co.uk/"
+            [ ExternalLink "https://www.colehayes.co.uk/" "https://www.colehayes.co.uk/"
             ]
         , Section "Getting there"
             [ BulletList
                 [ Bold "via train & cab/Elm Camp shuttle" ]
                 [ BulletList
                     [ Text "The closest train station is ("
-                    , ExternalLink "Newton Abbot station" "www.gwr.com/stations-and-destinations/stations/Newton-Abbot"
+                    , ExternalLink "Newton Abbot station" "https://www.gwr.com/stations-and-destinations/stations/Newton-Abbot"
                     , Text ")"
                     ]
                     [ Paragraph
@@ -257,34 +257,34 @@ venueAccessContent =
                 [ Bold "via plane" ]
                 [ Paragraph
                     [ Text "The closest airport is Exeter, with "
-                    , ExternalLink "flight connections to the UK, Dublin, and Southern Spain" "www.flightsfrom.com/EXT"
+                    , ExternalLink "flight connections to the UK, Dublin, and Southern Spain" "https://www.flightsfrom.com/EXT"
                     ]
                 , BulletList
                     [ Text "The next closest major airports in order of travel time are:" ]
                     [ Paragraph
-                        [ ExternalLink "Bristol" "www.flightsfrom.com/explorer/BRS?mapview"
+                        [ ExternalLink "Bristol" "https://www.flightsfrom.com/explorer/BRS?mapview"
                         , Text " (Europe & Northern Africa)"
                         ]
                     , Paragraph
-                        [ ExternalLink "London Heathrow" "www.flightsfrom.com/explorer/LHR?mapview"
+                        [ ExternalLink "London Heathrow" "https://www.flightsfrom.com/explorer/LHR?mapview"
                         , Text " (best International coverage)"
                         ]
                     , Paragraph
-                        [ ExternalLink "London Gatwick" "www.flightsfrom.com/explorer/LGW?mapview"
+                        [ ExternalLink "London Gatwick" "https://www.flightsfrom.com/explorer/LGW?mapview"
                         , Text " (International)"
                         ]
                     , Paragraph
-                        [ ExternalLink "London Stanstead" "www.flightsfrom.com/explorer/STN?mapview"
+                        [ ExternalLink "London Stanstead" "https://www.flightsfrom.com/explorer/STN?mapview"
                         , Text " (Europe)"
                         ]
                     , Paragraph
-                        [ ExternalLink "London Luton" "www.flightsfrom.com/explorer/LTN?mapview"
+                        [ ExternalLink "London Luton" "https://www.flightsfrom.com/explorer/LTN?mapview"
                         , Text " (Europe)"
                         ]
                     ]
                 ]
             , Paragraph
-                [ ExternalLink "Rome2Rio" "www.rome2rio.com/s/Exeter-UK"
+                [ ExternalLink "Rome2Rio" "https://www.rome2rio.com/s/Exeter-UK"
                 , Text " is a useful tool for finding possible routes from your location."
                 ]
             ]
@@ -294,14 +294,14 @@ venueAccessContent =
             , BulletList
                 [ Bold "Supermarkets" ]
                 [ Paragraph
-                    [ ExternalLink "Tesco Express" "www.tesco.com/store-locator/newton-abbot/47-fore-st"
+                    [ ExternalLink "Tesco Express" "https://www.tesco.com/store-locator/newton-abbot/47-fore-st"
                     , Text " (7 am—11 pm), 47 Fore St"
                     ]
                 ]
             , BulletList [ Bold "Health" ]
                 [ Paragraph
                     [ Text "Pharmacy ("
-                    , ExternalLink "Bovey Tracey Pharmacy" "www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40"
+                    , ExternalLink "Bovey Tracey Pharmacy" "https://www.nhs.uk/services/pharmacy/bovey-tracey-pharmacy/FFL40"
                     , Text ") (9 am—5:30 pm), near Tesco Express supermarket"
                     ]
                 ]
@@ -314,9 +314,9 @@ venueAccessContent =
             , BulletList
                 [ Bold "Floor plans" ]
                 [ Paragraph
-                    [ ExternalLink "The main house" "www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf" ]
+                    [ ExternalLink "The main house" "https://www.colehayes.co.uk/wp-content/uploads/2018/10/Colehayes-Park-Floor-Plans.pdf" ]
                 , Paragraph
-                    [ ExternalLink "The cottage" "www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf" ]
+                    [ ExternalLink "The cottage" "https://www.colehayes.co.uk/wp-content/uploads/2019/02/Colehayes-Park-Cottage-Floor-Plan.pdf" ]
                 ]
             , BulletList
                 [ Text "Partially step free." ]
