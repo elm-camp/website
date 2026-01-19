@@ -55,7 +55,6 @@ view model =
                 , organisers = organisers
                 , sponsors = sponsors model.window
                 , conferenceSummary = conferenceSummary
-                , schedule = Nothing
                 , venue = venueAccessContent
                 }
                 model

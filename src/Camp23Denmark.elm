@@ -54,7 +54,6 @@ view model =
                 { images = images
                 , conferenceSummary = unconferenceBulletPoints
                 , sponsors = sponsors model.window
-                , schedule = Just schedule
                 , venue = venue
                 , organisers = organisers
                 }
@@ -132,8 +131,8 @@ unconferenceBulletPoints =
     ]
 
 
-schedule : List Formatting
-schedule =
+venue : List Formatting
+venue =
     [ Section "Schedule"
         [ Section "Wed 28th June"
             [ BulletList
@@ -169,12 +168,7 @@ schedule =
                 ]
             ]
         ]
-    ]
-
-
-venue : List Formatting
-venue =
-    [ Section "Travel & Venue"
+    , Section "Travel & Venue"
         [ Paragraph [ Text "Elm Camp takes place at Dallund Castle near Odense in Denmark." ]
         , Paragraph [ Text "Odense can be reached directly by train from Hamburg, Copenhagen and other locations in Denmark. Denmark has multiple airports for attendants arriving from distant locations." ]
         , Paragraph [ Text "Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense." ]

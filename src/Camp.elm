@@ -46,7 +46,6 @@ elmCampBottomLine meta =
 
 type alias ArchiveContents msg =
     { conferenceSummary : List Formatting
-    , schedule : Maybe (List Formatting)
     , venue : List Formatting
     , organisers : List Formatting
     , sponsors : Ui.Element msg
@@ -88,15 +87,6 @@ viewArchive contents config =
                             )
                     )
                 |> Ui.column [ Ui.spacing 10 ]
-        , contents.schedule
-            |> Maybe.map
-                (\schedule ->
-                    Ui.column
-                        Theme.contentAttributes
-                        [ Formatting.view config schedule
-                        ]
-                )
-            |> Maybe.withDefault Ui.none
         , Ui.column
             Theme.contentAttributes
             [ Formatting.view config contents.venue
