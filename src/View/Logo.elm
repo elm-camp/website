@@ -9,18 +9,20 @@ module View.Logo exposing
 
 import Animator
 import Animator.Timeline exposing (Timeline)
+import Animator.Transition exposing (Transition)
+import Animator.Value
 import Color exposing (Color)
-import Html exposing (Html, div)
-import Html.Attributes
+import Html exposing (Html)
+import Html.Events
 import List.Nonempty exposing (Nonempty(..))
 import Svg exposing (Svg)
+import Svg.Attributes
 import Time
-import View.Tangram as Tangram
 
 
 type alias Model =
     { index : Int
-    , timeline : Timeline Tangram.Tangram
+    , timeline : Timeline Tangram
     }
 
 
@@ -63,8 +65,31 @@ needsAnimationFrame model =
 
 view : Model -> Html Msg
 view model =
-    div [ Html.Attributes.style "width" "100px" ]
-        [ Tangram.viewAnimatedTangram model.timeline ToggleConfig
+    let
+        interpolatedTangram : Tangram
+        interpolatedTangram =
+            { firstLargeTriangle = animatePieceConfig model.timeline .firstLargeTriangle
+            , secondLargeTriangle = animatePieceConfig model.timeline .secondLargeTriangle
+            , firstSmallTriangle = animatePieceConfig model.timeline .firstSmallTriangle
+            , secondSmallTriangle = animatePieceConfig model.timeline .secondSmallTriangle
+            , mediumTriangle = animatePieceConfig model.timeline .mediumTriangle
+            , square = animatePieceConfig model.timeline .square
+            , parallelogram = animatePieceConfig model.timeline .parallelogram
+            , scale = animateScale model.timeline
+            }
+    in
+    Svg.svg
+        [ Svg.Attributes.viewBox "0 0 800 600"
+        , Html.Events.onClick ToggleConfig
+        , Svg.Attributes.width "100"
+        ]
+        [ largeTriangle interpolatedTangram.firstLargeTriangle interpolatedTangram.scale
+        , largeTriangle interpolatedTangram.secondLargeTriangle interpolatedTangram.scale
+        , smallTriangle interpolatedTangram.firstSmallTriangle interpolatedTangram.scale
+        , smallTriangle interpolatedTangram.secondSmallTriangle interpolatedTangram.scale
+        , mediumTriangle interpolatedTangram.mediumTriangle interpolatedTangram.scale
+        , square interpolatedTangram.square interpolatedTangram.scale
+        , parallelogram interpolatedTangram.parallelogram interpolatedTangram.scale
         ]
 
 
@@ -72,7 +97,7 @@ view model =
 -- TANGRAM DEFINITIONS
 
 
-elmLogo : Tangram.Tangram
+elmLogo : Tangram
 elmLogo =
     { firstLargeTriangle = { color = Color.rgb255 29 50 45, x = 154, y = 328, rotation = -90 }
     , secondLargeTriangle = { color = Color.rgb255 93 177 126, x = 439, y = 406, rotation = 180 }
@@ -85,7 +110,7 @@ elmLogo =
     }
 
 
-tent : Tangram.Tangram
+tent : Tangram
 tent =
     { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = -7, y = 239, rotation = 90 }
     , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 480, y = 297, rotation = 270 }
@@ -98,7 +123,7 @@ tent =
     }
 
 
-lake : Tangram.Tangram
+lake : Tangram
 lake =
     { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = 145, y = 196, rotation = 180 }
     , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 25, y = 346, rotation = 0 }
@@ -111,7 +136,7 @@ lake =
     }
 
 
-byTheRiver : Tangram.Tangram
+byTheRiver : Tangram
 byTheRiver =
     { firstLargeTriangle = { color = Color.rgb255 95 181 204, x = 415, y = 360, rotation = 90 }
     , secondLargeTriangle = { color = Color.rgb255 95 181 204, x = 340, y = 436, rotation = 180 }
@@ -124,7 +149,7 @@ byTheRiver =
     }
 
 
-tents : Tangram.Tangram
+tents : Tangram
 tents =
     { firstLargeTriangle = { color = Color.rgb255 93 177 126, x = 485, y = 83, rotation = 180 }
     , secondLargeTriangle = { color = Color.rgb255 29 50 45, x = 140, y = 201, rotation = 180 }
@@ -137,7 +162,7 @@ tents =
     }
 
 
-fireplace : Tangram.Tangram
+fireplace : Tangram
 fireplace =
     { firstLargeTriangle = { color = Color.rgb255 255 128 0, x = 200, y = 226, rotation = 90 }
     , secondLargeTriangle = { color = Color.rgb255 255 128 0, x = 352, y = 259, rotation = 270 }
@@ -150,7 +175,7 @@ fireplace =
     }
 
 
-configurations : Nonempty Tangram.Tangram
+configurations : Nonempty Tangram
 configurations =
     Nonempty
         elmLogo
@@ -159,4 +184,180 @@ configurations =
         , tent
         , lake
         , byTheRiver
+        ]
+
+
+type alias PieceConfig =
+    { color : Color, x : Float, y : Float, rotation : Float }
+
+
+type alias Tangram =
+    { firstLargeTriangle : PieceConfig
+    , secondLargeTriangle : PieceConfig
+    , mediumTriangle : PieceConfig
+    , firstSmallTriangle : PieceConfig
+    , secondSmallTriangle : PieceConfig
+    , square : PieceConfig
+    , parallelogram : PieceConfig
+    , scale : Float
+    }
+
+
+
+-- ANIMATION
+
+
+animatePieceConfig : Timeline Tangram -> (Tangram -> PieceConfig) -> PieceConfig
+animatePieceConfig timeline getPiece =
+    { color = Animator.Value.color timeline (\tangram -> (getPiece tangram).color)
+    , x =
+        Animator.Value.float timeline
+            (\tangram -> Animator.Value.to (getPiece tangram).x |> Animator.Value.withTransition transition)
+    , y =
+        Animator.Value.float timeline
+            (\tangram -> Animator.Value.to (getPiece tangram).y |> Animator.Value.withTransition transition)
+    , rotation =
+        Animator.Value.float timeline
+            (\tangram -> Animator.Value.to (getPiece tangram).rotation |> Animator.Value.withTransition transition)
+    }
+
+
+transition : Transition
+transition =
+    Animator.Transition.spring { wobble = 0.5, quickness = 1 }
+
+
+animateScale : Timeline Tangram -> Float
+animateScale timeline =
+    Animator.Value.float timeline
+        (\tangram -> Animator.Value.to tangram.scale)
+
+
+
+-- RENDERING
+
+
+strokeW : Svg.Attribute msg
+strokeW =
+    Svg.Attributes.strokeWidth "12"
+
+
+strokeColor : Svg.Attribute msg
+strokeColor =
+    Svg.Attributes.stroke "#ffffff"
+
+
+transformValue_ : PieceConfig -> String -> Float -> String
+transformValue_ triangle center scale =
+    "translate("
+        ++ String.fromFloat triangle.x
+        ++ ","
+        ++ String.fromFloat triangle.y
+        ++ ") rotate("
+        ++ String.fromFloat triangle.rotation
+        ++ " "
+        ++ center
+        ++ ") scale("
+        ++ String.fromFloat scale
+        ++ ")"
+
+
+largeTriangle : PieceConfig -> Float -> Svg msg
+largeTriangle config scale =
+    let
+        transformValue =
+            transformValue_ config "150 75" scale
+    in
+    Svg.g
+        [ Svg.Attributes.transform transformValue
+        ]
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 300,0 150,150"
+            , Svg.Attributes.fill (Color.toCssString config.color)
+            , strokeColor
+            , strokeW
+            , Svg.Attributes.strokeOpacity "1"
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
+        ]
+
+
+smallTriangle : PieceConfig -> Float -> Svg msg
+smallTriangle config scale =
+    let
+        transformValue =
+            transformValue_ config "75 37.5" scale
+    in
+    Svg.g
+        [ Svg.Attributes.transform transformValue
+        ]
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 150,0 75,75"
+            , Svg.Attributes.fill (Color.toCssString config.color)
+            , strokeColor
+            , strokeW
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
+        ]
+
+
+mediumTriangle : PieceConfig -> Float -> Svg msg
+mediumTriangle config scale =
+    let
+        transformValue =
+            transformValue_ config "106.08 53.04" scale
+    in
+    Svg.g
+        [ Svg.Attributes.transform transformValue
+        ]
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 212.13,0 106.08,106.08"
+            , Svg.Attributes.fill (Color.toCssString config.color)
+            , strokeColor
+            , strokeW
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
+        ]
+
+
+square : PieceConfig -> Float -> Svg msg
+square config scale =
+    let
+        transformValue =
+            transformValue_ config "53.04 53.04" scale
+    in
+    Svg.g
+        [ Svg.Attributes.transform transformValue
+        ]
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 106.08,0 106.08,106.08 0,106.08"
+            , Svg.Attributes.fill (Color.toCssString config.color)
+            , strokeColor
+            , strokeW
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
+        ]
+
+
+parallelogram : PieceConfig -> Float -> Svg msg
+parallelogram config scale =
+    let
+        transformValue =
+            transformValue_ config "106.08 53.04" scale
+    in
+    Svg.g
+        [ Svg.Attributes.transform transformValue
+        ]
+        [ Svg.polygon
+            [ Svg.Attributes.points "0,0 106.08,0 0,106.08 -106.08,106.08"
+            , Svg.Attributes.fill (Color.toCssString config.color)
+            , strokeColor
+            , strokeW
+            , Svg.Attributes.strokeLinejoin "round"
+            ]
+            []
         ]
