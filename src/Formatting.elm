@@ -2,6 +2,7 @@ module Formatting exposing
     ( Formatting(..)
     , Inline(..)
     , Shared
+    , h1
     , view
     )
 
@@ -126,32 +127,7 @@ viewHelper shared depth item =
             in
             case depth of
                 [] ->
-                    Html.div
-                        []
-                        (Html.h1
-                            [ Html.Attributes.id id
-                            , Html.Attributes.style
-                                "font-size"
-                                (if shared.window.width < 800 then
-                                    "36px"
-
-                                 else
-                                    "48px"
-                                )
-                            , Html.Attributes.style "line-height" "1.2"
-                            , Html.Attributes.style "font-weight" "600"
-                            , Html.Attributes.style "margin" "0"
-                            , Html.Attributes.style "padding-top" "24px"
-                            ]
-                            [ Html.a
-                                [ Html.Attributes.href ("#" ++ id)
-                                , Html.Attributes.style "text-decoration" "none"
-                                , colorAttribute Theme.lightTheme.defaultText
-                                ]
-                                [ Html.text title ]
-                            ]
-                            :: content
-                        )
+                    Html.div [] (h1 id shared.window title :: content)
 
                 [ _ ] ->
                     Html.div
@@ -265,6 +241,32 @@ viewHelper shared depth item =
                 [ Html.Attributes.src url
                 ]
                 []
+
+
+h1 : String -> { width : Int, height : Int } -> String -> Html msg
+h1 id window title =
+    Html.h1
+        [ Html.Attributes.id id
+        , Html.Attributes.style
+            "font-size"
+            (if window.width < 800 then
+                "36px"
+
+             else
+                "48px"
+            )
+        , Html.Attributes.style "line-height" "1.2"
+        , Html.Attributes.style "font-weight" "600"
+        , Html.Attributes.style "margin" "0"
+        , Html.Attributes.style "padding-top" "24px"
+        ]
+        [ Html.a
+            [ Html.Attributes.href ("#" ++ id)
+            , Html.Attributes.style "text-decoration" "none"
+            , colorAttribute Theme.lightTheme.defaultText
+            ]
+            [ Html.text title ]
+        ]
 
 
 inlineView : Shared b -> Inline -> Html msg

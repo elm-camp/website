@@ -103,13 +103,13 @@ viewArchive contents config =
             ]
         , Ui.column
             Theme.contentAttributes
-            [ MarkdownThemed.renderFull "# Our sponsors"
+            [ Formatting.h1 "organisers" config.window "Our sponsors" |> Ui.html
             , contents.sponsors
             ]
         , Ui.column
             [ Ui.spacing 24
             ]
-            [ MarkdownThemed.renderFull "# Organisers"
+            [ Formatting.h1 "organisers" config.window "Organisers" |> Ui.html
             , Ui.el
                 Theme.contentAttributes
                 contents.organisers
