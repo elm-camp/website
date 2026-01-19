@@ -6,8 +6,6 @@ module Camp26Czech exposing
     , organisers
     , sponsors
     , venueAccessContent
-    , venueImage
-    , venuePictures
     , view
     )
 
@@ -16,16 +14,11 @@ import Camp26Czech.Archive
 import Camp26Czech.Artifacts
 import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
-import Html
-import Html.Attributes
-import MarkdownThemed
 import Route exposing (SubPage(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 
 
@@ -94,29 +87,6 @@ elmBottomLine =
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
         , Ui.text meta.location
         ]
-
-
-venuePictures : LoadedModel -> Ui.Element msg
-venuePictures model =
-    let
-        prefix =
-            "/26-park-hotel/"
-    in
-    [ [ "image1.jpg" ]
-    , [ "image3.jpg", "image2.jpg" ]
-    ]
-        |> List.map
-            (\paths ->
-                Ui.row
-                    [ Ui.spacing 10 ]
-                    (List.map (\image -> venueImage Ui.fill (prefix ++ image)) paths)
-            )
-        |> Ui.column [ Ui.spacing 10 ]
-
-
-venueImage : Ui.Length -> String -> Ui.Element msg
-venueImage width path =
-    Ui.image [ Ui.width width ] { source = path, description = "Photo of Park Hotel", onLoad = Nothing }
 
 
 organisers : Int -> Ui.Element msg
@@ -194,7 +164,7 @@ venueAccessContent =
                 , Paragraph [ Text "Elm Slack: @katjam" ]
                 ]
             ]
-            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
+        , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
         ]
     ]
 

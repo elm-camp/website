@@ -779,27 +779,31 @@ homepageView model =
             [ header { window = model.window, isCompact = False, logoModel = model.logoModel }
             , Ui.column
                 [ Ui.spacing 40 ]
-                [ --View.Sales.ticketSalesOpenCountdown model
-                  Ui.column
+                [ Ui.column
                     -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     Theme.contentAttributes
-                    [ elmCampOverview ]
-                , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-                    [ Camp26Czech.venuePictures model
-
-                    --, Camp26Czech.conferenceSummary
-                    , Ui.column
-                        []
-                        [ Formatting.view
-                            model
-                            [ Section "Organisers"
-                                [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
-                                ]
+                    [ --, Camp26Czech.conferenceSummary
+                      Formatting.view
+                        model
+                        [ Section "Elm Camp 2026 - Olomouc, Czechia"
+                            [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
+                            , HorizontalLine
+                            , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
+                            , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
+                            , Paragraph [ Text "Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption." ]
+                            , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
                             ]
-                        , Camp26Czech.organisers model.window.width
+                        , Images
+                            [ [ { source = "/26-park-hotel/image1.jpg", description = "Ariel view of the hotel" } ]
+                            , [ { source = "/26-park-hotel/image3.jpg", description = "Photo of a conference room in the hotel" }
+                              , { source = "/26-park-hotel/image2.jpg", description = "Photo of a bed room in the hotel" }
+                              ]
+                            ]
+                        , Section "Organisers"
+                            [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
+                            ]
                         ]
+                    , Camp26Czech.organisers model.window.width
                     ]
 
                 --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
@@ -816,27 +820,6 @@ jumpToId id offset =
         |> Task.andThen (\el -> Dom.setViewport 0 (el.element.y - offset))
         |> Task.attempt
             (\_ -> Noop)
-
-
-elmCampOverview : Ui.Element msg
-elmCampOverview =
-    """
-# Elm Camp 2026 - Olomouc, Czechia
-
-Elm Camp returns for its 4th year, this time in Olomouc, Czechia!
-
----
-
-Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome.
-
-Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language.
-
-Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
-
-We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals.
-
-"""
-        |> MarkdownThemed.renderFull
 
 
 codeOfConductContent : Ui.Element msg

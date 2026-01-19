@@ -23,8 +23,10 @@ type Formatting
     | Group (List Formatting)
     | Section String (List Formatting)
     | Image String (List Inline)
+    | Images (List (List { source : String, description : String }))
     | LegacyMap
     | QuoteBlock (List Inline)
+    | HorizontalLine
 
 
 type Inline
@@ -54,6 +56,13 @@ viewHelper shared depth item =
     case item of
         Paragraph items ->
             Html.p [] (List.map (inlineView shared) items)
+
+        HorizontalLine ->
+            Html.hr
+                [ Html.Attributes.style "border-color" (Color.toCssString Theme.lightTheme.elmText)
+                , Html.Attributes.style "border-style" "solid"
+                ]
+                []
 
         BulletList leading formattings ->
             Html.div
@@ -180,6 +189,43 @@ viewHelper shared depth item =
                     ]
                     (List.map (inlineView shared) altText)
                 ]
+
+        Images rows ->
+            List.map
+                (\row ->
+                    let
+                        count =
+                            List.length row
+
+                        width =
+                            "calc(" ++ String.fromFloat (100 / toFloat count) ++ "% - 6px)"
+                    in
+                    case row of
+                        [] ->
+                            Html.text ""
+
+                        head :: rest ->
+                            Html.img
+                                [ Html.Attributes.src head.source
+                                , Html.Attributes.style "border-radius" "6px"
+                                , Html.Attributes.style "width" width
+                                ]
+                                []
+                                :: List.map
+                                    (\image ->
+                                        Html.img
+                                            [ Html.Attributes.src image.source
+                                            , Html.Attributes.style "border-radius" "4px"
+                                            , Html.Attributes.style "margin-left" "6px"
+                                            , Html.Attributes.style "width" width
+                                            ]
+                                            []
+                                    )
+                                    rest
+                                |> Html.div []
+                )
+                rows
+                |> Html.div []
 
         LegacyMap ->
             Html.iframe
