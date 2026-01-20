@@ -552,7 +552,7 @@ loadedView model =
         UnconferenceFormatRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ Camp26Czech.header True model
+                [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ Formatting.view model UnconferenceFormat.view
@@ -563,7 +563,7 @@ loadedView model =
         CodeOfConductRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ Camp26Czech.header True model
+                [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ Formatting.view model codeOfConductContent
@@ -574,7 +574,7 @@ loadedView model =
         ElmCampArchiveRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ Camp26Czech.header True model
+                [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ Formatting.view model Archive.content ]

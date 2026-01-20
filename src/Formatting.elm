@@ -189,9 +189,12 @@ viewHelper shared depth item =
             List.map
                 (\row ->
                     let
+                        count =
+                            toFloat (List.length row)
+
                         width : String
                         width =
-                            "calc(" ++ String.fromFloat (100 / toFloat (List.length row)) ++ "% - " ++ spacing ++ ")"
+                            "calc(" ++ String.fromFloat (100 / count) ++ "% - " ++ spacing ++ ")"
 
                         addLink : Maybe String -> Html msg -> Html msg
                         addLink maybeLink content =
@@ -204,7 +207,7 @@ viewHelper shared depth item =
 
                         spacing : String
                         spacing =
-                            if shared.window.width < 800 then
+                            if Theme.isMobile shared.window then
                                 "6px"
 
                             else
@@ -227,7 +230,7 @@ viewHelper shared depth item =
                                      )
                                         ++ [ Html.Attributes.src head.source
                                            , Html.Attributes.style "border-radius" "4px"
-                                           , Html.Attributes.style "width" width
+                                           , Html.Attributes.style "width" (String.fromFloat (100 / count) ++ "%")
                                            , Html.Attributes.style "vertical-align" "top"
                                            , Html.Attributes.style "margin" (spacing ++ " 0 0 0")
                                            ]
@@ -301,7 +304,7 @@ h1 id window title =
         [ Html.Attributes.id id
         , Html.Attributes.style
             "font-size"
-            (if window.width < 800 then
+            (if Theme.isMobile window then
                 "36px"
 
              else

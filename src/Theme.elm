@@ -11,6 +11,7 @@ module Theme exposing
     , greenTheme
     , h2
     , h3
+    , isMobile
     , lightTheme
     , normalButtonAttributes
     , numericField
@@ -79,6 +80,11 @@ contentAttributes =
     [ Ui.widthMax 800
     , Ui.centerX
     ]
+
+
+isMobile : Size -> Bool
+isMobile a =
+    a.width < 800
 
 
 css : Html msg

@@ -36,25 +36,17 @@ location =
 
 view : Config a -> Element FrontendMsg
 view model =
-    let
-        sidePadding =
-            if model.window.width < 800 then
-                24
-
-            else
-                60
-    in
     Ui.column
-        []
+        [ Ui.spacing 32 ]
         [ Ui.column
-            [ Ui.spacing 50
-            , Ui.paddingWith { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
+            [ Ui.spacing 32
+            , Ui.paddingXY 16 0
             ]
-            [ header False model
+            [ header model
             , Ui.column
                 (Ui.spacing 16 :: Theme.contentAttributes)
                 [ Formatting.view model content
-                , organisers model.window.width
+                , organisers model.window
                 ]
 
             --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
@@ -132,11 +124,11 @@ content =
     ]
 
 
-header : Bool -> Config a -> Ui.Element FrontendMsg
-header isCompact config =
+header : Config a -> Ui.Element FrontendMsg
+header config =
     let
         titleSize =
-            if config.window.width < 800 then
+            if Theme.isMobile config.window then
                 64
 
             else
@@ -194,7 +186,7 @@ header isCompact config =
                     ]
                 ]
     in
-    if config.window.width < 1000 || isCompact then
+    if Theme.isMobile config.window then
         Ui.column
             [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
@@ -215,8 +207,8 @@ header isCompact config =
             ]
 
 
-organisers : Int -> Ui.Element msg
-organisers windowWidth =
+organisers : Size -> Ui.Element msg
+organisers window =
     [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
       , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }
       , { country = "🇩🇪", name = "Johannes Emerich", description = "Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps." }
@@ -231,7 +223,7 @@ organisers windowWidth =
       ]
     ]
         |> (\list2 ->
-                if windowWidth < 1000 then
+                if Theme.isMobile window then
                     [ List.concat list2 ]
 
                 else
