@@ -15,7 +15,6 @@ meta =
     , tag = "Europe 2023"
     , location = "🇩🇰 Dallund Castle, Denmark"
     , dates = "Wed 28th - Fri 30th June"
-    , artifactPicture = { src = "/23-denmark/artifacts.png", description = "A suitcase full of artifacts in the middle of a danish forest" }
     }
 
 
@@ -31,76 +30,24 @@ view model =
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image
                     [ Ui.width (Ui.px 300) ]
-                    { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
+                    { source = "/23-denmark/artifacts.png"
+                    , description = "A suitcase full of artifacts in the middle of a danish forest"
+                    , onLoad = Nothing
+                    }
                 , Ui.column [ Ui.spacing 20 ]
                     [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , Camp.elmCampTopLine meta
                     , Camp.elmCampBottomLine meta
                     ]
                 ]
-            , Camp.viewArchive
-                { sponsors = sponsors model.window
-                , venue = venue
-                , organisers = organisers
-                }
-                model
+            , Formatting.view model content
             ]
         , Theme.footer
         ]
 
 
-sponsors : { window | width : Int } -> Ui.Element msg
-sponsors window =
-    let
-        asImg { image, url, width } =
-            Ui.el
-                [ Ui.linkNewTab url, Ui.width Ui.fill ]
-                (Ui.image
-                    [ Ui.width
-                        (Ui.px
-                            (if window.width < 800 then
-                                Basics.toFloat width * 0.7 |> Basics.round
-
-                             else
-                                width
-                            )
-                        )
-                    ]
-                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
-                )
-    in
-    [ asImg { image = "vendr.png", url = "https://www.vendr.com/", width = 250 }
-    , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health/", width = 250 }
-    , asImg { image = "logo-dividat.svg", url = "https://dividat.com", width = 170 }
-    , asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 200 }
-    , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 200 }
-    , asImg { image = "bekk.svg", url = "https://www.bekk.no/", width = 200 }
-    , Ui.el
-        [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
-        (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 200) ]
-            [ Ui.image
-                [ Ui.width
-                    (Ui.px
-                        (if window.width < 800 then
-                            60 * 0.7 |> Basics.round
-
-                         else
-                            60
-                        )
-                    )
-                ]
-                { description = "https://www.elmweekly.nl", source = "/sponsors/" ++ "elm-weekly.svg", onLoad = Nothing }
-            , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
-            ]
-        )
-    , asImg { image = "cookiewolf-logo.png", url = "", width = 220 }
-    ]
-        -- |> List.map asImg
-        |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.spacing 32 ]
-
-
-venue : List Formatting
-venue =
+content : List Formatting
+content =
     [ Section "Unconference"
         [ BulletList
             []
@@ -116,23 +63,35 @@ venue =
         ]
     , Images
         [ [ { source = "/23-denmark/image1.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           , { source = "/23-denmark/image2.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           , { source = "/23-denmark/image3.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           ]
         , [ { source = "/23-denmark/image4.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           , { source = "/23-denmark/image5.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           , { source = "/23-denmark/image6.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Dallund Castle"
+            , link = Nothing
             }
           ]
         ]
@@ -177,13 +136,20 @@ venue =
         , Paragraph [ Text "Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense." ]
         , Paragraph [ Text "All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option." ]
         ]
-    , Section "Our sponsors" []
-    ]
-
-
-organisers : List Formatting
-organisers =
-    [ Section
+    , Section "Our sponsors"
+        [ Images
+            [ [ { source = "/sponsors/vendr.png", link = Just "https://www.vendr.com/", maxWidth = Just 250, description = "Vendr's logo" }
+              , { source = "/sponsors/concentrichealthlogo.svg", link = Just "https://concentric.health/", maxWidth = Just 250, description = "Concentric health's logo" }
+              , { source = "/sponsors/logo-dividat.svg", link = Just "https://dividat.com", maxWidth = Just 170, description = "Dividat's logo" }
+              ]
+            , [ { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 200, description = "Lamdera's logo" }
+              , { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 200, description = "Scripta IO's logo" }
+              , { source = "/sponsors/bekk.svg", link = Just "https://www.bekk.no/", maxWidth = Just 200, description = "Bekk's logo" }
+              , { source = "/sponsors/cookiewolf-logo.png", link = Nothing, maxWidth = Just 220, description = "Cookie wolf's logo" }
+              ]
+            ]
+        ]
+    , Section
         "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]

@@ -16,7 +16,6 @@ meta =
     , tag = "Michigan, US 2025"
     , location = "🇺🇸 Watervliet, Michigan"
     , dates = "Tues 24th - Fri 27th June 2025"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
 
 
@@ -29,19 +28,18 @@ view model =
             [ Theme.rowToColumnWhen 700
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
-                [ Ui.image [ Ui.width (Ui.px 300) ] { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
+                [ Ui.image [ Ui.width (Ui.px 300) ]
+                    { source = "/24-colehayes/artifacts-mark-skipper.png"
+                    , description = "A watercolour of an old tree in an English stately garden"
+                    , onLoad = Nothing
+                    }
                 , Ui.column [ Ui.spacing 20 ]
                     [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
                     , elmTopLine
                     , elmBottomLine
                     ]
                 ]
-            , Camp.viewArchive
-                { organisers = organisers
-                , sponsors = sponsors model.window
-                , venue = venueAccessContent
-                }
-                model
+            , Formatting.view model content
             ]
         , Theme.footer
         ]
@@ -69,23 +67,8 @@ elmBottomLine =
         ]
 
 
-organisers : List Formatting
-organisers =
-    [ Section "Organisers"
-        [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
-        , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
-        , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
-        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
-        , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
-        , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
-        , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
-        , Paragraph [ Text "🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr." ]
-        ]
-    ]
-
-
-venueAccessContent : List Formatting
-venueAccessContent =
+content : List Formatting
+content =
     [ Section "Unconference"
         [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"
             [ Paragraph [ Text "Arrive anytime on Tues 24th June 2025" ]
@@ -130,23 +113,35 @@ venueAccessContent =
         ]
     , Images
         [ [ { source = "/25-ronora/image1.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           , { source = "/25-ronora/image2.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           , { source = "/25-ronora/image3.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           ]
         , [ { source = "/25-ronora/image4.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           , { source = "/25-ronora/image5.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           , { source = "/25-ronora/image6.webp"
+            , maxWidth = Nothing
             , description = "Photo of part of Ronora Lodge"
+            , link = Nothing
             }
           ]
         ]
@@ -185,55 +180,25 @@ venueAccessContent =
             ]
         , LegacyMap
         ]
-    , Section "Our sponsors" []
-    ]
-
-
-sponsors : { window | width : Int } -> Ui.Element msg
-sponsors window =
-    let
-        asImg { image, url, width } =
-            Ui.el
-                [ Ui.linkNewTab url, Ui.width Ui.fill ]
-                (Ui.image
-                    [ Ui.width
-                        (Ui.px
-                            (if window.width < 800 then
-                                Basics.toFloat width * 0.7 |> Basics.round
-
-                             else
-                                width
-                            )
-                        )
-                    ]
-                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
-                )
-    in
-    Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
-          , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
-          ]
-            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
-          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , Ui.el
-                [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
-                (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 180) ]
-                    [ Ui.image
-                        [ Ui.width
-                            (Ui.px
-                                (if window.width < 800 then
-                                    50 * 0.7 |> Basics.round
-
-                                 else
-                                    50
-                                )
-                            )
-                        ]
-                        { description = "https://www.elmweekly.nl", source = "/sponsors/" ++ "elm-weekly.svg", onLoad = Nothing }
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
-                    ]
-                )
-          ]
-            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
+    , Section "Our sponsors"
+        [ Images
+            [ [ { source = "/sponsors/noredink-logo.svg", link = Just "https://www.noredink.com/", maxWidth = Just 220, description = "No red ink's logo" }
+              , { source = "/sponsors/concentrichealthlogo.svg", link = Just "https://concentric.health", maxWidth = Just 235, description = "Concentric health's logo" }
+              ]
+            , [ { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 120, description = "Lamdera's logo" }
+              , { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
+              , { source = "/sponsors/elm-weekly.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
+              ]
+            ]
         ]
+    , Section "Organisers"
+        [ Paragraph [ Text "🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." ]
+        , Paragraph [ Text "🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." ]
+        , Paragraph [ Text "🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless." ]
+        , Paragraph [ Text "🇬🇧 Katja Mordaunt – Uses web tech to help improve the reach of charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of ", ExternalLink "codereading.club" "https://codereading.club" ]
+        , Paragraph [ Text "🇦🇺 Mario Rogic – Organiser of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera." ]
+        , Paragraph [ Text "🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help." ]
+        , Paragraph [ Text "🇺🇸 Tristan Pendergrass – Frontend developer at Dropbox, and Elm enthusiast in his spare time who likes to write apps for his friends and family." ]
+        , Paragraph [ Text "🇺🇸 Wolfgang Schuster – Author of Elm Weekly, builds with Elm at Vendr." ]
+        ]
+    ]

@@ -780,9 +780,22 @@ homepageView model =
                             , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
                             ]
                         , Images
-                            [ [ { source = "/26-park-hotel/image1.jpg", description = "Ariel view of the hotel" } ]
-                            , [ { source = "/26-park-hotel/image3.jpg", description = "Photo of a conference room in the hotel" }
-                              , { source = "/26-park-hotel/image2.jpg", description = "Photo of a bed room in the hotel" }
+                            [ [ { source = "/26-park-hotel/image1.jpg"
+                                , maxWidth = Nothing
+                                , description = "Ariel view of the hotel"
+                                , link = Nothing
+                                }
+                              ]
+                            , [ { source = "/26-park-hotel/image3.jpg"
+                                , maxWidth = Nothing
+                                , description = "Photo of a conference room in the hotel"
+                                , link = Nothing
+                                }
+                              , { source = "/26-park-hotel/image2.jpg"
+                                , maxWidth = Nothing
+                                , description = "Photo of a bed room in the hotel"
+                                , link = Nothing
+                                }
                               ]
                             ]
                         , Section "Organisers"

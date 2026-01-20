@@ -1,9 +1,8 @@
-module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, viewArchive)
+module Camp exposing (Meta, elmCampBottomLine, elmCampTopLine)
 
 {-| Shared definition for all camp years.
 -}
 
-import Formatting exposing (Formatting)
 import Theme
 import Ui
 import Ui.Font
@@ -14,7 +13,6 @@ type alias Meta =
     , tag : String
     , location : String
     , dates : String
-    , artifactPicture : { src : String, description : String }
     }
 
 
@@ -38,44 +36,3 @@ elmCampBottomLine meta =
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
         , Ui.text meta.location
         ]
-
-
-type alias ArchiveContents msg =
-    { venue : List Formatting
-    , organisers : List Formatting
-    , sponsors : Ui.Element msg
-    }
-
-
-{-| View an archive page for a past year of Elm Camp.
--}
-viewArchive : ArchiveContents msg -> { a | window : { width : Int, height : Int } } -> Ui.Element msg
-viewArchive contents config =
-    Ui.column
-        [ Ui.spacing 40 ]
-        [ Ui.column
-            Theme.contentAttributes
-            [ Formatting.view config contents.venue
-            ]
-        , Ui.column
-            Theme.contentAttributes
-            [ contents.sponsors
-            ]
-        , Ui.column
-            Theme.contentAttributes
-            [ Formatting.view config contents.organisers
-            ]
-        ]
-
-
-groupsOfTwo : List a -> List (List a)
-groupsOfTwo list =
-    case list of
-        x :: y :: rest ->
-            [ x, y ] :: groupsOfTwo rest
-
-        [ x ] ->
-            [ [ x ] ]
-
-        [] ->
-            []

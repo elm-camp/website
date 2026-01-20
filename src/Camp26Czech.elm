@@ -24,7 +24,6 @@ meta =
     , tag = "Michigan, US 2026"
     , location = location
     , dates = "Mon 15th - Thur 18th June 2026"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
 
 

@@ -25,7 +25,7 @@ type Formatting
     | Group (List Formatting)
     | Section String (List Formatting)
     | Image { source : String, maxWidth : Maybe Int, caption : List Inline }
-    | Images (List (List { source : String, description : String }))
+    | Images (List (List { source : String, maxWidth : Maybe Int, link : Maybe String, description : String }))
     | LegacyMap
     | QuoteBlock (List Inline)
     | HorizontalLine
@@ -179,31 +179,64 @@ viewHelper shared depth item =
                     let
                         width : String
                         width =
-                            "calc(" ++ String.fromFloat (100 / toFloat (List.length row)) ++ "% - 6px)"
+                            "calc(" ++ String.fromFloat (100 / toFloat (List.length row)) ++ "% - " ++ spacing ++ ")"
+
+                        addLink maybeLink content =
+                            case maybeLink of
+                                Just link ->
+                                    Html.a [ Html.Attributes.href link ] [ content ]
+
+                                Nothing ->
+                                    content
+
+                        spacing =
+                            "10px"
                     in
                     case row of
                         [] ->
                             Html.text ""
 
                         head :: rest ->
-                            Html.img
-                                [ Html.Attributes.src head.source
-                                , Html.Attributes.style "border-radius" "6px"
-                                , Html.Attributes.style "width" width
-                                , Html.Attributes.style "vertical-align" "top"
-                                , Html.Attributes.style "margin" "6px 0 0 0"
-                                ]
-                                []
+                            addLink
+                                head.link
+                                (Html.img
+                                    ((case head.maxWidth of
+                                        Just maxWidth ->
+                                            [ Html.Attributes.style "max-width" (String.fromInt maxWidth ++ "px") ]
+
+                                        Nothing ->
+                                            []
+                                     )
+                                        ++ [ Html.Attributes.src head.source
+                                           , Html.Attributes.style "border-radius" "6px"
+                                           , Html.Attributes.style "width" width
+                                           , Html.Attributes.style "vertical-align" "top"
+                                           , Html.Attributes.style "margin" (spacing ++ " 0 0 0")
+                                           ]
+                                    )
+                                    []
+                                )
                                 :: List.map
                                     (\image ->
-                                        Html.img
-                                            [ Html.Attributes.src image.source
-                                            , Html.Attributes.style "border-radius" "4px"
-                                            , Html.Attributes.style "margin" "6px 0 0 6px"
-                                            , Html.Attributes.style "width" width
-                                            , Html.Attributes.style "vertical-align" "top"
-                                            ]
-                                            []
+                                        addLink
+                                            image.link
+                                            (Html.img
+                                                ((case image.maxWidth of
+                                                    Just maxWidth ->
+                                                        [ Html.Attributes.style "max-width" (String.fromInt maxWidth ++ "px") ]
+
+                                                    Nothing ->
+                                                        []
+                                                 )
+                                                    ++ [ Html.Attributes.src image.source
+                                                       , Html.Attributes.style "border-radius" "6px"
+                                                       , Html.Attributes.style "margin" (spacing ++ " 0 0 " ++ spacing)
+                                                       , Html.Attributes.style "width" width
+                                                       , Html.Attributes.style "vertical-align" "top"
+                                                       ]
+                                                )
+                                                []
+                                            )
                                     )
                                     rest
                                 |> Html.div []
