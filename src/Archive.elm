@@ -24,7 +24,7 @@ content =
             , Paragraph [ Link "Click here" Route.Camp25US, Text " to view the 2025 website" ]
             ]
         , Section "Elm Camp 2024"
-            [ Image "/24-colehayes/elm-camp-24-attendees.jpg" []
+            [ Image { source = "/24-colehayes/elm-camp-24-attendees.jpg", maxWidth = Nothing, caption = [] }
             , BulletList
                 [ Bold "Posts" ]
                 [ Paragraph [ ExternalLink "Notes from Elm Camp 2024" "https://martin.janiczek.cz/2024/06/22/notes-from-elm-camp-2024.html", Text " by @janiczek (Blog)" ]
@@ -41,7 +41,11 @@ content =
             ]
         , HorizontalLine
         , Section "Elm Camp 2023"
-            [ Image "/23-denmark/elm-camp-23-attendees.jpeg" [ Text "Denmark attendees standing in the courtyard" ]
+            [ Image
+                { source = "/23-denmark/elm-camp-23-attendees.jpeg"
+                , maxWidth = Nothing
+                , caption = [ Text "Denmark attendees standing in the courtyard" ]
+                }
             , BulletList
                 [ Bold "Posts" ]
                 [ Paragraph

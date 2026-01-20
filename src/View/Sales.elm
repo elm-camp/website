@@ -6,7 +6,6 @@ module View.Sales exposing
     , errorText
     , formView
     , goToTicketSales
-    , grantApplicationCopy
     , opportunityGrant
     , opportunityGrantInfo
     , radioButton
@@ -40,6 +39,7 @@ import Id exposing (Id)
 import List.Extra as List
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
@@ -263,50 +263,36 @@ ticketInfo model =
                 Nothing ->
                     "Price not available"
     in
-    """
-# Tickets
+    [ Section "Tickets"
+        [ Paragraph [ Text "There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms. The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds are beautiful and include woodland, a swimming lake and a firepit." ]
+        , Paragraph [ Text "Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction." ]
+        , Section "All tickets include full access to the event 18th - 21st June 2024 and all meals."
+            [ BulletList
+                [ Text ("Staying offsite – " ++ offsitePrice) ]
+                [ Paragraph [ Text "You will organise your own accommodation elsewhere." ] ]
+            , BulletList
+                [ if campingPrice == "£0" || campingPrice == "$0" then
+                    Text "Camping space – Free"
 
-There is a mix of room types — singles, doubles, dorm style rooms
-suitable for up to four people. Attendees will self-organize
-to distribute among the rooms and share bathrooms.
-The facilities for those who wish to bring a tent or campervan and camp
-are excellent. The surrounding grounds are
-beautiful and include woodland, a swimming lake and a firepit.
-
-Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction.
-
-## All tickets include full access to the event 18th - 21st June 2024 and all meals.
-
-### Staying offsite - """
-        ++ offsitePrice
-        ++ """
-You will organise your own accommodation elsewhere.
-
-### Camping space – """
-        ++ (if campingPrice == "£0" || campingPrice == "$0" then
-                "Free"
-
-            else
-                campingPrice
-           )
-        ++ """
-- Bring your own tent or campervan and stay on site
-- Showers & toilets provided
-
-### Shared room - """
-        ++ dormPrice
-        ++ """
-- Suitable for a couple or up to 4 people in twin beds
-
-### Single room – """
-        ++ singlePrice
-        ++ """
-- Limited availability
-
-
-This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
-"""
-        |> MarkdownThemed.renderFull
+                  else
+                    Text ("Camping space – " ++ campingPrice)
+                ]
+                [ Paragraph [ Text "Bring your own tent or campervan and stay on site" ]
+                , Paragraph [ Text "Showers & toilets provided" ]
+                ]
+            , BulletList
+                [ Text ("Shared room – " ++ dormPrice) ]
+                [ Paragraph [ Text "Suitable for a couple or up to 4 people in twin beds" ]
+                ]
+            , BulletList
+                [ Text ("Single room – " ++ singlePrice) ]
+                [ Paragraph [ Text "Limited availability" ]
+                ]
+            ]
+        , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
+        ]
+    ]
+        |> Formatting.view model
 
 
 ticketsHtmlId : HtmlId
@@ -333,27 +319,16 @@ opportunityGrantInfo =
 
 ticketsView : LoadedModel -> Ui.Element FrontendMsg
 ticketsView model =
-    let
-        attendanceTicketPriceText =
-            -- Look up the attendance ticket price from model.prices
-            case SeqDict.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
-                Just priceInfo ->
-                    " - " ++ Theme.priceText priceInfo.price
-
-                Nothing ->
-                    " - Price not available"
-    in
     Ui.column
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
         [ Ui.row
             [ Ui.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
             ]
-            [ Ui.column []
-                [ """## 🎟️ Attendee Details
-Please enter details for each person attending Elm camp, then select your accommodation below.
-                """
-                    |> MarkdownThemed.renderFull
+            [ Ui.column
+                []
+                [ Formatting.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
+                , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
                 ]
             , Ui.column [ Ui.width Ui.shrink ]
                 [ Theme.numericField
@@ -415,14 +390,12 @@ accommodationView model =
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
-            , """
-Please select one accommodation option per attendee.
-
-There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared.
-
-The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
-"""
-                |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph [ Text "Please select one accommodation option per attendee." ]
+                , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared." ]
+                , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
+                ]
             ]
         , SeqDict.toList Tickets.accommodationOptions
             |> List.reverse
@@ -493,18 +466,18 @@ formView model productId priceId ticket =
         includesRoom =
             Tickets.formIncludesRoom form
 
-        orderNotes =
-            if includesAccom && not hasAttendees then
-                "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
-
-            else if not includesAccom && hasAttendees then
-                "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
-
-            else if not includesRoom then
-                "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
-
-            else
-                ""
+        --orderNotes =
+        --    if includesAccom && not hasAttendees then
+        --        "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
+        --
+        --    else if not includesAccom && hasAttendees then
+        --        "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
+        --
+        --    else if not includesRoom then
+        --        "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
+        --
+        --    else
+        --        ""
     in
     Ui.column
         [ Ui.spacing 60 ]
@@ -524,7 +497,8 @@ formView model productId priceId ticket =
                    ]
             )
             [ Ui.none
-            , MarkdownThemed.renderFull orderNotes
+
+            --, MarkdownThemed.renderFull orderNotes
             , textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
@@ -541,18 +515,25 @@ formView model productId priceId ticket =
 
                 SubmitBackendError err ->
                     Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text err ]
-            , """
-Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
-
-By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
-""" |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
+                , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
+                , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
+                ]
             , if model.window.width > 600 then
                 Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
                 Ui.column [ Ui.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
-            , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
-                |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph
+                    [ Text "Problem with something above? Get in touch with the team at "
+                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                    , Text "."
+                    ]
+                ]
             ]
         ]
 

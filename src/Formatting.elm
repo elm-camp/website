@@ -3,6 +3,7 @@ module Formatting exposing
     , Inline(..)
     , Shared
     , h1
+    , h2
     , view
     )
 
@@ -23,7 +24,7 @@ type Formatting
     | LetterList (List Inline) (List Formatting)
     | Group (List Formatting)
     | Section String (List Formatting)
-    | Image String (List Inline)
+    | Image { source : String, maxWidth : Maybe Int, caption : List Inline }
     | Images (List (List { source : String, description : String }))
     | LegacyMap
     | QuoteBlock (List Inline)
@@ -130,24 +131,7 @@ viewHelper shared depth item =
                     Html.div [] (h1 id shared.window title :: content)
 
                 [ _ ] ->
-                    Html.div
-                        []
-                        (Html.h2
-                            [ Html.Attributes.id id
-                            , Html.Attributes.style "font-size" "24px"
-                            , Html.Attributes.style "font-weight" "800"
-                            , Html.Attributes.style "margin" "0"
-                            , Html.Attributes.style "padding-top" "16px"
-                            ]
-                            [ Html.a
-                                [ Html.Attributes.href ("#" ++ id)
-                                , Html.Attributes.style "text-decoration" "none"
-                                , colorAttribute Theme.lightTheme.elmText
-                                ]
-                                [ Html.text title ]
-                            ]
-                            :: content
-                        )
+                    Html.div [] (h2 id title :: content)
 
                 _ ->
                     Html.div
@@ -164,12 +148,20 @@ viewHelper shared depth item =
                             :: content
                         )
 
-        Image url altText ->
+        Image { source, maxWidth, caption } ->
             Html.figure
                 [ Html.Attributes.style "margin" "0" ]
                 [ Html.img
-                    [ Html.Attributes.src url
-                    , Html.Attributes.style "max-width" "100%"
+                    [ Html.Attributes.src source
+                    , Html.Attributes.style
+                        "max-width"
+                        (case maxWidth of
+                            Just maxWidth2 ->
+                                String.fromInt maxWidth2 ++ "px"
+
+                            Nothing ->
+                                "100%"
+                        )
                     , Html.Attributes.style "max-height" "500px"
                     , Html.Attributes.style "border-radius" "4px"
                     ]
@@ -178,7 +170,7 @@ viewHelper shared depth item =
                     [ Html.Attributes.style "font-size" "14px"
                     , Html.Attributes.style "padding" "0 8px 0 8px "
                     ]
-                    (List.map (inlineView shared) altText)
+                    (List.map (inlineView shared) caption)
                 ]
 
         Images rows ->
@@ -265,6 +257,24 @@ h1 id window title =
             [ Html.Attributes.href ("#" ++ id)
             , Html.Attributes.style "text-decoration" "none"
             , colorAttribute Theme.lightTheme.defaultText
+            ]
+            [ Html.text title ]
+        ]
+
+
+h2 : String -> String -> Html msg
+h2 id title =
+    Html.h2
+        [ Html.Attributes.id id
+        , Html.Attributes.style "font-size" "24px"
+        , Html.Attributes.style "font-weight" "800"
+        , Html.Attributes.style "margin" "0"
+        , Html.Attributes.style "padding-top" "16px"
+        ]
+        [ Html.a
+            [ Html.Attributes.href ("#" ++ id)
+            , Html.Attributes.style "text-decoration" "none"
+            , colorAttribute Theme.lightTheme.elmText
             ]
             [ Html.text title ]
         ]

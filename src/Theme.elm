@@ -12,10 +12,6 @@ module Theme exposing
     , h1
     , h2
     , h3
-    , h4
-    , heading1Attrs
-    , heading2Attrs
-    , heading3Attrs
     , heading4Attrs
     , lightTheme
     , normalButtonAttributes
@@ -389,14 +385,6 @@ h3 t =
     Ui.el
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (heading3Attrs lightTheme)
-        (Ui.text t)
-
-
-h4 : String -> Ui.Element msg
-h4 t =
-    Ui.el
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (heading4Attrs lightTheme)
         (Ui.text t)
 
 
