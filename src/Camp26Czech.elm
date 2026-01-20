@@ -1,11 +1,6 @@
 module Camp26Czech exposing
     ( Config
     , header
-    , location
-    , meta
-    , organisers
-    , sponsors
-    , venueAccessContent
     , view
     )
 
@@ -60,39 +55,7 @@ view model =
                 [ Ui.spacing 40 ]
                 [ Ui.column
                     Theme.contentAttributes
-                    [ Formatting.view
-                        model
-                        [ Section "Elm Camp 2026 - Olomouc, Czechia"
-                            [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
-                            , HorizontalLine
-                            , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
-                            , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
-                            , Paragraph [ Text "Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption." ]
-                            , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
-                            ]
-                        , Images
-                            [ [ { source = "/26-park-hotel/image1.jpg"
-                                , maxWidth = Nothing
-                                , description = "Ariel view of the hotel"
-                                , link = Nothing
-                                }
-                              ]
-                            , [ { source = "/26-park-hotel/image3.jpg"
-                                , maxWidth = Nothing
-                                , description = "Photo of a conference room in the hotel"
-                                , link = Nothing
-                                }
-                              , { source = "/26-park-hotel/image2.jpg"
-                                , maxWidth = Nothing
-                                , description = "Photo of a bed room in the hotel"
-                                , link = Nothing
-                                }
-                              ]
-                            ]
-                        , Section "Organisers"
-                            [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
-                            ]
-                        ]
+                    [ Formatting.view model content
                     , organisers model.window.width
                     ]
 
@@ -102,6 +65,74 @@ view model =
             ]
         , Theme.footer
         ]
+
+
+content : List Formatting
+content =
+    [ Section "Elm Camp 2026 - Olomouc, Czechia"
+        [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
+        , HorizontalLine
+        , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
+        , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
+        , Paragraph [ Text "Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption." ]
+        , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
+        ]
+    , Images
+        [ [ { source = "/26-park-hotel/image1.jpg"
+            , maxWidth = Nothing
+            , description = "Ariel view of the hotel"
+            , link = Nothing
+            }
+          ]
+        , [ { source = "/26-park-hotel/image3.jpg"
+            , maxWidth = Nothing
+            , description = "Photo of a conference room in the hotel"
+            , link = Nothing
+            }
+          , { source = "/26-park-hotel/image2.jpg"
+            , maxWidth = Nothing
+            , description = "Photo of a bed room in the hotel"
+            , link = Nothing
+            }
+          ]
+        ]
+    , Section
+        "The venue and access"
+        [ Section
+            "The venue"
+            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
+            ]
+        , Section
+            "Participating in conversations"
+            [ BulletList
+                []
+                [ Paragraph [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
+                , Paragraph [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
+                , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
+                ]
+            ]
+        , Section
+            "Contacting the organisers"
+            [ BulletList
+                [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch" ]
+                [ Paragraph
+                    [ Text "Elmcraft Discord: "
+                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
+                    , Text " channel or DM katjam_"
+                    ]
+                , Paragraph
+                    [ Text "Email: "
+                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp)"
+                    ]
+                , Paragraph [ Text "Elm Slack: @katjam" ]
+                ]
+            ]
+        , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
+        ]
+    , Section "Organisers"
+        [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
+        ]
+    ]
 
 
 header : Bool -> Config a -> Ui.Element FrontendMsg
@@ -227,94 +258,3 @@ organisers windowWidth =
                     |> Ui.column [ Ui.alignTop, Ui.spacing 24 ]
             )
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
-
-
-venueAccessContent : List Formatting
-venueAccessContent =
-    [ Section
-        "The venue and access"
-        [ Section
-            "The venue"
-            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
-            ]
-        , Section
-            "Participating in conversations"
-            [ BulletList
-                []
-                [ Paragraph [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
-                , Paragraph [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
-                , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
-                ]
-            ]
-        , Section
-            "Contacting the organisers"
-            [ BulletList
-                [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch" ]
-                [ Paragraph
-                    [ Text "Elmcraft Discord: "
-                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
-                    , Text " channel or DM katjam_"
-                    ]
-                , Paragraph
-                    [ Text "Email: "
-                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp)"
-                    ]
-                , Paragraph [ Text "Elm Slack: @katjam" ]
-                ]
-            ]
-        , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
-        ]
-    ]
-
-
-sponsors : { window | width : Int } -> Ui.Element msg
-sponsors window =
-    let
-        asImg { image, url, width } =
-            Ui.el
-                [ Ui.linkNewTab url, Ui.width Ui.fill ]
-                (Ui.image
-                    [ Ui.width
-                        (Ui.px
-                            (if window.width < 800 then
-                                Basics.toFloat width * 0.7 |> Basics.round
-
-                             else
-                                width
-                            )
-                        )
-                    ]
-                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
-                )
-    in
-    Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
-          , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
-          ]
-            |> Ui.row [ Ui.contentTop, Ui.wrap, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
-          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , Ui.el
-                [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
-                (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 180) ]
-                    [ Ui.image
-                        [ Ui.width
-                            (Ui.px
-                                (if window.width < 800 then
-                                    50 * 0.7 |> Basics.round
-
-                                 else
-                                    50
-                                )
-                            )
-                        ]
-                        { description = "https://www.elmweekly.nl"
-                        , source = "/sponsors/" ++ "elm-weekly.svg"
-                        , onLoad = Nothing
-                        }
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
-                    ]
-                )
-          ]
-            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        ]

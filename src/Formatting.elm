@@ -55,29 +55,33 @@ view shared list =
         |> Ui.html
 
 
+noMargin : Html.Attribute msg
+noMargin =
+    Html.Attributes.style "margin" "0"
+
+
 viewHelper : Shared b -> List String -> Formatting -> Html msg
 viewHelper shared depth item =
     case item of
         Paragraph items ->
-            Html.p [] (List.map (inlineView shared) items)
+            Html.p [ noMargin ] (List.map (inlineView shared) items)
 
         HorizontalLine ->
             Html.hr
                 [ Html.Attributes.style "border-color" (Color.toCssString Theme.lightTheme.elmText)
                 , Html.Attributes.style "border-style" "solid"
+                , noMargin
                 ]
                 []
 
         BulletList leading formattings ->
             Html.div
                 []
-                [ Html.p
-                    []
-                    (List.map (inlineView shared) leading)
+                [ Html.p [ noMargin ] (List.map (inlineView shared) leading)
                 , Html.ul
-                    [ Html.Attributes.style "padding-left" "20px" ]
+                    [ Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
                         formattings
                     )
                 ]
@@ -85,13 +89,11 @@ viewHelper shared depth item =
         NumberList leading formattings ->
             Html.div
                 []
-                [ Html.p
-                    []
-                    (List.map (inlineView shared) leading)
+                [ Html.p [ noMargin ] (List.map (inlineView shared) leading)
                 , Html.ol
-                    [ Html.Attributes.style "padding-left" "20px" ]
+                    [ Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
                         formattings
                     )
                 ]
@@ -99,13 +101,11 @@ viewHelper shared depth item =
         LetterList leading formattings ->
             Html.div
                 []
-                [ Html.p
-                    []
-                    (List.map (inlineView shared) leading)
+                [ Html.p [ noMargin ] (List.map (inlineView shared) leading)
                 , Html.ul
-                    [ Html.Attributes.type_ "A", Html.Attributes.style "padding-left" "20px" ]
+                    [ Html.Attributes.type_ "A", Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
                         formattings
                     )
                 ]
@@ -121,24 +121,32 @@ viewHelper shared depth item =
 
                 content : List (Html msg)
                 content =
-                    List.map (viewHelper shared depth2) formattings
+                    case formattings of
+                        head :: rest ->
+                            viewHelper shared depth2 head
+                                :: List.map (\item2 -> Html.div [ paddingTop 16 ] [ viewHelper shared depth2 item2 ]) rest
+
+                        [] ->
+                            []
 
                 id : String
                 id =
-                    Url.percentEncode (String.join "-" depth2)
+                    List.reverse depth2 |> String.join "-" |> Url.percentEncode
             in
-            case depth of
-                [] ->
-                    Html.div [] (h1 id shared.window title :: content)
+            Html.div
+                []
+                ((case depth of
+                    [] ->
+                        h1 id shared.window title
 
-                [ _ ] ->
-                    Html.div [] (h2 id title :: content)
+                    [ _ ] ->
+                        h2 id title
 
-                _ ->
-                    Html.div
-                        [ Html.Attributes.style "padding-top" "8px" ]
-                        (Html.h3
-                            [ Html.Attributes.id (Url.percentEncode title) ]
+                    _ ->
+                        Html.h3
+                            [ Html.Attributes.id (Url.percentEncode title)
+                            , noMargin
+                            ]
                             [ Html.a
                                 [ Html.Attributes.href ("#" ++ id)
                                 , Html.Attributes.style "text-decoration" "none"
@@ -146,12 +154,13 @@ viewHelper shared depth item =
                                 ]
                                 [ Html.text title ]
                             ]
-                            :: content
-                        )
+                 )
+                    :: content
+                )
 
         Image { source, maxWidth, caption } ->
             Html.figure
-                [ Html.Attributes.style "margin" "0" ]
+                [ noMargin ]
                 [ Html.img
                     [ Html.Attributes.src source
                     , Html.Attributes.style
@@ -165,11 +174,13 @@ viewHelper shared depth item =
                         )
                     , Html.Attributes.style "max-height" "500px"
                     , Html.Attributes.style "border-radius" "4px"
+                    , noMargin
                     ]
                     []
                 , Html.figcaption
                     [ Html.Attributes.style "font-size" "14px"
                     , Html.Attributes.style "padding" "0 8px 0 8px "
+                    , noMargin
                     ]
                     (List.map (inlineView shared) caption)
                 ]
@@ -215,7 +226,7 @@ viewHelper shared depth item =
                                             []
                                      )
                                         ++ [ Html.Attributes.src head.source
-                                           , Html.Attributes.style "border-radius" "6px"
+                                           , Html.Attributes.style "border-radius" "4px"
                                            , Html.Attributes.style "width" width
                                            , Html.Attributes.style "vertical-align" "top"
                                            , Html.Attributes.style "margin" (spacing ++ " 0 0 0")
@@ -236,7 +247,7 @@ viewHelper shared depth item =
                                                         []
                                                  )
                                                     ++ [ Html.Attributes.src image.source
-                                                       , Html.Attributes.style "border-radius" "6px"
+                                                       , Html.Attributes.style "border-radius" "4px"
                                                        , Html.Attributes.style "margin" (spacing ++ " 0 0 " ++ spacing)
                                                        , Html.Attributes.style "width" width
                                                        , Html.Attributes.style "vertical-align" "top"
@@ -258,6 +269,7 @@ viewHelper shared depth item =
                 , Html.Attributes.style "height" "auto"
                 , Html.Attributes.style "aspect-ratio" "21 / 9"
                 , Html.Attributes.style "border" "none"
+                , noMargin
                 ]
                 []
 
@@ -266,14 +278,21 @@ viewHelper shared depth item =
                 [ Html.Attributes.style "padding-left" "16px"
                 , colorAttribute Theme.lightTheme.mutedText
                 , Html.Attributes.style "border-left" (Color.toCssString Theme.lightTheme.grey ++ " solid 4px")
+                , noMargin
                 ]
                 (List.map (inlineView shared) items)
 
         YoutubeVideo url ->
             Html.iframe
                 [ Html.Attributes.src url
+                , noMargin
                 ]
                 []
+
+
+paddingTop : Int -> Html.Attribute msg
+paddingTop px =
+    Html.Attributes.style "padding-top" (String.fromInt px ++ "px")
 
 
 h1 : String -> Size -> String -> Html msg
@@ -290,8 +309,8 @@ h1 id window title =
             )
         , Html.Attributes.style "line-height" "1.2"
         , Html.Attributes.style "font-weight" "600"
-        , Html.Attributes.style "margin" "0"
-        , Html.Attributes.style "padding-top" "24px"
+        , Html.Attributes.style "padding" "24px 0 8px 0"
+        , noMargin
         ]
         [ Html.a
             [ Html.Attributes.href ("#" ++ id)
@@ -308,8 +327,9 @@ h2 id title =
         [ Html.Attributes.id id
         , Html.Attributes.style "font-size" "24px"
         , Html.Attributes.style "font-weight" "800"
-        , Html.Attributes.style "margin" "0"
-        , Html.Attributes.style "padding-top" "16px"
+        , Html.Attributes.style "padding" "8px 0 4px 0"
+        , Html.Attributes.style "line-height" "1.3"
+        , noMargin
         ]
         [ Html.a
             [ Html.Attributes.href ("#" ++ id)

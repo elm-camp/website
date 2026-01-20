@@ -41,7 +41,13 @@ view =
                 [ Paragraph [ Text "There is no restriction or theme on the subject for proposed topics, except that they should be with positive intent. Think do no harm and don't frame your session negatively. A simple, open question is best." ]
                 , Paragraph [ Text "If you want to talk about something and someone here wants to talk with you about it, grab some space and make it happen. You don't need permission, but keep it open to everyone and don't disrupt running sessions." ]
                 , Paragraph [ Text "Think of it as a gathering of people having open conversations" ]
-                , Paragraph [ Text "Think discussion: talk _with_, not talk _at_. Share a 20-second description of what you think would be interesting to talk about and why." ]
+                , Paragraph
+                    [ Text "Think discussion: talk "
+                    , Italic "with"
+                    , Text ", not talk "
+                    , Italic "at"
+                    , Text ". Share a 20-second description of what you think would be interesting to talk about and why."
+                    ]
                 , Paragraph [ Text "As much as possible, the organisers want to be normal session participants. We're one of you." ]
                 , Paragraph [ Text "People will be freely moving in and out of sessions. If you find yourself in an empty room, migrate." ]
                 , Paragraph [ Text "The event has some fixed infrastructure to keep the environment positive. But outside of that if you want to change something, feel free to make it happen." ]
