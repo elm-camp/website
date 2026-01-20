@@ -52,16 +52,13 @@ view model =
             ]
             [ header False model
             , Ui.column
-                [ Ui.spacing 40 ]
-                [ Ui.column
-                    Theme.contentAttributes
-                    [ Formatting.view model content
-                    , organisers model.window.width
-                    ]
-
-                --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
-                --, View.Sales.view model
+                (Ui.spacing 16 :: Theme.contentAttributes)
+                [ Formatting.view model content
+                , organisers model.window.width
                 ]
+
+            --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
+            --, View.Sales.view model
             ]
         , Theme.footer
         ]
@@ -101,6 +98,7 @@ content =
         [ Section
             "The venue"
             [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
+            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
             ]
         , Section
             "Participating in conversations"
@@ -127,7 +125,6 @@ content =
                 , Paragraph [ Text "Elm Slack: @katjam" ]
                 ]
             ]
-        , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
         ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]

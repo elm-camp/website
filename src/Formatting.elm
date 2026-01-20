@@ -305,7 +305,7 @@ h1 id window title =
                 "36px"
 
              else
-                "48px"
+                "44px"
             )
         , Html.Attributes.style "line-height" "1.2"
         , Html.Attributes.style "font-weight" "600"
@@ -327,7 +327,7 @@ h2 id title =
         [ Html.Attributes.id id
         , Html.Attributes.style "font-size" "24px"
         , Html.Attributes.style "font-weight" "800"
-        , Html.Attributes.style "padding" "8px 0 4px 0"
+        , Html.Attributes.style "padding" "4px 0 4px 0"
         , Html.Attributes.style "line-height" "1.3"
         , noMargin
         ]

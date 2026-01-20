@@ -800,18 +800,22 @@ summary model =
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
                 |> Ui.column [ Ui.width Ui.shrink ]
-        , Theme.viewIf (model.form.grantContribution /= "0")
-            (Ui.text
+        , if model.form.grantContribution == "0" then
+            Ui.none
+
+          else
+            Ui.text
                 ("Opportunity grant: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
                 )
-            )
-        , Theme.viewIf (sponsorshipTotal > 0)
-            (Ui.text
+        , if sponsorshipTotal > 0 then
+            Ui.text
                 ("Sponsorship: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
                 )
-            )
+
+          else
+            Ui.none
         , Theme.h3 ("Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total })
         ]
 
