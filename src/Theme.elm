@@ -34,6 +34,7 @@ import Html.Attributes
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
+import Types exposing (Size)
 import Ui
 import Ui.Accessibility
 import Ui.Anim
@@ -233,7 +234,7 @@ toggleButtonAttributes onPress isActive =
     ]
 
 
-rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
+rowToColumnWhen : Int -> Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 rowToColumnWhen width window attrs children =
     if window.width > width then
         Ui.row
@@ -299,7 +300,6 @@ footer =
             )
             [ footerButton CodeOfConductRoute "Code of Conduct"
             , footerButton UnconferenceFormatRoute "Unconference Guidelines"
-            , footerButton VenueAndAccessRoute "Venue & Access"
             , footerButton ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )

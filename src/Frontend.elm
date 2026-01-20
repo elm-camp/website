@@ -32,7 +32,6 @@ import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
 import List.Extra as List
-import Page.UnconferenceFormat
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Route exposing (Route(..))
 import SeqDict
@@ -44,6 +43,7 @@ import Ui.Anim
 import Ui.Font
 import Ui.Prose
 import Ui.Shadow
+import UnconferenceFormat
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
@@ -483,89 +483,6 @@ updateFromBackendLoaded msg model =
             ( { model | backendModel = Just backendModel }, Command.none )
 
 
-header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Ui.Element FrontendMsg
-header config =
-    let
-        titleSize =
-            if config.window.width < 800 then
-                64
-
-            else
-                80
-
-        elmCampTitle =
-            Ui.el
-                [ Ui.link (Route.encode Nothing Route.HomepageRoute) ]
-                (Ui.el
-                    [ Ui.width Ui.shrink
-                    , Ui.Font.size titleSize
-                    , Theme.glow
-                    , Ui.paddingXY 0 8
-                    , Ui.Font.lineHeight 1.1
-                    ]
-                    (Ui.text "Elm Camp")
-                )
-
-        elmCampNextTopLine =
-            Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
-                [ Ui.row
-                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
-                    , Ui.column
-                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
-                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
-                        , Ui.el
-                            [ Ui.width Ui.shrink
-                            , Ui.Font.weight 800
-                            , Ui.Font.color Theme.lightTheme.elmText
-                            , Ui.Font.lineHeight 1
-                            ]
-                            (Ui.text "2026")
-                        ]
-                    ]
-                , Ui.column
-                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18 ]
-                    [ Ui.el
-                        [ Ui.width Ui.shrink
-                        , Ui.Font.bold
-                        , Ui.Font.color Theme.lightTheme.defaultText
-                        ]
-                        (Ui.text Camp26Czech.location)
-                    , Ui.el
-                        [ Ui.width Ui.shrink
-                        , Ui.Font.bold
-                        , Ui.linkNewTab "https://www.hotel-pracharna.cz/en/"
-                        , Ui.Font.color Theme.lightTheme.link
-                        , Ui.Font.underline
-                        ]
-                        (Ui.text "Park Hotel Prachárna")
-                    , Ui.el
-                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        (Ui.text "Monday 15th - Thursday 18th June 2026")
-                    ]
-                ]
-    in
-    if config.window.width < 1000 || config.isCompact then
-        Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
-            [ Ui.column
-                [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
-                [ elmCampTitle
-                , elmCampNextTopLine
-                ]
-            ]
-
-    else
-        Ui.row
-            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 40, Ui.centerX ]
-            [ Ui.column
-                [ Ui.width Ui.shrink, Ui.spacing 24 ]
-                [ elmCampTitle
-                , elmCampNextTopLine
-                ]
-            ]
-
-
 view : FrontendModel -> Effect.Browser.Document FrontendMsg
 view model =
     { title = "Elm Camp"
@@ -630,26 +547,15 @@ loadedView : LoadedModel -> Ui.Element FrontendMsg
 loadedView model =
     case model.route of
         HomepageRoute ->
-            homepageView model
+            Camp26Czech.view model
 
         UnconferenceFormatRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header True model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model Page.UnconferenceFormat.view
-                    ]
-                , Theme.footer
-                ]
-
-        VenueAndAccessRoute ->
-            Ui.column
-                [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Ui.column
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model Camp26Czech.venueAccessContent
+                    [ Formatting.view model UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
@@ -657,7 +563,7 @@ loadedView model =
         CodeOfConductRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header True model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ Formatting.view model codeOfConductContent
@@ -668,7 +574,7 @@ loadedView model =
         ElmCampArchiveRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header True model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
                     [ Formatting.view model Archive.content ]
@@ -746,71 +652,6 @@ downloadTicketSalesReminder =
               }
             ]
         }
-
-
-homepageView : LoadedModel -> Ui.Element FrontendMsg
-homepageView model =
-    let
-        sidePadding =
-            if model.window.width < 800 then
-                24
-
-            else
-                60
-    in
-    Ui.column
-        []
-        [ Ui.column
-            [ Ui.spacing 50
-            , Ui.paddingWith { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
-            ]
-            [ header { window = model.window, isCompact = False, logoModel = model.logoModel }
-            , Ui.column
-                [ Ui.spacing 40 ]
-                [ Ui.column
-                    Theme.contentAttributes
-                    [ Formatting.view
-                        model
-                        [ Section "Elm Camp 2026 - Olomouc, Czechia"
-                            [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
-                            , HorizontalLine
-                            , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
-                            , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
-                            , Paragraph [ Text "Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption." ]
-                            , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
-                            ]
-                        , Images
-                            [ [ { source = "/26-park-hotel/image1.jpg"
-                                , maxWidth = Nothing
-                                , description = "Ariel view of the hotel"
-                                , link = Nothing
-                                }
-                              ]
-                            , [ { source = "/26-park-hotel/image3.jpg"
-                                , maxWidth = Nothing
-                                , description = "Photo of a conference room in the hotel"
-                                , link = Nothing
-                                }
-                              , { source = "/26-park-hotel/image2.jpg"
-                                , maxWidth = Nothing
-                                , description = "Photo of a bed room in the hotel"
-                                , link = Nothing
-                                }
-                              ]
-                            ]
-                        , Section "Organisers"
-                            [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
-                            ]
-                        ]
-                    , Camp26Czech.organisers model.window.width
-                    ]
-
-                --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
-                --, View.Sales.view model
-                ]
-            ]
-        , Theme.footer
-        ]
 
 
 jumpToId : HtmlId -> Float -> Command FrontendOnly toMsg FrontendMsg

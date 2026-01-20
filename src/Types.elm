@@ -13,6 +13,7 @@ module Types exposing
     , PendingOrder
     , Price2
     , Product(..)
+    , Size
     , Sponsorship(..)
     , StripePaymentId(..)
     , TicketAvailability
@@ -49,7 +50,7 @@ type alias LoadingModel =
     { key : Key
     , now : Time.Posix
     , zone : Maybe Time.Zone
-    , window : Maybe { width : Int, height : Int }
+    , window : Maybe Size
     , url : Url
     , isOrganiser : Bool
     , initData : Maybe InitData2
@@ -61,7 +62,7 @@ type alias LoadedModel =
     { key : Key
     , now : Time.Posix
     , zone : Maybe Time.Zone
-    , window : { width : Int, height : Int }
+    , window : Size
     , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
@@ -76,6 +77,10 @@ type alias LoadedModel =
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
     }
+
+
+type alias Size =
+    { width : Int, height : Int }
 
 
 type alias TicketAvailability =

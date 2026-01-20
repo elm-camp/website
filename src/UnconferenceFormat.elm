@@ -1,4 +1,4 @@
-module Page.UnconferenceFormat exposing (view)
+module UnconferenceFormat exposing (view)
 
 import Formatting exposing (Formatting(..), Inline(..))
 

@@ -13,6 +13,7 @@ import Html.Attributes
 import Html.Lazy
 import Route exposing (Route)
 import Theme
+import Types exposing (Size)
 import Ui
 import Url
 
@@ -43,7 +44,7 @@ type Inline
 
 
 type alias Shared a =
-    { a | window : { width : Int, height : Int } }
+    { a | window : Size }
 
 
 view : Shared b -> List Formatting -> Ui.Element msg
@@ -181,6 +182,7 @@ viewHelper shared depth item =
                         width =
                             "calc(" ++ String.fromFloat (100 / toFloat (List.length row)) ++ "% - " ++ spacing ++ ")"
 
+                        addLink : Maybe String -> Html msg -> Html msg
                         addLink maybeLink content =
                             case maybeLink of
                                 Just link ->
@@ -189,8 +191,13 @@ viewHelper shared depth item =
                                 Nothing ->
                                     content
 
+                        spacing : String
                         spacing =
-                            "10px"
+                            if shared.window.width < 800 then
+                                "6px"
+
+                            else
+                                "10px"
                     in
                     case row of
                         [] ->
@@ -269,7 +276,7 @@ viewHelper shared depth item =
                 []
 
 
-h1 : String -> { width : Int, height : Int } -> String -> Html msg
+h1 : String -> Size -> String -> Html msg
 h1 id window title =
     Html.h1
         [ Html.Attributes.id id
