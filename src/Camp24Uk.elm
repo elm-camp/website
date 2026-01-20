@@ -356,6 +356,7 @@ venueAccessContent =
                 [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
             ]
         ]
+    , Section "Our sponsors" []
     ]
 
 

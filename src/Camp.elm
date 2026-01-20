@@ -59,8 +59,7 @@ viewArchive contents config =
             ]
         , Ui.column
             Theme.contentAttributes
-            [ Formatting.h1 "sponsors" config.window "Our sponsors" |> Ui.html
-            , contents.sponsors
+            [ contents.sponsors
             ]
         , Ui.column
             Theme.contentAttributes

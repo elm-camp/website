@@ -177,6 +177,7 @@ venue =
         , Paragraph [ Text "Dallund Castle itself offers 24 rooms, additional accommodation can be found in Odense." ]
         , Paragraph [ Text "All meals are organic or biodynamic and the venue can accommodate individual allergies & intolerances. Lunches will be vegetarian, dinners will include free-range & organic meat with a vegetarian option." ]
         ]
+    , Section "Our sponsors" []
     ]
 
 

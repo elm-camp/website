@@ -185,6 +185,7 @@ venueAccessContent =
             ]
         , LegacyMap
         ]
+    , Section "Our sponsors" []
     ]
 
 
