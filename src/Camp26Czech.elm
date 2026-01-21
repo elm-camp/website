@@ -1,6 +1,7 @@
 module Camp26Czech exposing
     ( Config
     , header
+    , ticketSalesOpenAt
     , view
     )
 
@@ -16,6 +17,7 @@ import Ui.Font
 import Ui.Prose
 import View.Countdown
 import View.Logo
+import View.Sales
 
 
 type alias Config a =
@@ -148,8 +150,8 @@ content =
     ]
 
 
-ticketSaleTime : Time.Posix
-ticketSaleTime =
+ticketSalesOpenAt : Time.Posix
+ticketSalesOpenAt =
     -- 2025 Feb 28 12:00 GMT
     Time.millisToPosix 1772280000000
 
@@ -214,7 +216,7 @@ header config =
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         (Ui.text "Monday 15th - Thursday 18th June 2026")
                     ]
-                , View.Countdown.ui ticketSaleTime "Tickets on sale soon!" config
+                , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt config.timeZone config.now
                 ]
     in
     if Theme.isMobile config.window then

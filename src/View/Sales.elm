@@ -16,13 +16,11 @@ module View.Sales exposing
     , textInput
     , ticketInfo
     , ticketSalesHtmlId
-    , ticketSalesOpen
     , ticketSalesOpenCountdown
     , ticketsHtmlId
     , ticketsView
     , tooltip
     , view
-    , year
     )
 
 import Camp26Czech.Inventory as Inventory
@@ -57,21 +55,16 @@ import Ui.Shadow
 import View.Countdown
 
 
-year : String
-year =
-    "2025"
-
-
-ticketSalesOpen : Time.Posix
-ticketSalesOpen =
-    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
-
-
-view : LoadedModel -> Ui.Element FrontendMsg
-view model =
+view : Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
+view ticketSalesOpenAt model =
     let
         ticketsAreLive =
-            View.Countdown.ticketSalesLive ticketSalesOpen model
+            case View.Countdown.detailedCountdown ticketSalesOpenAt model.now of
+                Just _ ->
+                    False
+
+                Nothing ->
+                    True
 
         afterTicketsAreLive v =
             if ticketsAreLive then
@@ -124,45 +117,42 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : LoadedModel -> Ui.Element FrontendMsg
-ticketSalesOpenCountdown model =
-    let
-        ticketsAreLive =
-            View.Countdown.ticketSalesLive ticketSalesOpen model
-    in
+ticketSalesOpenCountdown : Time.Posix -> Time.Zone -> Time.Posix -> Ui.Element FrontendMsg
+ticketSalesOpenCountdown ticketSalesOpenAt timeZone now =
     Ui.column
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
-        (if ticketsAreLive then
-            [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+        (case View.Countdown.detailedCountdown ticketSalesOpenAt now of
+            Nothing ->
+                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
 
-         else
-            [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
-            , DateFormat.format
-                [ DateFormat.yearNumber
-                , DateFormat.text "-"
-                , DateFormat.monthFixed
-                , DateFormat.text "-"
-                , DateFormat.dayOfMonthFixed
-                , DateFormat.text " "
-                , DateFormat.hourMilitaryFixed
-                , DateFormat.text ":"
-                , DateFormat.minuteFixed
+            Just countdownElement ->
+                [ countdownElement
+                , DateFormat.format
+                    [ DateFormat.yearNumber
+                    , DateFormat.text "-"
+                    , DateFormat.monthFixed
+                    , DateFormat.text "-"
+                    , DateFormat.dayOfMonthFixed
+                    , DateFormat.text " "
+                    , DateFormat.hourMilitaryFixed
+                    , DateFormat.text ":"
+                    , DateFormat.minuteFixed
+                    ]
+                    timeZone
+                    ticketSalesOpenAt
+                    |> (\t ->
+                            Ui.el
+                                [ Ui.width Ui.shrink
+                                , Ui.centerX
+                                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                                ]
+                                (Ui.text t)
+                       )
+                , Ui.el
+                    (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
+                    (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
+                , Ui.text " "
                 ]
-                model.timeZone
-                ticketSalesOpen
-                |> (\t ->
-                        Ui.el
-                            [ Ui.width Ui.shrink
-                            , Ui.centerX
-                            , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
-                            ]
-                            (Ui.text t)
-                   )
-            , Ui.el
-                (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
-                (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
-            , Ui.text " "
-            ]
         )
 
 
@@ -654,13 +644,21 @@ opportunityGrant form =
         ]
 
 
-sponsorships : LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
-sponsorships model form =
+sponsorships : Time.Posix -> LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
+sponsorships ticketSalesOpenAt model form =
+    let
+        year : String
+        year =
+            Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
+    in
     Ui.column
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
+        , "Position your company as a leading supporter of the Elm community and help Elm Camp "
+            ++ year
+            ++ " achieve a reasonable ticket offering."
+            |> Ui.text
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]

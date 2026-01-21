@@ -1,7 +1,5 @@
-module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, ui)
+module View.Countdown exposing (detailedCountdown)
 
-import Date
-import DateFormat
 import Theme
 import Time exposing (Month(..))
 import Ui
@@ -9,41 +7,17 @@ import Ui.Font
 import Ui.Prose
 
 
-ui : Time.Posix -> String -> { model | timeZone : Time.Zone, now : Time.Posix } -> Ui.Element msg
-ui target description model =
-    Ui.el
-        Theme.contentAttributes
-        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Theme.h2 (asTimeToGo target model.timeZone model.now)))
-
-
-ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
-ticketSalesLive t model =
+detailedCountdown : Time.Posix -> Time.Posix -> Maybe (Ui.Element msg)
+detailedCountdown target now =
     let
-        target =
-            t |> Time.posixToMillis
+        target2 =
+            Time.posixToMillis target
 
-        now =
-            model.now
-                |> Time.posixToMillis
+        now2 =
+            Time.posixToMillis now
 
         secondsRemaining =
-            (target - now) // 1000
-    in
-    (Time.posixToMillis model.now == 0) || secondsRemaining < 0
-
-
-detailedCountdown : Time.Posix -> String -> { model | now : Time.Posix } -> Ui.Element msg
-detailedCountdown t description model =
-    let
-        target =
-            t |> Time.posixToMillis
-
-        now =
-            model.now
-                |> Time.posixToMillis
-
-        secondsRemaining =
-            (target - now) // 1000
+            (target2 - now2) // 1000
 
         days =
             secondsRemaining // (60 * 60 * 24)
@@ -82,67 +56,11 @@ detailedCountdown t description model =
             String.join " "
                 (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
-    if (Time.posixToMillis model.now == 0) || secondsRemaining < 0 then
-        Ui.none
+    if secondsRemaining < 0 then
+        Nothing
 
     else
         Ui.Prose.paragraph
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Theme.contentAttributes ++ [ Ui.Font.center ])
-            [ Theme.h2 (output ++ " " ++ description) ]
-
-
-
--- String.fromInt (target - now)
---     ++ " "
---     ++ description
-
-
-asTimeToGo : Time.Posix -> Time.Zone -> Time.Posix -> String
-asTimeToGo target timeZone now =
-    let
-        days =
-            Date.diff Date.Days (Date.fromPosix Time.utc now) (Date.fromPosix Time.utc target)
-    in
-    if target == Time.millisToPosix 0 then
-        "Never"
-
-    else if days > 84 then
-        let
-            months =
-                days // 30
-
-            days_ =
-                modBy 30 days
-        in
-        String.fromInt months ++ " months " ++ String.fromInt days_ ++ " days"
-
-    else if days > 28 then
-        let
-            weeks =
-                days // 7
-
-            days_ =
-                modBy 7 days
-        in
-        String.fromInt weeks ++ " weeks " ++ (days_ |> String.fromInt) ++ "d"
-
-    else if days == 1 then
-        DateFormat.format
-            [ DateFormat.hourMilitaryFixed
-            , DateFormat.text ":"
-            , DateFormat.minuteFixed
-            ]
-            timeZone
-            target
-            ++ " Tomorrow"
-
-    else
-        DateFormat.format
-            [ DateFormat.hourMilitaryFixed
-            , DateFormat.text ":"
-            , DateFormat.minuteFixed
-            ]
-            timeZone
-            target
-            ++ " today"
+            [ Theme.h2 (output ++ " until ticket sales open") ]
+            |> Just
