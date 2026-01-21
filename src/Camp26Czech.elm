@@ -48,8 +48,30 @@ view model =
                 [ Formatting.view model content
                 , organisers model.window
                 ]
+            , Ui.column
+                Theme.contentAttributes
+                [ Formatting.view
+                    model
+                    [ Section
+                        "Our sponsors"
+                        [ Images
+                            [ [ { source = "/sponsors/scrive-logo.svg"
+                                , maxWidth = Just 400
+                                , link = Just "https://www.scrive.com/"
+                                , description = "Scrive's logo"
+                                }
+                              ]
+                            , [ { source = "/sponsors/concentrichealthlogo.svg"
+                                , link = Just "https://concentric.health/"
+                                , maxWidth = Just 250
+                                , description = "Concentric health's logo"
+                                }
+                              ]
+                            ]
+                        ]
+                    ]
+                ]
 
-            --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
             --, View.Sales.view model
             ]
         , Theme.footer
