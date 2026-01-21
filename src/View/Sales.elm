@@ -42,24 +42,20 @@ import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
-import TimeFormat
 import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Events
 import Ui.Font
 import Ui.Input
-import Ui.Layout
 import Ui.Prose
 import Ui.Shadow
-import View.Countdown
 
 
 view : Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
 view ticketSalesOpenAt model =
     let
         ticketsAreLive =
-            case View.Countdown.detailedCountdown ticketSalesOpenAt model.now of
+            case detailedCountdown ticketSalesOpenAt model.now of
                 Just _ ->
                     False
 
@@ -117,39 +113,104 @@ view ticketSalesOpenAt model =
         ]
 
 
-ticketSalesOpenCountdown : Time.Posix -> Time.Zone -> Time.Posix -> Ui.Element FrontendMsg
-ticketSalesOpenCountdown ticketSalesOpenAt timeZone now =
+detailedCountdown : Time.Posix -> Time.Posix -> Maybe (Ui.Element msg)
+detailedCountdown target now =
+    let
+        target2 =
+            Time.posixToMillis target
+
+        now2 =
+            Time.posixToMillis now
+
+        secondsRemaining =
+            (target2 - now2) // 1000
+
+        days =
+            secondsRemaining // (60 * 60 * 24)
+
+        hours =
+            modBy 24 (secondsRemaining // (60 * 60))
+
+        minutes =
+            modBy 60 (secondsRemaining // 60)
+
+        formatDays =
+            if days > 1 then
+                Just (String.fromInt days ++ " days")
+
+            else if days == 1 then
+                Just "1 day"
+
+            else
+                Nothing
+
+        formatHours =
+            if hours > 0 then
+                Just (String.fromInt hours ++ "h")
+
+            else
+                Nothing
+
+        formatMinutes =
+            if minutes > 0 then
+                Just (String.fromInt minutes ++ "m")
+
+            else
+                Nothing
+
+        output =
+            String.join " "
+                (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
+    in
+    if secondsRemaining < 0 then
+        Nothing
+
+    else
+        Ui.Prose.paragraph
+            (Theme.contentAttributes ++ [ Ui.Font.center ])
+            [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
+            |> Just
+
+
+ticketSalesOpenCountdown : Time.Posix -> Time.Posix -> Ui.Element FrontendMsg
+ticketSalesOpenCountdown ticketSalesOpenAt now =
     Ui.column
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
-        (case View.Countdown.detailedCountdown ticketSalesOpenAt now of
+        (case detailedCountdown ticketSalesOpenAt now of
             Nothing ->
                 [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
 
             Just countdownElement ->
                 [ countdownElement
-                , DateFormat.format
-                    [ DateFormat.yearNumber
-                    , DateFormat.text "-"
-                    , DateFormat.monthFixed
-                    , DateFormat.text "-"
-                    , DateFormat.dayOfMonthFixed
-                    , DateFormat.text " "
-                    , DateFormat.hourMilitaryFixed
-                    , DateFormat.text ":"
-                    , DateFormat.minuteFixed
-                    ]
-                    timeZone
-                    ticketSalesOpenAt
-                    |> (\t ->
-                            Ui.el
-                                [ Ui.width Ui.shrink
-                                , Ui.centerX
-                                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
-                                ]
-                                (Ui.text t)
-                       )
+
+                --, DateFormat.format
+                --    [ DateFormat.yearNumber
+                --    , DateFormat.text "-"
+                --    , DateFormat.monthFixed
+                --    , DateFormat.text "-"
+                --    , DateFormat.dayOfMonthFixed
+                --    , DateFormat.text " "
+                --    , DateFormat.hourMilitaryFixed
+                --    , DateFormat.text ":"
+                --    , DateFormat.minuteFixed
+                --    ]
+                --    timeZone
+                --    ticketSalesOpenAt
+                --    |> (\t ->
+                --            Ui.el
+                --                [ Ui.width Ui.shrink
+                --                , Ui.centerX
+                --                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                --                ]
+                --                (Ui.text t)
+                --       )
                 , Ui.el
-                    (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
+                    (Theme.submitButtonAttributes DownloadTicketSalesReminder True
+                        ++ [ Ui.width (Ui.px 200)
+                           , Ui.centerX
+                           , Ui.Font.size 20
+                           ]
+                    )
                     (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
                 , Ui.text " "
                 ]

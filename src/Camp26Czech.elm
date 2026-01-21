@@ -15,7 +15,6 @@ import Types exposing (FrontendMsg, LoadedModel, Size)
 import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
-import View.Countdown
 import View.Logo
 import View.Sales
 
@@ -71,6 +70,7 @@ view model =
                                 , description = "Concentric health's logo"
                                 }
                               ]
+                            , []
                             ]
                         ]
                     ]
@@ -216,7 +216,7 @@ header config =
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         (Ui.text "Monday 15th - Thursday 18th June 2026")
                     ]
-                , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt config.timeZone config.now
+                , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt config.now
                 ]
     in
     if Theme.isMobile config.window then
