@@ -9,15 +9,17 @@ import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import Route
 import Theme
+import Time
 import Types exposing (FrontendMsg, LoadedModel, Size)
 import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
+import View.Countdown
 import View.Logo
 
 
 type alias Config a =
-    { a | window : Size, logoModel : View.Logo.Model }
+    { a | window : Size, logoModel : View.Logo.Model, now : Time.Posix, timeZone : Time.Zone }
 
 
 meta : Camp.Meta
@@ -146,6 +148,12 @@ content =
     ]
 
 
+ticketSaleTime : Time.Posix
+ticketSaleTime =
+    -- 2025 Feb 28 12:00 GMT
+    Time.millisToPosix 1772280000000
+
+
 header : Config a -> Ui.Element FrontendMsg
 header config =
     let
@@ -170,7 +178,7 @@ header config =
                 )
 
         elmCampNextTopLine =
-            Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
+            Ui.column [ Ui.spacing 30 ]
                 [ Ui.row
                     [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
                     [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
@@ -187,7 +195,7 @@ header config =
                         ]
                     ]
                 , Ui.column
-                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18 ]
+                    [ Ui.spacing 8, Ui.Font.size 18 ]
                     [ Ui.el
                         [ Ui.width Ui.shrink
                         , Ui.Font.bold
@@ -206,6 +214,7 @@ header config =
                         [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
                         (Ui.text "Monday 15th - Thursday 18th June 2026")
                     ]
+                , View.Countdown.ui ticketSaleTime "Tickets on sale soon!" config
                 ]
     in
     if Theme.isMobile config.window then

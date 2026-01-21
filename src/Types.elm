@@ -48,8 +48,8 @@ type FrontendModel
 
 type alias LoadingModel =
     { key : Key
-    , now : Time.Posix
-    , zone : Maybe Time.Zone
+    , now : Maybe Time.Posix
+    , timeZone : Maybe Time.Zone
     , window : Maybe Size
     , url : Url
     , isOrganiser : Bool
@@ -61,7 +61,7 @@ type alias LoadingModel =
 type alias LoadedModel =
     { key : Key
     , now : Time.Posix
-    , zone : Maybe Time.Zone
+    , timeZone : Time.Zone
     , window : Size
     , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )

@@ -2,30 +2,18 @@ module View.Countdown exposing (asTimeToGo, detailedCountdown, ticketSalesLive, 
 
 import Date
 import DateFormat
-import Effect.Time as Time
 import Theme
-import TimeFormat exposing (Zoned)
+import Time exposing (Month(..))
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 
 
-ui : String -> String -> { model | now : Time.Posix } -> Ui.Element msg
-ui t description model =
-    let
-        target =
-            TimeFormat.certain t Time.utc
-
-        now =
-            model.now
-                |> Time.posixToMillis
-    in
+ui : Time.Posix -> String -> { model | timeZone : Time.Zone, now : Time.Posix } -> Ui.Element msg
+ui target description model =
     Ui.el
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
-        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Theme.h2 (asTimeToGo target model.now)))
+        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Theme.h2 (asTimeToGo target model.timeZone model.now)))
 
 
 ticketSalesLive : Time.Posix -> { model | now : Time.Posix } -> Bool
@@ -110,13 +98,13 @@ detailedCountdown t description model =
 --     ++ description
 
 
-asTimeToGo : Zoned -> Time.Posix -> String
-asTimeToGo zoned now =
+asTimeToGo : Time.Posix -> Time.Zone -> Time.Posix -> String
+asTimeToGo target timeZone now =
     let
         days =
-            Date.diff Date.Days (Date.fromPosix Time.utc now) (Date.fromPosix Time.utc zoned.time)
+            Date.diff Date.Days (Date.fromPosix Time.utc now) (Date.fromPosix Time.utc target)
     in
-    if zoned.time == Time.millisToPosix 0 then
+    if target == Time.millisToPosix 0 then
         "Never"
 
     else if days > 84 then
@@ -145,8 +133,8 @@ asTimeToGo zoned now =
             , DateFormat.text ":"
             , DateFormat.minuteFixed
             ]
-            zoned.zone
-            zoned.time
+            timeZone
+            target
             ++ " Tomorrow"
 
     else
@@ -155,6 +143,6 @@ asTimeToGo zoned now =
             , DateFormat.text ":"
             , DateFormat.minuteFixed
             ]
-            zoned.zone
-            zoned.time
+            timeZone
+            target
             ++ " today"

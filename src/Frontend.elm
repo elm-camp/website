@@ -126,8 +126,8 @@ init url key =
     in
     ( Loading
         { key = key
-        , now = Time.millisToPosix 0
-        , zone = Nothing
+        , now = Nothing
+        , timeZone = Nothing
         , window = Nothing
         , initData = Nothing
         , url = url
@@ -166,10 +166,10 @@ update msg model =
                     tryLoading { loading | window = Just { width = width, height = height } }
 
                 Tick now ->
-                    ( Loading { loading | now = now }, Command.none )
+                    tryLoading { loading | now = Just now }
 
                 GotZone zone ->
-                    ( Loading { loading | zone = Just zone }, Command.none )
+                    tryLoading { loading | timeZone = Just zone }
 
                 _ ->
                     ( model, Command.none )
@@ -180,12 +180,12 @@ update msg model =
 
 tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
-    Maybe.map2
-        (\window { slotsRemaining, prices, ticketsEnabled } ->
+    Maybe.map4
+        (\window { slotsRemaining, prices, ticketsEnabled } now timeZone ->
             ( Loaded
                 { key = loadingModel.key
-                , now = loadingModel.now
-                , zone = loadingModel.zone
+                , now = now
+                , timeZone = timeZone
                 , window = window
                 , showTooltip = False
                 , prices = prices
@@ -211,6 +211,8 @@ tryLoading loadingModel =
         )
         loadingModel.window
         loadingModel.initData
+        loadingModel.now
+        loadingModel.timeZone
         |> Maybe.withDefault ( Loading loadingModel, Command.none )
 
 
@@ -248,7 +250,7 @@ updateLoaded msg model =
             ( { model | now = now }, Command.none )
 
         GotZone zone ->
-            ( { model | zone = Just zone }, Command.none )
+            ( { model | timeZone = zone }, Command.none )
 
         GotWindowSize width height ->
             ( { model | window = { width = width, height = height } }, Command.none )

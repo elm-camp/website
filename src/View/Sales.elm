@@ -131,39 +131,33 @@ ticketSalesOpenCountdown model =
             View.Countdown.ticketSalesLive ticketSalesOpen model
     in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         (if ticketsAreLive then
             [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
 
          else
             [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
-            , case model.zone of
-                Just zone ->
-                    DateFormat.format
-                        [ DateFormat.yearNumber
-                        , DateFormat.text "-"
-                        , DateFormat.monthFixed
-                        , DateFormat.text "-"
-                        , DateFormat.dayOfMonthFixed
-                        , DateFormat.text " "
-                        , DateFormat.hourMilitaryFixed
-                        , DateFormat.text ":"
-                        , DateFormat.minuteFixed
-                        ]
-                        zone
-                        ticketSalesOpen
-                        |> (\t ->
-                                Ui.el
-                                    [ Ui.width Ui.shrink
-                                    , Ui.centerX
-                                    , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
-                                    ]
-                                    (Ui.text t)
-                           )
-
-                _ ->
-                    Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "nozone")
+            , DateFormat.format
+                [ DateFormat.yearNumber
+                , DateFormat.text "-"
+                , DateFormat.monthFixed
+                , DateFormat.text "-"
+                , DateFormat.dayOfMonthFixed
+                , DateFormat.text " "
+                , DateFormat.hourMilitaryFixed
+                , DateFormat.text ":"
+                , DateFormat.minuteFixed
+                ]
+                model.timeZone
+                ticketSalesOpen
+                |> (\t ->
+                        Ui.el
+                            [ Ui.width Ui.shrink
+                            , Ui.centerX
+                            , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                            ]
+                            (Ui.text t)
+                   )
             , Ui.el
                 (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
                 (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
