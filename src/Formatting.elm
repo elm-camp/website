@@ -312,7 +312,7 @@ h1 id window title =
             )
         , Html.Attributes.style "line-height" "1.2"
         , Html.Attributes.style "font-weight" "600"
-        , Html.Attributes.style "padding" "24px 0 8px 0"
+        , Html.Attributes.style "padding" "48px 0 8px 0"
         , noMargin
         ]
         [ Html.a
