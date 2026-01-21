@@ -70,7 +70,9 @@ view model =
                                 , description = "Concentric health's logo"
                                 }
                               ]
-                            , []
+                            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
+                              , { source = "/sponsors/elm-weekly.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
+                              ]
                             ]
                         ]
                     ]
