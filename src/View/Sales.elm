@@ -6,10 +6,8 @@ module View.Sales exposing
     , errorText
     , formView
     , goToTicketSales
-    , grantApplicationCopy
     , opportunityGrant
     , opportunityGrantInfo
-    , organisersInfo
     , radioButton
     , sponsorshipOption
     , sponsorships
@@ -18,61 +16,51 @@ module View.Sales exposing
     , textInput
     , ticketInfo
     , ticketSalesHtmlId
-    , ticketSalesOpen
     , ticketSalesOpenCountdown
     , ticketsHtmlId
     , ticketsView
     , tooltip
     , view
-    , year
     )
 
-import Camp25US.Inventory as Inventory
-import Camp25US.Product as Product
-import Camp25US.Tickets as Tickets
+import Camp26Czech.Inventory as Inventory
+import Camp26Czech.Product as Product
+import Camp26Czech.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
+import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Html
 import Html.Attributes
 import Html.Events
 import Id exposing (Id)
 import List.Extra as List
-import MarkdownThemed
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
 import Theme exposing (normalButtonAttributes, showyButtonAttributes)
-import TimeFormat
 import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
-import Ui.Anim
 import Ui.Events
 import Ui.Font
 import Ui.Input
-import Ui.Layout
 import Ui.Prose
 import Ui.Shadow
-import View.Countdown
 
 
-year : String
-year =
-    "2025"
-
-
-ticketSalesOpen : Time.Posix
-ticketSalesOpen =
-    (TimeFormat.certain "2025-04-04T19:00" Time.utc).time
-
-
-view : LoadedModel -> Ui.Element FrontendMsg
-view model =
+view : Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
+view ticketSalesOpenAt model =
     let
         ticketsAreLive =
-            View.Countdown.ticketSalesLive ticketSalesOpen model
+            case detailedCountdown ticketSalesOpenAt model.now of
+                Just _ ->
+                    False
+
+                Nothing ->
+                    True
 
         afterTicketsAreLive v =
             if ticketsAreLive then
@@ -89,12 +77,10 @@ view model =
                 v
     in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
         [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
           beforeTicketsAreLive
             (Ui.column
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.contentAttributes
                 [ ticketInfo model
                 ]
@@ -104,26 +90,15 @@ view model =
             , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
             [ Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                 Theme.contentAttributes
-                opportunityGrantInfo
-            , grantApplicationCopy
-                |> MarkdownThemed.renderFull
-                |> Ui.el
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-            , Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                Theme.contentAttributes
-                organisersInfo
+                (Formatting.view model opportunityGrantInfo)
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive
-                (Ui.el
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-                    (MarkdownThemed.renderFull "# Attend Elm Camp")
-                )
+            --, afterTicketsAreLive
+            --    (Ui.el
+            --        Theme.contentAttributes
+            --        (MarkdownThemed.renderFull "# Attend Elm Camp")
+            --    )
             , afterTicketsAreLive (ticketsView model)
             , afterTicketsAreLive (accommodationView model)
             , afterTicketsAreLive
@@ -138,51 +113,107 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : LoadedModel -> Ui.Element FrontendMsg
-ticketSalesOpenCountdown model =
+detailedCountdown : Time.Posix -> Time.Posix -> Maybe (Ui.Element msg)
+detailedCountdown target now =
     let
-        ticketsAreLive =
-            View.Countdown.ticketSalesLive ticketSalesOpen model
+        target2 =
+            Time.posixToMillis target
+
+        now2 =
+            Time.posixToMillis now
+
+        secondsRemaining =
+            (target2 - now2) // 1000
+
+        days =
+            secondsRemaining // (60 * 60 * 24)
+
+        hours =
+            modBy 24 (secondsRemaining // (60 * 60))
+
+        minutes =
+            modBy 60 (secondsRemaining // 60)
+
+        formatDays =
+            if days > 1 then
+                Just (String.fromInt days ++ " days")
+
+            else if days == 1 then
+                Just "1 day"
+
+            else
+                Nothing
+
+        formatHours =
+            if hours > 0 then
+                Just (String.fromInt hours ++ "h")
+
+            else
+                Nothing
+
+        formatMinutes =
+            if minutes > 0 then
+                Just (String.fromInt minutes ++ "m")
+
+            else
+                Nothing
+
+        output =
+            String.join " "
+                (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
     in
+    if secondsRemaining < 0 then
+        Nothing
+
+    else
+        Ui.Prose.paragraph
+            (Theme.contentAttributes ++ [ Ui.Font.center ])
+            [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
+            |> Just
+
+
+ticketSalesOpenCountdown : Time.Posix -> Time.Posix -> Ui.Element FrontendMsg
+ticketSalesOpenCountdown ticketSalesOpenAt now =
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
-        (if ticketsAreLive then
-            [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+        (case detailedCountdown ticketSalesOpenAt now of
+            Nothing ->
+                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
 
-         else
-            [ View.Countdown.detailedCountdown ticketSalesOpen "until ticket sales open" model
-            , case model.zone of
-                Just zone ->
-                    DateFormat.format
-                        [ DateFormat.yearNumber
-                        , DateFormat.text "-"
-                        , DateFormat.monthFixed
-                        , DateFormat.text "-"
-                        , DateFormat.dayOfMonthFixed
-                        , DateFormat.text " "
-                        , DateFormat.hourMilitaryFixed
-                        , DateFormat.text ":"
-                        , DateFormat.minuteFixed
-                        ]
-                        zone
-                        ticketSalesOpen
-                        |> (\t ->
-                                Ui.el
-                                    [ Ui.width Ui.shrink
-                                    , Ui.centerX
-                                    , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
-                                    ]
-                                    (Ui.text t)
-                           )
+            Just countdownElement ->
+                [ countdownElement
 
-                _ ->
-                    Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "nozone")
-            , Ui.el
-                (Theme.submitButtonAttributes DownloadTicketSalesReminder True ++ [ Ui.width (Ui.px 200), Ui.centerX ])
-                (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
-            , Ui.text " "
-            ]
+                --, DateFormat.format
+                --    [ DateFormat.yearNumber
+                --    , DateFormat.text "-"
+                --    , DateFormat.monthFixed
+                --    , DateFormat.text "-"
+                --    , DateFormat.dayOfMonthFixed
+                --    , DateFormat.text " "
+                --    , DateFormat.hourMilitaryFixed
+                --    , DateFormat.text ":"
+                --    , DateFormat.minuteFixed
+                --    ]
+                --    timeZone
+                --    ticketSalesOpenAt
+                --    |> (\t ->
+                --            Ui.el
+                --                [ Ui.width Ui.shrink
+                --                , Ui.centerX
+                --                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                --                ]
+                --                (Ui.text t)
+                --       )
+                , Ui.el
+                    (Theme.submitButtonAttributes DownloadTicketSalesReminder True
+                        ++ [ Ui.width (Ui.px 200)
+                           , Ui.centerX
+                           , Ui.Font.size 20
+                           ]
+                    )
+                    (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
+                , Ui.text " "
+                ]
         )
 
 
@@ -277,50 +308,36 @@ ticketInfo model =
                 Nothing ->
                     "Price not available"
     in
-    """
-# Tickets
+    [ Section "Tickets"
+        [ Paragraph [ Text "There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms. The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds are beautiful and include woodland, a swimming lake and a firepit." ]
+        , Paragraph [ Text "Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction." ]
+        , Section "All tickets include full access to the event 18th - 21st June 2024 and all meals."
+            [ BulletList
+                [ Text ("Staying offsite – " ++ offsitePrice) ]
+                [ Paragraph [ Text "You will organise your own accommodation elsewhere." ] ]
+            , BulletList
+                [ if campingPrice == "£0" || campingPrice == "$0" then
+                    Text "Camping space – Free"
 
-There is a mix of room types — singles, doubles, dorm style rooms
-suitable for up to four people. Attendees will self-organize
-to distribute among the rooms and share bathrooms.
-The facilities for those who wish to bring a tent or campervan and camp
-are excellent. The surrounding grounds are
-beautiful and include woodland, a swimming lake and a firepit.
-
-Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction.
-
-## All tickets include full access to the event 18th - 21st June 2024 and all meals.
-
-### Staying offsite - """
-        ++ offsitePrice
-        ++ """
-You will organise your own accommodation elsewhere.
-
-### Camping space – """
-        ++ (if campingPrice == "£0" || campingPrice == "$0" then
-                "Free"
-
-            else
-                campingPrice
-           )
-        ++ """
-- Bring your own tent or campervan and stay on site
-- Showers & toilets provided
-
-### Shared room - """
-        ++ dormPrice
-        ++ """
-- Suitable for a couple or up to 4 people in twin beds
-
-### Single room – """
-        ++ singlePrice
-        ++ """
-- Limited availability
-
-
-This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms.
-"""
-        |> MarkdownThemed.renderFull
+                  else
+                    Text ("Camping space – " ++ campingPrice)
+                ]
+                [ Paragraph [ Text "Bring your own tent or campervan and stay on site" ]
+                , Paragraph [ Text "Showers & toilets provided" ]
+                ]
+            , BulletList
+                [ Text ("Shared room – " ++ dormPrice) ]
+                [ Paragraph [ Text "Suitable for a couple or up to 4 people in twin beds" ]
+                ]
+            , BulletList
+                [ Text ("Single room – " ++ singlePrice) ]
+                [ Paragraph [ Text "Limited availability" ]
+                ]
+            ]
+        , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
+        ]
+    ]
+        |> Formatting.view model
 
 
 ticketsHtmlId : HtmlId
@@ -328,66 +345,35 @@ ticketsHtmlId =
     Dom.id "tickets"
 
 
-grantApplicationCopy : String
-grantApplicationCopy =
-    """
-
-## 🤗 Opportunity grant applications
-
-If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help.
-
-Please apply by sending an email to [team@elm.camp](mailto:team@elm.camp). The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process.
-
-All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants.
-"""
-
-
-opportunityGrantInfo : Ui.Element msg
+opportunityGrantInfo : List Formatting
 opportunityGrantInfo =
-    """
-# 🫶 Opportunity grant
-
-Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again.
-
-"""
-        |> MarkdownThemed.renderFull
-
-
-organisersInfo : Ui.Element msg
-organisersInfo =
-    """
-
-# Organisers
-
-Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community.
-
-"""
-        |> MarkdownThemed.renderFull
+    [ Section "🫶 Opportunity grant"
+        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
+        , Section "🤗 Opportunity grant applications"
+            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
+            , Paragraph
+                [ Text "Please apply by sending an email to "
+                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                , Text ". The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process."
+                ]
+            , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
+            ]
+        ]
+    ]
 
 
 ticketsView : LoadedModel -> Ui.Element FrontendMsg
 ticketsView model =
-    let
-        attendanceTicketPriceText =
-            -- Look up the attendance ticket price from model.prices
-            case SeqDict.get (Id.fromString Product.ticket.attendanceTicket) model.prices of
-                Just priceInfo ->
-                    " - " ++ Theme.priceText priceInfo.price
-
-                Nothing ->
-                    " - Price not available"
-    in
     Ui.column
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
         [ Ui.row
             [ Ui.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
             ]
-            [ Ui.column []
-                [ """## 🎟️ Attendee Details
-Please enter details for each person attending Elm camp, then select your accommodation below.
-                """
-                    |> MarkdownThemed.renderFull
+            [ Ui.column
+                []
+                [ Formatting.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
+                , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
                 ]
             , Ui.column [ Ui.width Ui.shrink ]
                 [ Theme.numericField
@@ -449,14 +435,12 @@ accommodationView model =
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
-            , """
-Please select one accommodation option per attendee.
-
-There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared.
-
-The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit.
-"""
-                |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph [ Text "Please select one accommodation option per attendee." ]
+                , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared." ]
+                , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
+                ]
             ]
         , SeqDict.toList Tickets.accommodationOptions
             |> List.reverse
@@ -527,18 +511,18 @@ formView model productId priceId ticket =
         includesRoom =
             Tickets.formIncludesRoom form
 
-        orderNotes =
-            if includesAccom && not hasAttendees then
-                "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
-
-            else if not includesAccom && hasAttendees then
-                "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
-
-            else if not includesRoom then
-                "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
-
-            else
-                ""
+        --orderNotes =
+        --    if includesAccom && not hasAttendees then
+        --        "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
+        --
+        --    else if not includesAccom && hasAttendees then
+        --        "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
+        --
+        --    else if not includesRoom then
+        --        "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
+        --
+        --    else
+        --        ""
     in
     Ui.column
         [ Ui.spacing 60 ]
@@ -558,7 +542,8 @@ formView model productId priceId ticket =
                    ]
             )
             [ Ui.none
-            , MarkdownThemed.renderFull orderNotes
+
+            --, MarkdownThemed.renderFull orderNotes
             , textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
@@ -575,18 +560,25 @@ formView model productId priceId ticket =
 
                 SubmitBackendError err ->
                     Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text err ]
-            , """
-Your order will be processed by Elm Camp's fiscal host: <img src="/sponsors/cofoundry.png" width="100" />.
-
-By purchasing you agree to the event [Code of Conduct](/code-of-conduct).
-""" |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
+                , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
+                , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
+                ]
             , if model.window.width > 600 then
                 Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
 
               else
                 Ui.column [ Ui.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
-            , """Problem with something above? Get in touch with the team at [team@elm.camp](mailto:team@elm.camp)."""
-                |> MarkdownThemed.renderFull
+            , Formatting.view
+                model
+                [ Paragraph
+                    [ Text "Problem with something above? Get in touch with the team at "
+                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                    , Text "."
+                    ]
+                ]
             ]
         ]
 
@@ -713,13 +705,21 @@ opportunityGrant form =
         ]
 
 
-sponsorships : LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
-sponsorships model form =
+sponsorships : Time.Posix -> LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
+sponsorships ticketSalesOpenAt model form =
+    let
+        year : String
+        year =
+            Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
+    in
     Ui.column
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (Theme.contentAttributes ++ [ Ui.spacing 20 ])
         [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text ("Position your company as a leading supporter of the Elm community and help Elm Camp " ++ year ++ " achieve a reasonable ticket offering.") ]
+        , "Position your company as a leading supporter of the Elm community and help Elm Camp "
+            ++ year
+            ++ " achieve a reasonable ticket offering."
+            |> Ui.text
         , Product.sponsorshipItems
             |> List.map (sponsorshipOption model form)
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]
@@ -853,18 +853,22 @@ summary model =
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
                 |> Ui.column [ Ui.width Ui.shrink ]
-        , Theme.viewIf (model.form.grantContribution /= "0")
-            (Ui.text
+        , if model.form.grantContribution == "0" then
+            Ui.none
+
+          else
+            Ui.text
                 ("Opportunity grant: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
                 )
-            )
-        , Theme.viewIf (sponsorshipTotal > 0)
-            (Ui.text
+        , if sponsorshipTotal > 0 then
+            Ui.text
                 ("Sponsorship: "
                     ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
                 )
-            )
+
+          else
+            Ui.none
         , Theme.h3 ("Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total })
         ]
 

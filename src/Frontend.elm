@@ -1,10 +1,10 @@
 module Frontend exposing (app, app_)
 
 import Admin
+import Archive
 import Browser
 import Browser.Navigation exposing (Key)
 import Camp23Denmark
-import Camp23Denmark.Artifacts
 import Camp24Uk
 import Camp25US
 import Camp26Czech
@@ -24,30 +24,26 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
+import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
-import LamderaRPC
 import List.Extra as List
-import MarkdownThemed
-import Page.UnconferenceFormat
-import Ports
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
-import Route exposing (Route(..), SubPage(..))
+import Route exposing (Route(..))
 import SeqDict
 import Stripe
-import Task as TaskCore
-import Theme exposing (normalButtonAttributes)
+import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
 import Ui.Shadow
+import UnconferenceFormat
 import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
@@ -120,9 +116,6 @@ queryBool name =
 init : Url.Url -> Navigation.Key -> ( FrontendModel, Command FrontendOnly ToBackend FrontendMsg )
 init url key =
     let
-        route =
-            Route.decode url
-
         isOrganiser =
             case url |> Url.Parser.parse (Url.Parser.top <?> queryBool "organiser") of
                 Just (Just isOrganiser_) ->
@@ -133,11 +126,11 @@ init url key =
     in
     ( Loading
         { key = key
-        , now = Time.millisToPosix 0
-        , zone = Nothing
+        , now = Nothing
+        , timeZone = Nothing
         , window = Nothing
         , initData = Nothing
-        , route = route
+        , url = url
         , isOrganiser = isOrganiser
         , elmUiState = Ui.Anim.init
         }
@@ -146,7 +139,7 @@ init url key =
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , Time.now |> Task.perform Tick
         , Time.here |> Task.perform GotZone
-        , case route of
+        , case Route.decode url of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
 
@@ -173,10 +166,10 @@ update msg model =
                     tryLoading { loading | window = Just { width = width, height = height } }
 
                 Tick now ->
-                    ( Loading { loading | now = now }, Command.none )
+                    tryLoading { loading | now = Just now }
 
                 GotZone zone ->
-                    ( Loading { loading | zone = Just zone }, Command.none )
+                    tryLoading { loading | timeZone = Just zone }
 
                 _ ->
                     ( model, Command.none )
@@ -187,18 +180,18 @@ update msg model =
 
 tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
-    Maybe.map2
-        (\window { slotsRemaining, prices, ticketsEnabled } ->
+    Maybe.map4
+        (\window { slotsRemaining, prices, ticketsEnabled } now timeZone ->
             ( Loaded
                 { key = loadingModel.key
-                , now = loadingModel.now
-                , zone = loadingModel.zone
+                , now = now
+                , timeZone = timeZone
                 , window = window
                 , showTooltip = False
                 , prices = prices
                 , selectedTicket = Nothing
                 , form = PurchaseForm.init
-                , route = loadingModel.route
+                , route = Route.decode loadingModel.url
                 , showCarbonOffsetTooltip = False
                 , slotsRemaining = slotsRemaining
                 , isOrganiser = loadingModel.isOrganiser
@@ -208,11 +201,18 @@ tryLoading loadingModel =
                 , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
                 }
-            , Command.none
+            , case loadingModel.url.fragment of
+                Just fragment ->
+                    scrollToFragment (Dom.id fragment)
+
+                Nothing ->
+                    Command.none
             )
         )
         loadingModel.window
         loadingModel.initData
+        loadingModel.now
+        loadingModel.timeZone
         |> Maybe.withDefault ( Loading loadingModel, Command.none )
 
 
@@ -223,7 +223,7 @@ updateLoaded msg model =
             case urlRequest of
                 Browser.Internal url ->
                     ( model
-                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode)
+                    , Navigation.pushUrl model.key (Route.decode url |> Route.encode url.fragment)
                     )
 
                 Browser.External url ->
@@ -232,13 +232,25 @@ updateLoaded msg model =
                     )
 
         UrlChanged url ->
-            ( { model | route = Route.decode url }, scrollToTop )
+            let
+                route : Route
+                route =
+                    Route.decode url
+            in
+            ( { model | route = route }
+            , case url.fragment of
+                Just fragment ->
+                    scrollToFragment (Dom.id fragment)
+
+                Nothing ->
+                    scrollToTop
+            )
 
         Tick now ->
             ( { model | now = now }, Command.none )
 
         GotZone zone ->
-            ( { model | zone = Just zone }, Command.none )
+            ( { model | timeZone = zone }, Command.none )
 
         GotWindowSize width height ->
             ( { model | window = { width = width, height = height } }, Command.none )
@@ -371,6 +383,9 @@ updateLoaded msg model =
         ElmUiMsg elmUiMsg ->
             ( { model | elmUiState = Ui.Anim.update elmUiMsg model.elmUiState }, Command.none )
 
+        ScrolledToFragment ->
+            ( model, Command.none )
+
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
 -}
@@ -418,6 +433,13 @@ scrollToTop =
     Dom.setViewport 0 0 |> Task.perform (\() -> SetViewport)
 
 
+scrollToFragment : HtmlId -> Command FrontendOnly toMsg FrontendMsg
+scrollToFragment fragment =
+    Dom.getElement fragment
+        |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
+        |> Task.attempt (\_ -> ScrolledToFragment)
+
+
 updateFromBackend : ToFrontend -> FrontendModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 updateFromBackend msg model =
     case model of
@@ -461,80 +483,6 @@ updateFromBackendLoaded msg model =
 
         AdminInspectResponse backendModel ->
             ( { model | backendModel = Just backendModel }, Command.none )
-
-
-header : { window : { width : Int, height : Int }, isCompact : Bool, logoModel : View.Logo.Model } -> Ui.Element FrontendMsg
-header config =
-    let
-        titleSize =
-            if config.window.width < 800 then
-                64
-
-            else
-                80
-
-        elmCampTitle =
-            Ui.el
-                [ Ui.link (Route.encode Route.HomepageRoute) ]
-                (Ui.el
-                    [ Ui.width Ui.shrink
-                    , Ui.Font.size titleSize
-                    , Theme.glow
-                    , Ui.paddingXY 0 8
-                    , Ui.Font.lineHeight 1.1
-                    ]
-                    (Ui.text "Elm Camp")
-                )
-
-        elmCampNextTopLine =
-            Ui.column [ Ui.width Ui.shrink, Ui.spacing 30 ]
-                [ Ui.row
-                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
-                    , Ui.column
-                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
-                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
-                        , Ui.el
-                            [ Ui.width Ui.shrink
-                            , Ui.Font.weight 800
-                            , Ui.Font.color Theme.lightTheme.elmText
-                            , Ui.Font.lineHeight 1
-                            ]
-                            (Ui.text "2026")
-                        ]
-                    ]
-                , Ui.column
-                    [ Ui.width Ui.shrink, Ui.spacing 8, Ui.Font.size 18, Ui.move { x = 0, y = -1, z = 0 } ]
-                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text "")
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ] (Ui.text Camp26Czech.location)
-                    , Ui.el
-                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        ("[Park Hotel Prachárna](https://www.hotel-pracharna.cz/en/)" |> MarkdownThemed.renderFull)
-                    , Ui.el
-                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        (Ui.text "Monday 15th - Thursday 18th June 2026")
-                    ]
-                ]
-    in
-    if config.window.width < 1000 || config.isCompact then
-        Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
-            [ Ui.column
-                [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
-                [ elmCampTitle
-                , elmCampNextTopLine
-                ]
-            ]
-
-    else
-        Ui.row
-            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 40, Ui.centerX ]
-            [ Ui.column
-                [ Ui.width Ui.shrink, Ui.spacing 24 ]
-                [ elmCampTitle
-                , elmCampNextTopLine
-                ]
-            ]
 
 
 view : FrontendModel -> Effect.Browser.Document FrontendMsg
@@ -601,28 +549,15 @@ loadedView : LoadedModel -> Ui.Element FrontendMsg
 loadedView model =
     case model.route of
         HomepageRoute ->
-            homepageView model
+            Camp26Czech.view model
 
         UnconferenceFormatRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header model
                 , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Page.UnconferenceFormat.view
-                    ]
-                , Theme.footer
-                ]
-
-        VenueAndAccessRoute ->
-            Ui.column
-                [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Camp26Czech.venueAccessContent
+                    [ Formatting.view model UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
@@ -630,24 +565,10 @@ loadedView model =
         CodeOfConductRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header model
                 , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ codeOfConductContent
-                    ]
-                , Theme.footer
-                ]
-
-        OrganisersRoute ->
-            Ui.column
-                [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
-                , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ View.Sales.organisersInfo
-                    , Camp26Czech.organisers model.window.width
+                    [ Formatting.view model codeOfConductContent
                     ]
                 , Theme.footer
                 ]
@@ -655,11 +576,10 @@ loadedView model =
         ElmCampArchiveRoute ->
             Ui.column
                 [ Ui.height Ui.fill ]
-                [ header { window = model.window, isCompact = True, logoModel = model.logoModel }
+                [ Camp26Czech.header model
                 , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ elmCampArchiveContent model ]
+                    [ Formatting.view model Archive.content ]
                 , Theme.footer
                 ]
 
@@ -695,17 +615,14 @@ loadedView model =
                 , returnToHomepageButton
                 ]
 
-        Camp23Denmark subpage ->
-            Camp23Denmark.view model subpage
+        Camp23Denmark ->
+            Camp23Denmark.view model
 
-        Camp24Uk subpage ->
-            Camp24Uk.view model subpage
+        Camp24Uk ->
+            Camp24Uk.view model
 
-        Camp25US subpage ->
-            Camp25US.view model subpage
-
-        Camp26Czech subpage ->
-            Camp26Czech.view model subpage
+        Camp25US ->
+            Camp25US.view model
 
 
 returnToHomepageButton : Ui.Element msg
@@ -718,7 +635,7 @@ returnToHomepageButton =
         , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
         , Ui.Font.weight 600
         , Ui.width Ui.shrink
-        , Ui.link (Route.encode HomepageRoute)
+        , Ui.link (Route.encode Nothing HomepageRoute)
         , Ui.contentCenterX
         ]
         (Ui.text "Return to homepage")
@@ -731,52 +648,12 @@ downloadTicketSalesReminder =
         , prodid = { company = "elm-camp", product = "website" }
         , events =
             [ { uid = "elm-camp-ticket-sale-starts"
-              , start = View.Sales.ticketSalesOpen
+              , start = Camp26Czech.ticketSalesOpenAt
               , summary = "Elm Camp Ticket Sale Starts"
               , description = "Can't wait to see you there!"
               }
             ]
         }
-
-
-homepageView : LoadedModel -> Ui.Element FrontendMsg
-homepageView model =
-    let
-        sidePadding =
-            if model.window.width < 800 then
-                24
-
-            else
-                60
-    in
-    Ui.column
-        []
-        [ Ui.column
-            [ Ui.spacing 50
-            , Ui.paddingWith { left = sidePadding, right = sidePadding, top = 0, bottom = 24 }
-            ]
-            [ header { window = model.window, isCompact = False, logoModel = model.logoModel }
-            , Ui.column
-                [ Ui.spacing 40 ]
-                [ --View.Sales.ticketSalesOpenCountdown model
-                  Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-                    [ elmCampOverview ]
-                , Ui.column
-                    -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                    Theme.contentAttributes
-                    [ Camp26Czech.venuePictures model
-
-                    --, Camp26Czech.conferenceSummary
-                    ]
-
-                --, Element.column Theme.contentAttributes [ MarkdownThemed.renderFull "# Our sponsors", Camp26Czech.sponsors model.window ]
-                --, View.Sales.view model
-                ]
-            ]
-        , Theme.footer
-        ]
 
 
 jumpToId : HtmlId -> Float -> Command FrontendOnly toMsg FrontendMsg
@@ -787,121 +664,91 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-elmCampOverview : Ui.Element msg
-elmCampOverview =
-    """
-# Elm Camp 2026 - Olomouc, Czechia
-
-Elm Camp returns for its 4th year, this time in Olomouc, Czechia!
-
----
-
-Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome.
-
-Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language.
-
-Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption.
-
-We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals.
-
-"""
-        |> MarkdownThemed.renderFull
-
-
-codeOfConductContent : Ui.Element msg
+codeOfConductContent : List Formatting
 codeOfConductContent =
-    """
-# Code of Conduct
-
-Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions.
-<br/>
-## Help everyone feel welcome at Elm Camp
-
-Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds.
-
-We expect everyone here to ensure that our community is harrassment-free for everyone.
-
-### Examples of behaviours that help us to provide an an open, welcoming, diverse, inclusive, and healthy community:
-
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologising to those affected by our mistakes
-* Learning from our and others' mistakes and not repeating negative behaviour
-* Focusing on what is best for the overall community, not just ourselves as individuals
-* Consider sharing your pronouns when introducing yourself, even if you think they are obvious
-* Respect the name and pronouns others introduce themselves with
-* When discussing code, avoid criticising the person who wrote the code or referring to the quality of the code in a negative way
-* Leave silences to allow everyone a chance to speak
-* When standing around talking, leave space for new people to join your converation (sometimes referred to pacman shape)
-* If you think something you are about to say might be offensive, consider not saying it. If you need to say it, please warn people beforehand.
-
-
-### Examples of unacceptable behavior include:
-
-* Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion
-* The use of sexualised language or imagery, and sexual attention or advances of any kind
-* Interrupting people when they are speaking
-* Sharing others' private information, such as a physical or email address, without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a professional setting
-
-
-## Guidelines for running a camp session
-
-As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it.
-
-If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you.
-<br/>
-
-## Talk to us
-
-If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome.
-
-* Email the organiser team: [team@elm.camp](mailto:team@elm.camp)
-* Contact Katja on [Elm slack](https://elm-lang.org/community/slack): @katjam or [Elmcraft Discord]("""
-        ++ Helpers.discordInviteLink
-        ++ """): katjam_
-
-## How we handle Code of Conduct issues
-
-If someone makes you or anyone else feel unsafe or unwelcome, please report it as soon as possible. You can make a report personally, anonymously or ask someone to do it on your behalf.
-
-The Code of Conduct is in place to protect everyone at Elm Camp. If any participant violates these rules the organisers will take action.
-
-We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly.
-
-However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in the case that they prefer to remain anonymous.
-
-Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise.
-
-Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can't possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn't write down explicitly here.
-
-If you have any questions, concerns or suggestions regarding this policy, please get in touch.
-
-This code of conduct was inspired by the [!!Con code of conduct](https://bangbangcon.com/conduct.html) and drafted with the guidance of the [Geek Feminism Wiki](https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources)
-    """
-        |> MarkdownThemed.renderFull
-
-
-elmCampArchiveContent : LoadedModel -> Ui.Element msg
-elmCampArchiveContent model =
-    Ui.column [ Ui.width Ui.shrink ]
-        [ """
-# What happened at Elm Camp 2023
-
-Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
-
-"""
-            ++ Camp23Denmark.Artifacts.posts
-            ++ Camp23Denmark.Artifacts.media
-            ++ """
-Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
-
-[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
-
-[Archive: Elm Camp 2024 - UK website](/24-uk)
-
-[Archive: Elm Camp 2025 - US website](/25-us)
-        """
-            |> MarkdownThemed.renderFull
+    [ Section "Code of Conduct"
+        [ Paragraph [ Text "Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions." ]
+        , Section "Help everyone feel welcome at Elm Camp"
+            [ Paragraph [ Text "Everyone at Elm Camp is part of Elm Camp. There are a few staff on call and caterers preparing food, but there are no other guests on the grounds." ]
+            , Paragraph [ Text "We expect everyone here to ensure that our community is harrassment-free for everyone." ]
+            , BulletList
+                [ Bold "Examples of behaviours that help us to provide an an open, welcoming, diverse, inclusive, and healthy community:" ]
+                [ Paragraph [ Text "Demonstrating empathy and kindness toward other people" ]
+                , Paragraph [ Text "Being respectful of differing opinions, viewpoints, and experiences" ]
+                , Paragraph [ Text "Giving and gracefully accepting constructive feedback" ]
+                , Paragraph [ Text "Accepting responsibility and apologising to those affected by our mistakes" ]
+                , Paragraph [ Text "Learning from our and others' mistakes and not repeating negative behaviour" ]
+                , Paragraph [ Text "Focusing on what is best for the overall community, not just ourselves as individuals" ]
+                , Paragraph [ Text "Consider sharing your pronouns when introducing yourself, even if you think they are obvious" ]
+                , Paragraph [ Text "Respect the name and pronouns others introduce themselves with" ]
+                , Paragraph [ Text "When discussing code, avoid criticising the person who wrote the code or referring to the quality of the code in a negative way" ]
+                , Paragraph [ Text "Leave silences to allow everyone a chance to speak" ]
+                , Paragraph [ Text "When standing around talking, leave space for new people to join your converation (sometimes referred to pacman shape)" ]
+                , Paragraph [ Text "If you think something you are about to say might be offensive, consider not saying it. If you need to say it, please warn people beforehand." ]
+                ]
+            , BulletList
+                [ Bold "Examples of unacceptable behavior include:" ]
+                [ Paragraph [ Text "Public or private harassment of any kind including offensive comments related to gender, sexual orientation, disability, physical appearance, body size, race, politics, or religion" ]
+                , Paragraph [ Text "The use of sexualised language or imagery, and sexual attention or advances of any kind" ]
+                , Paragraph [ Text "Interrupting people when they are speaking" ]
+                , Paragraph [ Text "Sharing others' private information, such as a physical or email address, without their explicit permission" ]
+                , Paragraph [ Text "Other conduct which could reasonably be considered inappropriate in a professional setting" ]
+                ]
+            ]
+        , Section "Guidelines for running a camp session"
+            [ Paragraph [ Text "As a facilitator it's important that you not only follow our code of conduct, but also help to enforce it." ]
+            , Paragraph [ Text "If you have any concerns when planning, during or after your session, please get in touch with one of the organisers so we can help you." ]
+            ]
+        , Section "Talk to us"
+            [ BulletList
+                [ Text "If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome." ]
+                [ Paragraph [ Text "Email the organiser team: ", ExternalLink "team@elm.camp" "mailto:team@elm.camp" ]
+                , Paragraph
+                    [ Text "Contact Katja on "
+                    , ExternalLink "Elm Slack" "https://elm-lang.org/community/slack"
+                    , Text ": @katjam or "
+                    , ExternalLink "Elmcraft Discord" Helpers.discordInviteLink
+                    , Text ": katjam_"
+                    ]
+                ]
+            ]
+        , Section "How we handle Code of Conduct issues"
+            [ Paragraph [ Text "If someone makes you or anyone else feel unsafe or unwelcome, please report it as soon as possible. You can make a report personally, anonymously or ask someone to do it on your behalf." ]
+            , Paragraph [ Text "The Code of Conduct is in place to protect everyone at Elm Camp. If any participant violates these rules the organisers will take action." ]
+            , Paragraph [ Text "We prefer to resolve things collaboratively and listening to everyone involved. We can all learn things from each other if we discuss issues openly." ]
+            , Paragraph [ Text "However, if you feel you want help resolving something more privately, please ask an organiser. We are here to support you. The organisers will never disclose who brought the matter to our attention, in the case that they prefer to remain anonymous." ]
+            , Paragraph [ Text "Where appropriate, we aim to be forgiving: if it seems like someone has made a good-natured mistake, we want to give space to grow and learn and a chance to apologise." ]
+            , Paragraph [ Text "Where deemed necessary, the organisers will ask participants who harm the Elm Camp community to leave. This Code of Conduct is a guide, and since we can't possibly write down all the ways you can hurt people, we may ask participants to leave for reasons that we didn't write down explicitly here." ]
+            , Paragraph [ Text "If you have any questions, concerns or suggestions regarding this policy, please get in touch." ]
+            , Paragraph
+                [ Text "This code of conduct was inspired by the "
+                , ExternalLink "!!Con code of conduct" "https://bangbangcon.com/conduct.html"
+                , Text " and drafted with the guidance of the "
+                , ExternalLink "Geek Feminism Wiki" "https://geekfeminism.fandom.com/wiki/Conference_anti-harassment/Policy_resources"
+                ]
+            ]
         ]
+    ]
+
+
+
+--    Ui.column [ Ui.width Ui.shrink ]
+--        [ """
+--# What happened at Elm Camp 2023
+--
+--Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
+--
+--"""
+--            ++ Camp23Denmark.Artifacts.posts
+--            ++ Camp23Denmark.Artifacts.media
+--            ++ """
+--Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
+--
+--[Archive: Elm Camp 2023 - Denmark website](/23-denmark)
+--
+--[Archive: Elm Camp 2024 - UK website](/24-uk)
+--
+--[Archive: Elm Camp 2025 - US website](/25-us)
+--        """
+--            |> MarkdownThemed.renderFull
+--        ]

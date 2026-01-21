@@ -11,9 +11,9 @@ module Backend exposing
     , updateFromFrontend
     )
 
-import Camp25US.Inventory as Inventory
-import Camp25US.Product as Product
-import Camp25US.Tickets as Tickets
+import Camp26Czech.Inventory as Inventory
+import Camp26Czech.Product as Product
+import Camp26Czech.Tickets as Tickets
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
 import Effect.Lamdera as Lamdera exposing (ClientId, SessionId)

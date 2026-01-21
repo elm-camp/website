@@ -1,15 +1,11 @@
-module Camp exposing (ArchiveContents, Meta, elmCampBottomLine, elmCampTopLine, viewArchive)
+module Camp exposing (Meta, elmCampBottomLine, elmCampTopLine)
 
 {-| Shared definition for all camp years.
 -}
 
-import MarkdownThemed
 import Theme
 import Ui
-import Ui.Anim
 import Ui.Font
-import Ui.Layout
-import Ui.Prose
 
 
 type alias Meta =
@@ -17,7 +13,6 @@ type alias Meta =
     , tag : String
     , location : String
     , dates : String
-    , artifactPicture : { src : String, description : String }
     }
 
 
@@ -41,102 +36,3 @@ elmCampBottomLine meta =
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
         , Ui.text meta.location
         ]
-
-
-type alias ArchiveContents msg =
-    { conferenceSummary : Ui.Element msg
-    , schedule : Maybe (Ui.Element msg)
-    , venue : Maybe (Ui.Element msg)
-    , organisers : Ui.Element msg
-    , sponsors : Ui.Element msg
-    , images : List { src : String, description : String }
-    }
-
-
-{-| View an archive page for a past year of Elm Camp.
--}
-viewArchive : ArchiveContents msg -> { a | width : Int } -> Ui.Element msg
-viewArchive contents window =
-    Ui.column
-        [ Ui.spacing 40 ]
-        [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            Theme.contentAttributes
-            [ MarkdownThemed.renderFull "# Unconference"
-            , contents.conferenceSummary
-            ]
-        , if window.width > 950 then
-            contents.images
-                |> List.map
-                    (\image ->
-                        Ui.image
-                            [ Ui.width (Ui.px 288) ]
-                            { source = image.src, description = image.description, onLoad = Nothing }
-                    )
-                |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.spacing 10, Ui.width (Ui.px 900), Ui.centerX ]
-
-          else
-            groupsOfTwo contents.images
-                |> List.map
-                    (\row ->
-                        Ui.row
-                            [ Ui.spacing 10 ]
-                            (List.map
-                                (\image ->
-                                    Ui.image [] { source = image.src, description = image.description, onLoad = Nothing }
-                                )
-                                row
-                            )
-                    )
-                |> Ui.column [ Ui.spacing 10 ]
-        , contents.schedule
-            |> Maybe.map
-                (\schedule ->
-                    Ui.column
-                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                        Theme.contentAttributes
-                        [ MarkdownThemed.renderFull "# Schedule"
-                        , schedule
-                        ]
-                )
-            |> Maybe.withDefault Ui.none
-        , contents.venue
-            |> Maybe.map
-                (\venue ->
-                    Ui.column
-                        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                        Theme.contentAttributes
-                        [ MarkdownThemed.renderFull "# Travel & Venue"
-                        , venue
-                        ]
-                )
-            |> Maybe.withDefault Ui.none
-        , Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            Theme.contentAttributes
-            [ MarkdownThemed.renderFull "# Our sponsors"
-            , contents.sponsors
-            ]
-        , Ui.column
-            [ Ui.spacing 24
-            ]
-            [ MarkdownThemed.renderFull "# Organisers"
-            , Ui.el
-                -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-                Theme.contentAttributes
-                contents.organisers
-            ]
-        ]
-
-
-groupsOfTwo : List a -> List (List a)
-groupsOfTwo list =
-    case list of
-        x :: y :: rest ->
-            [ x, y ] :: groupsOfTwo rest
-
-        [ x ] ->
-            [ [ x ] ]
-
-        [] ->
-            []

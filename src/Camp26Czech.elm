@@ -1,33 +1,26 @@
 module Camp26Czech exposing
-    ( conferenceSummary
-    , contactDetails
-    , elmBottomLine
-    , elmTopLine
-    , location
-    , meta
-    , organisers
-    , sponsors
-    , venueAccessContent
-    , venueImage
-    , venuePictures
+    ( Config
+    , header
+    , ticketSalesOpenAt
     , view
     )
 
 import Camp
-import Camp26Czech.Archive
-import Camp26Czech.Artifacts
+import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
-import Html
-import Html.Attributes
-import MarkdownThemed
-import Route exposing (SubPage(..))
+import Route
 import Theme
-import Types exposing (FrontendMsg, LoadedModel)
-import Ui
-import Ui.Anim
+import Time
+import Types exposing (FrontendMsg, LoadedModel, Size)
+import Ui exposing (Element)
 import Ui.Font
-import Ui.Layout
 import Ui.Prose
+import View.Logo
+import View.Sales
+
+
+type alias Config a =
+    { a | window : Size, logoModel : View.Logo.Model, now : Time.Posix, timeZone : Time.Zone }
 
 
 meta : Camp.Meta
@@ -36,7 +29,6 @@ meta =
     , tag = "Michigan, US 2026"
     , location = location
     , dates = "Mon 15th - Thur 18th June 2026"
-    , artifactPicture = { src = "/24-colehayes/artifacts-mark-skipper.png", description = "A watercolour of an old tree in an English stately garden" }
     }
 
 
@@ -45,128 +37,213 @@ location =
     "🇨🇿 Olomouc, Czechia"
 
 
-view : LoadedModel -> SubPage -> Ui.Element FrontendMsg
-view model subpage =
+view : Config a -> Element FrontendMsg
+view model =
     Ui.column
-        [ Ui.height Ui.fill ]
+        [ Ui.spacing 32 ]
         [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
-                model.window
-                [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
-                [ Ui.image
-                    [ Ui.width (Ui.px 300) ]
-                    { source = meta.artifactPicture.src, description = meta.artifactPicture.description, onLoad = Nothing }
-                , Ui.column [ Ui.spacing 20 ]
-                    [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 50, Ui.Font.center ] [ Ui.text "Archive" ]
-                    , elmTopLine
-                    , elmBottomLine
+            [ Ui.spacing 32
+            , Ui.paddingXY 16 0
+            ]
+            [ header model
+            , Ui.column
+                (Ui.spacing 16 :: Theme.contentAttributes)
+                [ Formatting.view model content
+                , organisers model.window
+                ]
+            , Ui.column
+                Theme.contentAttributes
+                [ Formatting.view
+                    model
+                    [ Section
+                        "Our sponsors"
+                        [ Images
+                            [ [ { source = "/sponsors/scrive-logo.svg"
+                                , maxWidth = Just 400
+                                , link = Just "https://www.scrive.com/"
+                                , description = "Scrive's logo"
+                                }
+                              ]
+                            , [ { source = "/sponsors/concentrichealthlogo.svg"
+                                , link = Just "https://concentric.health/"
+                                , maxWidth = Just 250
+                                , description = "Concentric health's logo"
+                                }
+                              ]
+                            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
+                              , { source = "/sponsors/elm-weekly.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
+                              ]
+                            ]
+                        ]
                     ]
                 ]
-            , case subpage of
-                Home ->
-                    Camp26Czech.Archive.view model
 
-                Artifacts ->
-                    Camp26Czech.Artifacts.view model
+            --, View.Sales.view model
             ]
         , Theme.footer
         ]
 
 
-elmTopLine : Ui.Element msg
-elmTopLine =
-    Ui.row
-        [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-        [ Ui.image [ Ui.width (Ui.px 49) ] { source = meta.logo.src, description = meta.logo.description, onLoad = Nothing }
-        , Ui.column
-            [ Ui.width Ui.shrink, Ui.spacing 2, Ui.Font.size 24, Ui.move { x = 0, y = -1, z = 0 } ]
-            [ Ui.el [ Ui.width Ui.shrink, Theme.glow ] (Ui.text "Unconference")
-            , Ui.el [ Ui.width Ui.shrink, Ui.Font.weight 800, Ui.Font.color Theme.lightTheme.elmText ] (Ui.text meta.tag)
+content : List Formatting
+content =
+    [ Section "Elm Camp 2026 - Olomouc, Czechia"
+        [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
+        , HorizontalLine
+        , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
+        , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
+        , Paragraph [ Text "Over the last few years, Elm has seen community-driven tools and libraries expanding the potential and utility of the Elm language, stemming from a steady pace of continued commercial and hobbyist adoption." ]
+        , Paragraph [ Text "We find great potential for progress and innovation in a creative, focused, in-person gathering. We expect the wider community and practitioners to benefit from this collaborative exploration of our shared problems and goals." ]
+        ]
+    , Images
+        [ [ { source = "/26-park-hotel/image1.jpg"
+            , maxWidth = Nothing
+            , description = "Ariel view of the hotel"
+            , link = Nothing
+            }
+          ]
+        , [ { source = "/26-park-hotel/image3.jpg"
+            , maxWidth = Nothing
+            , description = "Photo of a conference room in the hotel"
+            , link = Nothing
+            }
+          , { source = "/26-park-hotel/image2.jpg"
+            , maxWidth = Nothing
+            , description = "Photo of a bed room in the hotel"
+            , link = Nothing
+            }
+          ]
+        ]
+    , Section
+        "The venue and access"
+        [ Section
+            "The venue"
+            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
+            , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
+            ]
+        , Section
+            "Participating in conversations"
+            [ BulletList
+                []
+                [ Paragraph [ Text "The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible" ]
+                , Paragraph [ Text "We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do" ]
+                , Paragraph [ Text "We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know" ]
+                ]
+            ]
+        , Section
+            "Contacting the organisers"
+            [ BulletList
+                [ Text "If you have questions or concerns about this website or attending Elm Camp, please get in touch" ]
+                [ Paragraph
+                    [ Text "Elmcraft Discord: "
+                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
+                    , Text " channel or DM katjam_"
+                    ]
+                , Paragraph
+                    [ Text "Email: "
+                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp)"
+                    ]
+                , Paragraph [ Text "Elm Slack: @katjam" ]
+                ]
             ]
         ]
-
-
-elmBottomLine : Ui.Element msg
-elmBottomLine =
-    Ui.column
-        [ Ui.width Ui.shrink, Theme.glow, Ui.Font.size 16, Ui.centerX, Ui.spacing 2 ]
-        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.bold, Ui.centerX ] (Ui.text meta.dates)
-        , Ui.text meta.location
+    , Section "Organisers"
+        [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         ]
-
-
-conferenceSummary : Ui.Element msg
-conferenceSummary =
-    """
-
-# The Unconference
-
-## Ronora Lodge and Retreat Center - Watervliet, Michigan
-### Arrive anytime on Tues 24th June 2026
-### Depart 10am on Fri 27th June 2026
-#### 2 full days of talks
-#### 40+ attendees
-
----
-## Prospective Schedule:
-
-### Tue 24th June
-  - 3pm arrivals & halls officially open
-  - Opening of session board
-  - Informal dinner
-  - Evening stroll
-
-### Wed 25th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference sessions
-  - Dinner
-  - Board Games and informal chats
-
-### Thu 26th June
-  - Breakfast
-  - Unconference sessions
-  - Lunch
-  - Unconference Sessions
-  - Dinner
-  - Unconference wrap-up & party
-
-### Fri 27th June
-  - Grab and go breakfast
-  - Depart by 10am
-
-"""
-        |> MarkdownThemed.renderFull
-
-
-venuePictures : LoadedModel -> Ui.Element msg
-venuePictures model =
-    let
-        prefix =
-            "/26-park-hotel/"
-    in
-    [ [ "image1.jpg" ]
-    , [ "image3.jpg", "image2.jpg" ]
     ]
-        |> List.map
-            (\paths ->
-                Ui.row
-                    [ Ui.spacing 10 ]
-                    (List.map (\image -> venueImage Ui.fill (prefix ++ image)) paths)
-            )
-        |> Ui.column [ Ui.spacing 10 ]
 
 
-venueImage : Ui.Length -> String -> Ui.Element msg
-venueImage width path =
-    Ui.image [ Ui.width width ] { source = path, description = "Photo of Park Hotel", onLoad = Nothing }
+ticketSalesOpenAt : Time.Posix
+ticketSalesOpenAt =
+    -- 2025 Feb 28 12:00 GMT
+    Time.millisToPosix 1772280000000
 
 
-organisers : Int -> Ui.Element msg
-organisers windowWidth =
+header : Config a -> Ui.Element FrontendMsg
+header config =
+    let
+        titleSize =
+            if Theme.isMobile config.window then
+                64
+
+            else
+                80
+
+        elmCampTitle =
+            Ui.el
+                [ Ui.link (Route.encode Nothing Route.HomepageRoute) ]
+                (Ui.el
+                    [ Ui.width Ui.shrink
+                    , Ui.Font.size titleSize
+                    , Theme.glow
+                    , Ui.paddingXY 0 8
+                    , Ui.Font.lineHeight 1.1
+                    ]
+                    (Ui.text "Elm Camp")
+                )
+
+        elmCampNextTopLine =
+            Ui.column [ Ui.spacing 30 ]
+                [ Ui.row
+                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
+                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
+                    , Ui.column
+                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
+                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
+                        , Ui.el
+                            [ Ui.width Ui.shrink
+                            , Ui.Font.weight 800
+                            , Ui.Font.color Theme.lightTheme.elmText
+                            , Ui.Font.lineHeight 1
+                            ]
+                            (Ui.text "2026")
+                        ]
+                    ]
+                , Ui.column
+                    [ Ui.spacing 8, Ui.Font.size 18 ]
+                    [ Ui.el
+                        [ Ui.width Ui.shrink
+                        , Ui.Font.bold
+                        , Ui.Font.color Theme.lightTheme.defaultText
+                        ]
+                        (Ui.text location)
+                    , Ui.el
+                        [ Ui.width Ui.shrink
+                        , Ui.Font.bold
+                        , Ui.linkNewTab "https://www.hotel-pracharna.cz/en/"
+                        , Ui.Font.color Theme.lightTheme.link
+                        , Ui.Font.underline
+                        ]
+                        (Ui.text "Park Hotel Prachárna")
+                    , Ui.el
+                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
+                        (Ui.text "Monday 15th - Thursday 18th June 2026")
+                    ]
+                , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt config.now
+                ]
+    in
+    if Theme.isMobile config.window then
+        Ui.column
+            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.column
+                [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
+                [ elmCampTitle
+                , elmCampNextTopLine
+                ]
+            ]
+
+    else
+        Ui.row
+            [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 40, Ui.centerX ]
+            [ Ui.column
+                [ Ui.width Ui.shrink, Ui.spacing 24 ]
+                [ elmCampTitle
+                , elmCampNextTopLine
+                ]
+            ]
+
+
+organisers : Size -> Ui.Element msg
+organisers window =
     [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
       , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }
       , { country = "🇩🇪", name = "Johannes Emerich", description = "Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps." }
@@ -181,7 +258,7 @@ organisers windowWidth =
       ]
     ]
         |> (\list2 ->
-                if windowWidth < 1000 then
+                if Theme.isMobile window then
                     [ List.concat list2 ]
 
                 else
@@ -205,129 +282,3 @@ organisers windowWidth =
                     |> Ui.column [ Ui.alignTop, Ui.spacing 24 ]
             )
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
-
-
-
---        """
---🇧🇪 Hayleigh Thompson – Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam.
---
---🇺🇸 James Carlson – Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming.
---
---🇩🇪 Johannes Emerich – Works at Dividat, making a console with small games and a large controller. Remembers when Elm demos were about the intricacies of how high Super Mario jumps.
---
---🇺🇸 John Pavlick – Professional combinator enthusiast at AppyPeople. Mostly harmless.
---
---🇬🇧 Katja Mordaunt – Uses web tech to help charities, artists, activists & community groups. Industry advocate for functional & Elm. Co-founder of codereading.club
---
---🇦🇺 Mario Rogic – Organizer of the Elm London and Elm Online meetups. Groundskeeper of Elmcraft, founder of Lamdera.
---
---🇨🇿 Martin Janiczek – Loves to start things and one-off experiments, has a drive for teaching and unblocking others. Regularly races for the first answer in Elm Slack #beginners and #help.
---
---🇸🇪 Martin Stewart – Likes making games and apps using Lamdera. Currently trying to recreate Discord in Elm.
---
---🇺🇸 Wolfgang Schuster – Author of Elm Weekly."""
---        |> MarkdownThemed.renderFull
-
-
-venueAccessContent : Ui.Element msg
-venueAccessContent =
-    Ui.column
-        [ Ui.width Ui.shrink ]
-        [ """
-# The venue and access
-
-## The venue
-
-**Hotel Prachárna**<br/>
-Křelovská 91, 779 00 Olomouc 9<br/>
-Řepčín, Česko<br/>
-Czechia
-
-[https://www.hotel-pracharna.cz/en/](https://www.hotel-pracharna.cz/en/)
-
-## Participating in conversations
-
-* The official conference language will be English. We ask that attendees conduct as much of their conversations in English in order to include as many people as possible
-* We do not have facility for captioning or signing, please get in touch as soon as possible if you would benefit from something like that and we'll see what we can do
-* We aim to provide frequent breaks of a decent length, so if this feels lacking to you at any time, let an organiser know
-
-## Contacting the organisers
-
-If you have questions or concerns about this website or attending Elm Camp, please get in touch
-
-    """
-            ++ contactDetails
-            |> MarkdownThemed.renderFull
-
-        --
-        --, Html.iframe
-        --    [ Html.Attributes.src "/map.html"
-        --    , Html.Attributes.style "width" "100%"
-        --    , Html.Attributes.style "height" "auto"
-        --    , Html.Attributes.style "aspect-ratio" "21 / 9"
-        --    , Html.Attributes.style "border" "none"
-        --    ]
-        --    []
-        --    |> Element.html
-        ]
-
-
-contactDetails : String
-contactDetails =
-    """
-* Elmcraft Discord: [#elm-camp-26](""" ++ Helpers.discordInviteLink ++ """) channel or DM katjam_
-* Email: [team@elm.camp](mailto:team@elm.camp)
-* Elm Slack: @katjam"""
-
-
-sponsors : { window | width : Int } -> Ui.Element msg
-sponsors window =
-    let
-        asImg { image, url, width } =
-            Ui.el
-                [ Ui.linkNewTab url, Ui.width Ui.fill ]
-                (Ui.image
-                    [ Ui.width
-                        (Ui.px
-                            (if window.width < 800 then
-                                Basics.toFloat width * 0.7 |> Basics.round
-
-                             else
-                                width
-                            )
-                        )
-                    ]
-                    { description = url, source = "/sponsors/" ++ image, onLoad = Nothing }
-                )
-    in
-    Ui.column [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        [ [ asImg { image = "noredink-logo.svg", url = "https://www.noredink.com/", width = 220 }
-          , asImg { image = "concentrichealthlogo.svg", url = "https://concentric.health", width = 235 }
-          ]
-            |> Ui.row [ Ui.contentTop, Ui.wrap, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        , [ asImg { image = "lamdera-logo-black.svg", url = "https://lamdera.com/", width = 120 }
-          , asImg { image = "scripta.io.svg", url = "https://scripta.io", width = 120 }
-          , Ui.el
-                [ Ui.linkNewTab "https://www.elmweekly.nl", Ui.width Ui.fill ]
-                (Ui.row [ Ui.spacing 10, Ui.width (Ui.px 180) ]
-                    [ Ui.image
-                        [ Ui.width
-                            (Ui.px
-                                (if window.width < 800 then
-                                    50 * 0.7 |> Basics.round
-
-                                 else
-                                    50
-                                )
-                            )
-                        ]
-                        { description = "https://www.elmweekly.nl"
-                        , source = "/sponsors/" ++ "elm-weekly.svg"
-                        , onLoad = Nothing
-                        }
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 24 ] (Ui.text "Elm Weekly")
-                    ]
-                )
-          ]
-            |> Ui.row [ Ui.wrap, Ui.contentTop, Ui.width Ui.shrink, Ui.centerX, Ui.spacing 32 ]
-        ]

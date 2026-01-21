@@ -13,6 +13,7 @@ module Types exposing
     , PendingOrder
     , Price2
     , Product(..)
+    , Size
     , Sponsorship(..)
     , StripePaymentId(..)
     , TicketAvailability
@@ -47,10 +48,10 @@ type FrontendModel
 
 type alias LoadingModel =
     { key : Key
-    , now : Time.Posix
-    , zone : Maybe Time.Zone
-    , window : Maybe { width : Int, height : Int }
-    , route : Route
+    , now : Maybe Time.Posix
+    , timeZone : Maybe Time.Zone
+    , window : Maybe Size
+    , url : Url
     , isOrganiser : Bool
     , initData : Maybe InitData2
     , elmUiState : Ui.State
@@ -60,8 +61,8 @@ type alias LoadingModel =
 type alias LoadedModel =
     { key : Key
     , now : Time.Posix
-    , zone : Maybe Time.Zone
-    , window : { width : Int, height : Int }
+    , timeZone : Time.Zone
+    , window : Size
     , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
     , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
@@ -76,6 +77,10 @@ type alias LoadedModel =
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
     }
+
+
+type alias Size =
+    { width : Int, height : Int }
 
 
 type alias TicketAvailability =
@@ -302,6 +307,7 @@ type FrontendMsg
     | LogoMsg View.Logo.Msg
     | Noop
     | ElmUiMsg Ui.Msg
+    | ScrolledToFragment
 
 
 type ToBackend

@@ -9,14 +9,9 @@ module Theme exposing
     , footer
     , glow
     , greenTheme
-    , h1
     , h2
     , h3
-    , h4
-    , heading1Attrs
-    , heading2Attrs
-    , heading3Attrs
-    , heading4Attrs
+    , isMobile
     , lightTheme
     , normalButtonAttributes
     , numericField
@@ -29,7 +24,6 @@ module Theme exposing
     , submitButtonAttributes
     , toggleButton
     , toggleButtonAttributes
-    , viewIf
     )
 
 import Color
@@ -38,14 +32,11 @@ import Html.Attributes
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
+import Types exposing (Size)
 import Ui
 import Ui.Accessibility
-import Ui.Anim
-import Ui.Events
 import Ui.Font
 import Ui.Input
-import Ui.Layout
-import Ui.Prose
 import Ui.Shadow
 
 
@@ -89,6 +80,11 @@ contentAttributes =
     [ Ui.widthMax 800
     , Ui.centerX
     ]
+
+
+isMobile : Size -> Bool
+isMobile a =
+    a.width < 800
 
 
 css : Html msg
@@ -151,15 +147,6 @@ fontFace weight name fontFamilyName =
   src: url(/fonts/""" ++ name ++ """.ttf) format('truetype');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+2192, U+2713;
 }"""
-
-
-viewIf : Bool -> Ui.Element msg -> Ui.Element msg
-viewIf condition view =
-    if condition then
-        view
-
-    else
-        Ui.none
 
 
 priceText : Price -> String
@@ -237,7 +224,7 @@ toggleButtonAttributes onPress isActive =
     ]
 
 
-rowToColumnWhen : Int -> { width : Int, height : Int } -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
+rowToColumnWhen : Int -> Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 rowToColumnWhen width window attrs children =
     if window.width > width then
         Ui.row
@@ -278,7 +265,7 @@ glow =
 footerButton : Route -> String -> Ui.Element msg
 footerButton route label =
     Ui.el
-        [ Ui.link (Route.encode route)
+        [ Ui.link (Route.encode Nothing route)
         , Ui.background (Ui.rgb 12 109 82)
         , Ui.paddingXY 16 10
         , Ui.rounded 10
@@ -303,8 +290,6 @@ footer =
             )
             [ footerButton CodeOfConductRoute "Code of Conduct"
             , footerButton UnconferenceFormatRoute "Unconference Guidelines"
-            , footerButton VenueAndAccessRoute "Venue & Access"
-            , footerButton OrganisersRoute "Organisers"
             , footerButton ElmCampArchiveRoute "Elm Camp Archives"
             ]
         )
@@ -369,14 +354,6 @@ showyButtonAttributes onPress =
     ]
 
 
-h1 : String -> Ui.Element msg
-h1 t =
-    Ui.el
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (heading1Attrs lightTheme)
-        (Ui.text t)
-
-
 h2 : String -> Ui.Element msg
 h2 t =
     Ui.el
@@ -391,24 +368,6 @@ h3 t =
         -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         (heading3Attrs lightTheme)
         (Ui.text t)
-
-
-h4 : String -> Ui.Element msg
-h4 t =
-    Ui.el
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (heading4Attrs lightTheme)
-        (Ui.text t)
-
-
-heading1Attrs : Theme -> List (Ui.Attribute msg)
-heading1Attrs theme =
-    [ Ui.Font.size 36
-    , Ui.Font.weight 600
-    , Ui.Font.color lightTheme.defaultText
-    , Ui.paddingWith { top = 40, right = 0, bottom = 30, left = 0 }
-    , Ui.Accessibility.h1
-    ]
 
 
 heading2Attrs : Theme -> List (Ui.Attribute msg)
@@ -429,14 +388,4 @@ heading3Attrs theme =
     , Ui.paddingWith { top = 8, right = 0, bottom = 16, left = 0 }
     , Ui.Font.bold
     , Ui.Accessibility.h3
-    ]
-
-
-heading4Attrs : Theme -> List (Ui.Attribute msg)
-heading4Attrs theme =
-    [ Ui.Font.color theme.defaultText
-    , Ui.Font.size 16
-    , Ui.Font.weight 500
-    , Ui.paddingWith { top = 0, right = 0, bottom = 10, left = 0 }
-    , Ui.Accessibility.h4
     ]

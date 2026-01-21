@@ -26,21 +26,14 @@ module Camp26Czech.Tickets exposing
 -}
 
 import Camp26Czech.Product as Product
-import Env
 import Helpers
 import Id exposing (Id)
-import MarkdownThemed
-import Money
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
 import Theme
 import Ui
-import Ui.Anim
-import Ui.Events
 import Ui.Font
-import Ui.Input
-import Ui.Layout
 import Ui.Prose
 
 
@@ -234,7 +227,7 @@ viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
 
         -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket.name ]
-        , MarkdownThemed.renderFull ticket.description
+        , Ui.text ticket.description
         , Ui.el
             [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
             (Ui.text (Theme.priceText price))
