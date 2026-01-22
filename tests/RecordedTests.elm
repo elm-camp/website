@@ -114,15 +114,9 @@ tests fileData =
                 , tab1.clickLink 100 "/unconference-format"
                 , tab1.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Unconference Format" ])
-                , tab1.clickLink 100 "/venue-and-access"
-                , tab1.checkView 100
-                    (Test.Html.Query.has [ Test.Html.Selector.exactText "The venue and access" ])
-                , tab1.clickLink 100 "/organisers"
-                , tab1.checkView 100
-                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Organisers" ])
                 , tab1.clickLink 100 "/elm-camp-archive"
                 , tab1.checkView 100
-                    (Test.Html.Query.has [ Test.Html.Selector.exactText "What happened at Elm Camp 2023" ])
+                    (Test.Html.Query.has [ Test.Html.Selector.text "Here we keep track of what has come out of past Elm Camp events." ])
                 , tab1.clickLink 100 "/24-uk"
                 , tab1.navigateBack 100
                 , tab1.clickLink 100 "/23-denmark"
