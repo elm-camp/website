@@ -159,7 +159,7 @@ ticketSalesOpenAt =
     Time.millisToPosix 1772280000000
 
 
-header : Config a -> Ui.Element FrontendMsg
+header : Config a -> Element FrontendMsg
 header config =
     let
         titleSize =
@@ -243,7 +243,7 @@ header config =
             ]
 
 
-organisers : Size -> Ui.Element msg
+organisers : Size -> Element msg
 organisers window =
     [ [ { country = "🇧🇪", name = "Hayleigh Thompson", description = "Competitive person-helper in the Elm Slack. Author of Lustre, an Elm port written in Gleam." }
       , { country = "🇺🇸", name = "James Carlson", description = "Worked for many years as a math professor. Trying to learn type theory, which combines philosophy, logic, mathematics, and functional programming." }

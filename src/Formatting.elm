@@ -115,23 +115,23 @@ viewHelper shared depth item =
 
         Section title formattings ->
             let
-                depth2 : List String
-                depth2 =
+                nextDepth : List String
+                nextDepth =
                     title :: depth
 
                 content : List (Html msg)
                 content =
                     case formattings of
                         head :: rest ->
-                            viewHelper shared depth2 head
-                                :: List.map (\item2 -> Html.div [ paddingTop 16 ] [ viewHelper shared depth2 item2 ]) rest
+                            viewHelper shared nextDepth head
+                                :: List.map (\item2 -> Html.div [ paddingTop 16 ] [ viewHelper shared nextDepth item2 ]) rest
 
                         [] ->
                             []
 
                 id : String
                 id =
-                    List.reverse depth2 |> String.join "-" |> Url.percentEncode
+                    List.reverse nextDepth |> String.join "-" |> Url.percentEncode
             in
             Html.div
                 []

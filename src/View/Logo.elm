@@ -1,6 +1,8 @@
 module View.Logo exposing
     ( Model
     , Msg(..)
+    , PieceConfig
+    , Tangram
     , init
     , needsAnimationFrame
     , update
