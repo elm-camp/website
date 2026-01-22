@@ -24,7 +24,6 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
-import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
@@ -33,6 +32,7 @@ import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
 import List.Extra as List
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
 import SeqDict
 import Stripe
@@ -557,7 +557,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model UnconferenceFormat.view
+                    [ RichText.view model UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
@@ -568,7 +568,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model codeOfConductContent
+                    [ RichText.view model codeOfConductContent
                     ]
                 , Theme.footer
                 ]
@@ -579,7 +579,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model Archive.content ]
+                    [ RichText.view model Archive.content ]
                 , Theme.footer
                 ]
 
@@ -664,7 +664,7 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-codeOfConductContent : List Formatting
+codeOfConductContent : List RichText
 codeOfConductContent =
     [ Section "Code of Conduct"
         [ Paragraph [ Text "Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions." ]

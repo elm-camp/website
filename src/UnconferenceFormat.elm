@@ -1,9 +1,9 @@
 module UnconferenceFormat exposing (view)
 
-import Formatting exposing (Formatting(..), Inline(..))
+import RichText exposing (Inline(..), RichText(..))
 
 
-view : List Formatting
+view : List RichText
 view =
     [ Section "Unconference Format"
         [ Section "First and foremost, there are no unchangeable rules, with the exception of the \"rule of two feet\":"

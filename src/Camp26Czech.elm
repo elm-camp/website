@@ -1,13 +1,12 @@
 module Camp26Czech exposing
-    ( Config
-    , header
+    ( header
     , ticketSalesOpenAt
     , view
     )
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
+import RichText exposing (Inline(..), RichText(..))
 import Route
 import Theme
 import Time
@@ -17,10 +16,6 @@ import Ui.Font
 import Ui.Prose
 import View.Logo
 import View.Sales
-
-
-type alias Config a =
-    { a | window : Size, logoModel : View.Logo.Model, now : Time.Posix, timeZone : Time.Zone }
 
 
 meta : Camp.Meta
@@ -37,56 +32,51 @@ location =
     "🇨🇿 Olomouc, Czechia"
 
 
-view : Config a -> Element FrontendMsg
+view : LoadedModel -> Element FrontendMsg
 view model =
     Ui.column
         [ Ui.spacing 32 ]
         [ Ui.column
-            [ Ui.spacing 32
-            , Ui.paddingXY 16 0
-            ]
+            (Ui.paddingXY 16 0 :: Theme.contentAttributes)
             [ header model
-            , Ui.column
-                (Ui.spacing 16 :: Theme.contentAttributes)
-                [ Formatting.view model content
-                , organisers model.window
-                ]
-            , Ui.column
-                Theme.contentAttributes
-                [ Formatting.view
-                    model
-                    [ Section
-                        "Our sponsors"
-                        [ Images
-                            [ [ { source = "/sponsors/scrive-logo.svg"
-                                , maxWidth = Just 400
-                                , link = Just "https://www.scrive.com/"
-                                , description = "Scrive's logo"
-                                }
-                              ]
-                            , [ { source = "/sponsors/concentrichealthlogo.svg"
-                                , link = Just "https://concentric.health/"
-                                , maxWidth = Just 250
-                                , description = "Concentric health's logo"
-                                }
-                              ]
-                            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
-                              , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
-                              , { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 180, description = "Lamdera's logo" }
-                              ]
-                            ]
-                        ]
-                    ]
-                ]
-
-            --, View.Sales.view model
+            , RichText.view model intro
+            , View.Sales.view ticketSalesOpenAt model
+            , RichText.view model venueAndAccess
+            , organisers model.window
+            , RichText.view model sponsors
             ]
         , Theme.footer
         ]
 
 
-content : List Formatting
-content =
+sponsors : List RichText
+sponsors =
+    [ Section
+        "Our sponsors"
+        [ Images
+            [ [ { source = "/sponsors/scrive-logo.svg"
+                , maxWidth = Just 400
+                , link = Just "https://www.scrive.com/"
+                , description = "Scrive's logo"
+                }
+              ]
+            , [ { source = "/sponsors/concentrichealthlogo.svg"
+                , link = Just "https://concentric.health/"
+                , maxWidth = Just 250
+                , description = "Concentric health's logo"
+                }
+              ]
+            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
+              , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
+              , { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 180, description = "Lamdera's logo" }
+              ]
+            ]
+        ]
+    ]
+
+
+intro : List RichText
+intro =
     [ Section "Elm Camp 2026 - Olomouc, Czechia"
         [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
         , HorizontalLine
@@ -114,7 +104,12 @@ content =
             }
           ]
         ]
-    , Section
+    ]
+
+
+venueAndAccess : List RichText
+venueAndAccess =
+    [ Section
         "The venue and access"
         [ Section
             "The venue"
@@ -159,7 +154,7 @@ ticketSalesOpenAt =
     Time.millisToPosix 1772280000000
 
 
-header : Config a -> Element FrontendMsg
+header : LoadedModel -> Element FrontendMsg
 header config =
     let
         titleSize =

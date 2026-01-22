@@ -1,10 +1,10 @@
 module Archive exposing (content)
 
-import Formatting exposing (Formatting(..), Inline(..))
+import RichText exposing (Inline(..), RichText(..))
 import Route
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Archive"
         [ Paragraph
