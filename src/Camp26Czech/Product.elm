@@ -37,19 +37,19 @@ ticket =
             }
 
 
-sponsorship : { silver : String, gold : String, platinum : String }
+sponsorship : { bronze : String, silver : String, gold : String }
 sponsorship =
     case Env.mode of
         Env.Production ->
-            { silver = "prod_RzWTill7eglkFc"
+            { bronze = ""
+            , silver = "prod_RzWTill7eglkFc"
             , gold = "prod_RzWVRbQ0spItOf"
-            , platinum = "prod_RzWWOS4E6aID6y"
             }
 
         Env.Development ->
-            { silver = "prod_RzWTill7eglkFc"
+            { bronze = ""
+            , silver = "prod_RzWTill7eglkFc"
             , gold = "prod_RzWVRbQ0spItOf"
-            , platinum = "prod_RzWWOS4E6aID6y"
             }
 
 
@@ -59,14 +59,26 @@ type alias Sponsorship =
 
 sponsorshipItems : List Sponsorship
 sponsorshipItems =
-    [ { name = "Silver"
+    [ { name = "Bronze"
+      , price = 50000
+      , productId = sponsorship.bronze
+      , description = "You will be a minor supporter of Elm Camp " ++ year ++ "."
+      , features =
+            [ "Thank you tweet"
+            , "Logo on website"
+            , "Small logo on shared slide during the opening and closing sessions"
+            ]
+      }
+    , { name = "Silver"
       , price = 100000
       , productId = sponsorship.silver
       , description = "You will be a major supporter of Elm Camp " ++ year ++ "."
       , features =
             [ "Thank you tweet"
-            , "Logo on webpage"
-            , "Small logo on shared slide, displayed during breaks"
+            , "Logo on website"
+            , "Small logo on shared slide during the opening and closing sessions"
+            , "Small logo on a slide displayed between sessions throughout the event"
+            , "One campfire ticket"
             ]
       }
     , { name = "Gold"
@@ -75,24 +87,11 @@ sponsorshipItems =
       , description = "You will be a pivotal supporter of Elm Camp " ++ year ++ "."
       , features =
             [ "Thank you tweet"
-            , "Rollup or poster inside the venue (provided by you)"
-            , "Logo on webpage"
-            , "Medium logo on shared slide, displayed during breaks"
-            , "1 free campfire ticket"
-            ]
-      }
-    , { name = "Platinum"
-      , price = 500000
-      , productId = sponsorship.platinum
-      , description = "You will be principal sponsor and guarantee that Elm Camp " ++ year ++ " is a success."
-      , features =
-            [ "Thank you tweet"
-            , "Rollup or poster inside the venue (provided by you)"
-            , "Self-written snippet on shared web page about use of Elm at your company"
-            , "Logo on webpage"
-            , "2 free campfire tickets or 1 free ticket with accommodation"
-            , "Big logo on shared slide, displayed during breaks"
-            , "Honorary mention in opening and closing talks"
+            , "Dedicated \"thank you\" slide during the opening and closing sessions"
+            , "Large logo on a slide displayed between sessions throughout the event"
+            , "Two campfire tickets or one single room ticket"
+            , "A self-written snippet on the website about your use of Elm and an optional CTA if you are hiring"
+            , "A rollup or poster (provided by you) visible inside the venue during the event"
             ]
       }
     ]
