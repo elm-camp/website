@@ -507,7 +507,7 @@ view model =
                 Ui.default
             )
             [ Ui.Font.color Theme.lightTheme.defaultText
-            , Ui.Font.family [ Ui.Font.typeface "Open Sans" ]
+            , Ui.Font.family [ Ui.Font.typeface "Open Sans", Ui.Font.sansSerif ]
             , Ui.Font.size 16
             , Ui.Font.weight 500
             , Ui.background Theme.lightTheme.background
