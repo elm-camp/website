@@ -65,8 +65,8 @@ needsAnimationFrame model =
     Animator.Timeline.isRunning model.timeline
 
 
-view : Model -> Html Msg
-view model =
+view : Int -> Model -> Html Msg
+view size model =
     let
         interpolatedTangram : Tangram
         interpolatedTangram =
@@ -83,7 +83,7 @@ view model =
     Svg.svg
         [ Svg.Attributes.viewBox "0 0 800 600"
         , Html.Events.onClick ToggleConfig
-        , Svg.Attributes.width "100"
+        , Svg.Attributes.width (String.fromInt size)
         ]
         [ largeTriangle interpolatedTangram.firstLargeTriangle interpolatedTangram.scale
         , largeTriangle interpolatedTangram.secondLargeTriangle interpolatedTangram.scale
@@ -226,7 +226,7 @@ animatePieceConfig timeline getPiece =
 
 transition : Transition
 transition =
-    Animator.Transition.spring { wobble = 0.5, quickness = 1 }
+    Animator.Transition.spring { wobble = 0, quickness = 2 }
 
 
 animateScale : Timeline Tangram -> Float

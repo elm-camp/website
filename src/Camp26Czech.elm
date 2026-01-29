@@ -34,7 +34,7 @@ meta =
 
 location : String
 location =
-    "🇨🇿 Olomouc, Czechia"
+    "🇨🇿 Olomouc, Czech Republic"
 
 
 view : Config a -> Element FrontendMsg
@@ -46,6 +46,7 @@ view model =
             , Ui.paddingXY 16 0
             ]
             [ header model
+            , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
             , Ui.column
                 (Ui.spacing 16 :: Theme.contentAttributes)
                 [ Formatting.view model content
@@ -87,8 +88,8 @@ view model =
 
 content : List Formatting
 content =
-    [ Section "Elm Camp 2026 - Olomouc, Czechia"
-        [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czechia!" ]
+    [ Section "Elm Camp 2026 - Olomouc, Czech Republic"
+        [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czech Republic!" ]
         , HorizontalLine
         , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
         , Paragraph [ Text "Elm Camp is an event geared towards reconnecting in-person and collaborating on the current and future community landscape of the Elm ecosystem that surrounds the Elm core language." ]
@@ -118,7 +119,7 @@ content =
         "The venue and access"
         [ Section
             "The venue"
-            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzechia" ]
+            [ Paragraph [ Bold "Hotel Prachárna", Text "\nKřelovská 91, 779 00 Olomouc 9\nŘepčín, Česko\nCzech Republic" ]
             , Paragraph [ ExternalLink "https://www.hotel-pracharna.cz/en/" "https://www.hotel-pracharna.cz/en/" ]
             ]
         , Section
@@ -162,49 +163,18 @@ ticketSalesOpenAt =
 header : Config a -> Element FrontendMsg
 header config =
     let
-        titleSize =
-            if Theme.isMobile config.window then
-                64
-
-            else
-                80
-
-        elmCampTitle =
-            Ui.el
-                [ Ui.link (Route.encode Nothing Route.HomepageRoute) ]
-                (Ui.el
-                    [ Ui.width Ui.shrink
-                    , Ui.Font.size titleSize
-                    , Theme.glow
-                    , Ui.paddingXY 0 8
-                    , Ui.Font.lineHeight 1.1
-                    ]
-                    (Ui.text "Elm Camp")
-                )
-
+        elmCampNextTopLine : Element FrontendMsg
         elmCampNextTopLine =
-            Ui.column [ Ui.spacing 30 ]
-                [ Ui.row
-                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
-                    , Ui.column
-                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
-                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
-                        , Ui.el
-                            [ Ui.width Ui.shrink
-                            , Ui.Font.weight 800
-                            , Ui.Font.color Theme.lightTheme.elmText
-                            , Ui.Font.lineHeight 1
-                            ]
-                            (Ui.text "2026")
-                        ]
-                    ]
-                , Ui.column
-                    [ Ui.spacing 8, Ui.Font.size 18 ]
+            Ui.column
+                [ Ui.spacing 30 ]
+                [ Ui.column
+                    [ Ui.spacing 0 ]
                     [ Ui.el
                         [ Ui.width Ui.shrink
                         , Ui.Font.bold
                         , Ui.Font.color Theme.lightTheme.defaultText
+                        , Ui.centerX
+                        , Ui.Font.size 18
                         ]
                         (Ui.text location)
                     , Ui.el
@@ -213,13 +183,19 @@ header config =
                         , Ui.linkNewTab "https://www.hotel-pracharna.cz/en/"
                         , Ui.Font.color Theme.lightTheme.link
                         , Ui.Font.underline
+                        , Ui.centerX
+                        , Ui.Font.size 18
                         ]
                         (Ui.text "Park Hotel Prachárna")
-                    , Ui.el
-                        [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.color Theme.lightTheme.defaultText ]
-                        (Ui.text "Monday 15th - Thursday 18th June 2026")
                     ]
-                , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt config.now
+                , Ui.el
+                    [ Ui.width Ui.shrink
+                    , Ui.Font.bold
+                    , Ui.Font.color Theme.lightTheme.defaultText
+                    , Ui.centerX
+                    , Ui.Font.size 18
+                    ]
+                    (Ui.text "Monday 15th - Thursday 18th June 2026")
                 ]
     in
     if Theme.isMobile config.window then
@@ -227,7 +203,31 @@ header config =
             [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
-                [ elmCampTitle
+                [ Ui.column
+                    [ Ui.spacing 8 ]
+                    [ Ui.html (View.Logo.view 200 config.logoModel)
+                        |> Ui.el [ Ui.centerX, Ui.move { x = -10, y = 0, z = 0 } ]
+                        |> Ui.map Types.LogoMsg
+                    , Ui.column
+                        [ Ui.width Ui.shrink
+                        , Ui.centerX
+                        , Ui.Font.size 54
+                        , Theme.glow
+                        , Ui.Font.lineHeight 1
+                        , Ui.spacing 8
+                        , Ui.alignTop
+                        , Ui.link (Route.encode Nothing Route.HomepageRoute)
+                        ]
+                        [ Ui.text "Elm Camp"
+                        , Ui.row
+                            [ Ui.width Ui.shrink, Ui.Font.size 27, Ui.contentCenterY, Ui.paddingXY 4 0 ]
+                            [ Ui.el
+                                [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1, Ui.Font.exactWhitespace ]
+                                (Ui.text "Unconference ")
+                            , year
+                            ]
+                        ]
+                    ]
                 , elmCampNextTopLine
                 ]
             ]
@@ -237,10 +237,42 @@ header config =
             [ Ui.width Ui.shrink, Ui.padding 30, Ui.spacing 40, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24 ]
-                [ elmCampTitle
+                [ Ui.row
+                    []
+                    [ Ui.html (View.Logo.view 150 config.logoModel) |> Ui.el [ Ui.move { x = 0, y = -2, z = 0 } ] |> Ui.map Types.LogoMsg
+                    , Ui.column
+                        [ Ui.width Ui.shrink
+                        , Ui.Font.size 64
+                        , Theme.glow
+                        , Ui.Font.lineHeight 1
+                        , Ui.spacing 8
+                        , Ui.paddingXY 16 0
+                        , Ui.alignTop
+                        , Ui.link (Route.encode Nothing Route.HomepageRoute)
+                        ]
+                        [ Ui.text "Elm Camp"
+                        , Ui.row
+                            [ Ui.width Ui.shrink, Ui.Font.size 32, Ui.contentCenterY, Ui.paddingXY 4 0 ]
+                            [ Ui.el
+                                [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1, Ui.Font.exactWhitespace ]
+                                (Ui.text "Unconference ")
+                            , year
+                            ]
+                        ]
+                    ]
                 , elmCampNextTopLine
                 ]
             ]
+
+
+year : Element msg
+year =
+    Ui.el
+        [ Ui.width Ui.shrink
+        , Ui.Font.weight 800
+        , Ui.Font.color Theme.lightTheme.elmText
+        ]
+        (Ui.text "2026")
 
 
 organisers : Size -> Element msg

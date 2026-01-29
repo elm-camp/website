@@ -308,7 +308,7 @@ h1 id window title =
                 "36px"
 
              else
-                "44px"
+                "40px"
             )
         , Html.Attributes.style "line-height" "1.2"
         , Html.Attributes.style "font-weight" "600"
