@@ -647,7 +647,7 @@ downloadTicketSalesReminder =
         { name = "elm-camp-ticket-sale-starts"
         , prodid = { company = "elm-camp", product = "website" }
         , events =
-            [ { uid = "elm-camp-ticket-sale-starts"
+            [ { uid = "elm-camp-26-ticket-sale-starts"
               , start = Camp26Czech.ticketSalesOpenAt
               , summary = "Elm Camp Ticket Sale Starts"
               , description = "Can't wait to see you there!"
