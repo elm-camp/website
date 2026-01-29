@@ -157,44 +157,43 @@ ticketSalesOpenAt =
 header : LoadedModel -> Element FrontendMsg
 header config =
     let
-        titleSize =
-            if Theme.isMobile config.window then
-                64
-
-            else
-                80
-
+        elmCampTitle : Element FrontendMsg
         elmCampTitle =
-            Ui.el
+            Ui.row
                 [ Ui.link (Route.encode Nothing Route.HomepageRoute) ]
-                (Ui.el
+                [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
+                , Ui.column
                     [ Ui.width Ui.shrink
-                    , Ui.Font.size titleSize
+                    , if Theme.isMobile config.window then
+                        Ui.Font.size 64
+
+                      else
+                        Ui.Font.size 80
                     , Theme.glow
                     , Ui.paddingXY 0 8
                     , Ui.Font.lineHeight 1.1
                     ]
-                    (Ui.text "Elm Camp")
-                )
-
-        elmCampNextTopLine =
-            Ui.column [ Ui.spacing 30 ]
-                [ Ui.row
-                    [ Ui.width Ui.shrink, Ui.centerX, Ui.spacing 13 ]
-                    [ Ui.html (View.Logo.view config.logoModel) |> Ui.map Types.LogoMsg
-                    , Ui.column
-                        [ Ui.width Ui.shrink, Ui.Font.size 24, Ui.contentCenterY ]
-                        [ Ui.el [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1 ] (Ui.text "Unconference")
+                    [ Ui.text "Elm Camp"
+                    , Ui.row
+                        [ Ui.width Ui.shrink, Ui.Font.size 40, Ui.contentCenterY, Ui.paddingXY 4 0 ]
+                        [ Ui.el
+                            [ Ui.width Ui.shrink, Theme.glow, Ui.Font.lineHeight 1, Ui.Font.exactWhitespace ]
+                            (Ui.text "Unconference ")
                         , Ui.el
                             [ Ui.width Ui.shrink
                             , Ui.Font.weight 800
                             , Ui.Font.color Theme.lightTheme.elmText
-                            , Ui.Font.lineHeight 1
                             ]
                             (Ui.text "2026")
                         ]
                     ]
-                , Ui.column
+                ]
+
+        elmCampNextTopLine : Element FrontendMsg
+        elmCampNextTopLine =
+            Ui.column
+                [ Ui.spacing 30 ]
+                [ Ui.column
                     [ Ui.spacing 8, Ui.Font.size 18 ]
                     [ Ui.el
                         [ Ui.width Ui.shrink
