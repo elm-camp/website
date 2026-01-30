@@ -103,7 +103,7 @@ subscriptions model =
     Subscription.batch
         [ Effect.Browser.Events.onResize GotWindowSize
         , Effect.Browser.Events.onMouseUp (D.succeed MouseDown)
-        , Time.every Duration.second Tick
+        , Time.every (Duration.seconds 5) Tick
         , logoSubscription
         ]
 
