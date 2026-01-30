@@ -39,6 +39,7 @@ view model =
         [ Ui.column
             (Ui.paddingXY 16 0 :: Theme.contentAttributes)
             [ header model
+            , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
             , RichText.view model intro
             , View.Sales.view ticketSalesOpenAt model
             , RichText.view model venueAndAccess

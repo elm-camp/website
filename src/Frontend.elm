@@ -349,9 +349,6 @@ updateLoaded msg model =
         SetViewport ->
             ( model, Command.none )
 
-        SetViewPortForElement elmentId ->
-            ( model, jumpToId elmentId 40 )
-
         AdminPullBackendModel ->
             ( model
             , postJsonBytes
@@ -490,9 +487,6 @@ view model =
     { title = "Elm Camp"
     , body =
         [ Theme.css
-
-        -- , W.Styles.globalStyles
-        -- , W.Styles.baseTheme
         , Ui.layout
             (Ui.withAnimation
                 { toMsg = ElmUiMsg

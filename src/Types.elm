@@ -301,7 +301,6 @@ type FrontendMsg
     | PressedCancelForm
     | PressedShowCarbonOffsetTooltip
     | SetViewport
-    | SetViewPortForElement HtmlId
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | LogoMsg View.Logo.Msg

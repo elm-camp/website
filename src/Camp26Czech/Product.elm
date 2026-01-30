@@ -1,7 +1,5 @@
 module Camp26Czech.Product exposing (Sponsorship, sponsorship, sponsorshipItems, ticket, year)
 
-import Env
-
 
 year : String
 year =
@@ -17,40 +15,21 @@ ticket :
     , groupRoom : String
     }
 ticket =
-    case Env.mode of
-        Env.Production ->
-            { attendanceTicket = "prod_S57SF0eTq5vOvx"
-            , offsite = "prod_RzWC4KcrRdLzBH"
-            , campingSpot = "prod_RzWC4KcrRdLzBH"
-            , singleRoom = "prod_RzWGafvirlc2HL"
-            , doubleRoom = ""
-            , groupRoom = "prod_RzWIY7BfNEYSqF"
-            }
-
-        Env.Development ->
-            { attendanceTicket = "prod_S57SF0eTq5vOvx"
-            , offsite = "prod_RzWC4KcrRdLzBH"
-            , campingSpot = "prod_RzWC4KcrRdLzBH"
-            , singleRoom = "prod_RzWGafvirlc2HL"
-            , doubleRoom = ""
-            , groupRoom = "prod_RzWIY7BfNEYSqF"
-            }
+    { attendanceTicket = ""
+    , offsite = ""
+    , campingSpot = "prod_TmIy0Mltqmgzg5"
+    , singleRoom = "prod_TmJ0n8liux9A3d"
+    , doubleRoom = "prod_TmIzrbSouU0bYE"
+    , groupRoom = ""
+    }
 
 
 sponsorship : { bronze : String, silver : String, gold : String }
 sponsorship =
-    case Env.mode of
-        Env.Production ->
-            { bronze = ""
-            , silver = "prod_RzWTill7eglkFc"
-            , gold = "prod_RzWVRbQ0spItOf"
-            }
-
-        Env.Development ->
-            { bronze = ""
-            , silver = "prod_RzWTill7eglkFc"
-            , gold = "prod_RzWVRbQ0spItOf"
-            }
+    { bronze = ""
+    , silver = "prod_RzWTill7eglkFc"
+    , gold = "prod_RzWVRbQ0spItOf"
+    }
 
 
 type alias Sponsorship =

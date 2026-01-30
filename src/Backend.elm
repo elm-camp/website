@@ -356,7 +356,7 @@ updateFromFrontend sessionId clientId msg model =
                                 |> List.map
                                     (\( accom, accomCount ) ->
                                         Stripe.Priced
-                                            { name = Tickets.accomToString accom
+                                            { name = Tickets.accomToTicket accom |> .name
                                             , priceId =
                                                 let
                                                     productId =

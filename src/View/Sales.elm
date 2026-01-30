@@ -41,7 +41,7 @@ import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
 import Stripe exposing (PriceId, ProductId(..))
-import Theme exposing (normalButtonAttributes, showyButtonAttributes)
+import Theme
 import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
 import Ui.Events
@@ -97,7 +97,7 @@ view ticketSalesOpenAt model =
             , afterTicketsAreLive
                 (Ui.el
                     Theme.contentAttributes
-                    (RichText.h1 "attend-elm-camp" model.window "Attend Elm Camp" |> Ui.html)
+                    (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
                 )
             , afterTicketsAreLive (ticketsView model)
             , afterTicketsAreLive (accommodationView model)
@@ -111,6 +111,10 @@ view ticketSalesOpenAt model =
             -- , Element.el Theme.contentAttributes content3
             ]
         ]
+
+
+attendSectionId =
+    "attend-elm-camp"
 
 
 detailedCountdown : Time.Posix -> Time.Posix -> Maybe (Ui.Element msg)
@@ -229,7 +233,16 @@ ticketSalesHtmlId =
 goToTicketSales : Ui.Element FrontendMsg
 goToTicketSales =
     Ui.el
-        (showyButtonAttributes (SetViewPortForElement ticketSalesHtmlId))
+        [ Ui.width Ui.fill
+        , Ui.background (Ui.rgb 255 172 98)
+        , Ui.padding 16
+        , Ui.rounded 8
+        , Ui.Font.color (Ui.rgb 0 0 0)
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.link (Route.encode (Just attendSectionId) Route.HomepageRoute)
+        ]
         (Ui.text "Tickets on sale now! ⬇️")
 
 
@@ -503,7 +516,7 @@ formView model productId priceId ticket =
 
         cancelButton =
             Ui.el
-                (normalButtonAttributes PressedCancelForm)
+                (Theme.normalButtonAttributes PressedCancelForm)
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
 
         includesAccom =
@@ -606,7 +619,7 @@ attendeeForm model i attendee =
 
         removeButton =
             Ui.el
-                (normalButtonAttributes (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
+                (Theme.normalButtonAttributes (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
                     ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.move { x = 0, y = removeButtonAlignment, z = 0 } ]
                 )
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
@@ -891,7 +904,11 @@ summaryAccommodation model ( accom, items ) displayCurrency =
                             |> Maybe.withDefault 0
                             |> (\price -> price * toFloat num)
                 in
-                Tickets.accomToString accom ++ " x " ++ String.fromInt num ++ " – " ++ Theme.priceText { currency = displayCurrency, amount = floor total }
+                (Tickets.accomToTicket accom).name
+                    ++ " x "
+                    ++ String.fromInt num
+                    ++ " – "
+                    ++ Theme.priceText { currency = displayCurrency, amount = floor total }
            )
         |> Ui.text
 

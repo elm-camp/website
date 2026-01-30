@@ -19,7 +19,6 @@ module Theme exposing
     , priceAmount
     , priceText
     , rowToColumnWhen
-    , showyButtonAttributes
     , spinnerWhite
     , submitButtonAttributes
     , toggleButton
@@ -337,20 +336,6 @@ normalButtonAttributes onPress =
     , Ui.Font.weight 600
     , Ui.Input.button onPress
     , Ui.width Ui.shrink
-    ]
-
-
-showyButtonAttributes : msg -> List (Ui.Attribute msg)
-showyButtonAttributes onPress =
-    [ Ui.width Ui.fill
-    , Ui.background (Ui.rgb 255 172 98)
-    , Ui.padding 16
-    , Ui.rounded 8
-    , Ui.Font.color (Ui.rgb 0 0 0)
-    , Ui.alignBottom
-    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-    , Ui.Font.weight 600
-    , Ui.Input.button onPress
     ]
 
 

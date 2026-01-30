@@ -1,6 +1,5 @@
 module Camp26Czech.Tickets exposing
     ( Ticket
-    , accomToString
     , accomToTicket
     , accommodationOptions
     , allAccommodations
@@ -138,28 +137,9 @@ accomToTicket accom =
             groupRoom
 
 
-accomToString : Accommodation -> String
-accomToString accom =
-    case accom of
-        Offsite ->
-            "Offsite"
-
-        Campsite ->
-            "Camping Spot"
-
-        Single ->
-            "Single Room"
-
-        Double ->
-            "Double Room"
-
-        Group ->
-            "Shared Room"
-
-
 allAccommodations : List Accommodation
 allAccommodations =
-    [ Offsite, Campsite, Single, Group ]
+    [ Campsite, Single, Double ]
 
 
 formIncludesAccom : PurchaseForm -> Bool
@@ -211,7 +191,7 @@ accommodationOptions =
 
 dict : SeqDict (Id ProductId) Ticket
 dict =
-    [ offsite, campingSpot, singleRoom, groupRoom ]
+    [ campingSpot, singleRoom, doubleRoom ]
         |> List.map (\t -> ( Id.fromString t.productId, t ))
         |> SeqDict.fromList
 
