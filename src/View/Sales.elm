@@ -15,7 +15,6 @@ module View.Sales exposing
     , summaryAccommodation
     , textInput
     , ticketInfo
-    , ticketSalesHtmlId
     , ticketSalesOpenCountdown
     , ticketsHtmlId
     , ticketsView
@@ -34,7 +33,7 @@ import Html.Attributes
 import Html.Events
 import Id exposing (Id)
 import List.Extra as List
-import List.Nonempty exposing (Nonempty)
+import List.Nonempty exposing (Nonempty(..))
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import RichText exposing (Inline(..), RichText(..), Shared)
@@ -226,11 +225,6 @@ ticketSalesOpenCountdown ticketSalesOpenAt now =
         )
 
 
-ticketSalesHtmlId : HtmlId
-ticketSalesHtmlId =
-    Dom.id "ticket-sales"
-
-
 goToTicketSales : Ui.Element FrontendMsg
 goToTicketSales =
     Ui.el
@@ -382,23 +376,40 @@ opportunityGrantInfo =
 
 ticketsView : LoadedModel -> Ui.Element FrontendMsg
 ticketsView model =
+    let
+        form =
+            model.form
+
+        attendeeCount =
+            List.Nonempty.length form.attendees
+    in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         Theme.contentAttributes
-        [ Ui.row
-            [ Ui.htmlAttribute (Dom.idToAttribute ticketSalesHtmlId)
+        [ Ui.column
+            []
+            [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
+            , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
             ]
-            [ Ui.column
-                []
-                [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
-                , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
-                ]
-            ]
-        , Ui.column [ Ui.spacing 20 ]
+        , Ui.column
+            [ Ui.spacing 20 ]
             [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
             , Ui.column
                 [ Ui.spacing 16 ]
-                (List.indexedMap (\i attendee -> attendeeForm model i attendee) (List.Nonempty.toList model.form.attendees))
+                (List.indexedMap (attendeeForm (attendeeCount > 1) model) (List.Nonempty.toList form.attendees))
+            , if attendeeCount < 10 then
+                Ui.el
+                    (Theme.normalButtonAttributes
+                        (FormChanged
+                            { form
+                                | attendees =
+                                    List.Nonempty.append form.attendees (Nonempty PurchaseForm.defaultAttendee [])
+                            }
+                        )
+                    )
+                    (Ui.text "Add another attendee")
+
+              else
+                Ui.none
             , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
 
             -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
@@ -564,8 +575,8 @@ formView model productId priceId ticket =
         ]
 
 
-attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
-attendeeForm model i attendee =
+attendeeForm : Bool -> LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
+attendeeForm showRemove model i attendee =
     let
         form =
             model.form
@@ -580,21 +591,6 @@ attendeeForm model i attendee =
 
             else
                 0
-
-        removeButton =
-            Ui.el
-                (Theme.normalButtonAttributes
-                    (FormChanged
-                        { form
-                            | attendees =
-                                List.removeIfIndex (\j -> i == j) (List.Nonempty.toList model.form.attendees)
-                                    |> List.Nonempty.fromList
-                                    |> Maybe.withDefault model.form.attendees
-                        }
-                    )
-                    ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.move { x = 0, y = removeButtonAlignment, z = 0 } ]
-                )
-                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
     in
     Theme.rowToColumnWhen columnWhen
         model.window
@@ -637,7 +633,26 @@ attendeeForm model i attendee =
                         Err "Please type in the name of city nearest to you"
             )
             attendee.originCity
-        , removeButton
+        , if showRemove then
+            Ui.el
+                (Theme.normalButtonAttributes
+                    (FormChanged
+                        { form
+                            | attendees =
+                                List.removeIfIndex (\j -> i == j) (List.Nonempty.toList model.form.attendees)
+                                    |> List.Nonempty.fromList
+                                    |> Maybe.withDefault model.form.attendees
+                        }
+                    )
+                    ++ [ Ui.width (Ui.px 100)
+                       , Ui.alignTop
+                       , Ui.move { x = 0, y = removeButtonAlignment, z = 0 }
+                       ]
+                )
+                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
+
+          else
+            Ui.none
         ]
 
 
@@ -715,8 +730,7 @@ sponsorships ticketSalesOpenAt model form =
             Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
     in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
+        (Ui.spacing 20 :: Theme.contentAttributes)
         [ Theme.h2 "🤝 Sponsor Elm Camp"
         , "Position your company as a leading supporter of the Elm community and help Elm Camp "
             ++ year
@@ -984,7 +998,7 @@ textInput form onChange title validator text =
         [ Ui.spacing 4, Ui.alignTop ]
         [ label.element
         , Ui.Input.text
-            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 8 4 ]
+            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 8 4, Ui.width Ui.fill ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing
