@@ -29,7 +29,6 @@ import Camp26Czech.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
-import Formatting exposing (Inline(..), RichText(..), Shared)
 import Html
 import Html.Attributes
 import Html.Events
@@ -37,6 +36,7 @@ import Id exposing (Id)
 import List.Extra as List
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import RichText exposing (Inline(..), RichText(..), Shared)
 import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
@@ -91,7 +91,7 @@ view ticketSalesOpenAt model =
             ]
             [ Ui.el
                 Theme.contentAttributes
-                (Formatting.view model opportunityGrantInfo)
+                (RichText.view model opportunityGrantInfo)
 
             -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
             --, afterTicketsAreLive
@@ -337,7 +337,7 @@ ticketInfo model =
         , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
         ]
     ]
-        |> Formatting.view model
+        |> RichText.view model
 
 
 ticketsHtmlId : HtmlId
@@ -372,7 +372,7 @@ ticketsView model =
             ]
             [ Ui.column
                 []
-                [ Formatting.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
+                [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
                 , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
                 ]
             , Ui.column [ Ui.width Ui.shrink ]
@@ -435,7 +435,7 @@ accommodationView model =
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
-            , Formatting.view
+            , RichText.view
                 model
                 [ Paragraph [ Text "Please select one accommodation option per attendee." ]
                 , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared." ]
@@ -560,7 +560,7 @@ formView model productId priceId ticket =
 
                 SubmitBackendError err ->
                     Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text err ]
-            , Formatting.view
+            , RichText.view
                 model
                 [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
                 , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
@@ -571,7 +571,7 @@ formView model productId priceId ticket =
 
               else
                 Ui.column [ Ui.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
-            , Formatting.view
+            , RichText.view
                 model
                 [ Paragraph
                     [ Text "Problem with something above? Get in touch with the team at "

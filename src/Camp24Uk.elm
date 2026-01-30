@@ -1,7 +1,7 @@
 module Camp24Uk exposing (view)
 
 import Camp
-import Formatting exposing (Inline(..), RichText(..))
+import RichText exposing (Inline(..), RichText(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -39,7 +39,7 @@ view model =
                     , Camp.elmCampBottomLine meta
                     ]
                 ]
-            , Formatting.view model content
+            , RichText.view model content
             ]
         , Theme.footer
         ]

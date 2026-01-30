@@ -1,8 +1,8 @@
 module Camp25US exposing (view)
 
 import Camp
-import Formatting exposing (Inline(..), RichText(..), Shared)
 import Helpers
+import RichText exposing (Inline(..), RichText(..), Shared)
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -39,7 +39,7 @@ view model =
                     , elmBottomLine
                     ]
                 ]
-            , Formatting.view model content
+            , RichText.view model content
             ]
         , Theme.footer
         ]

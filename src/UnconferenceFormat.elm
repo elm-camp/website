@@ -1,6 +1,6 @@
 module UnconferenceFormat exposing (view)
 
-import Formatting exposing (Inline(..), RichText(..))
+import RichText exposing (Inline(..), RichText(..))
 
 
 view : List RichText

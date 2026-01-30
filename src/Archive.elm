@@ -1,6 +1,6 @@
 module Archive exposing (content)
 
-import Formatting exposing (Inline(..), RichText(..))
+import RichText exposing (Inline(..), RichText(..))
 import Route
 
 

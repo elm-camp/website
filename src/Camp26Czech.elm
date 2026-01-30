@@ -6,8 +6,8 @@ module Camp26Czech exposing
     )
 
 import Camp
-import Formatting exposing (Inline(..), RichText(..))
 import Helpers
+import RichText exposing (Inline(..), RichText(..))
 import Route
 import Theme
 import Time
@@ -49,12 +49,12 @@ view model =
             , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
             , Ui.column
                 (Ui.spacing 16 :: Theme.contentAttributes)
-                [ Formatting.view model content
+                [ RichText.view model content
                 , organisers model.window
                 ]
             , Ui.column
                 Theme.contentAttributes
-                [ Formatting.view
+                [ RichText.view
                     model
                     [ Section
                         "Our sponsors"
