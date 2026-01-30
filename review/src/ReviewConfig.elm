@@ -38,7 +38,10 @@ import Review.Rule exposing (Rule)
 import ReviewPipelineStyles
 import ReviewPipelineStyles.Fixes
 import RunUnsafeAtStartup
-import Simplify
+
+
+
+--import Simplify
 
 
 config : List Rule
@@ -77,7 +80,8 @@ config =
         ]
         |> Review.Rule.ignoreErrorsForDirectories [ "tests" ]
         |> defaultIgnore
-    , Simplify.rule Simplify.defaults |> defaultIgnore
+
+    --, Simplify.rule Simplify.defaults |> defaultIgnore
     , NoInconsistentAliases.config
         [ ( "Json.Decode", "D" )
         , ( "Json.Encode", "E" )
