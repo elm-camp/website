@@ -1,7 +1,7 @@
 module Camp25US exposing (view)
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..), Shared)
+import Formatting exposing (Inline(..), RichText(..), Shared)
 import Helpers
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
@@ -67,7 +67,7 @@ elmBottomLine =
         ]
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Unconference"
         [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"

@@ -6,7 +6,7 @@ module Camp26Czech exposing
     )
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..))
+import Formatting exposing (Inline(..), RichText(..))
 import Helpers
 import Route
 import Theme
@@ -86,7 +86,7 @@ view model =
         ]
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Elm Camp 2026 - Olomouc, Czech Republic"
         [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czech Republic!" ]

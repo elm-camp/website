@@ -1,6 +1,6 @@
-module Formatting exposing
-    ( Formatting(..)
-    , Inline(..)
+module RichText exposing
+    ( Inline(..)
+    , RichText(..)
     , Shared
     , h1
     , h2
@@ -18,13 +18,13 @@ import Ui
 import Url
 
 
-type Formatting
+type RichText
     = Paragraph (List Inline)
-    | BulletList (List Inline) (List Formatting)
-    | NumberList (List Inline) (List Formatting)
-    | LetterList (List Inline) (List Formatting)
-    | Group (List Formatting)
-    | Section String (List Formatting)
+    | BulletList (List Inline) (List RichText)
+    | NumberList (List Inline) (List RichText)
+    | LetterList (List Inline) (List RichText)
+    | Group (List RichText)
+    | Section String (List RichText)
     | Image { source : String, maxWidth : Maybe Int, caption : List Inline }
     | Images (List (List { source : String, maxWidth : Maybe Int, link : Maybe String, description : String }))
     | LegacyMap
@@ -47,7 +47,7 @@ type alias Shared a =
     { a | window : Size }
 
 
-view : Shared b -> List Formatting -> Ui.Element msg
+view : Shared b -> List RichText -> Ui.Element msg
 view shared list =
     Html.div
         [ Html.Attributes.style "line-height" "1.5", Html.Attributes.style "white-space" "pre-wrap" ]
@@ -60,7 +60,7 @@ noMargin =
     Html.Attributes.style "margin" "0"
 
 
-viewHelper : Shared b -> List String -> Formatting -> Html msg
+viewHelper : Shared b -> List String -> RichText -> Html msg
 viewHelper shared depth item =
     case item of
         Paragraph items ->

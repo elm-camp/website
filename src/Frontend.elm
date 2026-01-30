@@ -24,7 +24,7 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
-import Formatting exposing (Formatting(..), Inline(..))
+import Formatting exposing (Inline(..), RichText(..))
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
@@ -664,7 +664,7 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-codeOfConductContent : List Formatting
+codeOfConductContent : List RichText
 codeOfConductContent =
     [ Section "Code of Conduct"
         [ Paragraph [ Text "Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions." ]

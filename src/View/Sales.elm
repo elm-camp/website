@@ -29,7 +29,7 @@ import Camp26Czech.Tickets as Tickets
 import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
-import Formatting exposing (Formatting(..), Inline(..), Shared)
+import Formatting exposing (Inline(..), RichText(..), Shared)
 import Html
 import Html.Attributes
 import Html.Events
@@ -345,7 +345,7 @@ ticketsHtmlId =
     Dom.id "tickets"
 
 
-opportunityGrantInfo : List Formatting
+opportunityGrantInfo : List RichText
 opportunityGrantInfo =
     [ Section "🫶 Opportunity grant"
         [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]

@@ -1,7 +1,7 @@
 module Camp24Uk exposing (view)
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..))
+import Formatting exposing (Inline(..), RichText(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -45,7 +45,7 @@ view model =
         ]
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Unconference"
         [ BulletList
