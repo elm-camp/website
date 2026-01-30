@@ -227,13 +227,11 @@ rowToColumnWhen : Int -> Size -> List (Ui.Attribute msg) -> List (Ui.Element msg
 rowToColumnWhen width window attrs children =
     if window.width > width then
         Ui.row
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             attrs
             children
 
     else
         Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             attrs
             children
 

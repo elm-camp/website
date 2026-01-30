@@ -8,6 +8,8 @@ module PurchaseForm exposing
     , SubmitStatus(..)
     , defaultAttendee
     , init
+    , unvalidateAttendee
+    , validateAttendees
     , validateEmailAddress
     , validateForm
     , validateInt
@@ -20,6 +22,7 @@ import EmailAddress exposing (EmailAddress)
 import Env
 import Helpers
 import Id exposing (Id)
+import List.Nonempty exposing (Nonempty(..))
 import Name exposing (Name)
 import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
@@ -38,7 +41,7 @@ type Accommodation
 
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
-    , attendees : List AttendeeForm
+    , attendees : Nonempty AttendeeForm
     , accommodationBookings : List Accommodation
     , billingEmail : String
     , grantContribution : String
@@ -50,7 +53,7 @@ type alias PurchaseForm =
 init : PurchaseForm
 init =
     { submitStatus = NotSubmitted NotPressedSubmit
-    , attendees = []
+    , attendees = Nonempty defaultAttendee []
     , accommodationBookings = []
     , billingEmail = ""
     , grantContribution = "0"
@@ -60,7 +63,7 @@ init =
 
 
 type alias PurchaseFormValidated =
-    { attendees : List AttendeeFormValidated
+    { attendees : Nonempty AttendeeFormValidated
     , accommodationBookings : List Accommodation
     , billingEmail : EmailAddress
     , grantContribution : Int
@@ -143,6 +146,35 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
+validateAttendees : Nonempty AttendeeForm -> Result String (Nonempty AttendeeFormValidated)
+validateAttendees attendees =
+    let
+        attendeesValidated : List AttendeeFormValidated
+        attendeesValidated =
+            List.Nonempty.toList attendees |> List.filterMap validateAttendee
+    in
+    case List.Nonempty.fromList attendeesValidated of
+        Just list ->
+            if List.Nonempty.length list == List.Nonempty.length attendees then
+                Ok list
+
+            else
+                Err "Invalid attendees"
+
+        Nothing ->
+            Err "Invalid attendees"
+
+
+unvalidateAttendee : AttendeeFormValidated -> AttendeeForm
+unvalidateAttendee attendee =
+    { name = Name.toString attendee.name
+    , email = EmailAddress.toString attendee.email
+    , country = String.Nonempty.toString attendee.country
+    , originCity = String.Nonempty.toString attendee.originCity
+    , primaryModeOfTravel = attendee.primaryModeOfTravel
+    }
+
+
 validateForm : PurchaseForm -> Maybe PurchaseFormValidated
 validateForm form =
     let
@@ -163,19 +195,8 @@ validateForm form =
 
                 Nothing ->
                     Ok Nothing
-
-        attendees =
-            let
-                attendeesValidated =
-                    form.attendees |> List.map validateAttendee
-            in
-            if attendeesValidated |> List.all Helpers.isJust then
-                attendeesValidated |> Helpers.justs |> Ok
-
-            else
-                Err "Invalid attendees"
     in
-    case T4 billingEmail grantContribution sponsorship attendees of
+    case T4 billingEmail grantContribution sponsorship (validateAttendees form.attendees) of
         T4 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) ->
             Just
                 { attendees = attendeesOk

@@ -21,6 +21,7 @@ module Camp26Czech.Inventory exposing
 -}
 
 import Camp26Czech.Product as Product
+import List.Nonempty
 import PurchaseForm exposing (Accommodation(..))
 import SeqDict exposing (SeqDict)
 import Types exposing (BackendModel, TicketAvailability)
@@ -75,7 +76,7 @@ slotsRemaining model =
 
         bookedAttendees =
             model.orders
-                |> extract (\id order -> order.form.attendees)
+                |> extract (\id order -> List.Nonempty.toList order.form.attendees)
                 |> List.length
 
         remainingCapacity =

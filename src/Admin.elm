@@ -22,6 +22,7 @@ import Env
 import Html
 import Id exposing (Id)
 import List.Extra
+import List.Nonempty exposing (Nonempty)
 import Name
 import SeqDict exposing (SeqDict)
 import String.Nonempty
@@ -213,17 +214,17 @@ viewPendingOrder idx ( id, order ) =
 
 attendees : Types.Order -> List String
 attendees order =
-    order.form.attendees |> List.map (\a -> Name.toString a.name)
+    List.Nonempty.toList order.form.attendees |> List.map (\a -> Name.toString a.name)
 
 
 attendeesPending : Types.PendingOrder -> List String
 attendeesPending order =
-    order.form.attendees |> List.map (\a -> Name.toString a.name)
+    List.Nonempty.toList order.form.attendees |> List.map (\a -> Name.toString a.name)
 
 
-attendeesDetail : (a -> b) -> { c | form : { d | attendees : List a } } -> List String
+attendeesDetail : (a -> b) -> { c | form : { d | attendees : Nonempty a } } -> List String
 attendeesDetail fn order =
-    order.form.attendees |> List.map (\a -> fn a |> toString)
+    List.Nonempty.toList order.form.attendees |> List.map (\a -> fn a |> toString)
 
 
 loadProdBackend : Command restriction toMsg msg

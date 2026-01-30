@@ -34,6 +34,7 @@ import Html.Attributes
 import Html.Events
 import Id exposing (Id)
 import List.Extra as List
+import List.Nonempty exposing (Nonempty)
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import RichText exposing (Inline(..), RichText(..), Shared)
@@ -392,50 +393,16 @@ ticketsView model =
                 [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
                 , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
                 ]
-            , Ui.column [ Ui.width Ui.shrink ]
-                [ Theme.numericField
-                    "Tickets"
-                    (List.length model.form.attendees)
-                    (\_ ->
-                        -- Remove last attendee from the list
-                        model.form.attendees
-                            |> List.init
-                            |> Maybe.withDefault []
-                            |> (\attendees ->
-                                    let
-                                        form =
-                                            model.form
-                                    in
-                                    FormChanged { form | attendees = attendees }
-                               )
-                    )
-                    (\_ ->
-                        -- Add a new attendee to the list
-                        model.form.attendees
-                            |> (\attendees ->
-                                    let
-                                        form =
-                                            model.form
-                                    in
-                                    FormChanged { form | attendees = attendees ++ [ PurchaseForm.defaultAttendee ] }
-                               )
-                    )
-                ]
             ]
-        , case model.form.attendees of
-            [] ->
-                Ui.none
+        , Ui.column [ Ui.spacing 20 ]
+            [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
+            , Ui.column
+                [ Ui.spacing 16 ]
+                (List.indexedMap (\i attendee -> attendeeForm model i attendee) (List.Nonempty.toList model.form.attendees))
+            , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
 
-            _ ->
-                Ui.column [ Ui.spacing 20 ]
-                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
-                    , Ui.column
-                        [ Ui.spacing 16 ]
-                        (List.indexedMap (\i attendee -> attendeeForm model i attendee) model.form.attendees)
-                    , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
-
-                    -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
-                    ]
+            -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
+            ]
         ]
 
 
@@ -522,9 +489,6 @@ formView model productId priceId ticket =
         includesAccom =
             Tickets.formIncludesAccom form
 
-        hasAttendees =
-            List.length form.attendees > 0
-
         includesRoom =
             Tickets.formIncludesRoom form
 
@@ -584,10 +548,10 @@ formView model productId priceId ticket =
                 , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
                 ]
             , if model.window.width > 600 then
-                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton (includesAccom && hasAttendees) ]
+                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton includesAccom ]
 
               else
-                Ui.column [ Ui.spacing 16 ] [ submitButton (includesAccom && hasAttendees), cancelButton ]
+                Ui.column [ Ui.spacing 16 ] [ submitButton includesAccom, cancelButton ]
             , RichText.view
                 model
                 [ Paragraph
@@ -619,7 +583,15 @@ attendeeForm model i attendee =
 
         removeButton =
             Ui.el
-                (Theme.normalButtonAttributes (FormChanged { form | attendees = List.removeIfIndex (\j -> i == j) model.form.attendees })
+                (Theme.normalButtonAttributes
+                    (FormChanged
+                        { form
+                            | attendees =
+                                List.removeIfIndex (\j -> i == j) (List.Nonempty.toList model.form.attendees)
+                                    |> List.Nonempty.fromList
+                                    |> Maybe.withDefault model.form.attendees
+                        }
+                    )
                     ++ [ Ui.width (Ui.px 100), Ui.alignTop, Ui.move { x = 0, y = removeButtonAlignment, z = 0 } ]
                 )
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
@@ -629,19 +601,19 @@ attendeeForm model i attendee =
         [ Ui.width Ui.fill, Ui.spacing 16 ]
         [ textInput
             model.form
-            (\a -> FormChanged { form | attendees = List.setAt i { attendee | name = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | name = a } model.form.attendees })
             "Name"
             PurchaseForm.validateName
             attendee.name
         , textInput
             model.form
-            (\a -> FormChanged { form | attendees = List.setAt i { attendee | email = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | email = a } model.form.attendees })
             "Email"
             PurchaseForm.validateEmailAddress
             attendee.email
         , textInput
             model.form
-            (\a -> FormChanged { form | attendees = List.setAt i { attendee | country = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | country = a } model.form.attendees })
             "Country you live in"
             (\text ->
                 case String.Nonempty.fromString text of
@@ -654,7 +626,7 @@ attendeeForm model i attendee =
             attendee.country
         , textInput
             model.form
-            (\a -> FormChanged { form | attendees = List.setAt i { attendee | originCity = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | originCity = a } model.form.attendees })
             "City/town"
             (\text ->
                 case String.Nonempty.fromString text of
@@ -667,6 +639,19 @@ attendeeForm model i attendee =
             attendee.originCity
         , removeButton
         ]
+
+
+nonemptySetAt : Int -> a -> Nonempty a -> Nonempty a
+nonemptySetAt index a nonempty =
+    List.Nonempty.indexedMap
+        (\i item ->
+            if i == index then
+                a
+
+            else
+                item
+        )
+        nonempty
 
 
 opportunityGrant : PurchaseForm -> Ui.Element FrontendMsg
@@ -810,15 +795,11 @@ summary model =
             (model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0) * 100
 
         ticketsTotal =
-            model.form.attendees
-                |> List.length
-                |> (\num ->
-                        model.prices
-                            |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
-                            |> Maybe.map (\price -> Theme.priceAmount price.price)
-                            |> Maybe.withDefault 0
-                            |> (\price -> price * toFloat num)
-                   )
+            model.prices
+                |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> Maybe.map (\price -> Theme.priceAmount price.price)
+                |> Maybe.withDefault 0
+                |> (\price -> price * toFloat (List.Nonempty.length model.form.attendees))
 
         accomTotal =
             model.form.accommodationBookings
@@ -857,10 +838,9 @@ summary model =
                 |> Maybe.withDefault Money.USD
     in
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (Theme.contentAttributes ++ [ Ui.spacing 10 ])
+        (Ui.spacing 10 :: Theme.contentAttributes)
         [ Theme.h2 "Summary"
-        , model.form.attendees |> List.length |> (\num -> Ui.text ("Attendees x " ++ String.fromInt num))
+        , Ui.text ("Attendees x " ++ String.fromInt (List.Nonempty.length model.form.attendees))
         , if List.isEmpty model.form.accommodationBookings then
             Ui.text "No accommodation bookings"
 
@@ -1004,7 +984,7 @@ textInput form onChange title validator text =
         [ Ui.spacing 4, Ui.alignTop ]
         [ label.element
         , Ui.Input.text
-            [ Ui.width Ui.shrink, Ui.rounded 8 ]
+            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 8 4 ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing

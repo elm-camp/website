@@ -329,26 +329,27 @@ updateFromFrontend sessionId clientId msg model =
                                 Nothing ->
                                     []
 
+                        ticketItems : List Stripe.CheckoutItem
                         ticketItems =
-                            purchaseForm.attendees
-                                |> List.map
-                                    (\attendee ->
-                                        Stripe.Priced
-                                            { name = Tickets.attendanceTicket.name ++ " for " ++ Name.toString attendee.name
-                                            , priceId =
-                                                let
-                                                    productId =
-                                                        Id.fromString Tickets.attendanceTicket.productId
-                                                in
-                                                case SeqDict.get productId model.prices of
-                                                    Just price ->
-                                                        price.priceId
+                            List.map
+                                (\attendee ->
+                                    Stripe.Priced
+                                        { name = Tickets.attendanceTicket.name ++ " for " ++ Name.toString attendee.name
+                                        , priceId =
+                                            let
+                                                productId =
+                                                    Id.fromString Tickets.attendanceTicket.productId
+                                            in
+                                            case SeqDict.get productId model.prices of
+                                                Just price ->
+                                                    price.priceId
 
-                                                    Nothing ->
-                                                        Id.fromString "price not found"
-                                            , quantity = 1
-                                            }
-                                    )
+                                                Nothing ->
+                                                    Id.fromString "price not found"
+                                        , quantity = 1
+                                        }
+                                )
+                                (List.Nonempty.toList purchaseForm.attendees)
 
                         accommodationItems =
                             purchaseForm.accommodationBookings

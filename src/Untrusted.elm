@@ -8,6 +8,7 @@ module Untrusted exposing
 
 import EmailAddress exposing (EmailAddress)
 import Helpers
+import List.Nonempty
 import Name exposing (Name)
 import PurchaseForm exposing (AttendeeFormValidated, PurchaseFormValidated)
 import Toop exposing (T2(..), T3(..))
@@ -35,11 +36,9 @@ emailAddress (Untrusted a) =
 purchaseForm : Untrusted PurchaseFormValidated -> Maybe PurchaseFormValidated
 purchaseForm (Untrusted a) =
     case
-        T2 (untrust a.billingEmail |> emailAddress)
-            (a.attendees
-                |> List.map (\b -> untrust b |> attendeeForm)
-                |> validateList
-            )
+        T2
+            (untrust a.billingEmail |> emailAddress)
+            (PurchaseForm.validateAttendees (List.Nonempty.map PurchaseForm.unvalidateAttendee a.attendees))
     of
         T2 (Just billingEmail) (Ok attendees) ->
             Just
