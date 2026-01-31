@@ -55,61 +55,38 @@ view : Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
 view ticketSalesOpenAt model =
     let
         ticketsAreLive =
-            case detailedCountdown ticketSalesOpenAt model.now of
-                Just _ ->
-                    False
-
-                Nothing ->
-                    True
-
-        afterTicketsAreLive v =
-            if ticketsAreLive then
-                v
-
-            else
-                Ui.none
-
-        beforeTicketsAreLive v =
-            if ticketsAreLive then
-                Ui.none
-
-            else
-                v
+            detailedCountdown ticketSalesOpenAt model.now == Nothing
     in
     Ui.column
         Theme.contentAttributes
-        [ -- , text " ---------------------------------------------- START OF BEFORE TICKET SALES GO LIVE CONTENT ------------------"
-          beforeTicketsAreLive
-            (Ui.column
-                Theme.contentAttributes
-                [ ticketInfo model
-                ]
-            )
+        [ if ticketsAreLive then
+            Ui.none
+
+          else
+            Ui.column Theme.contentAttributes [ ticketInfo model ]
         , Ui.column
             [ Ui.spacing 60
             , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
-            [ Ui.el
+            (Ui.el
                 Theme.contentAttributes
                 (RichText.view model opportunityGrantInfo)
+                :: (if ticketsAreLive then
+                        [ Ui.el
+                            Theme.contentAttributes
+                            (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
+                        , ticketsView model
+                        , accommodationView model
+                        , formView model
+                            (Id.fromString Product.ticket.campingSpot)
+                            (Id.fromString "testing")
+                            Tickets.attendanceTicket
+                        ]
 
-            -- , text "-------------------------------------------- START OF TICKETS LIVE CONTENT ---------------"
-            , afterTicketsAreLive
-                (Ui.el
-                    Theme.contentAttributes
-                    (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
-                )
-            , afterTicketsAreLive (ticketsView model)
-            , afterTicketsAreLive (accommodationView model)
-            , afterTicketsAreLive
-                (formView model
-                    (Id.fromString Product.ticket.campingSpot)
-                    (Id.fromString "testing")
-                    Tickets.attendanceTicket
-                )
-
-            -- , Element.el Theme.contentAttributes content3
-            ]
+                    else
+                        []
+                   )
+            )
         ]
 
 
@@ -427,7 +404,6 @@ accommodationView : LoadedModel -> Ui.Element FrontendMsg
 accommodationView model =
     Ui.column [ Ui.spacing 20 ]
         [ Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             Theme.contentAttributes
             [ Theme.h2 "🏕️ Ticket type"
             , RichText.view
@@ -447,7 +423,6 @@ accommodationView model =
                                 accom
                                 (Inventory.purchaseable ticket.productId model.slotsRemaining)
                                 (PressedSelectTicket productId price.priceId)
-                                (RemoveAccom accom)
                                 (AddAccom accom)
                                 price.price
                                 ticket
@@ -455,7 +430,7 @@ accommodationView model =
                         Nothing ->
                             Ui.text "No ticket prices found"
                 )
-            |> Theme.rowToColumnWhen 1200 model.window [ Ui.spacing 16 ]
+            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
         ]
 
 

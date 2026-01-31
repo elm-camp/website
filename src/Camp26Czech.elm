@@ -6,8 +6,11 @@ module Camp26Czech exposing
 
 import Camp
 import Helpers
+import NonNegative exposing (NonNegative)
+import PurchaseForm exposing (PurchaseFormValidated)
 import RichText exposing (Inline(..), RichText(..))
 import Route
+import SeqDict exposing (SeqDict)
 import Theme
 import Time
 import Types exposing (FrontendMsg, LoadedModel, Size)
@@ -310,3 +313,53 @@ organisers window =
                     |> Ui.column [ Ui.alignTop, Ui.spacing 24 ]
             )
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
+
+
+maxAttendees : number
+maxAttendees =
+    80
+
+
+
+--
+--maxForAccommodationType : Accommodation -> number
+--maxForAccommodationType t =
+--    case t of
+--        Offsite ->
+--            -- Effectively no limit, the attendee limit should hit first
+--            80
+--
+--        Campsite ->
+--            20
+--
+--        Single ->
+--            6
+--
+--        Double ->
+--            15
+--
+--        Group ->
+--            4
+
+
+totalTicketCount : SeqDict k PurchaseFormValidated -> TicketCount
+totalTicketCount orders =
+    SeqDict.foldl
+        (\_ order count ->
+            { campfireTicketCount = NonNegative.add count.campfireTicketCount order.form.campfireTicketCount
+            , singleRoomTicketCount = NonNegative.add count.singleRoomTicketCount order.form.singleRoomTicketCount
+            , doubleRoomTicketCount = NonNegative.add count.doubleRoomTicketCount order.form.doubleRoomTicketCount
+            }
+        )
+        { campfireTicketCount = NonNegative.zero
+        , singleRoomTicketCount = NonNegative.zero
+        , doubleRoomTicketCount = NonNegative.zero
+        }
+        orders
+
+
+type alias TicketCount =
+    { campfireTicketCount : NonNegative
+    , singleRoomTicketCount : NonNegative
+    , doubleRoomTicketCount : NonNegative
+    }

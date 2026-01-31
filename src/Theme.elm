@@ -292,11 +292,11 @@ footer =
         )
 
 
-numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Ui.Element msg
-numericField title value downMsg upMsg =
+numericField : String -> Int -> (Int -> msg) -> Ui.Element msg
+numericField title value onChange =
     Ui.row [ Ui.spacing 5 ]
         [ Ui.el
-            (normalButtonAttributes (downMsg (value - 1))
+            (normalButtonAttributes (onChange (value - 1))
                 ++ [ Ui.background colors.green
                    , Ui.Font.color colors.white
                    , Ui.width (Ui.px 50)
@@ -314,7 +314,7 @@ numericField title value downMsg upMsg =
             ]
             (Ui.text (String.fromInt value))
         , Ui.el
-            (normalButtonAttributes (upMsg (value + 1))
+            (normalButtonAttributes (onChange (value + 1))
                 ++ [ Ui.background colors.green
                    , Ui.Font.color colors.white
                    , Ui.width (Ui.px 50)

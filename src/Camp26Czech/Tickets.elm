@@ -27,6 +27,7 @@ module Camp26Czech.Tickets exposing
 import Camp26Czech.Product as Product
 import Helpers
 import Id exposing (Id)
+import NonNegative exposing (NonNegative)
 import PurchaseForm exposing (Accommodation(..), PurchaseForm)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, ProductId(..))
@@ -196,32 +197,25 @@ dict =
         |> SeqDict.fromList
 
 
-viewAccom : PurchaseForm -> Accommodation -> Bool -> msg -> msg -> msg -> Price -> Ticket -> Ui.Element msg
-viewAccom form accom ticketAvailable onPress removeMsg addMsg price ticket =
-    let
-        selectedCount =
-            form.accommodationBookings |> List.filter ((==) accom) |> List.length
-    in
+viewAccom : NonNegative -> (NonNegative -> PurchaseForm) -> Bool -> Price -> Ticket -> Ui.Element PurchaseForm
+viewAccom count setter ticketAvailable price ticket =
     Theme.panel []
         [ Ui.none
-
-        -- , image [ width (px 120) ] { src = ticket.image, description = "Illustration of a camp" }
         , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket.name ]
         , Ui.text ticket.description
         , Ui.el
             [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
             (Ui.text (Theme.priceText price))
         , if ticketAvailable then
-            if selectedCount > 0 then
+            if NonNegative.toInt count > 0 then
                 Theme.numericField
                     "Tickets"
-                    selectedCount
-                    (\_ -> removeMsg)
-                    (\_ -> addMsg)
+                    (NonNegative.toInt count)
+                    (\value -> NonNegative.fromInt value |> Result.withDefault count |> setter)
 
             else
                 Ui.el
-                    (Theme.submitButtonAttributes addMsg ticketAvailable)
+                    (Theme.submitButtonAttributes (setter NonNegative.one) ticketAvailable)
                     (Ui.el
                         [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
                         (Ui.text "Select")

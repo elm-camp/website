@@ -146,8 +146,8 @@ viewExpiredOrders orders =
          , quickTable (orders |> SeqDict.values)
             [ \order -> attendeesPending order |> String.join ", "
             , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
-            , \order -> toString order.form.accommodationBookings
 
+            --, \order -> toString order.form.accommodationBookings
             -- , .form >> .grantApply >> Debug.toString
             -- , .form >> .grantContribution >> Debug.toString
             -- , .form >> .sponsorship >> Debug.toString

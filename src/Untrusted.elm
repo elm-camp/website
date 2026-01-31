@@ -35,48 +35,7 @@ emailAddress (Untrusted a) =
 
 purchaseForm : Untrusted PurchaseFormValidated -> Maybe PurchaseFormValidated
 purchaseForm (Untrusted a) =
-    case
-        T2
-            (untrust a.billingEmail |> emailAddress)
-            (PurchaseForm.validateAttendees (List.Nonempty.map PurchaseForm.unvalidateAttendee a.attendees))
-    of
-        T2 (Just billingEmail) (Ok attendees) ->
-            Just
-                { attendees = attendees
-                , accommodationBookings = a.accommodationBookings
-                , billingEmail = billingEmail
-                , grantContribution = a.grantContribution
-                , grantApply = a.grantApply
-                , sponsorship = a.sponsorship
-                }
-
-        _ ->
-            Nothing
-
-
-validateList : List (Maybe a) -> Result String (List a)
-validateList validated =
-    if validated |> List.all Helpers.isJust then
-        validated |> Helpers.justs |> Ok
-
-    else
-        Err "Invalid attendees"
-
-
-attendeeForm : Untrusted AttendeeFormValidated -> Maybe AttendeeFormValidated
-attendeeForm (Untrusted a) =
-    case T2 (untrust a.name |> name) (untrust a.email |> emailAddress) of
-        T2 (Just name_) (Just email) ->
-            Just
-                { name = name_
-                , email = email
-                , country = a.country
-                , originCity = a.originCity
-                , primaryModeOfTravel = a.primaryModeOfTravel
-                }
-
-        _ ->
-            Nothing
+    PurchaseForm.unvalidatePurchaseForm a |> PurchaseForm.validateForm
 
 
 untrust : a -> Untrusted a

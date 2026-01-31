@@ -16,7 +16,6 @@ module Types exposing
     , Size
     , Sponsorship(..)
     , StripePaymentId(..)
-    , TicketAvailability
     , TicketsEnabled(..)
     , ToBackend(..)
     , ToFrontend(..)
@@ -81,15 +80,6 @@ type alias LoadedModel =
 
 type alias Size =
     { width : Int, height : Int }
-
-
-type alias TicketAvailability =
-    { attendanceTickets : Bool
-    , campingSpots : Bool
-    , singleRooms : Bool
-    , doubleRooms : Bool
-    , groupRooms : Bool
-    }
 
 
 type alias BackendModel =

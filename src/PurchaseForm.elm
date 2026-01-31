@@ -9,6 +9,7 @@ module PurchaseForm exposing
     , defaultAttendee
     , init
     , unvalidateAttendee
+    , unvalidatePurchaseForm
     , validateAttendees
     , validateEmailAddress
     , validateForm
@@ -24,6 +25,7 @@ import Helpers
 import Id exposing (Id)
 import List.Nonempty exposing (Nonempty(..))
 import Name exposing (Name)
+import NonNegative exposing (NonNegative)
 import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (ProductId(..))
@@ -42,7 +44,9 @@ type Accommodation
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
     , attendees : Nonempty AttendeeForm
-    , accommodationBookings : List Accommodation
+    , campfireTicketCount : Int
+    , singleRoomTicketCount : Int
+    , doubleRoomTicketCount : Int
     , billingEmail : String
     , grantContribution : String
     , grantApply : Bool
@@ -54,7 +58,9 @@ init : PurchaseForm
 init =
     { submitStatus = NotSubmitted NotPressedSubmit
     , attendees = Nonempty defaultAttendee []
-    , accommodationBookings = []
+    , campfireTicketCount = 0
+    , singleRoomTicketCount = 0
+    , doubleRoomTicketCount = 0
     , billingEmail = ""
     , grantContribution = "0"
     , grantApply = False
@@ -64,7 +70,9 @@ init =
 
 type alias PurchaseFormValidated =
     { attendees : Nonempty AttendeeFormValidated
-    , accommodationBookings : List Accommodation
+    , campfireTicketCount : NonNegative
+    , singleRoomTicketCount : NonNegative
+    , doubleRoomTicketCount : NonNegative
     , billingEmail : EmailAddress
     , grantContribution : Int
     , grantApply : Bool
@@ -177,6 +185,20 @@ unvalidateAttendee attendee =
     }
 
 
+unvalidatePurchaseForm : PurchaseFormValidated -> PurchaseForm
+unvalidatePurchaseForm form =
+    { submitStatus = NotSubmitted NotPressedSubmit
+    , attendees = List.Nonempty.map unvalidateAttendee form.attendees
+    , campfireTicketCount = NonNegative.toInt form.campfireTicketCount
+    , singleRoomTicketCount = NonNegative.toInt form.singleRoomTicketCount
+    , doubleRoomTicketCount = NonNegative.toInt form.doubleRoomTicketCount
+    , billingEmail = EmailAddress.toString form.billingEmail
+    , grantContribution = String.fromInt form.grantContribution
+    , grantApply = form.grantApply
+    , sponsorship = form.sponsorship
+    }
+
+
 validateForm : PurchaseForm -> Maybe PurchaseFormValidated
 validateForm form =
     let
@@ -198,11 +220,22 @@ validateForm form =
                 Nothing ->
                     Ok Nothing
     in
-    case T4 billingEmail grantContribution sponsorship (validateAttendees form.attendees) of
-        T4 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) ->
+    case
+        T7
+            billingEmail
+            grantContribution
+            sponsorship
+            (validateAttendees form.attendees)
+            (NonNegative.fromInt form.campfireTicketCount)
+            (NonNegative.fromInt form.singleRoomTicketCount)
+            (NonNegative.fromInt form.doubleRoomTicketCount)
+    of
+        T7 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) (Ok campfireTicketCount) (Ok singleRoomTicketCount) (Ok doubleRoomTicketCount) ->
             Just
                 { attendees = attendeesOk
-                , accommodationBookings = form.accommodationBookings
+                , campfireTicketCount = campfireTicketCount
+                , singleRoomTicketCount = singleRoomTicketCount
+                , doubleRoomTicketCount = doubleRoomTicketCount
                 , billingEmail = billingEmailOk
                 , grantContribution = grantContributionOk
                 , grantApply = form.grantApply
