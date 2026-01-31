@@ -12,7 +12,7 @@ module PurchaseForm exposing
     , validateAttendees
     , validateEmailAddress
     , validateForm
-    , validateInt
+    , validateGrantContribution
     , validateName
     )
 
@@ -111,20 +111,22 @@ type PressedSubmit
     | NotPressedSubmit
 
 
+validateGrantContribution : String -> Result String Int
+validateGrantContribution s =
+    if s == "" then
+        Ok 0
 
--- billingEmail : PurchaseFormValidated -> EmailAddress
--- billingEmail paymentForm =
---     paymentForm.billingEmail
+    else
+        case String.toInt s of
+            Nothing ->
+                Err "Invalid number"
 
+            Just x ->
+                if x < 0 then
+                    Err "Can't be negative"
 
-validateInt : String -> Result String Int
-validateInt s =
-    case String.toInt s of
-        Nothing ->
-            Err "Invalid number"
-
-        Just x ->
-            Ok x
+                else
+                    Ok x
 
 
 validateName : String -> Result String Name
@@ -182,7 +184,7 @@ validateForm form =
             validateEmailAddress form.billingEmail
 
         grantContribution =
-            validateInt form.grantContribution
+            validateGrantContribution form.grantContribution
 
         sponsorship =
             case form.sponsorship of

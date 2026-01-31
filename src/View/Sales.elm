@@ -690,12 +690,12 @@ opportunityGrant form =
                 , Ui.row [ Ui.spacing 30 ]
                     [ Ui.row
                         [ Ui.width (Ui.px 100), noShrink ]
-                        [ Ui.el [ noShrink, Ui.centerY ] (Ui.text "$")
+                        [ Ui.el [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ] (Ui.text "$")
                         , textInput
                             form
                             (\a -> FormChanged { form | grantContribution = a })
                             ""
-                            PurchaseForm.validateInt
+                            PurchaseForm.validateGrantContribution
                             form.grantContribution
                         ]
                     , Ui.column [ Ui.width (Ui.portion 3) ]
@@ -810,9 +810,20 @@ sponsorshipOption model form s =
 summary : LoadedModel -> Ui.Element msg
 summary model =
     let
-        grantTotal =
-            (model.form.grantContribution |> String.toFloat |> Maybe.withDefault 0) * 100
+        grant : Result String Int
+        grant =
+            PurchaseForm.validateGrantContribution model.form.grantContribution
 
+        grantTotal : Float
+        grantTotal =
+            case grant of
+                Ok value ->
+                    toFloat value * 100
+
+                Err _ ->
+                    0
+
+        ticketsTotal : Float
         ticketsTotal =
             model.prices
                 |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
@@ -820,6 +831,7 @@ summary model =
                 |> Maybe.withDefault 0
                 |> (\price -> price * toFloat (List.Nonempty.length model.form.attendees))
 
+        accomTotal : Float
         accomTotal =
             model.form.accommodationBookings
                 |> List.map
@@ -835,6 +847,7 @@ summary model =
                     )
                 |> List.sum
 
+        sponsorshipTotal : Float
         sponsorshipTotal =
             model.form.sponsorship
                 |> Maybe.andThen
@@ -844,9 +857,6 @@ summary model =
                             |> Maybe.map (\price -> Theme.priceAmount price.price)
                     )
                 |> Maybe.withDefault 0
-
-        total =
-            ticketsTotal + accomTotal + grantTotal + sponsorshipTotal
 
         displayCurrency : Money.Currency
         displayCurrency =
@@ -869,14 +879,18 @@ summary model =
                 |> List.map
                     (\group -> summaryAccommodation model group displayCurrency)
                 |> Ui.column [ Ui.width Ui.shrink ]
-        , if model.form.grantContribution == "0" then
-            Ui.none
+        , case grant of
+            Err _ ->
+                Ui.none
 
-          else
-            Ui.text
-                ("Opportunity grant: "
-                    ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
-                )
+            Ok 0 ->
+                Ui.none
+
+            Ok _ ->
+                Ui.text
+                    ("Opportunity grant: "
+                        ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
+                    )
         , if sponsorshipTotal > 0 then
             Ui.text
                 ("Sponsorship: "
@@ -885,7 +899,12 @@ summary model =
 
           else
             Ui.none
-        , Theme.h3 ("Total: " ++ Theme.priceText { currency = displayCurrency, amount = floor total })
+        , "Total: "
+            ++ Theme.priceText
+                { currency = displayCurrency
+                , amount = ticketsTotal + accomTotal + grantTotal + sponsorshipTotal |> floor
+                }
+            |> Theme.h3
         ]
 
 
