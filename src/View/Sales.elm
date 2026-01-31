@@ -669,51 +669,56 @@ nonemptySetAt index a nonempty =
         nonempty
 
 
+noShrink : Ui.Attribute msg
+noShrink =
+    Html.Attributes.style "flex-shrink" "0" |> Ui.htmlAttribute
+
+
 opportunityGrant : PurchaseForm -> Ui.Element FrontendMsg
 opportunityGrant form =
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
+        (Ui.spacing 20 :: Theme.contentAttributes)
         [ Theme.h2 "🫶 Opportunity grants"
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+        , Ui.Prose.paragraph
+            [ Ui.width Ui.shrink ]
+            [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
         , Theme.panel []
             [ Ui.column [ Ui.width Ui.shrink ]
-                [ Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                [ Ui.Prose.paragraph
+                    [ Ui.width Ui.shrink ]
+                    [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
                 , Ui.row [ Ui.spacing 30 ]
-                    [ Ui.column [ Ui.width (Ui.portion 1) ]
-                        [ Ui.row [ Ui.width Ui.shrink ]
-                            [ Ui.text "$ "
-                            , textInput form (\a -> FormChanged { form | grantContribution = a }) "" PurchaseForm.validateInt form.grantContribution
-                            ]
+                    [ Ui.row
+                        [ Ui.width (Ui.px 100), noShrink ]
+                        [ Ui.el [ noShrink, Ui.centerY ] (Ui.text "$")
+                        , textInput
+                            form
+                            (\a -> FormChanged { form | grantContribution = a })
+                            ""
+                            PurchaseForm.validateInt
+                            form.grantContribution
                         ]
                     , Ui.column [ Ui.width (Ui.portion 3) ]
                         [ Ui.row [ Ui.width (Ui.portion 3) ]
                             [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ] (Ui.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
+                            , Ui.el
+                                [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
+                                (Ui.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
                             ]
                         , Ui.Input.sliderHorizontal
-                            [ Ui.width Ui.shrink
-                            , Ui.behindContent
-                                (Ui.el
-                                    [ Ui.height (Ui.px 5)
-                                    , Ui.centerY
-                                    , Ui.background (Ui.rgb 94 176 125)
-                                    , Ui.rounded 2
-                                    ]
-                                    Ui.none
-                                )
-                            ]
+                            []
                             { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
                             , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
                             , min = 0
                             , max = 75000
-                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
+                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100 |> Debug.log "a"
                             , thumb = Nothing
                             , step = Just 1000
                             }
-                        , Ui.row [ Ui.width (Ui.portion 3) ]
-                            [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "No contribution")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ] (Ui.text "Donate full attendance")
+                        , Ui.row
+                            [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
+                            [ Ui.el [ Ui.width Ui.shrink ] (Ui.text "No contribution")
+                            , Ui.el [ Ui.width Ui.shrink, Ui.alignRight ] (Ui.text "Donate full attendance")
                             ]
                         ]
                     ]
@@ -996,7 +1001,11 @@ textInput form onChange title validator text =
     in
     Ui.column
         [ Ui.spacing 4, Ui.alignTop ]
-        [ label.element
+        [ if title == "" then
+            Ui.none
+
+          else
+            label.element
         , Ui.Input.text
             [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 8 4, Ui.width Ui.fill ]
             { text = text

@@ -301,16 +301,6 @@ updateFromFrontend sessionId clientId msg model =
                         availability =
                             Inventory.slotsRemaining model
 
-                        validProductAndForm =
-                            {-
-                               I'm going to leave this for now, it's supposed to protect from people hand-crafting payloads
-                               from the frontend to skip form validation, but given the Lamdera wire format is opaque and
-                               undocumented, and there isn't really much to gain from someone going to the pains to reverse
-                               engineer it just to avoid filling in their full name or valid email, I don't think this is a
-                               realistic concern for our small event :)
-                            -}
-                            True
-
                         sponsorshipItems =
                             case purchaseForm.sponsorship of
                                 Just sponsorshipId ->
