@@ -21,7 +21,7 @@ increment (NonNegative a) =
 
 zero : NonNegative
 zero =
-    NonNegative 1
+    NonNegative 0
 
 
 one : NonNegative

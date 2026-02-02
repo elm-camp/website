@@ -1,24 +1,32 @@
 module Camp26Czech exposing
-    ( header
+    ( allTicketTypes
+    , campfireTicket
+    , doubleRoomTicket
+    , groupRoomTicket
+    , header
+    , singleRoomTicket
     , ticketSalesOpenAt
     , view
     )
 
 import Camp
 import Helpers
+import Id exposing (Id)
+import List.Nonempty exposing (Nonempty(..))
 import NonNegative exposing (NonNegative)
-import PurchaseForm exposing (PurchaseFormValidated)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
 import RichText exposing (Inline(..), RichText(..))
 import Route
 import SeqDict exposing (SeqDict)
-import Theme
+import Stripe exposing (Price, ProductId)
+import Theme exposing (Size)
 import Time
-import Types exposing (FrontendMsg, LoadedModel, Size)
+import Types exposing (CompletedOrder, FrontendMsg, LoadedModel)
 import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
 import View.Logo
-import View.Sales
+import View.Sales exposing (TicketType)
 
 
 meta : Camp.Meta
@@ -35,6 +43,76 @@ location =
     "🇨🇿 Olomouc, Czech Republic"
 
 
+ticket :
+    { attendanceTicket : String
+    , offsite : String
+    , campingSpot : String
+    , singleRoom : String
+    , doubleRoom : String
+    , groupRoom : String
+    }
+ticket =
+    { attendanceTicket = ""
+    , offsite = ""
+    , campingSpot = "prod_TmIy0Mltqmgzg5"
+    , singleRoom = "prod_TmJ0n8liux9A3d"
+    , doubleRoom = "prod_TmIzrbSouU0bYE"
+    , groupRoom = ""
+    }
+
+
+sponsorship : { bronze : String, silver : String, gold : String }
+sponsorship =
+    { bronze = ""
+    , silver = "prod_RzWTill7eglkFc"
+    , gold = "prod_RzWVRbQ0spItOf"
+    }
+
+
+type alias Sponsorship =
+    { name : String, price : Int, productId : String, description : String, features : List String }
+
+
+sponsorshipItems : List Sponsorship
+sponsorshipItems =
+    [ { name = "Bronze"
+      , price = 50000
+      , productId = sponsorship.bronze
+      , description = "You will be a minor supporter of Elm Camp 2026."
+      , features =
+            [ "Thank you tweet"
+            , "Logo on website"
+            , "Small logo on shared slide during the opening and closing sessions"
+            ]
+      }
+    , { name = "Silver"
+      , price = 100000
+      , productId = sponsorship.silver
+      , description = "You will be a major supporter of Elm Camp 2026."
+      , features =
+            [ "Thank you tweet"
+            , "Logo on website"
+            , "Small logo on shared slide during the opening and closing sessions"
+            , "Small logo on a slide displayed between sessions throughout the event"
+            , "One campfire ticket"
+            ]
+      }
+    , { name = "Gold"
+      , price = 250000
+      , productId = sponsorship.gold
+      , description = "You will be a pivotal supporter of Elm Camp 2026."
+      , features =
+            [ "Thank you tweet"
+            , "Dedicated \"thank you\" slide during the opening and closing sessions"
+            , "Large logo on a slide displayed between sessions throughout the event"
+            , "Two campfire tickets or one single room ticket"
+            , "A self-written snippet on the website about your use of Elm and an optional CTA if you are hiring"
+            , "A rollup or poster (provided by you) visible inside the venue during the event"
+            ]
+      }
+    ]
+
+
 view : LoadedModel -> Element FrontendMsg
 view model =
     Ui.column
@@ -44,7 +122,7 @@ view model =
             [ header model
             , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
             , RichText.view model intro
-            , View.Sales.view ticketSalesOpenAt model
+            , View.Sales.view allTicketTypes ticketSalesOpenAt model
             , RichText.view model venueAndAccess
             , organisers model.window
             , RichText.view model sponsors
@@ -342,24 +420,67 @@ maxAttendees =
 --            4
 
 
-totalTicketCount : SeqDict k PurchaseFormValidated -> TicketCount
-totalTicketCount orders =
-    SeqDict.foldl
-        (\_ order count ->
-            { campfireTicketCount = NonNegative.add count.campfireTicketCount order.form.campfireTicketCount
-            , singleRoomTicketCount = NonNegative.add count.singleRoomTicketCount order.form.singleRoomTicketCount
-            , doubleRoomTicketCount = NonNegative.add count.doubleRoomTicketCount order.form.doubleRoomTicketCount
-            }
-        )
-        { campfireTicketCount = NonNegative.zero
-        , singleRoomTicketCount = NonNegative.zero
-        , doubleRoomTicketCount = NonNegative.zero
-        }
-        orders
+allTicketTypes : Nonempty TicketType
+allTicketTypes =
+    Nonempty
+        campfireTicket
+        [ --offsiteTicket
+          singleRoomTicket
+        , doubleRoomTicket
+        , groupRoomTicket
+        ]
 
 
-type alias TicketCount =
-    { campfireTicketCount : NonNegative
-    , singleRoomTicketCount : NonNegative
-    , doubleRoomTicketCount : NonNegative
+
+--offsiteTicket : Ticket
+--offsiteTicket =
+--    { name = "Offsite"
+--    , description = "You'll be organising your own accommodation off-site and making your own way to/from the event each day. You'll have full access to the event and all meals."
+--    , image = ""
+--    , productId = ""
+--    , getter = .offsiteTicket
+--    }
+
+
+campfireTicket : TicketType
+campfireTicket =
+    { name = "Camping Spot"
+    , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
+    , image = ""
+    , productId = Id.fromString "prod_TmIy0Mltqmgzg5"
+    , getter = .campfireTicket
+    , setter = \v m -> { m | campfireTicket = v }
+    }
+
+
+singleRoomTicket : TicketType
+singleRoomTicket =
+    { name = "Single Room"
+    , description = "Private room for a single attendee for 3 nights."
+    , image = ""
+    , productId = Id.fromString "prod_TmJ0n8liux9A3d"
+    , getter = .singleRoomTicket
+    , setter = \v m -> { m | singleRoomTicket = v }
+    }
+
+
+doubleRoomTicket : TicketType
+doubleRoomTicket =
+    { name = "Double Room"
+    , description = "Suitable for a couple or twin share for 3 nights."
+    , image = ""
+    , productId = Id.fromString "prod_TmIzrbSouU0bYE"
+    , getter = .doubleRoomTicket
+    , setter = \v m -> { m | doubleRoomTicket = v }
+    }
+
+
+groupRoomTicket : TicketType
+groupRoomTicket =
+    { name = "Shared Room"
+    , description = "Suitable for couples or up to 4 people for 3 nights. Purchase 1 `Shared Room` ticket per person and let us know who you are sharing with."
+    , image = ""
+    , productId = Id.fromString ""
+    , getter = .groupRoomTicket
+    , setter = \v m -> { m | groupRoomTicket = v }
     }

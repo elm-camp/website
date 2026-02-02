@@ -1,6 +1,7 @@
 module Env exposing (..)
 
 import EmailAddress exposing (EmailAddress)
+import EnvProd
 import Postmark
 
 
@@ -12,12 +13,14 @@ domain =
 stripePrivateApiKey : String
 stripePrivateApiKey =
     -- Test environment, prod key set in prod
-    "sk_test_BmyEiWFhwdb5PH3hGD5xZXft00r6mCGnKI"
+    --"sk_test_BmyEiWFhwdb5PH3hGD5xZXft00r6mCGnKI"
+    EnvProd.stripePrivateApiKey
 
 
 stripePublicApiKey : String
 stripePublicApiKey =
-    "pk_test_S7leIg6SGfj2NMkUaP6ipIOv00gGgSlmgj"
+    --"pk_test_S7leIg6SGfj2NMkUaP6ipIOv00gGgSlmgj"
+    EnvProd.stripePublicApiKey
 
 
 isProduction_ : String

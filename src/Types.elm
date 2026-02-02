@@ -2,18 +2,17 @@ module Types exposing
     ( BackendModel
     , BackendMsg(..)
     , CityCode
+    , CompletedOrder
     , EmailResult(..)
     , FrontendModel(..)
     , FrontendMsg(..)
     , InitData2
     , LoadedModel
     , LoadingModel
-    , Order
     , OrderStatus(..)
     , PendingOrder
     , Price2
     , Product(..)
-    , Size
     , Sponsorship(..)
     , StripePaymentId(..)
     , TicketsEnabled(..)
@@ -29,11 +28,13 @@ import Effect.Http as Http
 import Effect.Lamdera exposing (ClientId, SessionId)
 import Effect.Time as Time
 import Id exposing (Id)
+import NonNegative exposing (NonNegative)
 import Postmark
-import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketCount)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
+import Theme exposing (Size)
 import Ui
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
@@ -63,12 +64,11 @@ type alias LoadedModel =
     , timeZone : Time.Zone
     , window : Size
     , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
-    , selectedTicket : Maybe ( Id ProductId, Id PriceId )
     , form : PurchaseForm
     , route : Route
     , showTooltip : Bool
     , showCarbonOffsetTooltip : Bool
-    , slotsRemaining : TicketAvailability
+    , slotsRemaining : TicketCount
     , isOrganiser : Bool
     , ticketsEnabled : TicketsEnabled
     , backendModel : Maybe BackendModel
@@ -78,12 +78,8 @@ type alias LoadedModel =
     }
 
 
-type alias Size =
-    { width : Int, height : Int }
-
-
 type alias BackendModel =
-    { orders : SeqDict (Id StripeSessionId) Order
+    { orders : SeqDict (Id StripeSessionId) CompletedOrder
     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
     , prices : SeqDict (Id ProductId) Price2
@@ -163,7 +159,7 @@ type alias PendingOrder =
     }
 
 
-type alias Order =
+type alias CompletedOrder =
     { submitTime : Time.Posix
     , form : PurchaseFormValidated
     , emailResult : EmailResult
@@ -283,9 +279,6 @@ type FrontendMsg
     | PressedShowTooltip
     | MouseDown
     | DownloadTicketSalesReminder
-    | PressedSelectTicket (Id ProductId) (Id PriceId)
-    | AddAccom PurchaseForm.Accommodation
-    | RemoveAccom PurchaseForm.Accommodation
     | FormChanged PurchaseForm
     | PressedSubmitForm
     | PressedCancelForm
@@ -317,7 +310,7 @@ type BackendMsg
 
 type alias InitData2 =
     { prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
-    , slotsRemaining : TicketAvailability
+    , slotsRemaining : TicketCount
     , ticketsEnabled : TicketsEnabled
     }
 
@@ -325,7 +318,7 @@ type alias InitData2 =
 type ToFrontend
     = InitData InitData2
     | SubmitFormResponse (Result String (Id StripeSessionId))
-    | SlotRemainingChanged TicketAvailability
+    | SlotRemainingChanged TicketCount
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel
 

@@ -1,5 +1,6 @@
 module View.Sales exposing
-    ( accommodationView
+    ( TicketType
+    , accommodationView
     , attendeeForm
     , carbonOffsetForm
     , errorHtmlId
@@ -9,12 +10,9 @@ module View.Sales exposing
     , opportunityGrant
     , opportunityGrantInfo
     , radioButton
-    , sponsorshipOption
-    , sponsorships
     , summary
     , summaryAccommodation
     , textInput
-    , ticketInfo
     , ticketSalesOpenCountdown
     , ticketsHtmlId
     , ticketsView
@@ -22,10 +20,6 @@ module View.Sales exposing
     , view
     )
 
-import Camp26Czech.Inventory as Inventory
-import Camp26Czech.Product as Product
-import Camp26Czech.Tickets as Tickets
-import DateFormat
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html
@@ -35,12 +29,13 @@ import Id exposing (Id)
 import List.Extra as List
 import List.Nonempty exposing (Nonempty(..))
 import Money
-import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import NonNegative exposing (NonNegative)
+import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..), TicketCount)
 import RichText exposing (Inline(..), RichText(..), Shared)
 import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
-import Stripe exposing (PriceId, ProductId(..))
+import Stripe exposing (Price, PriceId, ProductId(..))
 import Theme
 import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
@@ -51,20 +46,20 @@ import Ui.Prose
 import Ui.Shadow
 
 
-view : Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
-view ticketSalesOpenAt model =
+view : Nonempty TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
+view allTicketTypes ticketSalesOpenAt model =
     let
         ticketsAreLive =
             detailedCountdown ticketSalesOpenAt model.now == Nothing
     in
     Ui.column
         Theme.contentAttributes
-        [ if ticketsAreLive then
-            Ui.none
-
-          else
-            Ui.column Theme.contentAttributes [ ticketInfo model ]
-        , Ui.column
+        [ --if ticketsAreLive then
+          --    Ui.none
+          --
+          --  else
+          --    Ui.column Theme.contentAttributes [ ticketInfo model ]
+          Ui.column
             [ Ui.spacing 60
             , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
             ]
@@ -76,11 +71,8 @@ view ticketSalesOpenAt model =
                             Theme.contentAttributes
                             (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
                         , ticketsView model
-                        , accommodationView model
-                        , formView model
-                            (Id.fromString Product.ticket.campingSpot)
-                            (Id.fromString "testing")
-                            Tickets.attendanceTicket
+                        , accommodationView allTicketTypes model
+                        , formView allTicketTypes model
                         ]
 
                     else
@@ -219,114 +211,109 @@ goToTicketSales =
 
 
 
-{--| Note that ticketInfo is shown before tickets are live.
-    It is replaced by accommodationView after tickets are live.
---}
-
-
-ticketInfo : LoadedModel -> Ui.Element msg
-ticketInfo model =
-    let
-        -- Get prices for each ticket type
-        formatTicketPrice productId =
-            model.prices
-                |> SeqDict.get (Id.fromString productId)
-                |> Maybe.map (\price -> Theme.priceText price.price)
-                |> Maybe.withDefault "Price not available"
-
-        offsitePrice =
-            formatTicketPrice Product.ticket.offsite
-
-        campingPrice =
-            formatTicketPrice Product.ticket.campingSpot
-
-        singlePrice =
-            formatTicketPrice Product.ticket.singleRoom
-
-        doublePrice =
-            formatTicketPrice Product.ticket.doubleRoom
-
-        dormPrice =
-            formatTicketPrice Product.ticket.groupRoom
-
-        -- Calculate example prices
-        exampleTickets3 =
-            model.prices
-                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
-                |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
-                |> Maybe.withDefault 0
-
-        exampleDorm =
-            model.prices
-                |> SeqDict.get (Id.fromString Product.ticket.groupRoom)
-                |> Maybe.map (\price -> Theme.priceAmount price.price)
-                |> Maybe.withDefault 0
-
-        exampleTotal1 =
-            exampleTickets3 + exampleDorm
-
-        examplePerson1 =
-            exampleTotal1 / 3
-
-        exampleTicket1 =
-            model.prices
-                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
-                |> Maybe.map (\price -> Theme.priceAmount price.price)
-                |> Maybe.withDefault 0
-
-        exampleSingle =
-            model.prices
-                |> SeqDict.get (Id.fromString Product.ticket.singleRoom)
-                |> Maybe.map (\price -> Theme.priceAmount price.price)
-                |> Maybe.withDefault 0
-
-        exampleTotal2 =
-            exampleTicket1 + exampleSingle
-
-        -- Get a reference price for formatting
-        refPrice =
-            model.prices
-                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
-                |> Maybe.map .price
-
-        formatPrice amount =
-            case refPrice of
-                Just price ->
-                    Theme.priceText { price | amount = round (amount * 100) }
-
-                Nothing ->
-                    "Price not available"
-    in
-    [ Section "Tickets"
-        [ Paragraph [ Text "There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms. The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds are beautiful and include woodland, a swimming lake and a firepit." ]
-        , Paragraph [ Text "Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction." ]
-        , Section "All tickets include full access to the event 18th - 21st June 2024 and all meals."
-            [ BulletList
-                [ Text ("Staying offsite – " ++ offsitePrice) ]
-                [ Paragraph [ Text "You will organise your own accommodation elsewhere." ] ]
-            , BulletList
-                [ if campingPrice == "£0" || campingPrice == "$0" then
-                    Text "Camping space – Free"
-
-                  else
-                    Text ("Camping space – " ++ campingPrice)
-                ]
-                [ Paragraph [ Text "Bring your own tent or campervan and stay on site" ]
-                , Paragraph [ Text "Showers & toilets provided" ]
-                ]
-            , BulletList
-                [ Text ("Shared room – " ++ dormPrice) ]
-                [ Paragraph [ Text "Suitable for a couple or up to 4 people in twin beds" ]
-                ]
-            , BulletList
-                [ Text ("Single room – " ++ singlePrice) ]
-                [ Paragraph [ Text "Limited availability" ]
-                ]
-            ]
-        , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
-        ]
-    ]
-        |> RichText.view model
+--ticketInfo : LoadedModel -> Ui.Element msg
+--ticketInfo model =
+--    let
+--        -- Get prices for each ticket type
+--        formatTicketPrice productId =
+--            model.prices
+--                |> SeqDict.get (Id.fromString productId)
+--                |> Maybe.map (\price -> Theme.priceText price.price)
+--                |> Maybe.withDefault "Price not available"
+--
+--        offsitePrice =
+--            formatTicketPrice Product.ticket.offsite
+--
+--        campingPrice =
+--            formatTicketPrice Product.ticket.campingSpot
+--
+--        singlePrice =
+--            formatTicketPrice Product.ticket.singleRoom
+--
+--        doublePrice =
+--            formatTicketPrice Product.ticket.doubleRoom
+--
+--        dormPrice =
+--            formatTicketPrice Product.ticket.groupRoom
+--
+--        -- Calculate example prices
+--        exampleTickets3 =
+--            model.prices
+--                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
+--                |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
+--                |> Maybe.withDefault 0
+--
+--        exampleDorm =
+--            model.prices
+--                |> SeqDict.get (Id.fromString Product.ticket.groupRoom)
+--                |> Maybe.map (\price -> Theme.priceAmount price.price)
+--                |> Maybe.withDefault 0
+--
+--        exampleTotal1 =
+--            exampleTickets3 + exampleDorm
+--
+--        examplePerson1 =
+--            exampleTotal1 / 3
+--
+--        exampleTicket1 =
+--            model.prices
+--                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
+--                |> Maybe.map (\price -> Theme.priceAmount price.price)
+--                |> Maybe.withDefault 0
+--
+--        exampleSingle =
+--            model.prices
+--                |> SeqDict.get (Id.fromString Product.ticket.singleRoom)
+--                |> Maybe.map (\price -> Theme.priceAmount price.price)
+--                |> Maybe.withDefault 0
+--
+--        exampleTotal2 =
+--            exampleTicket1 + exampleSingle
+--
+--        -- Get a reference price for formatting
+--        refPrice =
+--            model.prices
+--                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
+--                |> Maybe.map .price
+--
+--        formatPrice amount =
+--            case refPrice of
+--                Just price ->
+--                    Theme.priceText { price | amount = round (amount * 100) }
+--
+--                Nothing ->
+--                    "Price not available"
+--    in
+--    [ Section "Tickets"
+--        [ Paragraph [ Text "There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms. The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds are beautiful and include woodland, a swimming lake and a firepit." ]
+--        , Paragraph [ Text "Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction." ]
+--        , Section "All tickets include full access to the event 18th - 21st June 2024 and all meals."
+--            [ BulletList
+--                [ Text ("Staying offsite – " ++ offsitePrice) ]
+--                [ Paragraph [ Text "You will organise your own accommodation elsewhere." ] ]
+--            , BulletList
+--                [ if campingPrice == "£0" || campingPrice == "$0" then
+--                    Text "Camping space – Free"
+--
+--                  else
+--                    Text ("Camping space – " ++ campingPrice)
+--                ]
+--                [ Paragraph [ Text "Bring your own tent or campervan and stay on site" ]
+--                , Paragraph [ Text "Showers & toilets provided" ]
+--                ]
+--            , BulletList
+--                [ Text ("Shared room – " ++ dormPrice) ]
+--                [ Paragraph [ Text "Suitable for a couple or up to 4 people in twin beds" ]
+--                ]
+--            , BulletList
+--                [ Text ("Single room – " ++ singlePrice) ]
+--                [ Paragraph [ Text "Limited availability" ]
+--                ]
+--            ]
+--        , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
+--        ]
+--    ]
+--        |> RichText.view model
 
 
 ticketsHtmlId : HtmlId
@@ -400,8 +387,12 @@ ticketsView model =
 --}
 
 
-accommodationView : LoadedModel -> Ui.Element FrontendMsg
-accommodationView model =
+accommodationView : Nonempty TicketType -> LoadedModel -> Ui.Element FrontendMsg
+accommodationView allTicketTypes model =
+    let
+        form =
+            model.form
+    in
     Ui.column [ Ui.spacing 20 ]
         [ Ui.column
             Theme.contentAttributes
@@ -413,29 +404,82 @@ accommodationView model =
                 , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
                 ]
             ]
-        , SeqDict.toList Tickets.accommodationOptions
-            |> List.reverse
-            |> List.map
-                (\( productId, ( accom, ticket ) ) ->
-                    case SeqDict.get productId model.prices of
-                        Just price ->
-                            Tickets.viewAccom model.form
-                                accom
-                                (Inventory.purchaseable ticket.productId model.slotsRemaining)
-                                (PressedSelectTicket productId price.priceId)
-                                (AddAccom accom)
-                                price.price
-                                ticket
+        , List.map
+            (\ticket ->
+                case SeqDict.get ticket.productId model.prices of
+                    Just price ->
+                        viewAccom model.form.count True price.price ticket
 
-                        Nothing ->
-                            Ui.text "No ticket prices found"
-                )
+                    Nothing ->
+                        Ui.text "No ticket prices found"
+            )
+            (List.Nonempty.toList allTicketTypes)
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
+            |> Ui.map (\formCount -> FormChanged { form | count = formCount })
         ]
 
 
-formView : LoadedModel -> Id ProductId -> Id PriceId -> Tickets.Ticket -> Ui.Element FrontendMsg
-formView model productId priceId ticket =
+viewAccom : TicketCount -> Bool -> Price -> TicketType -> Ui.Element TicketCount
+viewAccom formCount ticketAvailable price ticket2 =
+    let
+        count =
+            ticket2.getter formCount
+    in
+    Ui.column
+        [ Ui.width Ui.fill
+        , Ui.height Ui.fill
+        , Ui.spacing 16
+        , Ui.background (Ui.rgb 255 255 255)
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
+        , Ui.height Ui.fill
+        , Ui.rounded 16
+        , Ui.padding 16
+        ]
+        [ Ui.none
+        , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket2.name ]
+        , Ui.text ticket2.description
+        , Ui.el
+            [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
+            (Ui.text (Theme.priceText price))
+        , if ticketAvailable then
+            if NonNegative.toInt count > 0 then
+                Theme.numericField
+                    "Tickets"
+                    (NonNegative.toInt count)
+                    (\value -> ticket2.setter (Result.withDefault count (NonNegative.fromInt value)) formCount)
+
+            else
+                Ui.el
+                    (Theme.submitButtonAttributes (ticket2.setter NonNegative.one formCount) ticketAvailable)
+                    (Ui.el
+                        [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+                        (Ui.text "Select")
+                    )
+
+          else if ticket2.name == "Campfire Ticket" then
+            Ui.text "Waitlist"
+
+          else
+            Ui.text "Sold out!"
+        ]
+
+
+type alias TicketType =
+    { name : String
+    , description : String
+    , image : String
+    , productId : Id ProductId
+    , getter : TicketCount -> NonNegative
+    , setter : NonNegative -> TicketCount -> TicketCount
+    }
+
+
+purchaseable ticket model =
+    True
+
+
+formView : Nonempty TicketType -> LoadedModel -> Ui.Element FrontendMsg
+formView allTicketTypes model =
     let
         form =
             model.form
@@ -444,16 +488,16 @@ formView model productId priceId ticket =
             Ui.el
                 (Theme.submitButtonAttributes
                     PressedSubmitForm
-                    (hasAttendeesAndAccommodation && Inventory.purchaseable ticket.productId model.slotsRemaining)
+                    hasAttendeesAndAccommodation
+                 -- && purchaseable ticket.productId model.slotsRemaining)
                 )
                 (Ui.Prose.paragraph
                     [ Ui.width Ui.shrink, Ui.Font.center ]
                     [ Ui.text
-                        (if Inventory.purchaseable ticket.productId model.slotsRemaining then
-                            "Purchase "
-
-                         else
-                            "Waitlist"
+                        (--if purchaseable ticket.productId model.slotsRemaining then
+                         "Purchase "
+                         --else
+                         --   "Waitlist"
                         )
                     , case form.submitStatus of
                         NotSubmitted _ ->
@@ -473,10 +517,13 @@ formView model productId priceId ticket =
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
 
         includesAccom =
-            Tickets.formIncludesAccom form
+            True
 
+        includesRoom : Bool
         includesRoom =
-            Tickets.formIncludesRoom form
+            (NonNegative.toInt form.count.singleRoomTicket > 0)
+                || (NonNegative.toInt form.count.doubleRoomTicket > 0)
+                || (NonNegative.toInt form.count.groupRoomTicket > 0)
 
         --orderNotes =
         --    if includesAccom && not hasAttendees then
@@ -499,7 +546,7 @@ formView model productId priceId ticket =
         , opportunityGrant form
 
         --, sponsorships model form
-        , summary model
+        , summary allTicketTypes model
         , Ui.column
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Theme.contentAttributes
@@ -686,7 +733,7 @@ opportunityGrant form =
                             , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
                             , min = 0
                             , max = 75000
-                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100 |> Debug.log "a"
+                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
                             , thumb = Nothing
                             , step = Just 1000
                             }
@@ -702,88 +749,90 @@ opportunityGrant form =
         ]
 
 
-sponsorships : Time.Posix -> LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
-sponsorships ticketSalesOpenAt model form =
-    let
-        year : String
-        year =
-            Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
-    in
-    Ui.column
-        (Ui.spacing 20 :: Theme.contentAttributes)
-        [ Theme.h2 "🤝 Sponsor Elm Camp"
-        , "Position your company as a leading supporter of the Elm community and help Elm Camp "
-            ++ year
-            ++ " achieve a reasonable ticket offering."
-            |> Ui.text
-        , Product.sponsorshipItems
-            |> List.map (sponsorshipOption model form)
-            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]
-        ]
+
+--
+--sponsorships : Time.Posix -> LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
+--sponsorships ticketSalesOpenAt model form =
+--    let
+--        year : String
+--        year =
+--            Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
+--    in
+--    Ui.column
+--        (Ui.spacing 20 :: Theme.contentAttributes)
+--        [ Theme.h2 "🤝 Sponsor Elm Camp"
+--        , "Position your company as a leading supporter of the Elm community and help Elm Camp "
+--            ++ year
+--            ++ " achieve a reasonable ticket offering."
+--            |> Ui.text
+--        , Product.sponsorshipItems
+--            |> List.map (sponsorshipOption model form)
+--            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]
+--        ]
+--
+--
+--sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Ui.Element FrontendMsg
+--sponsorshipOption model form s =
+--    let
+--        displayCurrency =
+--            model.prices
+--                |> SeqDict.get (Id.fromString s.productId)
+--                |> Maybe.map .price
+--                |> Maybe.map .currency
+--                |> Maybe.withDefault Money.USD
+--
+--        selected =
+--            form.sponsorship == Just s.productId
+--
+--        attrs =
+--            if selected then
+--                [ Ui.borderColor (Ui.rgb 94 176 125), Ui.border 3 ]
+--
+--            else
+--                [ Ui.borderColor (Ui.rgba 0 0 0 0), Ui.border 3 ]
+--
+--        priceDisplay =
+--            Theme.priceText { currency = displayCurrency, amount = s.price }
+--
+--        -- Fallback to hardcoded price if not in model.prices
+--    in
+--    Theme.panel attrs
+--        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.bold ] (Ui.text s.name)
+--        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 30, Ui.Font.bold ] (Ui.text priceDisplay)
+--        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text s.description ]
+--        , s.features
+--            |> List.map (\point -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 12 ] [ Ui.text ("• " ++ point) ])
+--            |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 5 ]
+--        , Ui.el
+--            (Theme.submitButtonAttributes
+--                (FormChanged
+--                    { form
+--                        | sponsorship =
+--                            if selected then
+--                                Nothing
+--
+--                            else
+--                                Just s.productId
+--                    }
+--                )
+--                True
+--            )
+--            (Ui.el
+--                [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+--                (Ui.text
+--                    (if selected then
+--                        "Un-select"
+--
+--                     else
+--                        "Select"
+--                    )
+--                )
+--            )
+--        ]
 
 
-sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Ui.Element FrontendMsg
-sponsorshipOption model form s =
-    let
-        displayCurrency =
-            model.prices
-                |> SeqDict.get (Id.fromString s.productId)
-                |> Maybe.map .price
-                |> Maybe.map .currency
-                |> Maybe.withDefault Money.USD
-
-        selected =
-            form.sponsorship == Just s.productId
-
-        attrs =
-            if selected then
-                [ Ui.borderColor (Ui.rgb 94 176 125), Ui.border 3 ]
-
-            else
-                [ Ui.borderColor (Ui.rgba 0 0 0 0), Ui.border 3 ]
-
-        priceDisplay =
-            Theme.priceText { currency = displayCurrency, amount = s.price }
-
-        -- Fallback to hardcoded price if not in model.prices
-    in
-    Theme.panel attrs
-        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.bold ] (Ui.text s.name)
-        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 30, Ui.Font.bold ] (Ui.text priceDisplay)
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text s.description ]
-        , s.features
-            |> List.map (\point -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 12 ] [ Ui.text ("• " ++ point) ])
-            |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 5 ]
-        , Ui.el
-            (Theme.submitButtonAttributes
-                (FormChanged
-                    { form
-                        | sponsorship =
-                            if selected then
-                                Nothing
-
-                            else
-                                Just s.productId
-                    }
-                )
-                True
-            )
-            (Ui.el
-                [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
-                (Ui.text
-                    (if selected then
-                        "Un-select"
-
-                     else
-                        "Select"
-                    )
-                )
-            )
-        ]
-
-
-summary : LoadedModel -> Ui.Element msg
-summary model =
+summary : Nonempty TicketType -> LoadedModel -> Ui.Element msg
+summary allTicketTypes model =
     let
         grant : Result String Int
         grant =
@@ -798,45 +847,34 @@ summary model =
                 Err _ ->
                     0
 
-        ticketsTotal : Float
-        ticketsTotal =
-            model.prices
-                |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
-                |> Maybe.map (\price -> Theme.priceAmount price.price)
-                |> Maybe.withDefault 0
-                |> (\price -> price * toFloat (List.Nonempty.length model.form.attendees))
-
         accomTotal : Float
         accomTotal =
-            model.form.accommodationBookings
-                |> List.map
-                    (\accom ->
-                        let
-                            t =
-                                Tickets.accomToTicket accom
-                        in
-                        model.prices
-                            |> SeqDict.get (Id.fromString t.productId)
-                            |> Maybe.map (\price -> Theme.priceAmount price.price)
-                            |> Maybe.withDefault 0
-                    )
+            List.map
+                (\ticket ->
+                    case SeqDict.get ticket.productId model.prices of
+                        Just price ->
+                            Theme.priceAmount price.price * toFloat (NonNegative.toInt (ticket.getter model.form.count))
+
+                        Nothing ->
+                            0
+                )
+                (List.Nonempty.toList allTicketTypes)
                 |> List.sum
 
-        sponsorshipTotal : Float
-        sponsorshipTotal =
-            model.form.sponsorship
-                |> Maybe.andThen
-                    (\productId ->
-                        model.prices
-                            |> SeqDict.get (Id.fromString productId)
-                            |> Maybe.map (\price -> Theme.priceAmount price.price)
-                    )
-                |> Maybe.withDefault 0
-
+        --sponsorshipTotal : Float
+        --sponsorshipTotal =
+        --    model.form.sponsorship
+        --        |> Maybe.andThen
+        --            (\productId ->
+        --                model.prices
+        --                    |> SeqDict.get (Id.fromString productId)
+        --                    |> Maybe.map (\price -> Theme.priceAmount price.price)
+        --            )
+        --        |> Maybe.withDefault 0
         displayCurrency : Money.Currency
         displayCurrency =
             model.prices
-                |> SeqDict.get (Id.fromString Tickets.attendanceTicket.productId)
+                |> SeqDict.get (List.Nonempty.head allTicketTypes).productId
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
@@ -845,15 +883,11 @@ summary model =
         (Ui.spacing 10 :: Theme.contentAttributes)
         [ Theme.h2 "Summary"
         , Ui.text ("Attendees x " ++ String.fromInt (List.Nonempty.length model.form.attendees))
-        , if List.isEmpty model.form.accommodationBookings then
+        , if model.form.count == PurchaseForm.initTicketCount then
             Ui.text "No accommodation bookings"
 
           else
-            model.form.accommodationBookings
-                |> List.group
-                |> List.map
-                    (\group -> summaryAccommodation model group displayCurrency)
-                |> Ui.column [ Ui.width Ui.shrink ]
+            summaryAccommodation allTicketTypes model model.form.count displayCurrency
         , case grant of
             Err _ ->
                 Ui.none
@@ -866,44 +900,52 @@ summary model =
                     ("Opportunity grant: "
                         ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
                     )
-        , if sponsorshipTotal > 0 then
-            Ui.text
-                ("Sponsorship: "
-                    ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
-                )
 
-          else
-            Ui.none
+        --, if sponsorshipTotal > 0 then
+        --    Ui.text
+        --        ("Sponsorship: "
+        --            ++ Theme.priceText { currency = displayCurrency, amount = floor sponsorshipTotal }
+        --        )
+        --
+        --  else
+        --    Ui.none
         , "Total: "
             ++ Theme.priceText
                 { currency = displayCurrency
-                , amount = ticketsTotal + accomTotal + grantTotal + sponsorshipTotal |> floor
+                , amount = accomTotal + grantTotal |> floor -- + sponsorshipTotal |> floor
                 }
             |> Theme.h3
         ]
 
 
-summaryAccommodation : LoadedModel -> ( PurchaseForm.Accommodation, List PurchaseForm.Accommodation ) -> Money.Currency -> Ui.Element msg
-summaryAccommodation model ( accom, items ) displayCurrency =
-    model.form.accommodationBookings
-        |> List.filter ((==) accom)
-        |> List.length
-        |> (\num ->
-                let
-                    total =
-                        model.prices
-                            |> SeqDict.get (Id.fromString (Tickets.accomToTicket accom).productId)
-                            |> Maybe.map (\price -> Theme.priceAmount price.price)
-                            |> Maybe.withDefault 0
-                            |> (\price -> price * toFloat num)
-                in
-                (Tickets.accomToTicket accom).name
-                    ++ " x "
-                    ++ String.fromInt num
-                    ++ " – "
-                    ++ Theme.priceText { currency = displayCurrency, amount = floor total }
-           )
-        |> Ui.text
+summaryAccommodation : Nonempty TicketType -> LoadedModel -> TicketCount -> Money.Currency -> Ui.Element msg
+summaryAccommodation ticketTypes model ticketCount displayCurrency =
+    List.filterMap
+        (\ticket ->
+            case SeqDict.get ticket.productId model.prices of
+                Just price ->
+                    let
+                        total : Float
+                        total =
+                            Theme.priceAmount price.price * toFloat (NonNegative.toInt (ticket.getter ticketCount))
+                    in
+                    if total > 0 then
+                        ticket.name
+                            ++ " x "
+                            ++ NonNegative.toString (ticket.getter ticketCount)
+                            ++ " – "
+                            ++ Theme.priceText { currency = displayCurrency, amount = floor total }
+                            |> Ui.text
+                            |> Just
+
+                    else
+                        Nothing
+
+                Nothing ->
+                    Nothing
+        )
+        (List.Nonempty.toList ticketTypes)
+        |> Ui.column [ Ui.width Ui.shrink ]
 
 
 carbonOffsetForm : Bool -> PurchaseForm -> Ui.Element FrontendMsg

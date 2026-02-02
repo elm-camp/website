@@ -11,9 +11,7 @@ module Backend exposing
     , updateFromFrontend
     )
 
-import Camp26Czech.Inventory as Inventory
-import Camp26Czech.Product as Product
-import Camp26Czech.Tickets as Tickets
+import Camp26Czech
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
 import Effect.Lamdera as Lamdera exposing (ClientId, SessionId)
@@ -29,15 +27,17 @@ import Lamdera as LamderaCore
 import List.Extra as List
 import List.Nonempty
 import Name
+import NonNegative exposing (NonNegative)
 import Postmark
-import PurchaseForm exposing (PurchaseFormValidated)
+import PurchaseForm exposing (PurchaseFormValidated, TicketCount)
 import Quantity
-import SeqDict
+import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
-import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
-import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Stripe exposing (CheckoutItem, PriceId, ProductId(..), StripeSessionId)
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
+import View.Sales exposing (TicketType)
 
 
 app :
@@ -155,7 +155,7 @@ update msg model =
                     clientId
                     (InitData
                         { prices = model.prices
-                        , slotsRemaining = Inventory.slotsRemaining model
+                        , slotsRemaining = totalTicketCount model.orders
                         , ticketsEnabled = model.ticketsEnabled
                         }
                     )
@@ -281,14 +281,28 @@ update msg model =
         |> (\( newModel, cmd ) ->
                 let
                     newSlotsRemaining =
-                        Inventory.slotsRemaining newModel
+                        totalTicketCount newModel.orders
                 in
-                if Inventory.slotsRemaining model == newSlotsRemaining then
+                if totalTicketCount model.orders == newSlotsRemaining then
                     ( newModel, cmd )
 
                 else
                     ( newModel, Command.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
            )
+
+
+totalTicketCount : SeqDict k CompletedOrder -> TicketCount
+totalTicketCount orders =
+    SeqDict.foldl
+        (\_ order count ->
+            { campfireTicket = NonNegative.add count.campfireTicket order.form.count.campfireTicket
+            , singleRoomTicket = NonNegative.add count.singleRoomTicket order.form.count.singleRoomTicket
+            , doubleRoomTicket = NonNegative.add count.doubleRoomTicket order.form.count.doubleRoomTicket
+            , groupRoomTicket = NonNegative.add count.groupRoomTicket order.form.count.groupRoomTicket
+            }
+        )
+        PurchaseForm.initTicketCount
+        orders
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
@@ -299,69 +313,38 @@ updateFromFrontend sessionId clientId msg model =
                 ( Just purchaseForm, TicketsEnabled ) ->
                     let
                         availability =
-                            Inventory.slotsRemaining model
+                            totalTicketCount model.orders
 
-                        sponsorshipItems =
-                            case purchaseForm.sponsorship of
-                                Just sponsorshipId ->
-                                    case SeqDict.get (Id.fromString sponsorshipId) model.prices of
+                        --sponsorshipItems =
+                        --    case purchaseForm.sponsorship of
+                        --        Just sponsorshipId ->
+                        --            case SeqDict.get (Id.fromString sponsorshipId) model.prices of
+                        --                Just price ->
+                        --                    [ Stripe.Priced
+                        --                        { name = "Sponsorship"
+                        --                        , priceId = price.priceId
+                        --                        , quantity = 1
+                        --                        }
+                        --                    ]
+                        --
+                        --                Nothing ->
+                        --                    []
+                        --
+                        --        Nothing ->
+                        --            []
+                        accommodationItems : TicketType -> CheckoutItem
+                        accommodationItems ticket =
+                            Stripe.Priced
+                                { name = ticket.name
+                                , priceId =
+                                    case SeqDict.get ticket.productId model.prices of
                                         Just price ->
-                                            [ Stripe.Priced
-                                                { name = "Sponsorship"
-                                                , priceId = price.priceId
-                                                , quantity = 1
-                                                }
-                                            ]
+                                            price.priceId
 
                                         Nothing ->
-                                            []
-
-                                Nothing ->
-                                    []
-
-                        ticketItems : List Stripe.CheckoutItem
-                        ticketItems =
-                            List.map
-                                (\attendee ->
-                                    Stripe.Priced
-                                        { name = Tickets.attendanceTicket.name ++ " for " ++ Name.toString attendee.name
-                                        , priceId =
-                                            let
-                                                productId =
-                                                    Id.fromString Tickets.attendanceTicket.productId
-                                            in
-                                            case SeqDict.get productId model.prices of
-                                                Just price ->
-                                                    price.priceId
-
-                                                Nothing ->
-                                                    Id.fromString "price not found"
-                                        , quantity = 1
-                                        }
-                                )
-                                (List.Nonempty.toList purchaseForm.attendees)
-
-                        accommodationItems =
-                            purchaseForm.accommodationBookings
-                                |> List.group
-                                |> List.map
-                                    (\( accom, accomCount ) ->
-                                        Stripe.Priced
-                                            { name = Tickets.accomToTicket accom |> .name
-                                            , priceId =
-                                                let
-                                                    productId =
-                                                        Id.fromString (Tickets.accomToTicket accom).productId
-                                                in
-                                                case SeqDict.get productId model.prices of
-                                                    Just price ->
-                                                        price.priceId
-
-                                                    Nothing ->
-                                                        Id.fromString "price not found"
-                                            , quantity = List.length accomCount + 1
-                                            }
-                                    )
+                                            Id.fromString "price not found"
+                                , quantity = ticket.getter purchaseForm.count |> NonNegative.toInt
+                                }
 
                         opportunityGrantItems =
                             if purchaseForm.grantContribution > 0 then
@@ -377,7 +360,10 @@ updateFromFrontend sessionId clientId msg model =
                                 []
 
                         items =
-                            ticketItems ++ accommodationItems ++ opportunityGrantItems ++ sponsorshipItems
+                            List.map accommodationItems (List.Nonempty.toList Camp26Czech.allTicketTypes)
+                                ++ opportunityGrantItems
+
+                        --++ sponsorshipItems
                     in
                     ( model
                     , Time.now

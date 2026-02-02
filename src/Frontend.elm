@@ -8,8 +8,6 @@ import Camp23Denmark
 import Camp24Uk
 import Camp25US
 import Camp26Czech
-import Camp26Czech.Inventory as Inventory
-import Camp26Czech.Tickets as Tickets
 import Dict
 import Duration
 import Effect.Browser
@@ -189,7 +187,6 @@ tryLoading loadingModel =
                 , window = window
                 , showTooltip = False
                 , prices = prices
-                , selectedTicket = Nothing
                 , form = PurchaseForm.init
                 , route = Route.decode loadingModel.url
                 , showCarbonOffsetTooltip = False
@@ -264,40 +261,6 @@ updateLoaded msg model =
         DownloadTicketSalesReminder ->
             ( model, downloadTicketSalesReminder )
 
-        PressedSelectTicket productId priceId ->
-            case ( SeqDict.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
-                ( Just ( _, ticket ), TicketsEnabled ) ->
-                    if Inventory.purchaseable ticket.productId model.slotsRemaining then
-                        ( { model | selectedTicket = Just ( productId, priceId ) }
-                        , scrollToTop
-                        )
-
-                    else
-                        ( model, Command.none )
-
-                _ ->
-                    ( model, Command.none )
-
-        AddAccom accom ->
-            let
-                form =
-                    model.form
-
-                newForm =
-                    { form | accommodationBookings = model.form.accommodationBookings ++ [ accom ] }
-            in
-            ( { model | form = newForm }, Command.none )
-
-        RemoveAccom accom ->
-            let
-                form =
-                    model.form
-
-                newForm =
-                    { form | accommodationBookings = List.remove accom model.form.accommodationBookings }
-            in
-            ( { model | form = newForm }, Command.none )
-
         FormChanged form ->
             case model.form.submitStatus of
                 NotSubmitted _ ->
@@ -337,7 +300,7 @@ updateLoaded msg model =
                     ( model, Command.none )
 
         PressedCancelForm ->
-            ( { model | selectedTicket = Nothing }
+            ( model
             , Dom.getElement View.Sales.ticketsHtmlId
                 |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
                 |> Task.attempt (\_ -> SetViewport)

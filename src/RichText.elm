@@ -12,8 +12,7 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Lazy
 import Route exposing (Route)
-import Theme
-import Types exposing (Size)
+import Theme exposing (Size)
 import Ui
 import Url
 

@@ -1,5 +1,6 @@
 module Theme exposing
-    ( Theme
+    ( Size
+    , Theme
     , attr
     , colorWithAlpha
     , colors
@@ -31,7 +32,6 @@ import Html.Attributes
 import Money
 import Route exposing (Route(..))
 import Stripe exposing (Price)
-import Types exposing (Size)
 import Ui
 import Ui.Accessibility
 import Ui.Font
@@ -48,6 +48,10 @@ type alias Theme =
     , elmText : Ui.Color
     , background : Ui.Color
     }
+
+
+type alias Size =
+    { width : Int, height : Int }
 
 
 lightTheme : Theme

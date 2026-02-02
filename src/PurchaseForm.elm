@@ -1,13 +1,14 @@
 module PurchaseForm exposing
-    ( Accommodation(..)
-    , AttendeeForm
+    ( AttendeeForm
     , AttendeeFormValidated
     , PressedSubmit(..)
     , PurchaseForm
     , PurchaseFormValidated
     , SubmitStatus(..)
+    , TicketCount
     , defaultAttendee
     , init
+    , initTicketCount
     , unvalidateAttendee
     , unvalidatePurchaseForm
     , validateAttendees
@@ -17,40 +18,24 @@ module PurchaseForm exposing
     , validateName
     )
 
-import Camp26Czech.Product as Product
-import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
-import Env
-import Helpers
-import Id exposing (Id)
 import List.Nonempty exposing (Nonempty(..))
 import Name exposing (Name)
 import NonNegative exposing (NonNegative)
-import Set exposing (Set)
 import String.Nonempty exposing (NonemptyString)
-import Stripe exposing (ProductId(..))
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
 import TravelMode exposing (TravelMode)
-
-
-type Accommodation
-    = Offsite
-    | Campsite
-    | Single
-    | Double
-    | Group
 
 
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
     , attendees : Nonempty AttendeeForm
-    , campfireTicketCount : Int
-    , singleRoomTicketCount : Int
-    , doubleRoomTicketCount : Int
+    , count : TicketCount
     , billingEmail : String
     , grantContribution : String
     , grantApply : Bool
-    , sponsorship : Maybe String
+
+    --, sponsorship : Maybe String
     }
 
 
@@ -58,25 +43,40 @@ init : PurchaseForm
 init =
     { submitStatus = NotSubmitted NotPressedSubmit
     , attendees = Nonempty defaultAttendee []
-    , campfireTicketCount = 0
-    , singleRoomTicketCount = 0
-    , doubleRoomTicketCount = 0
+    , count = initTicketCount
     , billingEmail = ""
     , grantContribution = "0"
     , grantApply = False
-    , sponsorship = Nothing
+
+    --, sponsorship = Nothing
     }
 
 
 type alias PurchaseFormValidated =
     { attendees : Nonempty AttendeeFormValidated
-    , campfireTicketCount : NonNegative
-    , singleRoomTicketCount : NonNegative
-    , doubleRoomTicketCount : NonNegative
+    , count : TicketCount
     , billingEmail : EmailAddress
     , grantContribution : Int
     , grantApply : Bool
-    , sponsorship : Maybe String
+
+    --, sponsorship : Maybe String
+    }
+
+
+type alias TicketCount =
+    { campfireTicket : NonNegative
+    , singleRoomTicket : NonNegative
+    , doubleRoomTicket : NonNegative
+    , groupRoomTicket : NonNegative
+    }
+
+
+initTicketCount : TicketCount
+initTicketCount =
+    { campfireTicket = NonNegative.zero
+    , singleRoomTicket = NonNegative.zero
+    , doubleRoomTicket = NonNegative.zero
+    , groupRoomTicket = NonNegative.zero
     }
 
 
@@ -189,13 +189,12 @@ unvalidatePurchaseForm : PurchaseFormValidated -> PurchaseForm
 unvalidatePurchaseForm form =
     { submitStatus = NotSubmitted NotPressedSubmit
     , attendees = List.Nonempty.map unvalidateAttendee form.attendees
-    , campfireTicketCount = NonNegative.toInt form.campfireTicketCount
-    , singleRoomTicketCount = NonNegative.toInt form.singleRoomTicketCount
-    , doubleRoomTicketCount = NonNegative.toInt form.doubleRoomTicketCount
+    , count = form.count
     , billingEmail = EmailAddress.toString form.billingEmail
     , grantContribution = String.fromInt form.grantContribution
     , grantApply = form.grantApply
-    , sponsorship = form.sponsorship
+
+    --, sponsorship = form.sponsorship
     }
 
 
@@ -208,38 +207,28 @@ validateForm form =
         grantContribution =
             validateGrantContribution form.grantContribution
 
-        sponsorship =
-            case form.sponsorship of
-                Just id ->
-                    Product.sponsorshipItems
-                        |> List.filter (\s -> s.productId == id)
-                        |> List.head
-                        |> Result.fromMaybe "Invalid sponsorship"
-                        |> Result.map (\a -> a.productId |> Just)
-
-                Nothing ->
-                    Ok Nothing
+        --sponsorship =
+        --    case form.sponsorship of
+        --        Just id ->
+        --            Product.sponsorshipItems
+        --                |> List.filter (\s -> s.productId == id)
+        --                |> List.head
+        --                |> Result.fromMaybe "Invalid sponsorship"
+        --                |> Result.map (\a -> a.productId |> Just)
+        --
+        --        Nothing ->
+        --            Ok Nothing
     in
-    case
-        T7
-            billingEmail
-            grantContribution
-            sponsorship
-            (validateAttendees form.attendees)
-            (NonNegative.fromInt form.campfireTicketCount)
-            (NonNegative.fromInt form.singleRoomTicketCount)
-            (NonNegative.fromInt form.doubleRoomTicketCount)
-    of
-        T7 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) (Ok campfireTicketCount) (Ok singleRoomTicketCount) (Ok doubleRoomTicketCount) ->
+    case T3 billingEmail grantContribution (validateAttendees form.attendees) of
+        T3 (Ok billingEmailOk) (Ok grantContributionOk) (Ok attendeesOk) ->
             Just
                 { attendees = attendeesOk
-                , campfireTicketCount = campfireTicketCount
-                , singleRoomTicketCount = singleRoomTicketCount
-                , doubleRoomTicketCount = doubleRoomTicketCount
+                , count = form.count
                 , billingEmail = billingEmailOk
                 , grantContribution = grantContributionOk
                 , grantApply = form.grantApply
-                , sponsorship = sponsorshipOk
+
+                --, sponsorship = sponsorshipOk
                 }
 
         _ ->

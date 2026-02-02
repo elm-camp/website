@@ -8,7 +8,6 @@ module RPC exposing
     )
 
 import Backend
-import Camp26Czech.Tickets as Tickets
 import Codec
 import Email.Html as Html
 import Email.Html.Attributes as Attributes
@@ -31,6 +30,7 @@ import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
+import View.Sales exposing (TicketType)
 
 
 backendModelEndpoint : SessionId -> BackendModel -> HttpRequest -> ( RPCResult, BackendModel, Cmd BackendMsg )
@@ -149,7 +149,7 @@ purchaseCompletedEndpoint _ model headers json =
             ( Err (HttpCore.BadBody errorText), model, Backend.errorEmail errorText )
 
 
-confirmationEmail : Tickets.Ticket -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail : TicketType -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
 confirmationEmail ticket =
     { subject =
         String.Nonempty.append

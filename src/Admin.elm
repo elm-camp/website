@@ -121,7 +121,7 @@ viewPrices prices =
         ]
 
 
-viewOrders : SeqDict (Id StripeSessionId) Types.Order -> Ui.Element msg
+viewOrders : SeqDict (Id StripeSessionId) Types.CompletedOrder -> Ui.Element msg
 viewOrders orders =
     let
         n =
@@ -192,7 +192,7 @@ viewExpiredOrders2 orders =
         (Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> Ui.row [ Ui.width Ui.shrink, Ui.Font.size 14, Ui.spacing 8 ] [ Ui.text (String.fromInt (k + 1)), Ui.text s ])))
 
 
-viewOrder : Int -> ( Id StripeSessionId, Types.Order ) -> Ui.Element msg
+viewOrder : Int -> ( Id StripeSessionId, Types.CompletedOrder ) -> Ui.Element msg
 viewOrder idx ( id, order ) =
     Ui.row
         [ Ui.Font.size 14, Ui.spacing 12 ]
@@ -212,7 +212,7 @@ viewPendingOrder idx ( id, order ) =
         ]
 
 
-attendees : Types.Order -> List String
+attendees : Types.CompletedOrder -> List String
 attendees order =
     List.Nonempty.toList order.form.attendees |> List.map (\a -> Name.toString a.name)
 
