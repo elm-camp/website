@@ -4,7 +4,6 @@ module Backend exposing
     , elmCampEmailAddress
     , errorEmail
     , init
-    , priceIdToProductId
     , sessionIdToStripeSessionId
     , subscriptions
     , update
@@ -408,19 +407,6 @@ sessionIdToStripeSessionId sessionId model =
             (\( stripeSessionId, data ) ->
                 if data.sessionId == sessionId then
                     Just stripeSessionId
-
-                else
-                    Nothing
-            )
-
-
-priceIdToProductId : BackendModel -> Id PriceId -> Maybe (Id ProductId)
-priceIdToProductId model priceId =
-    SeqDict.toList model.prices
-        |> List.findMap
-            (\( productId, prices ) ->
-                if prices.priceId == priceId then
-                    Just productId
 
                 else
                     Nothing

@@ -484,14 +484,10 @@ formView allTicketTypes model =
         form =
             model.form
 
-        submitButton hasAttendeesAndAccommodation =
+        submitButton =
             Ui.el
-                (Theme.submitButtonAttributes
-                    PressedSubmitForm
-                    hasAttendeesAndAccommodation
-                 -- && purchaseable ticket.productId model.slotsRemaining)
-                )
-                (Ui.Prose.paragraph
+                (Theme.submitButtonAttributes PressedSubmitForm True)
+                (Ui.row
                     [ Ui.width Ui.shrink, Ui.Font.center ]
                     [ Ui.text
                         (--if purchaseable ticket.productId model.slotsRemaining then
@@ -515,28 +511,6 @@ formView allTicketTypes model =
             Ui.el
                 (Theme.normalButtonAttributes PressedCancelForm)
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
-
-        includesAccom =
-            True
-
-        includesRoom : Bool
-        includesRoom =
-            (NonNegative.toInt form.count.singleRoomTicket > 0)
-                || (NonNegative.toInt form.count.doubleRoomTicket > 0)
-                || (NonNegative.toInt form.count.groupRoomTicket > 0)
-
-        --orderNotes =
-        --    if includesAccom && not hasAttendees then
-        --        "<red>Warning: you have chosen accommodation but no attendees, please add details for each attendee.</red>"
-        --
-        --    else if not includesAccom && hasAttendees then
-        --        "<red>Warning: you have added attendees but no sleeping arrangement. Please select one Accommodation type per attendee.</red>"
-        --
-        --    else if not includesRoom then
-        --        "**Please note:** You have selected a Camping ticket which means you need to make your own sleeping arrangements. You can stay offsite or bring a tent/ campervan and stay onsite."
-        --
-        --    else
-        --        ""
     in
     Ui.column
         [ Ui.spacing 60 ]
@@ -548,17 +522,8 @@ formView allTicketTypes model =
         --, sponsorships model form
         , summary allTicketTypes model
         , Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            (Theme.contentAttributes
-                ++ [ Ui.spacing 24
-
-                   --    , padding 16
-                   ]
-            )
-            [ Ui.none
-
-            --, MarkdownThemed.renderFull orderNotes
-            , textInput
+            (Ui.spacing 24 :: Theme.contentAttributes)
+            [ textInput
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
@@ -581,10 +546,10 @@ formView allTicketTypes model =
                 , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
                 ]
             , if model.window.width > 600 then
-                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton includesAccom ]
+                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton ]
 
               else
-                Ui.column [ Ui.spacing 16 ] [ submitButton includesAccom, cancelButton ]
+                Ui.column [ Ui.spacing 16 ] [ submitButton, cancelButton ]
             , RichText.view
                 model
                 [ Paragraph
@@ -1077,7 +1042,7 @@ errorText error =
         , Ui.Font.color (Ui.rgb 172 0 0)
         , Ui.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
-        [ Ui.text ("🚨 " ++ error) ]
+        [ Ui.text error ]
 
 
 tooltip : String -> Ui.Element msg
