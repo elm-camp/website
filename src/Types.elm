@@ -3,7 +3,10 @@ module Types exposing
     , BackendMsg(..)
     , CityCode
     , CompletedOrder
+    , ConversionRateStatus(..)
+    , CzechCrown
     , EmailResult(..)
+    , Euro
     , FrontendModel(..)
     , FrontendMsg(..)
     , InitData2
@@ -31,6 +34,7 @@ import Id exposing (Id)
 import NonNegative exposing (NonNegative)
 import Postmark
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketCount)
+import Quantity exposing (Quantity, Rate)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
@@ -55,7 +59,22 @@ type alias LoadingModel =
     , isOrganiser : Bool
     , initData : Maybe InitData2
     , elmUiState : Ui.State
+    , conversionRate : ConversionRateStatus
     }
+
+
+type ConversionRateStatus
+    = LoadingConversionRate
+    | LoadedConversionRate (Quantity Float (Rate Euro CzechCrown))
+    | LoadingConversionRateFailed Http.Error
+
+
+type Euro
+    = Euro
+
+
+type CzechCrown
+    = CzechCrown
 
 
 type alias LoadedModel =
@@ -75,6 +94,7 @@ type alias LoadedModel =
     , logoModel : View.Logo.Model
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
+    , conversionRate : ConversionRateStatus
     }
 
 
@@ -290,6 +310,7 @@ type FrontendMsg
     | Noop
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
+    | GotConversionRate (Result Http.Error (Quantity Float (Rate Euro CzechCrown)))
 
 
 type ToBackend
