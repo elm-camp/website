@@ -67,7 +67,6 @@ type alias TicketCount =
     { campfireTicket : NonNegative
     , singleRoomTicket : NonNegative
     , doubleRoomTicket : NonNegative
-    , groupRoomTicket : NonNegative
     }
 
 
@@ -76,7 +75,6 @@ initTicketCount =
     { campfireTicket = NonNegative.zero
     , singleRoomTicket = NonNegative.zero
     , doubleRoomTicket = NonNegative.zero
-    , groupRoomTicket = NonNegative.zero
     }
 
 

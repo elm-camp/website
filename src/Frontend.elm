@@ -28,15 +28,12 @@ import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
-import List.Extra as List
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
-import Quantity
 import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
-import SeqDict
 import Stripe
-import Theme
-import Types exposing (ConversionRateStatus(..), FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Theme exposing (ConversionRateStatus(..))
+import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
 import Ui.Font
@@ -158,7 +155,7 @@ init url key =
             , expect =
                 Http.expectJson
                     GotConversionRate
-                    (D.at [ "rates", "CZK" ] D.float |> D.map (\rate -> Quantity.unsafe rate))
+                    (D.field "rates" (D.dict D.float))
             }
         ]
     )

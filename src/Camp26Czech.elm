@@ -1,11 +1,10 @@
 module Camp26Czech exposing
-    ( allTicketTypes
-    , campfireTicket
-    , doubleRoomTicket
-    , groupRoomTicket
+    ( campfireTicket
     , header
+    , sharedRoomTicket
     , singleRoomTicket
     , ticketSalesOpenAt
+    , ticketTypes
     , view
     )
 
@@ -26,7 +25,7 @@ import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
 import View.Logo
-import View.Sales exposing (TicketType)
+import View.Sales exposing (TicketType, TicketTypes)
 
 
 meta : Camp.Meta
@@ -122,7 +121,7 @@ view model =
             [ header model
             , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
             , RichText.view model intro
-            , View.Sales.view allTicketTypes ticketSalesOpenAt model
+            , View.Sales.view ticketTypes ticketSalesOpenAt model
             , RichText.view model venueAndAccess
             , organisers model.window
             , RichText.view model sponsors
@@ -425,26 +424,12 @@ maxAttendees =
 --            4
 
 
-allTicketTypes : Nonempty TicketType
-allTicketTypes =
-    Nonempty
-        campfireTicket
-        [ --offsiteTicket
-          singleRoomTicket
-        , doubleRoomTicket
-        , groupRoomTicket
-        ]
-
-
-
---offsiteTicket : Ticket
---offsiteTicket =
---    { name = "Offsite"
---    , description = "You'll be organising your own accommodation off-site and making your own way to/from the event each day. You'll have full access to the event and all meals."
---    , image = ""
---    , productId = ""
---    , getter = .offsiteTicket
---    }
+ticketTypes : TicketTypes
+ticketTypes =
+    { campfireTicket = campfireTicket
+    , singleRoomTicket = singleRoomTicket
+    , sharedRoomTicket = sharedRoomTicket
+    }
 
 
 campfireTicket : TicketType
@@ -469,23 +454,12 @@ singleRoomTicket =
     }
 
 
-doubleRoomTicket : TicketType
-doubleRoomTicket =
+sharedRoomTicket : TicketType
+sharedRoomTicket =
     { name = "Double Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
     , productId = Id.fromString "prod_TmIzrbSouU0bYE"
     , getter = .doubleRoomTicket
     , setter = \v m -> { m | doubleRoomTicket = v }
-    }
-
-
-groupRoomTicket : TicketType
-groupRoomTicket =
-    { name = "Shared Room"
-    , description = "Suitable for couples or up to 4 people for 3 nights. Purchase 1 `Shared Room` ticket per person and let us know who you are sharing with."
-    , image = ""
-    , productId = Id.fromString ""
-    , getter = .groupRoomTicket
-    , setter = \v m -> { m | groupRoomTicket = v }
     }

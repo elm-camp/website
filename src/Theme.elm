@@ -1,5 +1,6 @@
 module Theme exposing
-    ( Size
+    ( ConversionRateStatus(..)
+    , Size
     , Theme
     , attr
     , colorWithAlpha
@@ -27,6 +28,8 @@ module Theme exposing
     )
 
 import Color
+import Dict exposing (Dict)
+import Effect.Http as Http
 import Html exposing (Html)
 import Html.Attributes
 import Money
@@ -37,6 +40,12 @@ import Ui.Accessibility
 import Ui.Font
 import Ui.Input
 import Ui.Shadow
+
+
+type ConversionRateStatus
+    = LoadingConversionRate
+    | LoadedConversionRate (Dict String Float)
+    | LoadingConversionRateFailed Http.Error
 
 
 type alias Theme =
@@ -152,9 +161,27 @@ fontFace weight name fontFamilyName =
 }"""
 
 
-priceText : Price -> String
-priceText { currency, amount } =
-    Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
+priceText : Price -> ConversionRateStatus -> String
+priceText { currency, amount } conversion =
+    let
+        conversion2 : Dict String Float
+        conversion2 =
+            case conversion of
+                LoadedConversionRate dict ->
+                    dict
+
+                LoadingConversionRate ->
+                    Dict.empty
+
+                LoadingConversionRateFailed error ->
+                    Dict.empty
+    in
+    case Dict.get (Money.toString currency) conversion2 of
+        Just euroRate ->
+            Money.toNativeSymbol Money.EUR ++ String.fromInt (round (toFloat amount / euroRate) // 100)
+
+        Nothing ->
+            Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
 
 
 priceAmount : Price -> Float

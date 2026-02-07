@@ -1,12 +1,8 @@
 module Types exposing
     ( BackendModel
     , BackendMsg(..)
-    , CityCode
     , CompletedOrder
-    , ConversionRateStatus(..)
-    , CzechCrown
     , EmailResult(..)
-    , Euro
     , FrontendModel(..)
     , FrontendMsg(..)
     , InitData2
@@ -24,6 +20,7 @@ module Types exposing
     , maxSlotsAvailable
     )
 
+import Dict exposing (Dict)
 import Effect.Browser exposing (UrlRequest)
 import Effect.Browser.Dom exposing (HtmlId)
 import Effect.Browser.Navigation exposing (Key)
@@ -38,7 +35,7 @@ import Quantity exposing (Quantity, Rate)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
-import Theme exposing (Size)
+import Theme exposing (ConversionRateStatus, Size)
 import Ui
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
@@ -61,20 +58,6 @@ type alias LoadingModel =
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
     }
-
-
-type ConversionRateStatus
-    = LoadingConversionRate
-    | LoadedConversionRate (Quantity Float (Rate Euro CzechCrown))
-    | LoadingConversionRateFailed Http.Error
-
-
-type Euro
-    = Euro
-
-
-type CzechCrown
-    = CzechCrown
 
 
 type alias LoadedModel =
@@ -286,10 +269,6 @@ type Sponsorship
     | SponsorGold Price
 
 
-type alias CityCode =
-    String
-
-
 type FrontendMsg
     = UrlClicked UrlRequest
     | UrlChanged Url
@@ -310,7 +289,7 @@ type FrontendMsg
     | Noop
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
-    | GotConversionRate (Result Http.Error (Quantity Float (Rate Euro CzechCrown)))
+    | GotConversionRate (Result Http.Error (Dict String Float))
 
 
 type ToBackend

@@ -1,6 +1,8 @@
 module View.Sales exposing
     ( TicketType
+    , TicketTypes
     , accommodationView
+    , allTicketTypes
     , attendeeForm
     , carbonOffsetForm
     , errorHtmlId
@@ -15,7 +17,6 @@ module View.Sales exposing
     , textInput
     , ticketSalesOpenCountdown
     , ticketsHtmlId
-    , ticketsView
     , tooltip
     , view
     )
@@ -46,8 +47,20 @@ import Ui.Prose
 import Ui.Shadow
 
 
-view : Nonempty TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
-view allTicketTypes ticketSalesOpenAt model =
+type alias TicketTypes =
+    { campfireTicket : TicketType
+    , singleRoomTicket : TicketType
+    , sharedRoomTicket : TicketType
+    }
+
+
+allTicketTypes : TicketTypes -> List TicketType
+allTicketTypes a =
+    [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
+
+
+view : TicketTypes -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
+view ticketTypes ticketSalesOpenAt model =
     let
         ticketsAreLive =
             detailedCountdown ticketSalesOpenAt model.now == Nothing
@@ -70,9 +83,9 @@ view allTicketTypes ticketSalesOpenAt model =
                         [ Ui.el
                             Theme.contentAttributes
                             (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
-                        , ticketsView model
-                        , accommodationView allTicketTypes model
-                        , formView allTicketTypes model
+                        , accommodationView ticketTypes model
+                        , attendeesView model
+                        , formView ticketTypes model
                         ]
 
                     else
@@ -338,12 +351,14 @@ opportunityGrantInfo =
     ]
 
 
-ticketsView : LoadedModel -> Ui.Element FrontendMsg
-ticketsView model =
+attendeesView : LoadedModel -> Ui.Element FrontendMsg
+attendeesView model =
     let
+        form : PurchaseForm
         form =
             model.form
 
+        attendeeCount : Int
         attendeeCount =
             List.Nonempty.length form.attendees
     in
@@ -387,8 +402,8 @@ ticketsView model =
 --}
 
 
-accommodationView : Nonempty TicketType -> LoadedModel -> Ui.Element FrontendMsg
-accommodationView allTicketTypes model =
+accommodationView : TicketTypes -> LoadedModel -> Ui.Element FrontendMsg
+accommodationView ticketTypes model =
     let
         form =
             model.form
@@ -408,19 +423,19 @@ accommodationView allTicketTypes model =
             (\ticket ->
                 case SeqDict.get ticket.productId model.prices of
                     Just price ->
-                        viewAccom model.form.count True price.price ticket
+                        viewAccom model.form.count True price.price ticket model
 
                     Nothing ->
                         Ui.text "No ticket prices found"
             )
-            (List.Nonempty.toList allTicketTypes)
+            (allTicketTypes ticketTypes)
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
             |> Ui.map (\formCount -> FormChanged { form | count = formCount })
         ]
 
 
-viewAccom : TicketCount -> Bool -> Price -> TicketType -> Ui.Element TicketCount
-viewAccom formCount ticketAvailable price ticket2 =
+viewAccom : TicketCount -> Bool -> Price -> TicketType -> LoadedModel -> Ui.Element TicketCount
+viewAccom formCount ticketAvailable price ticket2 model =
     let
         count =
             ticket2.getter formCount
@@ -438,29 +453,32 @@ viewAccom formCount ticketAvailable price ticket2 =
         [ Ui.none
         , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket2.name ]
         , Ui.text ticket2.description
-        , Ui.el
-            [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36, Ui.alignBottom ]
-            (Ui.text (Theme.priceText price))
-        , if ticketAvailable then
-            if NonNegative.toInt count > 0 then
-                Theme.numericField
-                    "Tickets"
-                    (NonNegative.toInt count)
-                    (\value -> ticket2.setter (Result.withDefault count (NonNegative.fromInt value)) formCount)
+        , Ui.column
+            [ Ui.alignBottom ]
+            [ Ui.el
+                [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
+                (Ui.text (Theme.priceText price model.conversionRate))
+            , if ticketAvailable then
+                if NonNegative.toInt count > 0 then
+                    Theme.numericField
+                        "Tickets"
+                        (NonNegative.toInt count)
+                        (\value -> ticket2.setter (Result.withDefault count (NonNegative.fromInt value)) formCount)
 
-            else
-                Ui.el
-                    (Theme.submitButtonAttributes (ticket2.setter NonNegative.one formCount) ticketAvailable)
-                    (Ui.el
-                        [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
-                        (Ui.text "Select")
-                    )
+                else
+                    Ui.el
+                        (Theme.submitButtonAttributes (ticket2.setter NonNegative.one formCount) ticketAvailable)
+                        (Ui.el
+                            [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
+                            (Ui.text "Select")
+                        )
 
-          else if ticket2.name == "Campfire Ticket" then
-            Ui.text "Waitlist"
+              else if ticket2.name == "Campfire Ticket" then
+                Ui.text "Waitlist"
 
-          else
-            Ui.text "Sold out!"
+              else
+                Ui.text "Sold out!"
+            ]
         ]
 
 
@@ -478,8 +496,8 @@ purchaseable ticket model =
     True
 
 
-formView : Nonempty TicketType -> LoadedModel -> Ui.Element FrontendMsg
-formView allTicketTypes model =
+formView : TicketTypes -> LoadedModel -> Ui.Element FrontendMsg
+formView ticketTypes model =
     let
         form =
             model.form
@@ -517,10 +535,10 @@ formView allTicketTypes model =
         [ Ui.none
 
         -- , carbonOffsetForm model.showCarbonOffsetTooltip form
-        , opportunityGrant form
+        , opportunityGrant ticketTypes form model
 
         --, sponsorships model form
-        , summary allTicketTypes model
+        , summary ticketTypes model
         , Ui.column
             (Ui.spacing 24 :: Theme.contentAttributes)
             [ textInput
@@ -661,57 +679,62 @@ noShrink =
     Html.Attributes.style "flex-shrink" "0" |> Ui.htmlAttribute
 
 
-opportunityGrant : PurchaseForm -> Ui.Element FrontendMsg
-opportunityGrant form =
-    Ui.column
-        (Ui.spacing 20 :: Theme.contentAttributes)
-        [ Theme.h2 "🫶 Opportunity grants"
-        , Ui.Prose.paragraph
-            [ Ui.width Ui.shrink ]
-            [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
-        , Theme.panel []
-            [ Ui.column [ Ui.width Ui.shrink ]
-                [ Ui.Prose.paragraph
+opportunityGrant : TicketTypes -> PurchaseForm -> LoadedModel -> Ui.Element FrontendMsg
+opportunityGrant ticketTypes form model =
+    case SeqDict.get ticketTypes.singleRoomTicket.productId model.prices of
+        Just price ->
+            Ui.column
+                (Ui.spacing 20 :: Theme.contentAttributes)
+                [ Theme.h2 "🫶 Opportunity grants"
+                , Ui.Prose.paragraph
                     [ Ui.width Ui.shrink ]
-                    [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
-                , Ui.row [ Ui.spacing 30 ]
-                    [ Ui.row
-                        [ Ui.width (Ui.px 100), noShrink ]
-                        [ Ui.el [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ] (Ui.text "$")
-                        , textInput
-                            form
-                            (\a -> FormChanged { form | grantContribution = a })
-                            ""
-                            PurchaseForm.validateGrantContribution
-                            form.grantContribution
-                        ]
-                    , Ui.column [ Ui.width (Ui.portion 3) ]
-                        [ Ui.row [ Ui.width (Ui.portion 3) ]
-                            [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
-                            , Ui.el
-                                [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
-                                (Ui.text (Theme.priceText { currency = Money.USD, amount = 75000 }))
-                            ]
-                        , Ui.Input.sliderHorizontal
-                            []
-                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
-                            , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
-                            , min = 0
-                            , max = 75000
-                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
-                            , thumb = Nothing
-                            , step = Just 1000
-                            }
-                        , Ui.row
-                            [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
-                            [ Ui.el [ Ui.width Ui.shrink ] (Ui.text "No contribution")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.alignRight ] (Ui.text "Donate full attendance")
+                    [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+                , Theme.panel []
+                    [ Ui.column [ Ui.width Ui.shrink ]
+                        [ Ui.Prose.paragraph
+                            [ Ui.width Ui.shrink ]
+                            [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
+                        , Ui.row [ Ui.spacing 30 ]
+                            [ Ui.row
+                                [ Ui.width (Ui.px 100), noShrink ]
+                                [ Ui.el [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ] (Ui.text "$")
+                                , textInput
+                                    form
+                                    (\a -> FormChanged { form | grantContribution = a })
+                                    ""
+                                    PurchaseForm.validateGrantContribution
+                                    form.grantContribution
+                                ]
+                            , Ui.column [ Ui.width (Ui.portion 3) ]
+                                [ Ui.row [ Ui.width (Ui.portion 3) ]
+                                    [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
+                                    , Ui.el
+                                        [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
+                                        (Ui.text (Theme.priceText price.price model.conversionRate))
+                                    ]
+                                , Ui.Input.sliderHorizontal
+                                    []
+                                    { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
+                                    , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
+                                    , min = 0
+                                    , max = 75000
+                                    , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
+                                    , thumb = Nothing
+                                    , step = Just 1000
+                                    }
+                                , Ui.row
+                                    [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
+                                    [ Ui.el [ Ui.width Ui.shrink ] (Ui.text "No contribution")
+                                    , Ui.el [ Ui.width Ui.shrink, Ui.alignRight ] (Ui.text "Donate full attendance")
+                                    ]
+                                ]
                             ]
                         ]
                     ]
                 ]
-            ]
-        ]
+
+        Nothing ->
+            Ui.none
 
 
 
@@ -796,8 +819,8 @@ opportunityGrant form =
 --        ]
 
 
-summary : Nonempty TicketType -> LoadedModel -> Ui.Element msg
-summary allTicketTypes model =
+summary : TicketTypes -> LoadedModel -> Ui.Element msg
+summary ticketTypes model =
     let
         grant : Result String Int
         grant =
@@ -823,7 +846,7 @@ summary allTicketTypes model =
                         Nothing ->
                             0
                 )
-                (List.Nonempty.toList allTicketTypes)
+                (allTicketTypes ticketTypes)
                 |> List.sum
 
         --sponsorshipTotal : Float
@@ -839,7 +862,7 @@ summary allTicketTypes model =
         displayCurrency : Money.Currency
         displayCurrency =
             model.prices
-                |> SeqDict.get (List.Nonempty.head allTicketTypes).productId
+                |> SeqDict.get ticketTypes.singleRoomTicket.productId
                 |> Maybe.map .price
                 |> Maybe.map .currency
                 |> Maybe.withDefault Money.USD
@@ -852,7 +875,7 @@ summary allTicketTypes model =
             Ui.text "No accommodation bookings"
 
           else
-            summaryAccommodation allTicketTypes model model.form.count displayCurrency
+            summaryAccommodation ticketTypes model model.form.count displayCurrency
         , case grant of
             Err _ ->
                 Ui.none
@@ -863,7 +886,7 @@ summary allTicketTypes model =
             Ok _ ->
                 Ui.text
                     ("Opportunity grant: "
-                        ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal }
+                        ++ Theme.priceText { currency = displayCurrency, amount = floor grantTotal } model.conversionRate
                     )
 
         --, if sponsorshipTotal > 0 then
@@ -879,11 +902,12 @@ summary allTicketTypes model =
                 { currency = displayCurrency
                 , amount = accomTotal + grantTotal |> floor -- + sponsorshipTotal |> floor
                 }
+                model.conversionRate
             |> Theme.h3
         ]
 
 
-summaryAccommodation : Nonempty TicketType -> LoadedModel -> TicketCount -> Money.Currency -> Ui.Element msg
+summaryAccommodation : TicketTypes -> LoadedModel -> TicketCount -> Money.Currency -> Ui.Element msg
 summaryAccommodation ticketTypes model ticketCount displayCurrency =
     List.filterMap
         (\ticket ->
@@ -899,7 +923,7 @@ summaryAccommodation ticketTypes model ticketCount displayCurrency =
                             ++ " x "
                             ++ NonNegative.toString (ticket.getter ticketCount)
                             ++ " – "
-                            ++ Theme.priceText { currency = displayCurrency, amount = floor total }
+                            ++ Theme.priceText { currency = displayCurrency, amount = floor total } model.conversionRate
                             |> Ui.text
                             |> Just
 
@@ -909,7 +933,7 @@ summaryAccommodation ticketTypes model ticketCount displayCurrency =
                 Nothing ->
                     Nothing
         )
-        (List.Nonempty.toList ticketTypes)
+        (allTicketTypes ticketTypes)
         |> Ui.column [ Ui.width Ui.shrink ]
 
 

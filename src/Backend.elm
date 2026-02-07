@@ -36,7 +36,7 @@ import Stripe exposing (CheckoutItem, PriceId, ProductId(..), StripeSessionId)
 import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
-import View.Sales exposing (TicketType)
+import View.Sales as Sales exposing (TicketType)
 
 
 app :
@@ -297,7 +297,6 @@ totalTicketCount orders =
             { campfireTicket = NonNegative.add count.campfireTicket order.form.count.campfireTicket
             , singleRoomTicket = NonNegative.add count.singleRoomTicket order.form.count.singleRoomTicket
             , doubleRoomTicket = NonNegative.add count.doubleRoomTicket order.form.count.doubleRoomTicket
-            , groupRoomTicket = NonNegative.add count.groupRoomTicket order.form.count.groupRoomTicket
             }
         )
         PurchaseForm.initTicketCount
@@ -311,26 +310,10 @@ updateFromFrontend sessionId clientId msg model =
             case ( Untrusted.purchaseForm a, model.ticketsEnabled ) of
                 ( Just purchaseForm, TicketsEnabled ) ->
                     let
+                        availability : TicketCount
                         availability =
                             totalTicketCount model.orders
 
-                        --sponsorshipItems =
-                        --    case purchaseForm.sponsorship of
-                        --        Just sponsorshipId ->
-                        --            case SeqDict.get (Id.fromString sponsorshipId) model.prices of
-                        --                Just price ->
-                        --                    [ Stripe.Priced
-                        --                        { name = "Sponsorship"
-                        --                        , priceId = price.priceId
-                        --                        , quantity = 1
-                        --                        }
-                        --                    ]
-                        --
-                        --                Nothing ->
-                        --                    []
-                        --
-                        --        Nothing ->
-                        --            []
                         accommodationItems : TicketType -> CheckoutItem
                         accommodationItems ticket =
                             Stripe.Priced
@@ -359,10 +342,8 @@ updateFromFrontend sessionId clientId msg model =
                                 []
 
                         items =
-                            List.map accommodationItems (List.Nonempty.toList Camp26Czech.allTicketTypes)
+                            List.map accommodationItems (Sales.allTicketTypes Camp26Czech.ticketTypes)
                                 ++ opportunityGrantItems
-
-                        --++ sponsorshipItems
                     in
                     ( model
                     , Time.now

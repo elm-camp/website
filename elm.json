@@ -36,7 +36,6 @@
             "mdgriffith/elm-bezier": "1.0.0",
             "mgold/elm-nonempty-list": "4.2.0",
             "miniBill/elm-codec": "2.3.0",
-            "pzp1997/assoc-list": "1.0.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.4",
             "ryan-haskell/date-format": "1.0.0"
         },
