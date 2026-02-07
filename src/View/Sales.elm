@@ -414,16 +414,12 @@ accommodationView ticketTypes initData model =
                 , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
                 ]
             ]
-        , List.map
-            (\ticket ->
-                case SeqDict.get ticket.productId model.prices of
-                    Just price ->
-                        viewAccom model.form.count True price ticket model
-
-                    Nothing ->
-                        Ui.text "No ticket prices found"
+        , List.map2
+            (\ticket price ->
+                viewAccom model.form.count True price ticket model
             )
             (allTicketTypes ticketTypes)
+            (allTicketTypes initData.prices)
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
             |> Ui.map (\formCount -> FormChanged { form | count = formCount })
         ]
@@ -452,7 +448,7 @@ viewAccom formCount ticketAvailable price ticket2 model =
             [ Ui.alignBottom ]
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
-                (Ui.text (Theme.stripePriceText price model.conversionRate))
+                (Ui.text (Theme.stripePriceText (Quantity.toFloatQuantity price.amount) model.currentCurrency))
             , if ticketAvailable then
                 if NonNegative.toInt count > 0 then
                     Theme.numericField
@@ -481,7 +477,6 @@ type alias TicketType =
     { name : String
     , description : String
     , image : String
-    , productId : Id ProductId
     , getter : TicketTypes TicketType -> NonNegative
     , setter : NonNegative -> TicketTypes TicketType -> TicketTypes TicketType
     }
@@ -528,12 +523,8 @@ formView ticketTypes initData model =
     Ui.column
         [ Ui.spacing 60 ]
         [ Ui.none
-
-        -- , carbonOffsetForm model.showCarbonOffsetTooltip form
-        , opportunityGrant ticketTypes form initData model
-
-        --, sponsorships model form
-        , summary ticketTypes model
+        , opportunityGrant form initData model
+        , summary ticketTypes initData model
         , Ui.column
             (Ui.spacing 24 :: Theme.contentAttributes)
             [ textInput
@@ -705,7 +696,12 @@ opportunityGrant form initData model =
                             [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
                             , Ui.el
                                 [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
-                                (Ui.text (Theme.stripePriceText initData.prices.singleRoomTicket model.conversionRate))
+                                (Ui.text
+                                    (Theme.stripePriceText
+                                        (Quantity.toFloatQuantity initData.prices.singleRoomTicket.amount)
+                                        model.currentCurrency
+                                    )
+                                )
                             ]
                         , Ui.Input.sliderHorizontal
                             []
@@ -836,7 +832,7 @@ summary ticketTypes initData model =
             Ui.text "No accommodation bookings"
 
           else
-            summaryAccommodation ticketTypes model model.form.count model.currentCurrency.currency
+            summaryAccommodation ticketTypes initData model model.form.count
         , case grant of
             Err _ ->
                 Ui.none
@@ -863,33 +859,30 @@ summary ticketTypes initData model =
         ]
 
 
-summaryAccommodation : TicketTypes TicketType -> LoadedModel -> TicketTypes NonNegative -> Money.Currency -> Ui.Element msg
-summaryAccommodation ticketTypes model ticketCount displayCurrency =
-    List.filterMap
-        (\ticket ->
-            case SeqDict.get ticket.productId model.prices of
-                Just price ->
-                    let
-                        total : Quantity Int StripeCurrency
-                        total =
-                            Quantity.multiplyBy (NonNegative.toInt (ticket.getter ticketCount)) price.amount
-                    in
-                    if Quantity.greaterThanZero total then
-                        ticket.name
-                            ++ " x "
-                            ++ NonNegative.toString (ticket.getter ticketCount)
-                            ++ " – "
-                            ++ Theme.stripePriceText { currency = displayCurrency, amount = floor total } model.conversionRate
-                            |> Ui.text
-                            |> Just
+summaryAccommodation : TicketTypes TicketType -> InitData2 -> LoadedModel -> TicketTypes NonNegative -> Ui.Element msg
+summaryAccommodation ticketTypes initData model ticketCount =
+    List.map2
+        (\ticket price ->
+            let
+                total : Quantity Int StripeCurrency
+                total =
+                    Quantity.multiplyBy (NonNegative.toInt (ticket.getter ticketCount)) price.amount
+            in
+            if Quantity.greaterThanZero total then
+                ticket.name
+                    ++ " x "
+                    ++ NonNegative.toString (ticket.getter ticketCount)
+                    ++ " – "
+                    ++ Theme.stripePriceText (Quantity.toFloatQuantity total) model.currentCurrency
+                    |> Ui.text
+                    |> Just
 
-                    else
-                        Nothing
-
-                Nothing ->
-                    Nothing
+            else
+                Nothing
         )
         (allTicketTypes ticketTypes)
+        (allTicketTypes initData.prices)
+        |> List.filterMap identity
         |> Ui.column [ Ui.width Ui.shrink ]
 
 
