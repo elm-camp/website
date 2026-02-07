@@ -5,7 +5,7 @@ module PurchaseForm exposing
     , PurchaseForm
     , PurchaseFormValidated
     , SubmitStatus(..)
-    , TicketCount
+    , TicketTypes
     , defaultAttendee
     , init
     , initTicketCount
@@ -31,11 +31,9 @@ import TravelMode exposing (TravelMode)
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
     , attendees : Nonempty AttendeeForm
-    , count : TicketCount
+    , count : TicketTypes NonNegative
     , billingEmail : String
     , grantContribution : String
-
-    --, sponsorship : Maybe String
     }
 
 
@@ -51,20 +49,20 @@ init =
 
 type alias PurchaseFormValidated =
     { attendees : Nonempty AttendeeFormValidated
-    , count : TicketCount
+    , count : TicketTypes NonNegative
     , billingEmail : EmailAddress
     , grantContribution : Quantity Float StripeCurrency
     }
 
 
-type alias TicketCount =
-    { campfireTicket : NonNegative
-    , singleRoomTicket : NonNegative
-    , sharedRoomTicket : NonNegative
+type alias TicketTypes a =
+    { campfireTicket : a
+    , singleRoomTicket : a
+    , sharedRoomTicket : a
     }
 
 
-initTicketCount : TicketCount
+initTicketCount : TicketTypes NonNegative
 initTicketCount =
     { campfireTicket = NonNegative.zero
     , singleRoomTicket = NonNegative.zero
@@ -111,8 +109,8 @@ type PressedSubmit
     | NotPressedSubmit
 
 
-validateGrantContribution : Quantity Float (Rate StripeCurrency LocalCurrency) -> String -> Result String (Quantity Float StripeCurrency)
-validateGrantContribution conversionRate s =
+validateGrantContribution : String -> Result String (Quantity Int LocalCurrency)
+validateGrantContribution s =
     if s == "" then
         Ok Quantity.zero
 
@@ -126,12 +124,7 @@ validateGrantContribution conversionRate s =
                     Err "Can't be negative"
 
                 else
-                    let
-                        x2 : Quantity Float LocalCurrency
-                        x2 =
-                            Quantity.unsafe (toFloat x)
-                    in
-                    Ok (Quantity.at conversionRate x2)
+                    Quantity.unsafe (x * 100) |> Ok
 
 
 validateName : String -> Result String Name
@@ -187,14 +180,14 @@ validateForm conversionRate form =
     case
         T3
             (validateEmailAddress form.billingEmail)
-            (validateGrantContribution conversionRate form.grantContribution)
+            (validateGrantContribution form.grantContribution)
             (validateAttendees form.attendees)
     of
         T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
             { attendees = attendeesOk
             , count = form.count
             , billingEmail = billingEmail
-            , grantContribution = grantContribution
+            , grantContribution = Quantity.at conversionRate grantContribution
             }
                 |> Just
 

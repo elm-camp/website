@@ -5,7 +5,6 @@ module Theme exposing
     , colorWithAlpha
     , colors
     , contentAttributes
-    , conversionRate
     , css
     , fontFace
     , footer
@@ -15,13 +14,13 @@ module Theme exposing
     , h3
     , isMobile
     , lightTheme
+    , localPriceText
     , normalButtonAttributes
     , numericField
     , panel
-    , priceSymbol
-    , priceText
     , rowToColumnWhen
     , spinnerWhite
+    , stripePriceText
     , submitButtonAttributes
     , toggleButton
     , toggleButtonAttributes
@@ -35,7 +34,7 @@ import Html.Attributes
 import Money
 import Quantity exposing (Quantity, Rate)
 import Route exposing (Route(..))
-import Stripe exposing (ConversionRateStatus(..), LocalCurrency, Price, StripeCurrency)
+import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, Price, StripeCurrency)
 import Ui
 import Ui.Accessibility
 import Ui.Font
@@ -156,43 +155,24 @@ fontFace weight name fontFamilyName =
 }"""
 
 
-priceText : Price -> ConversionRateStatus -> String
-priceText price conversion =
-    case conversionRate price conversion of
-        Just euroRate ->
-            Money.toNativeSymbol Money.EUR ++ String.fromInt (round (toFloat price.amount / euroRate) // 100)
-
-        Nothing ->
-            Money.toNativeSymbol price.currency ++ String.fromInt (price.amount // 100)
-
-
-conversionRate : Price -> ConversionRateStatus -> Maybe (Quantity Float (Rate StripeCurrency LocalCurrency))
-conversionRate price conversion =
-    case conversion of
-        LoadedConversionRate dict ->
-            Dict.get (Money.toString price.currency) dict
-
-        LoadingConversionRate ->
-            Nothing
-
-        LoadingConversionRateFailed error ->
-            Nothing
+stripePriceText : Quantity Float StripeCurrency -> CurrentCurrency -> String
+stripePriceText price currentCurrency =
+    let
+        amount : Int
+        amount =
+            Quantity.at_ currentCurrency.conversionRate price |> Quantity.unwrap |> round
+    in
+    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (amount // 100)
 
 
-priceSymbol : Price -> ConversionRateStatus -> String
-priceSymbol price conversion =
-    case conversionRate price conversion of
-        Just _ ->
-            Money.toNativeSymbol Stripe.localCurrency
-
-        Nothing ->
-            Money.toNativeSymbol price.currency
+localPriceText : Quantity Int LocalCurrency -> CurrentCurrency -> String
+localPriceText price currentCurrency =
+    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (Quantity.unwrap price // 100)
 
 
 panel : List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 panel attrs x =
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         ([ Ui.width Ui.fill
          , Ui.alignTop
          , Ui.spacing 16

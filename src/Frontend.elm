@@ -30,9 +30,11 @@ import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import Quantity exposing (Quantity, Rate)
 import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
-import Stripe
+import SeqDict
+import Stripe exposing (ConversionRateStatus(..), CurrentCurrency(..), LocalCurrency, StripeCurrency)
 import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
@@ -130,7 +132,6 @@ init url key =
         , url = url
         , isOrganiser = isOrganiser
         , elmUiState = Ui.Anim.init
-        , conversionRate = LoadingConversionRate
         }
     , Command.batch
         [ Dom.getViewport
@@ -151,13 +152,6 @@ init url key =
 
             _ ->
                 Command.none
-        , Http.get
-            { url = "https://open.er-api.com/v6/latest/" ++ Money.toString Stripe.localCurrency
-            , expect =
-                Http.expectJson
-                    GotConversionRate
-                    (D.field "rates" (D.dict D.float))
-            }
         ]
     )
 
@@ -176,16 +170,6 @@ update msg model =
                 GotZone zone ->
                     tryLoading { loading | timeZone = Just zone }
 
-                GotConversionRate result ->
-                    ( case result of
-                        Ok ok ->
-                            Loading { loading | conversionRate = LoadedConversionRate ok }
-
-                        Err error ->
-                            Loading { loading | conversionRate = LoadingConversionRateFailed error }
-                    , Command.none
-                    )
-
                 _ ->
                     ( model, Command.none )
 
@@ -196,32 +180,45 @@ update msg model =
 tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
     Maybe.map4
-        (\window { slotsRemaining, prices, ticketsEnabled } now timeZone ->
+        (\window initData now timeZone ->
             ( Loaded
                 { key = loadingModel.key
                 , now = now
                 , timeZone = timeZone
                 , window = window
                 , showTooltip = False
-                , prices = prices
+                , initData = initData
                 , form = PurchaseForm.init
                 , route = Route.decode loadingModel.url
                 , showCarbonOffsetTooltip = False
-                , slotsRemaining = slotsRemaining
                 , isOrganiser = loadingModel.isOrganiser
-                , ticketsEnabled = ticketsEnabled
                 , backendModel = Nothing
                 , pressedAudioButton = False
                 , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
-                , conversionRate = loadingModel.conversionRate
+                , conversionRate = LoadingConversionRate
+                , currentCurrency = UseStripeCurrency
                 }
-            , case loadingModel.url.fragment of
-                Just fragment ->
-                    scrollToFragment (Dom.id fragment)
+            , Command.batch
+                [ case loadingModel.url.fragment of
+                    Just fragment ->
+                        scrollToFragment (Dom.id fragment)
 
-                Nothing ->
-                    Command.none
+                    Nothing ->
+                        Command.none
+                , case initData of
+                    Ok initData2 ->
+                        Http.get
+                            { url = "https://open.er-api.com/v6/latest/" ++ Money.toString initData2.stripeCurrency
+                            , expect =
+                                Http.expectJson
+                                    GotConversionRate
+                                    (D.field "rates" (D.dict (D.map Quantity.unsafe D.float)))
+                            }
+
+                    Err () ->
+                        Command.none
+                ]
             )
         )
         loadingModel.window
@@ -294,8 +291,17 @@ updateLoaded msg model =
             let
                 form =
                     model.form
+
+                conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency)
+                conversionRate =
+                    case model.currentCurrency of
+                        UseStripeCurrency ->
+                            Quantity.unsafe 1
+
+                        UseLocalCurrency _ conversionRate ->
+                            conversionRate
             in
-            case ( form.submitStatus, PurchaseForm.validateForm form ) of
+            case ( form.submitStatus, PurchaseForm.validateForm conversionRate form ) of
                 ( NotSubmitted _, Just purchaseFormValidated ) ->
                     ( { model | form = { form | submitStatus = Submitting } }
                     , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
@@ -446,8 +452,8 @@ updateFromBackend msg model =
 updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Command FrontendOnly toMsg msg )
 updateFromBackendLoaded msg model =
     case msg of
-        InitData { prices, slotsRemaining, ticketsEnabled } ->
-            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Command.none )
+        InitData _ ->
+            ( model, Command.none )
 
         SubmitFormResponse result ->
             case result of
@@ -464,10 +470,20 @@ updateFromBackendLoaded msg model =
                     ( { model | form = { form | submitStatus = SubmitBackendError str } }, Command.none )
 
         SlotRemainingChanged slotsRemaining ->
-            ( { model | slotsRemaining = slotsRemaining }, Command.none )
+            case model.initData of
+                Ok initData ->
+                    ( { model | initData = Ok { initData | slotsRemaining = slotsRemaining } }, Command.none )
+
+                Err () ->
+                    ( model, Command.none )
 
         TicketsEnabledChanged ticketsEnabled ->
-            ( { model | ticketsEnabled = ticketsEnabled }, Command.none )
+            case model.initData of
+                Ok initData ->
+                    ( { model | initData = Ok { initData | ticketsEnabled = ticketsEnabled } }, Command.none )
+
+                Err () ->
+                    ( model, Command.none )
 
         AdminInspectResponse backendModel ->
             ( { model | backendModel = Just backendModel }, Command.none )
@@ -501,11 +517,23 @@ view model =
                     Ui.none
 
                 Loaded loaded ->
-                    case loaded.ticketsEnabled of
-                        TicketsEnabled ->
-                            Ui.none
+                    case loaded.initData of
+                        Ok initData ->
+                            case initData.ticketsEnabled of
+                                TicketsEnabled ->
+                                    Ui.none
 
-                        TicketsDisabled { adminMessage } ->
+                                TicketsDisabled { adminMessage } ->
+                                    Ui.Prose.paragraph
+                                        [ Ui.Font.color (Ui.rgb 255 255 255)
+                                        , Ui.Font.weight 500
+                                        , Ui.Font.size 20
+                                        , Ui.background (Ui.rgb 128 0 0)
+                                        , Ui.padding 8
+                                        ]
+                                        [ Ui.text adminMessage ]
+
+                        Err () ->
                             Ui.Prose.paragraph
                                 [ Ui.Font.color (Ui.rgb 255 255 255)
                                 , Ui.Font.weight 500
@@ -513,7 +541,7 @@ view model =
                                 , Ui.background (Ui.rgb 128 0 0)
                                 , Ui.padding 8
                                 ]
-                                [ Ui.text adminMessage ]
+                                [ Ui.text "Something went wrong when loading prices. Sorry about the inconvenience!" ]
               )
                 |> Ui.inFront
             ]

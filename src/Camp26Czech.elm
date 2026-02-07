@@ -11,13 +11,9 @@ module Camp26Czech exposing
 import Camp
 import Helpers
 import Id exposing (Id)
-import List.Nonempty exposing (Nonempty(..))
-import NonNegative exposing (NonNegative)
-import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
 import RichText exposing (Inline(..), RichText(..))
 import Route
-import SeqDict exposing (SeqDict)
-import Stripe exposing (Price, ProductId)
 import Theme exposing (Size)
 import Time
 import Types exposing (CompletedOrder, FrontendMsg, LoadedModel)
@@ -25,7 +21,7 @@ import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
 import View.Logo
-import View.Sales exposing (TicketType, TicketTypes)
+import View.Sales exposing (TicketType)
 
 
 meta : Camp.Meta
@@ -424,7 +420,7 @@ maxAttendees =
 --            4
 
 
-ticketTypes : TicketTypes
+ticketTypes : TicketTypes TicketType
 ticketTypes =
     { campfireTicket = campfireTicket
     , singleRoomTicket = singleRoomTicket

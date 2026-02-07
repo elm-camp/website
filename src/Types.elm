@@ -13,6 +13,7 @@ module Types exposing
     , Product(..)
     , Sponsorship(..)
     , StripePaymentId(..)
+    , TicketPriceStatus(..)
     , TicketsEnabled(..)
     , ToBackend(..)
     , ToFrontend(..)
@@ -27,13 +28,14 @@ import Effect.Http as Http
 import Effect.Lamdera exposing (ClientId, SessionId)
 import Effect.Time as Time
 import Id exposing (Id)
+import Money
 import NonNegative exposing (NonNegative)
 import Postmark
-import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketCount)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
 import Quantity exposing (Quantity, Rate)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
-import Stripe exposing (ConversionRateStatus, Price, PriceData, PriceId, ProductId, StripeSessionId)
+import Stripe exposing (ConversionRateStatus, CurrentCurrency, LocalCurrency, Price, PriceData, PriceId, ProductId, StripeCurrency, StripeSessionId)
 import Theme exposing (Size)
 import Ui
 import Untrusted exposing (Untrusted)
@@ -53,9 +55,8 @@ type alias LoadingModel =
     , window : Maybe Size
     , url : Url
     , isOrganiser : Bool
-    , initData : Maybe InitData2
+    , initData : Maybe (Result () InitData2)
     , elmUiState : Ui.State
-    , conversionRate : ConversionRateStatus
     }
 
 
@@ -64,19 +65,18 @@ type alias LoadedModel =
     , now : Time.Posix
     , timeZone : Time.Zone
     , window : Size
-    , prices : SeqDict (Id ProductId) Price
+    , initData : Result () InitData2
     , form : PurchaseForm
     , route : Route
     , showTooltip : Bool
     , showCarbonOffsetTooltip : Bool
-    , slotsRemaining : TicketCount
     , isOrganiser : Bool
-    , ticketsEnabled : TicketsEnabled
     , backendModel : Maybe BackendModel
     , logoModel : View.Logo.Model
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
+    , currentCurrency : CurrentCurrency
     }
 
 
@@ -84,11 +84,18 @@ type alias BackendModel =
     { orders : SeqDict (Id StripeSessionId) CompletedOrder
     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
-    , prices : SeqDict (Id ProductId) Price
+    , prices : TicketPriceStatus
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
-    , backendInitialized : Bool
     }
+
+
+type TicketPriceStatus
+    = NotLoadingTicketPrices
+    | LoadingTicketPrices
+    | LoadedTicketPrices Money.Currency (TicketTypes Price)
+    | FailedToLoadTicketPrices Http.Error
+    | TicketCurrenciesDoNotMatch
 
 
 
@@ -284,7 +291,7 @@ type FrontendMsg
     | Noop
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
-    | GotConversionRate (Result Http.Error (Dict String Float))
+    | GotConversionRate (Result Http.Error (Dict String (Quantity Float (Rate StripeCurrency LocalCurrency))))
 
 
 type ToBackend
@@ -304,16 +311,17 @@ type BackendMsg
 
 
 type alias InitData2 =
-    { prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
-    , slotsRemaining : TicketCount
+    { prices : { campfireTicket : Price, singleRoomTicket : Price, sharedRoomTicket : Price }
+    , stripeCurrency : Money.Currency
+    , slotsRemaining : TicketTypes NonNegative
     , ticketsEnabled : TicketsEnabled
     }
 
 
 type ToFrontend
-    = InitData InitData2
+    = InitData (Result () InitData2)
     | SubmitFormResponse (Result String (Id StripeSessionId))
-    | SlotRemainingChanged TicketCount
+    | SlotRemainingChanged (TicketTypes NonNegative)
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel
 

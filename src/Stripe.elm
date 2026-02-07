@@ -1,6 +1,7 @@
 module Stripe exposing
     ( CheckoutItem(..)
     , ConversionRateStatus(..)
+    , CurrentCurrency
     , LocalCurrency
     , Price
     , PriceData
@@ -45,13 +46,17 @@ import Url.Builder
 
 
 type alias Price =
-    { priceId : Id PriceId, currency : Money.Currency, amount : Quantity Int StripeCurrency }
+    { priceId : Id PriceId, amount : Quantity Int StripeCurrency }
 
 
 type ConversionRateStatus
     = LoadingConversionRate
     | LoadedConversionRate (Dict String (Quantity Float (Rate StripeCurrency LocalCurrency)))
     | LoadingConversionRateFailed Http.Error
+
+
+type alias CurrentCurrency =
+    { currency : Money.Currency, conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency) }
 
 
 type StripeCurrency
@@ -95,7 +100,7 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
+    { price : Price, currency : Money.Currency, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
 
 
 getPrices : Task restriction Http.Error (List PriceData)
@@ -119,7 +124,8 @@ decodePrice : D.Decoder PriceData
 decodePrice =
     D.succeed
         (\priceId currency amount productId isActive createdAt ->
-            { price = { priceId = priceId, currency = currency, amount = Quantity.unsafe amount }
+            { price = { priceId = priceId, amount = Quantity.unsafe amount }
+            , currency = currency
             , productId = productId
             , isActive = isActive
             , createdAt = createdAt

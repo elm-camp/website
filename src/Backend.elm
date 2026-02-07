@@ -25,15 +25,16 @@ import Id exposing (Id)
 import Lamdera as LamderaCore
 import List.Extra as List
 import List.Nonempty
+import Money
 import Name
 import NonNegative exposing (NonNegative)
 import Postmark
-import PurchaseForm exposing (PurchaseFormValidated, TicketCount)
+import PurchaseForm exposing (PurchaseFormValidated, TicketTypes)
 import Quantity
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
-import Stripe exposing (CheckoutItem, PriceId, ProductId(..), StripeSessionId)
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId)
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 import View.Sales as Sales exposing (TicketType)
@@ -68,10 +69,9 @@ init =
     ( { orders = SeqDict.empty
       , pendingOrder = SeqDict.empty
       , expiredOrders = SeqDict.empty
-      , prices = SeqDict.empty
+      , prices = NotLoadingTicketPrices
       , time = Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
-      , backendInitialized = False
       }
     , Command.none
     )
@@ -115,18 +115,45 @@ update msg model =
         GotPrices result ->
             case result of
                 Ok prices ->
-                    ( { model
-                        | prices =
+                    let
+                        dict : SeqDict (Id ProductId) PriceData
+                        dict =
                             List.filterMap
                                 (\price ->
                                     if price.isActive then
-                                        Just ( price.productId, { priceId = price.priceId, price = price.price } )
+                                        Just ( price.productId, price )
 
                                     else
                                         Nothing
                                 )
                                 prices
                                 |> SeqDict.fromList
+                    in
+                    ( { model
+                        | prices =
+                            case
+                                ( SeqDict.get Camp26Czech.campfireTicket.productId dict
+                                , SeqDict.get Camp26Czech.singleRoomTicket.productId dict
+                                , SeqDict.get Camp26Czech.sharedRoomTicket.productId dict
+                                )
+                            of
+                                ( Just campfirePrice, Just singleRoomPrice, Just sharedRoomPrice ) ->
+                                    if
+                                        (campfirePrice.currency == singleRoomPrice.currency)
+                                            && (campfirePrice.currency == sharedRoomPrice.currency)
+                                    then
+                                        LoadedTicketPrices
+                                            campfirePrice.currency
+                                            { campfireTicket = campfirePrice.price
+                                            , singleRoomTicket = singleRoomPrice.price
+                                            , sharedRoomTicket = sharedRoomPrice.price
+                                            }
+
+                                    else
+                                        TicketCurrenciesDoNotMatch
+
+                                _ ->
+                                    FailedToLoadTicketPrices
                       }
                     , Command.none
                     )
@@ -148,28 +175,36 @@ update msg model =
             --        }
             --    )
             --)
-            ( { model | backendInitialized = True }
-            , Command.batch
-                [ Lamdera.sendToFrontend
-                    clientId
-                    (InitData
-                        { prices = model.prices
-                        , slotsRemaining = totalTicketCount model.orders
-                        , ticketsEnabled = model.ticketsEnabled
-                        }
-                    )
-                , if model.backendInitialized then
-                    Command.none
-
-                  else
-                    Command.batch
-                        [ Time.now |> Task.perform GotTime
-                        , Effect.Process.sleep Duration.second
-                            |> Task.andThen (\() -> Stripe.getPrices)
-                            |> Task.attempt GotPrices
+            case model.prices of
+                NotLoadingTicketPrices ->
+                    ( { model | prices = LoadingTicketPrices }
+                    , Command.batch
+                        [ Lamdera.sendToFrontend clientId (InitData (Err ()))
+                        , Command.batch
+                            [ Time.now |> Task.perform GotTime
+                            , Effect.Process.sleep Duration.second
+                                |> Task.andThen (\() -> Stripe.getPrices)
+                                |> Task.attempt GotPrices
+                            ]
                         ]
-                ]
-            )
+                    )
+
+                LoadedTicketPrices stripeCurrency prices ->
+                    ( model
+                    , Lamdera.sendToFrontend
+                        clientId
+                        ({ prices = prices
+                         , slotsRemaining = totalTicketCount model.orders
+                         , ticketsEnabled = model.ticketsEnabled
+                         , stripeCurrency = stripeCurrency
+                         }
+                            |> Ok
+                            |> InitData
+                        )
+                    )
+
+                _ ->
+                    ( model, Lamdera.sendToFrontend clientId (InitData (Err ())) )
 
         CreatedCheckoutSession sessionId clientId purchaseForm result ->
             case result of
@@ -290,7 +325,7 @@ update msg model =
            )
 
 
-totalTicketCount : SeqDict k CompletedOrder -> TicketCount
+totalTicketCount : SeqDict k CompletedOrder -> TicketTypes NonNegative
 totalTicketCount orders =
     SeqDict.foldl
         (\_ order count ->
@@ -307,50 +342,44 @@ updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( Bac
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest a ->
-            case ( Untrusted.purchaseForm a, model.ticketsEnabled ) of
-                ( Just purchaseForm, TicketsEnabled ) ->
+            case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
+                ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
                     let
-                        availability : TicketCount
+                        availability : TicketTypes NonNegative
                         availability =
                             totalTicketCount model.orders
 
-                        accommodationItems : TicketType -> CheckoutItem
-                        accommodationItems ticket =
-                            Stripe.Priced
-                                { name = ticket.name
-                                , priceId =
-                                    case SeqDict.get ticket.productId model.prices of
-                                        Just price ->
-                                            price.priceId
-
-                                        Nothing ->
-                                            Id.fromString "price not found"
-                                , quantity = ticket.getter purchaseForm.count |> NonNegative.toInt
-                                }
-
+                        opportunityGrantItems : List CheckoutItem
                         opportunityGrantItems =
-                            if purchaseForm.grantContribution > 0 then
+                            if Quantity.greaterThanZero purchaseForm.grantContribution then
                                 [ Stripe.Unpriced
                                     { name = "Opportunity Grant"
                                     , quantity = 1
-                                    , currency = "usd"
-                                    , amountDecimal = purchaseForm.grantContribution * 100
+                                    , currency = Money.toString currency |> String.toLower
+                                    , amountDecimal = Quantity.round purchaseForm.grantContribution |> Quantity.unwrap
                                     }
                                 ]
 
                             else
                                 []
-
-                        items =
-                            List.map accommodationItems (Sales.allTicketTypes Camp26Czech.ticketTypes)
-                                ++ opportunityGrantItems
                     in
                     ( model
                     , Time.now
                         |> Task.andThen
                             (\now ->
                                 Stripe.createCheckoutSession
-                                    { items = items
+                                    { items =
+                                        List.map2
+                                            (\ticket price ->
+                                                Stripe.Priced
+                                                    { name = ticket.name
+                                                    , priceId = price.priceId
+                                                    , quantity = ticket.getter purchaseForm.count |> NonNegative.toInt
+                                                    }
+                                            )
+                                            (Sales.allTicketTypes Camp26Czech.ticketTypes)
+                                            (Sales.allTicketTypes prices)
+                                            ++ opportunityGrantItems
                                     , emailAddress = purchaseForm.billingEmail
                                     , now = now
                                     , expiresInMinutes = 30
