@@ -1,9 +1,12 @@
 module Stripe exposing
     ( CheckoutItem(..)
+    , ConversionRateStatus(..)
+    , LocalCurrency
     , Price
     , PriceData
     , PriceId(..)
     , ProductId(..)
+    , StripeCurrency
     , StripeSessionId(..)
     , Webhook(..)
     , cancelPath
@@ -13,10 +16,12 @@ module Stripe exposing
     , expireSession
     , getPrices
     , loadCheckout
+    , localCurrency
     , stripeSessionIdParameter
     , successPath
     )
 
+import Dict exposing (Dict)
 import Effect.Command as Command exposing (Command, FrontendOnly)
 import Effect.Http as Http
 import Effect.Task exposing (Task)
@@ -30,6 +35,7 @@ import Json.Decode.Pipeline
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
+import Quantity exposing (Quantity, Rate)
 import Url exposing (percentEncode)
 import Url.Builder
 
@@ -39,7 +45,26 @@ import Url.Builder
 
 
 type alias Price =
-    { currency : Money.Currency, amount : Int }
+    { priceId : Id PriceId, currency : Money.Currency, amount : Quantity Int StripeCurrency }
+
+
+type ConversionRateStatus
+    = LoadingConversionRate
+    | LoadedConversionRate (Dict String (Quantity Float (Rate StripeCurrency LocalCurrency)))
+    | LoadingConversionRateFailed Http.Error
+
+
+type StripeCurrency
+    = StripeCurrency
+
+
+type LocalCurrency
+    = LocalCurrency
+
+
+localCurrency : Money.Currency
+localCurrency =
+    Money.EUR
 
 
 type ProductId
@@ -70,7 +95,7 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
+    { price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
 
 
 getPrices : Task restriction Http.Error (List PriceData)
@@ -94,8 +119,7 @@ decodePrice : D.Decoder PriceData
 decodePrice =
     D.succeed
         (\priceId currency amount productId isActive createdAt ->
-            { priceId = priceId
-            , price = Price currency amount
+            { price = { priceId = priceId, currency = currency, amount = Quantity.unsafe amount }
             , productId = productId
             , isActive = isActive
             , createdAt = createdAt

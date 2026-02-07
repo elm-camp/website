@@ -10,7 +10,6 @@ module Types exposing
     , LoadingModel
     , OrderStatus(..)
     , PendingOrder
-    , Price2
     , Product(..)
     , Sponsorship(..)
     , StripePaymentId(..)
@@ -34,8 +33,8 @@ import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketCount)
 import Quantity exposing (Quantity, Rate)
 import Route exposing (Route)
 import SeqDict exposing (SeqDict)
-import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
-import Theme exposing (ConversionRateStatus, Size)
+import Stripe exposing (ConversionRateStatus, Price, PriceData, PriceId, ProductId, StripeSessionId)
+import Theme exposing (Size)
 import Ui
 import Untrusted exposing (Untrusted)
 import Url exposing (Url)
@@ -65,7 +64,7 @@ type alias LoadedModel =
     , now : Time.Posix
     , timeZone : Time.Zone
     , window : Size
-    , prices : SeqDict (Id ProductId) { priceId : Id PriceId, price : Price }
+    , prices : SeqDict (Id ProductId) Price
     , form : PurchaseForm
     , route : Route
     , showTooltip : Bool
@@ -85,15 +84,11 @@ type alias BackendModel =
     { orders : SeqDict (Id StripeSessionId) CompletedOrder
     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
-    , prices : SeqDict (Id ProductId) Price2
+    , prices : SeqDict (Id ProductId) Price
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
     , backendInitialized : Bool
     }
-
-
-type alias Price2 =
-    { priceId : Id PriceId, price : Price }
 
 
 

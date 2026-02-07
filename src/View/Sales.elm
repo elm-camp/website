@@ -21,6 +21,7 @@ module View.Sales exposing
     , view
     )
 
+import Dict
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html
@@ -32,11 +33,12 @@ import List.Nonempty exposing (Nonempty(..))
 import Money
 import NonNegative exposing (NonNegative)
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..), TicketCount)
+import Quantity exposing (Quantity)
 import RichText exposing (Inline(..), RichText(..), Shared)
 import Route exposing (Route(..))
 import SeqDict
 import String.Nonempty
-import Stripe exposing (Price, PriceId, ProductId(..))
+import Stripe exposing (Price, PriceId, ProductId(..), StripeCurrency)
 import Theme
 import Types exposing (FrontendMsg(..), LoadedModel)
 import Ui
@@ -423,7 +425,7 @@ accommodationView ticketTypes model =
             (\ticket ->
                 case SeqDict.get ticket.productId model.prices of
                     Just price ->
-                        viewAccom model.form.count True price.price ticket model
+                        viewAccom model.form.count True price ticket model
 
                     Nothing ->
                         Ui.text "No ticket prices found"
@@ -697,12 +699,16 @@ opportunityGrant ticketTypes form model =
                         , Ui.row [ Ui.spacing 30 ]
                             [ Ui.row
                                 [ Ui.width (Ui.px 100), noShrink ]
-                                [ Ui.el [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ] (Ui.text "$")
+                                [ Ui.el
+                                    [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ]
+                                    (Ui.text (Theme.priceSymbol price model.conversionRate))
                                 , textInput
                                     form
                                     (\a -> FormChanged { form | grantContribution = a })
                                     ""
-                                    PurchaseForm.validateGrantContribution
+                                    (PurchaseForm.validateGrantContribution
+                                        (Dict.get price.currency model.conversionRate)
+                                    )
                                     form.grantContribution
                                 ]
                             , Ui.column [ Ui.width (Ui.portion 3) ]
@@ -710,7 +716,7 @@ opportunityGrant ticketTypes form model =
                                     [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
                                     , Ui.el
                                         [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
-                                        (Ui.text (Theme.priceText price.price model.conversionRate))
+                                        (Ui.text (Theme.priceText price model.conversionRate))
                                     ]
                                 , Ui.Input.sliderHorizontal
                                     []
@@ -835,19 +841,19 @@ summary ticketTypes model =
                 Err _ ->
                     0
 
-        accomTotal : Float
+        accomTotal : Quantity Int StripeCurrency
         accomTotal =
             List.map
                 (\ticket ->
                     case SeqDict.get ticket.productId model.prices of
                         Just price ->
-                            Theme.priceAmount price.price * toFloat (NonNegative.toInt (ticket.getter model.form.count))
+                            Quantity.multiplyBy (NonNegative.toInt (ticket.getter model.form.count)) price.amount
 
                         Nothing ->
-                            0
+                            Quantity.zero
                 )
                 (allTicketTypes ticketTypes)
-                |> List.sum
+                |> Quantity.sum
 
         --sponsorshipTotal : Float
         --sponsorshipTotal =
@@ -914,11 +920,11 @@ summaryAccommodation ticketTypes model ticketCount displayCurrency =
             case SeqDict.get ticket.productId model.prices of
                 Just price ->
                     let
-                        total : Float
+                        total : Quantity Int StripeCurrency
                         total =
-                            Theme.priceAmount price.price * toFloat (NonNegative.toInt (ticket.getter ticketCount))
+                            Quantity.multiplyBy (NonNegative.toInt (ticket.getter ticketCount)) price.amount
                     in
-                    if total > 0 then
+                    if Quantity.greaterThanZero total then
                         ticket.name
                             ++ " x "
                             ++ NonNegative.toString (ticket.getter ticketCount)

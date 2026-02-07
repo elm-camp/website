@@ -28,11 +28,12 @@ import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
+import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
 import Stripe
-import Theme exposing (ConversionRateStatus(..))
+import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
@@ -151,7 +152,7 @@ init url key =
             _ ->
                 Command.none
         , Http.get
-            { url = "https://open.er-api.com/v6/latest/EUR"
+            { url = "https://open.er-api.com/v6/latest/" ++ Money.toString Stripe.localCurrency
             , expect =
                 Http.expectJson
                     GotConversionRate

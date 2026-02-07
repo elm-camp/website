@@ -1,11 +1,11 @@
 module Theme exposing
-    ( ConversionRateStatus(..)
-    , Size
+    ( Size
     , Theme
     , attr
     , colorWithAlpha
     , colors
     , contentAttributes
+    , conversionRate
     , css
     , fontFace
     , footer
@@ -18,7 +18,7 @@ module Theme exposing
     , normalButtonAttributes
     , numericField
     , panel
-    , priceAmount
+    , priceSymbol
     , priceText
     , rowToColumnWhen
     , spinnerWhite
@@ -33,19 +33,14 @@ import Effect.Http as Http
 import Html exposing (Html)
 import Html.Attributes
 import Money
+import Quantity exposing (Quantity, Rate)
 import Route exposing (Route(..))
-import Stripe exposing (Price)
+import Stripe exposing (ConversionRateStatus(..), LocalCurrency, Price, StripeCurrency)
 import Ui
 import Ui.Accessibility
 import Ui.Font
 import Ui.Input
 import Ui.Shadow
-
-
-type ConversionRateStatus
-    = LoadingConversionRate
-    | LoadedConversionRate (Dict String Float)
-    | LoadingConversionRateFailed Http.Error
 
 
 type alias Theme =
@@ -162,31 +157,36 @@ fontFace weight name fontFamilyName =
 
 
 priceText : Price -> ConversionRateStatus -> String
-priceText { currency, amount } conversion =
-    let
-        conversion2 : Dict String Float
-        conversion2 =
-            case conversion of
-                LoadedConversionRate dict ->
-                    dict
-
-                LoadingConversionRate ->
-                    Dict.empty
-
-                LoadingConversionRateFailed error ->
-                    Dict.empty
-    in
-    case Dict.get (Money.toString currency) conversion2 of
+priceText price conversion =
+    case conversionRate price conversion of
         Just euroRate ->
-            Money.toNativeSymbol Money.EUR ++ String.fromInt (round (toFloat amount / euroRate) // 100)
+            Money.toNativeSymbol Money.EUR ++ String.fromInt (round (toFloat price.amount / euroRate) // 100)
 
         Nothing ->
-            Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
+            Money.toNativeSymbol price.currency ++ String.fromInt (price.amount // 100)
 
 
-priceAmount : Price -> Float
-priceAmount { amount } =
-    toFloat amount
+conversionRate : Price -> ConversionRateStatus -> Maybe (Quantity Float (Rate StripeCurrency LocalCurrency))
+conversionRate price conversion =
+    case conversion of
+        LoadedConversionRate dict ->
+            Dict.get (Money.toString price.currency) dict
+
+        LoadingConversionRate ->
+            Nothing
+
+        LoadingConversionRateFailed error ->
+            Nothing
+
+
+priceSymbol : Price -> ConversionRateStatus -> String
+priceSymbol price conversion =
+    case conversionRate price conversion of
+        Just _ ->
+            Money.toNativeSymbol Stripe.localCurrency
+
+        Nothing ->
+            Money.toNativeSymbol price.currency
 
 
 panel : List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg

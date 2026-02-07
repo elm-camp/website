@@ -10,7 +10,6 @@ module PurchaseForm exposing
     , init
     , initTicketCount
     , unvalidateAttendee
-    , unvalidatePurchaseForm
     , validateAttendees
     , validateEmailAddress
     , validateForm
@@ -22,7 +21,9 @@ import EmailAddress exposing (EmailAddress)
 import List.Nonempty exposing (Nonempty(..))
 import Name exposing (Name)
 import NonNegative exposing (NonNegative)
+import Quantity exposing (Quantity, Rate)
 import String.Nonempty exposing (NonemptyString)
+import Stripe exposing (LocalCurrency, StripeCurrency)
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
 import TravelMode exposing (TravelMode)
 
@@ -33,7 +34,6 @@ type alias PurchaseForm =
     , count : TicketCount
     , billingEmail : String
     , grantContribution : String
-    , grantApply : Bool
 
     --, sponsorship : Maybe String
     }
@@ -46,9 +46,6 @@ init =
     , count = initTicketCount
     , billingEmail = ""
     , grantContribution = "0"
-    , grantApply = False
-
-    --, sponsorship = Nothing
     }
 
 
@@ -56,10 +53,7 @@ type alias PurchaseFormValidated =
     { attendees : Nonempty AttendeeFormValidated
     , count : TicketCount
     , billingEmail : EmailAddress
-    , grantContribution : Int
-    , grantApply : Bool
-
-    --, sponsorship : Maybe String
+    , grantContribution : Quantity Float StripeCurrency
     }
 
 
@@ -117,10 +111,10 @@ type PressedSubmit
     | NotPressedSubmit
 
 
-validateGrantContribution : String -> Result String Int
-validateGrantContribution s =
+validateGrantContribution : Quantity Float (Rate StripeCurrency LocalCurrency) -> String -> Result String (Quantity Float StripeCurrency)
+validateGrantContribution conversionRate s =
     if s == "" then
-        Ok 0
+        Ok Quantity.zero
 
     else
         case String.toInt s of
@@ -132,7 +126,12 @@ validateGrantContribution s =
                     Err "Can't be negative"
 
                 else
-                    Ok x
+                    let
+                        x2 : Quantity Float LocalCurrency
+                        x2 =
+                            Quantity.unsafe (toFloat x)
+                    in
+                    Ok (Quantity.at conversionRate x2)
 
 
 validateName : String -> Result String Name
@@ -183,51 +182,21 @@ unvalidateAttendee attendee =
     }
 
 
-unvalidatePurchaseForm : PurchaseFormValidated -> PurchaseForm
-unvalidatePurchaseForm form =
-    { submitStatus = NotSubmitted NotPressedSubmit
-    , attendees = List.Nonempty.map unvalidateAttendee form.attendees
-    , count = form.count
-    , billingEmail = EmailAddress.toString form.billingEmail
-    , grantContribution = String.fromInt form.grantContribution
-    , grantApply = form.grantApply
-
-    --, sponsorship = form.sponsorship
-    }
-
-
-validateForm : PurchaseForm -> Maybe PurchaseFormValidated
-validateForm form =
-    let
-        billingEmail =
-            validateEmailAddress form.billingEmail
-
-        grantContribution =
-            validateGrantContribution form.grantContribution
-
-        --sponsorship =
-        --    case form.sponsorship of
-        --        Just id ->
-        --            Product.sponsorshipItems
-        --                |> List.filter (\s -> s.productId == id)
-        --                |> List.head
-        --                |> Result.fromMaybe "Invalid sponsorship"
-        --                |> Result.map (\a -> a.productId |> Just)
-        --
-        --        Nothing ->
-        --            Ok Nothing
-    in
-    case T3 billingEmail grantContribution (validateAttendees form.attendees) of
-        T3 (Ok billingEmailOk) (Ok grantContributionOk) (Ok attendeesOk) ->
-            Just
-                { attendees = attendeesOk
-                , count = form.count
-                , billingEmail = billingEmailOk
-                , grantContribution = grantContributionOk
-                , grantApply = form.grantApply
-
-                --, sponsorship = sponsorshipOk
-                }
+validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Maybe PurchaseFormValidated
+validateForm conversionRate form =
+    case
+        T3
+            (validateEmailAddress form.billingEmail)
+            (validateGrantContribution conversionRate form.grantContribution)
+            (validateAttendees form.attendees)
+    of
+        T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
+            { attendees = attendeesOk
+            , count = form.count
+            , billingEmail = billingEmail
+            , grantContribution = grantContribution
+            }
+                |> Just
 
         _ ->
             Nothing

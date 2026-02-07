@@ -11,6 +11,7 @@ import Helpers
 import List.Nonempty
 import Name exposing (Name)
 import PurchaseForm exposing (AttendeeFormValidated, PurchaseFormValidated)
+import Quantity
 import Toop exposing (T2(..), T3(..))
 
 
@@ -34,8 +35,23 @@ emailAddress (Untrusted a) =
 
 
 purchaseForm : Untrusted PurchaseFormValidated -> Maybe PurchaseFormValidated
-purchaseForm (Untrusted a) =
-    PurchaseForm.unvalidatePurchaseForm a |> PurchaseForm.validateForm
+purchaseForm (Untrusted form) =
+    case
+        T3
+            (PurchaseForm.validateEmailAddress (EmailAddress.toString form.billingEmail))
+            (Quantity.greaterThanZero form.grantContribution)
+            (PurchaseForm.validateAttendees (List.Nonempty.map PurchaseForm.unvalidateAttendee form.attendees))
+    of
+        T3 (Ok billingEmail) True (Ok attendeesOk) ->
+            { attendees = attendeesOk
+            , count = form.count
+            , billingEmail = billingEmail
+            , grantContribution = form.grantContribution
+            }
+                |> Just
+
+        _ ->
+            Nothing
 
 
 untrust : a -> Untrusted a
