@@ -66,7 +66,7 @@ type alias PurchaseFormValidated =
 type alias TicketCount =
     { campfireTicket : NonNegative
     , singleRoomTicket : NonNegative
-    , doubleRoomTicket : NonNegative
+    , sharedRoomTicket : NonNegative
     }
 
 
@@ -74,7 +74,7 @@ initTicketCount : TicketCount
 initTicketCount =
     { campfireTicket = NonNegative.zero
     , singleRoomTicket = NonNegative.zero
-    , doubleRoomTicket = NonNegative.zero
+    , sharedRoomTicket = NonNegative.zero
     }
 
 

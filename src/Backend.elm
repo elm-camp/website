@@ -296,7 +296,7 @@ totalTicketCount orders =
         (\_ order count ->
             { campfireTicket = NonNegative.add count.campfireTicket order.form.count.campfireTicket
             , singleRoomTicket = NonNegative.add count.singleRoomTicket order.form.count.singleRoomTicket
-            , doubleRoomTicket = NonNegative.add count.doubleRoomTicket order.form.count.doubleRoomTicket
+            , sharedRoomTicket = NonNegative.add count.sharedRoomTicket order.form.count.sharedRoomTicket
             }
         )
         PurchaseForm.initTicketCount

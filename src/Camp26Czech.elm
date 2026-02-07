@@ -456,10 +456,10 @@ singleRoomTicket =
 
 sharedRoomTicket : TicketType
 sharedRoomTicket =
-    { name = "Double Room"
+    { name = "Shared Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
     , productId = Id.fromString "prod_TmIzrbSouU0bYE"
-    , getter = .doubleRoomTicket
-    , setter = \v m -> { m | doubleRoomTicket = v }
+    , getter = .sharedRoomTicket
+    , setter = \v m -> { m | sharedRoomTicket = v }
     }
