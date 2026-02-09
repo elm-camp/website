@@ -489,8 +489,11 @@ accommodationView ticketTypes initData model =
                                     | count = formCount2
                                     , attendees =
                                         if totalTicketsPrevious < totalTickets then
-                                            form.attendees
-                                                ++ List.repeat (totalTickets - totalTicketsPrevious) PurchaseForm.defaultAttendee
+                                            if List.length form.attendees < totalTickets then
+                                                form.attendees ++ [ PurchaseForm.defaultAttendee ]
+
+                                            else
+                                                form.attendees
 
                                         else
                                             List.Extra.remove PurchaseForm.defaultAttendee form.attendees
@@ -581,14 +584,16 @@ purchaseable ticket model =
 formView : TicketTypes TicketType -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
 formView ticketTypes initData model =
     let
+        form : PurchaseForm
         form =
             model.form
 
+        submitButton : Element FrontendMsg
         submitButton =
             Ui.el
                 (Theme.submitButtonAttributes PressedSubmitForm True)
                 (Ui.row
-                    [ Ui.width Ui.shrink, Ui.Font.center ]
+                    [ Ui.width Ui.shrink, Ui.Font.center, Ui.Font.exactWhitespace ]
                     [ Ui.text
                         (--if purchaseable ticket.productId model.slotsRemaining then
                          "Purchase "
@@ -600,13 +605,14 @@ formView ticketTypes initData model =
                             Ui.none
 
                         Submitting ->
-                            Ui.el [ Ui.width Ui.shrink, Ui.move { x = 0, y = 5, z = 0 } ] Theme.spinnerWhite
+                            Theme.spinnerWhite
 
                         SubmitBackendError _ ->
                             Ui.none
                     ]
                 )
 
+        cancelButton : Element FrontendMsg
         cancelButton =
             Ui.el
                 (Theme.normalButtonAttributes PressedCancelForm)
@@ -630,7 +636,6 @@ formView ticketTypes initData model =
                     Ui.none
 
                 Submitting ->
-                    -- @TODO spinner
                     Ui.none
 
                 SubmitBackendError err ->
@@ -714,10 +719,11 @@ attendeeForm model i attendee =
             [ Ui.background (Ui.rgb 230 40 30)
             , Ui.rounded 8
             , Ui.width (Ui.px 50)
-            , Ui.height (Ui.px 38)
+            , Ui.height (Ui.px textInputHeight)
             , Html.Attributes.title "Remove attendee" |> Ui.htmlAttribute
-            , Ui.alignBottom
             , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+            , Ui.alignTop
+            , Ui.move { x = 0, y = 27, z = 0 }
             , Ui.Input.button
                 (FormChanged { form | attendees = List.Extra.removeIfIndex (\j -> i == j) model.form.attendees })
             , Ui.Font.color (Ui.rgb 255 255 255)
@@ -753,9 +759,9 @@ opportunityGrant form initData =
                     [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
                 , Ui.row [ Ui.spacing 30 ]
                     [ Ui.row
-                        [ Ui.width (Ui.px 100), noShrink ]
+                        [ Ui.width (Ui.px 100), noShrink, Ui.spacing 2 ]
                         [ Ui.el
-                            [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ]
+                            [ noShrink, Ui.alignTop, Ui.move { x = 0, y = 7, z = 0 } ]
                             (Ui.text (Money.toNativeSymbol initData.currentCurrency.currency))
                         , textInput
                             form
@@ -766,7 +772,9 @@ opportunityGrant form initData =
                         ]
                     , Ui.column [ Ui.width (Ui.portion 3) ]
                         [ Ui.row [ Ui.width (Ui.portion 3) ]
-                            [ Ui.el [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ] (Ui.text "0")
+                            [ Ui.el
+                                [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ]
+                                (Ui.text (Theme.stripePriceText Quantity.zero initData.currentCurrency))
                             , Ui.el
                                 [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
                                 (Ui.text
@@ -904,6 +912,11 @@ summaryAccommodation ticketTypes initData ticketCount =
         |> Ui.column [ Ui.width Ui.shrink ]
 
 
+textInputHeight : number
+textInputHeight =
+    38
+
+
 textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
 textInput form onChange title validator text =
     let
@@ -918,7 +931,13 @@ textInput form onChange title validator text =
           else
             label.element
         , Ui.Input.text
-            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 12 8, Ui.width Ui.fill ]
+            [ Ui.width Ui.shrink
+            , Ui.rounded 8
+            , Ui.paddingXY 12 0
+            , Ui.height (Ui.px textInputHeight)
+            , Ui.width Ui.fill
+            , Ui.border 1
+            ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing
