@@ -379,9 +379,9 @@ updateFromFrontend sessionId clientId msg model =
                                                     , quantity = NonNegative.toInt count
                                                     }
                                             )
-                                            (Sales.allTicketTypes Camp26Czech.ticketTypes)
-                                            (Sales.allTicketTypes prices)
-                                            (Sales.allTicketTypes purchaseForm.count)
+                                            (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                            (PurchaseForm.allTicketTypes prices)
+                                            (PurchaseForm.allTicketTypes purchaseForm.count)
                                             ++ opportunityGrantItems
                                     , emailAddress = purchaseForm.billingEmail
                                     , now = now

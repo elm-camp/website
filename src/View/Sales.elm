@@ -1,7 +1,6 @@
 module View.Sales exposing
     ( TicketType
     , accommodationView
-    , allTicketTypes
     , attendeeForm
     , errorHtmlId
     , errorText
@@ -13,7 +12,6 @@ module View.Sales exposing
     , summaryAccommodation
     , textInput
     , ticketSalesOpenCountdown
-    , ticketTypesSetters
     , ticketsHtmlId
     , view
     )
@@ -23,9 +21,8 @@ import Effect.Time as Time
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
-import Html.Lazy
+import Icons
 import List.Extra
-import List.Nonempty exposing (Nonempty(..))
 import Money
 import NonNegative exposing (NonNegative)
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..), TicketTypes)
@@ -43,19 +40,6 @@ import Ui.Input
 import Ui.Lazy
 import Ui.Prose
 import Ui.Shadow
-
-
-allTicketTypes : TicketTypes a -> List a
-allTicketTypes a =
-    [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
-
-
-ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)
-ticketTypesSetters =
-    [ \value record -> { record | campfireTicket = value }
-    , \value record -> { record | singleRoomTicket = value }
-    , \value record -> { record | sharedRoomTicket = value }
-    ]
 
 
 view : TicketTypes TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
@@ -442,13 +426,13 @@ attendeesView initData model =
             [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
             , Ui.column
                 [ Ui.spacing 16 ]
-                (List.indexedMap (attendeeForm (attendeeCount > 1) model) form.attendees)
+                (List.indexedMap (attendeeForm model) form.attendees)
             , if attendeeCount < 10 then
                 Ui.el
                     (Theme.normalButtonAttributes
                         (FormChanged { form | attendees = form.attendees ++ [ PurchaseForm.defaultAttendee ] })
                     )
-                    (Ui.text "Add another attendee")
+                    (Ui.text "Add attendee")
 
               else
                 Ui.none
@@ -483,14 +467,41 @@ accommodationView ticketTypes initData model =
         , List.map4
             (\ticket price count setter ->
                 viewAccom count True price ticket initData
-                    |> Ui.map (\count2 -> setter count2 model.form.count)
+                    |> Ui.map
+                        (\count2 ->
+                            let
+                                formCount2 : TicketTypes NonNegative
+                                formCount2 =
+                                    setter count2 model.form.count
+
+                                totalTicketsPrevious : Int
+                                totalTicketsPrevious =
+                                    List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes model.form.count)
+                                        |> NonNegative.toInt
+
+                                totalTickets : Int
+                                totalTickets =
+                                    List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes formCount2)
+                                        |> NonNegative.toInt
+                            in
+                            FormChanged
+                                { form
+                                    | count = formCount2
+                                    , attendees =
+                                        if totalTicketsPrevious < totalTickets then
+                                            form.attendees
+                                                ++ List.repeat (totalTickets - totalTicketsPrevious) PurchaseForm.defaultAttendee
+
+                                        else
+                                            List.Extra.remove PurchaseForm.defaultAttendee form.attendees
+                                }
+                        )
             )
-            (allTicketTypes ticketTypes)
-            (allTicketTypes initData.prices)
-            (allTicketTypes model.form.count)
-            ticketTypesSetters
+            (PurchaseForm.allTicketTypes ticketTypes)
+            (PurchaseForm.allTicketTypes initData.prices)
+            (PurchaseForm.allTicketTypes model.form.count)
+            PurchaseForm.ticketTypesSetters
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
-            |> Ui.map (\formCount -> FormChanged { form | count = formCount })
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
@@ -512,11 +523,10 @@ viewAccom count ticketAvailable price ticket2 initData =
         , Ui.rounded 16
         , Ui.padding 16
         ]
-        [ Ui.none
-        , Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket2.name ]
+        [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text ticket2.name ]
         , Ui.text ticket2.description
         , Ui.column
-            [ Ui.alignBottom ]
+            [ Ui.alignBottom, Ui.spacing 8 ]
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
                 (Ui.text (Theme.stripePriceText (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
@@ -545,7 +555,6 @@ viewAccom count ticketAvailable price ticket2 initData =
                         , Ui.Font.weight 600
                         , Ui.Font.color (Ui.rgb 255 255 255)
                         , Ui.Input.button NonNegative.one
-                        , Ui.Font.color (Ui.rgb 255 255 255)
                         ]
                         (Ui.text "Select")
 
@@ -649,8 +658,8 @@ formView ticketTypes initData model =
         ]
 
 
-attendeeForm : Bool -> LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
-attendeeForm showRemove model i attendee =
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
+attendeeForm model i attendee =
     let
         form =
             model.form
@@ -668,7 +677,7 @@ attendeeForm showRemove model i attendee =
     in
     Theme.rowToColumnWhen columnWhen
         model.window
-        [ Ui.width Ui.fill, Ui.spacing 16 ]
+        [ Ui.width Ui.fill, Ui.spacing 8 ]
         [ textInput
             model.form
             (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | name = a } model.form.attendees })
@@ -701,35 +710,22 @@ attendeeForm showRemove model i attendee =
                         Err "Please type in the name of city nearest to you"
             )
             attendee.originCity
-        , if showRemove then
-            Ui.el
-                (Theme.normalButtonAttributes
-                    (FormChanged
-                        { form | attendees = List.Extra.removeIfIndex (\j -> i == j) model.form.attendees }
-                    )
-                    ++ [ Ui.width (Ui.px 100)
-                       , Ui.alignTop
-                       , Ui.move { x = 0, y = removeButtonAlignment, z = 0 }
-                       ]
-                )
-                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Remove"))
-
-          else
-            Ui.none
+        , Ui.el
+            [ Ui.background (Ui.rgb 230 40 30)
+            , Ui.rounded 8
+            , Ui.width (Ui.px 50)
+            , Ui.height (Ui.px 38)
+            , Html.Attributes.title "Remove attendee" |> Ui.htmlAttribute
+            , Ui.alignBottom
+            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+            , Ui.Input.button
+                (FormChanged { form | attendees = List.Extra.removeIfIndex (\j -> i == j) model.form.attendees })
+            , Ui.Font.color (Ui.rgb 255 255 255)
+            , Ui.contentCenterX
+            , Ui.contentCenterY
+            ]
+            (Ui.html Icons.trash)
         ]
-
-
-nonemptySetAt : Int -> a -> Nonempty a -> Nonempty a
-nonemptySetAt index a nonempty =
-    List.Nonempty.indexedMap
-        (\i item ->
-            if i == index then
-                a
-
-            else
-                item
-        )
-        nonempty
 
 
 noShrink : Ui.Attribute msg
@@ -830,88 +826,6 @@ sliderHorizontal attributes input =
         }
 
 
-
---
---sponsorships : Time.Posix -> LoadedModel -> PurchaseForm -> Ui.Element FrontendMsg
---sponsorships ticketSalesOpenAt model form =
---    let
---        year : String
---        year =
---            Time.toYear Time.utc ticketSalesOpenAt |> String.fromInt
---    in
---    Ui.column
---        (Ui.spacing 20 :: Theme.contentAttributes)
---        [ Theme.h2 "🤝 Sponsor Elm Camp"
---        , "Position your company as a leading supporter of the Elm community and help Elm Camp "
---            ++ year
---            ++ " achieve a reasonable ticket offering."
---            |> Ui.text
---        , Product.sponsorshipItems
---            |> List.map (sponsorshipOption model form)
---            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 20, Ui.width Ui.fill ]
---        ]
---
---
---sponsorshipOption : LoadedModel -> PurchaseForm -> Product.Sponsorship -> Ui.Element FrontendMsg
---sponsorshipOption model form s =
---    let
---        displayCurrency =
---            model.prices
---                |> SeqDict.get (Id.fromString s.productId)
---                |> Maybe.map .price
---                |> Maybe.map .currency
---                |> Maybe.withDefault Money.USD
---
---        selected =
---            form.sponsorship == Just s.productId
---
---        attrs =
---            if selected then
---                [ Ui.borderColor (Ui.rgb 94 176 125), Ui.border 3 ]
---
---            else
---                [ Ui.borderColor (Ui.rgba 0 0 0 0), Ui.border 3 ]
---
---        priceDisplay =
---            Theme.priceText { currency = displayCurrency, amount = s.price }
---
---        -- Fallback to hardcoded price if not in model.prices
---    in
---    Theme.panel attrs
---        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.bold ] (Ui.text s.name)
---        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 30, Ui.Font.bold ] (Ui.text priceDisplay)
---        , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text s.description ]
---        , s.features
---            |> List.map (\point -> Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 12 ] [ Ui.text ("• " ++ point) ])
---            |> Ui.column [ Ui.width Ui.shrink, Ui.spacing 5 ]
---        , Ui.el
---            (Theme.submitButtonAttributes
---                (FormChanged
---                    { form
---                        | sponsorship =
---                            if selected then
---                                Nothing
---
---                            else
---                                Just s.productId
---                    }
---                )
---                True
---            )
---            (Ui.el
---                [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
---                (Ui.text
---                    (if selected then
---                        "Un-select"
---
---                     else
---                        "Select"
---                    )
---                )
---            )
---        ]
-
-
 summary : TicketTypes TicketType -> InitData2 -> LoadedModel -> Ui.Element msg
 summary ticketTypes initData model =
     let
@@ -923,8 +837,8 @@ summary ticketTypes initData model =
         accomTotal =
             List.map2
                 (\price count -> Quantity.multiplyBy (NonNegative.toInt count) price.amount)
-                (allTicketTypes initData.prices)
-                (allTicketTypes model.form.count)
+                (PurchaseForm.allTicketTypes initData.prices)
+                (PurchaseForm.allTicketTypes model.form.count)
                 |> Quantity.sum
     in
     Ui.column
@@ -983,9 +897,9 @@ summaryAccommodation ticketTypes initData ticketCount =
             else
                 Nothing
         )
-        (allTicketTypes ticketTypes)
-        (allTicketTypes initData.prices)
-        (allTicketTypes ticketCount)
+        (PurchaseForm.allTicketTypes ticketTypes)
+        (PurchaseForm.allTicketTypes initData.prices)
+        (PurchaseForm.allTicketTypes ticketCount)
         |> List.filterMap identity
         |> Ui.column [ Ui.width Ui.shrink ]
 
@@ -1004,7 +918,7 @@ textInput form onChange title validator text =
           else
             label.element
         , Ui.Input.text
-            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 8 4, Ui.width Ui.fill ]
+            [ Ui.width Ui.shrink, Ui.rounded 8, Ui.paddingXY 12 8, Ui.width Ui.fill ]
             { text = text
             , onChange = onChange
             , placeholder = Nothing

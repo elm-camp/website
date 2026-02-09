@@ -6,9 +6,11 @@ module PurchaseForm exposing
     , PurchaseFormValidated
     , SubmitStatus(..)
     , TicketTypes
+    , allTicketTypes
     , defaultAttendee
     , init
     , initTicketCount
+    , ticketTypesSetters
     , unvalidateAttendee
     , unvalidateGrantContribution
     , validateAttendees
@@ -144,15 +146,26 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateAttendees : List AttendeeForm -> Result String (List AttendeeFormValidated)
-validateAttendees attendees =
+validateAttendees : TicketTypes NonNegative -> List AttendeeForm -> Result String (List AttendeeFormValidated)
+validateAttendees ticketCount attendees =
     let
+        totalTicketCount : Int
+        totalTicketCount =
+            List.foldl NonNegative.add NonNegative.zero (allTicketTypes ticketCount) |> NonNegative.toInt
+
         attendeesValidated : List AttendeeFormValidated
         attendeesValidated =
             List.filterMap validateAttendee attendees
+
+        attendeesValidatedCount =
+            List.length attendeesValidated
     in
-    if List.length attendeesValidated == List.length attendees then
-        Ok attendeesValidated
+    if attendeesValidatedCount == List.length attendees then
+        if totalTicketCount > attendeesValidatedCount then
+            Err "Not enough attendees listed. Please include at least one attendee for each ticket."
+
+        else
+            Ok attendeesValidated
 
     else
         Err "Invalid attendees"
@@ -172,7 +185,7 @@ validateForm conversionRate form =
         T3
             (validateEmailAddress form.billingEmail)
             (validateGrantContribution form.grantContribution)
-            (validateAttendees form.attendees)
+            (validateAttendees form.count form.attendees)
     of
         T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
             { attendees = attendeesOk
@@ -208,6 +221,19 @@ validateAttendee form =
 
         _ ->
             Nothing
+
+
+allTicketTypes : TicketTypes a -> List a
+allTicketTypes a =
+    [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
+
+
+ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)
+ticketTypesSetters =
+    [ \value record -> { record | campfireTicket = value }
+    , \value record -> { record | singleRoomTicket = value }
+    , \value record -> { record | sharedRoomTicket = value }
+    ]
 
 
 
