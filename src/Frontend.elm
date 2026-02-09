@@ -377,7 +377,29 @@ updateLoaded msg model =
         GotConversionRate result ->
             ( case result of
                 Ok ok ->
-                    { model | conversionRate = LoadedConversionRate ok }
+                    { model
+                        | conversionRate = LoadedConversionRate ok
+                        , initData =
+                            case model.initData of
+                                Ok initData ->
+                                    if initData.stripeCurrency == initData.currentCurrency.currency then
+                                        Ok
+                                            { initData
+                                                | currentCurrency =
+                                                    case SeqDict.get Money.EUR ok of
+                                                        Just euro ->
+                                                            { currency = Money.EUR, conversionRate = euro }
+
+                                                        Nothing ->
+                                                            initData.currentCurrency
+                                            }
+
+                                    else
+                                        model.initData
+
+                                Err () ->
+                                    model.initData
+                    }
 
                 Err error ->
                     { model | conversionRate = LoadingConversionRateFailed error }

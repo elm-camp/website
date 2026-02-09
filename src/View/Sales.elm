@@ -23,6 +23,7 @@ import Effect.Time as Time
 import Html exposing (Html)
 import Html.Attributes
 import Html.Events
+import Html.Lazy
 import List.Extra
 import List.Nonempty exposing (Nonempty(..))
 import Money
@@ -36,9 +37,10 @@ import String.Nonempty
 import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, Price, PriceId, ProductId(..), StripeCurrency)
 import Theme
 import Types exposing (FrontendMsg(..), InitData2, LoadedModel)
-import Ui
+import Ui exposing (Element)
 import Ui.Font
 import Ui.Input
+import Ui.Lazy
 import Ui.Prose
 import Ui.Shadow
 
@@ -81,20 +83,6 @@ view ticketTypes ticketSalesOpenAt model =
                             [ Ui.el
                                 Theme.contentAttributes
                                 (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
-                            , currencyDropdown
-                                initData.currentCurrency.currency
-                                (case model.conversionRate of
-                                    LoadingConversionRate ->
-                                        []
-
-                                    LoadedConversionRate dict ->
-                                        SeqDict.keys dict
-
-                                    LoadingConversionRateFailed error ->
-                                        []
-                                )
-                                |> Ui.html
-                                |> Ui.map SelectedCurrency
                             , accommodationView ticketTypes initData model
                             , attendeesView initData model
                             , formView ticketTypes initData model
@@ -107,26 +95,72 @@ view ticketTypes ticketSalesOpenAt model =
         ]
 
 
-currencyDropdown : Money.Currency -> List Money.Currency -> Html Money.Currency
-currencyDropdown selected currencies =
-    Html.select
-        [ Html.Attributes.value (Money.toString selected)
-        , Html.Events.onInput (\text -> Money.fromString text |> Maybe.withDefault selected)
-        , Html.Attributes.style "width" "300px"
-        , Html.Attributes.style "padding" "7px 8px"
-        , Html.Attributes.style "font-size" "16px"
-        , Html.Attributes.style "cursor" "pointer"
-        ]
-        (List.map
-            (\currency ->
-                Html.option
-                    [ Html.Attributes.value (Money.toString currency)
-                    , Html.Attributes.selected (currency == selected)
-                    ]
-                    [ Html.text (Money.toName { plural = False } currency ++ " (" ++ Money.toString currency ++ ")") ]
+listMoveToStart : a -> List a -> List a
+listMoveToStart item list =
+    if List.member item list then
+        item :: List.Extra.remove item list
+
+    else
+        list
+
+
+currencyDropdown : Money.Currency -> Money.Currency -> ConversionRateStatus -> Element Money.Currency
+currencyDropdown stripeCurrency selected currencies =
+    let
+        currencies2 : List Money.Currency
+        currencies2 =
+            case currencies of
+                LoadingConversionRate ->
+                    []
+
+                LoadedConversionRate dict ->
+                    SeqDict.keys dict
+                        |> List.sortBy Money.toString
+                        |> listMoveToStart Money.USD
+                        |> listMoveToStart Money.EUR
+
+                LoadingConversionRateFailed _ ->
+                    []
+    in
+    Ui.column
+        [ Ui.spacing 8 ]
+        [ Html.select
+            [ Html.Attributes.value (Money.toString selected)
+            , Html.Events.onInput (\text -> Money.fromString text |> Maybe.withDefault selected)
+            , Html.Attributes.style "width" "300px"
+            , Html.Attributes.style "padding" "7px 8px"
+            , Html.Attributes.style "font-size" "16px"
+            , Html.Attributes.style "cursor" "pointer"
+            ]
+            (List.map
+                (\currency ->
+                    Html.option
+                        [ Html.Attributes.value (Money.toString currency)
+                        , Html.Attributes.selected (currency == selected)
+                        ]
+                        [ Html.text (Money.toName { plural = False } currency ++ " (" ++ Money.toString currency ++ ")") ]
+                )
+                currencies2
             )
-            currencies
-        )
+            |> Ui.html
+        , Ui.Prose.paragraph
+            [ Ui.Font.size 14, Ui.Font.color Theme.lightTheme.mutedText ]
+            [ Ui.text "Exchange rates provided by "
+            , Ui.el
+                [ Ui.link "https://www.exchangerate-api.com"
+                , Ui.Font.underline
+                , Ui.Font.color Theme.lightTheme.link
+                ]
+                (Ui.text "Exchange Rate API")
+            , Ui.text
+                (". The selected currency is for viewing purposes only. "
+                    ++ Money.toName { plural = False } stripeCurrency
+                    ++ " ("
+                    ++ Money.toString stripeCurrency
+                    ++ ") will be used during the Stripe checkout step."
+                )
+            ]
+        ]
 
 
 attendSectionId =
@@ -457,6 +491,12 @@ accommodationView ticketTypes initData model =
             ticketTypesSetters
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
             |> Ui.map (\formCount -> FormChanged { form | count = formCount })
+        , Ui.Lazy.lazy3
+            currencyDropdown
+            initData.stripeCurrency
+            initData.currentCurrency.currency
+            model.conversionRate
+            |> Ui.map SelectedCurrency
         ]
 
 

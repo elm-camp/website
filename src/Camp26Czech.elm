@@ -184,11 +184,6 @@ intro =
     ]
 
 
-currencyConversionAttribution : Element msg
-currencyConversionAttribution =
-    Ui.el [ Ui.link "https://www.exchangerate-api.com" ] (Ui.text "Rates By Exchange Rate API")
-
-
 venueAndAccess : List RichText
 venueAndAccess =
     [ Section
