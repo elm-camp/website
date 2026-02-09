@@ -76,7 +76,6 @@ type alias LoadedModel =
     , pressedAudioButton : Bool
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
-    , currentCurrency : CurrentCurrency
     }
 
 
@@ -315,6 +314,7 @@ type alias InitData2 =
     , stripeCurrency : Money.Currency
     , slotsRemaining : TicketTypes NonNegative
     , ticketsEnabled : TicketsEnabled
+    , currentCurrency : { currency : Money.Currency, conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency) }
     }
 
 

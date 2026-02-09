@@ -187,7 +187,7 @@ validateForm conversionRate form =
             { attendees = attendeesOk
             , count = form.count
             , billingEmail = billingEmail
-            , grantContribution = Quantity.at conversionRate grantContribution
+            , grantContribution = Quantity.at conversionRate (Quantity.toFloatQuantity grantContribution)
             }
                 |> Just
 

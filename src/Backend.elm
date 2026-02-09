@@ -13,6 +13,7 @@ module Backend exposing
 import Camp26Czech
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
+import Effect.Http as Http
 import Effect.Lamdera as Lamdera exposing (ClientId, SessionId)
 import Effect.Process
 import Effect.Subscription as Subscription exposing (Subscription)
@@ -132,9 +133,9 @@ update msg model =
                     ( { model
                         | prices =
                             case
-                                ( SeqDict.get Camp26Czech.campfireTicket.productId dict
-                                , SeqDict.get Camp26Czech.singleRoomTicket.productId dict
-                                , SeqDict.get Camp26Czech.sharedRoomTicket.productId dict
+                                ( SeqDict.get (Id.fromString "prod_TmIy0Mltqmgzg5") dict
+                                , SeqDict.get (Id.fromString "prod_TmJ0n8liux9A3d") dict
+                                , SeqDict.get (Id.fromString "prod_TmIzrbSouU0bYE") dict
                                 )
                             of
                                 ( Just campfirePrice, Just singleRoomPrice, Just sharedRoomPrice ) ->
@@ -153,13 +154,13 @@ update msg model =
                                         TicketCurrenciesDoNotMatch
 
                                 _ ->
-                                    FailedToLoadTicketPrices
+                                    FailedToLoadTicketPrices (Http.BadBody "Missing one or more ticket prices")
                       }
                     , Command.none
                     )
 
                 Err error ->
-                    ( model
+                    ( { model | prices = FailedToLoadTicketPrices error }
                     , errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error)
                         |> Command.fromCmd "GotPrices failed email"
                     )
@@ -197,6 +198,7 @@ update msg model =
                          , slotsRemaining = totalTicketCount model.orders
                          , ticketsEnabled = model.ticketsEnabled
                          , stripeCurrency = stripeCurrency
+                         , currentCurrency = { currency = stripeCurrency, conversionRate = Quantity.unsafe 1 }
                          }
                             |> Ok
                             |> InitData
@@ -369,16 +371,17 @@ updateFromFrontend sessionId clientId msg model =
                             (\now ->
                                 Stripe.createCheckoutSession
                                     { items =
-                                        List.map2
-                                            (\ticket price ->
+                                        List.map3
+                                            (\ticket price count ->
                                                 Stripe.Priced
                                                     { name = ticket.name
                                                     , priceId = price.priceId
-                                                    , quantity = ticket.getter purchaseForm.count |> NonNegative.toInt
+                                                    , quantity = NonNegative.toInt count
                                                     }
                                             )
                                             (Sales.allTicketTypes Camp26Czech.ticketTypes)
                                             (Sales.allTicketTypes prices)
+                                            (Sales.allTicketTypes purchaseForm.count)
                                             ++ opportunityGrantItems
                                     , emailAddress = purchaseForm.billingEmail
                                     , now = now

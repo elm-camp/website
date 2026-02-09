@@ -28,7 +28,7 @@ import SeqDict exposing (SeqDict)
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
-import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, Price2, TicketsEnabled(..))
+import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, TicketsEnabled(..))
 import Ui
 import Ui.Anim
 import Ui.Events
@@ -111,7 +111,7 @@ viewTicketsEnabled ticketsEnabled =
         ]
 
 
-viewPrices : SeqDict (Id ProductId) Price2 -> Ui.Element msg
+viewPrices : SeqDict (Id ProductId) Price -> Ui.Element msg
 viewPrices prices =
     Ui.column
         []

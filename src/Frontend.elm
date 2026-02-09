@@ -34,7 +34,7 @@ import Quantity exposing (Quantity, Rate)
 import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
 import SeqDict
-import Stripe exposing (ConversionRateStatus(..), CurrentCurrency(..), LocalCurrency, StripeCurrency)
+import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, StripeCurrency)
 import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
@@ -197,7 +197,6 @@ tryLoading loadingModel =
                 , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
                 , conversionRate = LoadingConversionRate
-                , currentCurrency = UseStripeCurrency
                 }
             , Command.batch
                 [ case loadingModel.url.fragment of
@@ -288,39 +287,35 @@ updateLoaded msg model =
                     ( { model | form = form }, Command.none )
 
         PressedSubmitForm ->
-            let
-                form =
-                    model.form
-
-                conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency)
-                conversionRate =
-                    case model.currentCurrency of
-                        UseStripeCurrency ->
-                            Quantity.unsafe 1
-
-                        UseLocalCurrency _ conversionRate ->
-                            conversionRate
-            in
-            case ( form.submitStatus, PurchaseForm.validateForm conversionRate form ) of
-                ( NotSubmitted _, Just purchaseFormValidated ) ->
-                    ( { model | form = { form | submitStatus = Submitting } }
-                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
-                    )
-
-                ( NotSubmitted _, Nothing ) ->
+            case model.initData of
+                Ok initData ->
                     let
-                        _ =
-                            Debug.log "form invalid" ()
+                        form =
+                            model.form
                     in
-                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                    , jumpToId View.Sales.errorHtmlId 110
-                    )
+                    case ( form.submitStatus, PurchaseForm.validateForm initData.currentCurrency.conversionRate form ) of
+                        ( NotSubmitted _, Just purchaseFormValidated ) ->
+                            ( { model | form = { form | submitStatus = Submitting } }
+                            , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                            )
 
-                _ ->
-                    let
-                        _ =
-                            Debug.log "Form already submitted" "Form already submitted"
-                    in
+                        ( NotSubmitted _, Nothing ) ->
+                            let
+                                _ =
+                                    Debug.log "form invalid" ()
+                            in
+                            ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
+                            , jumpToId View.Sales.errorHtmlId 110
+                            )
+
+                        _ ->
+                            let
+                                _ =
+                                    Debug.log "Form already submitted" "Form already submitted"
+                            in
+                            ( model, Command.none )
+
+                Err () ->
                     ( model, Command.none )
 
         PressedCancelForm ->

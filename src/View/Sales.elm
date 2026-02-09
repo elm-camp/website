@@ -3,30 +3,26 @@ module View.Sales exposing
     , accommodationView
     , allTicketTypes
     , attendeeForm
-    , carbonOffsetForm
     , errorHtmlId
     , errorText
     , formView
     , goToTicketSales
     , opportunityGrant
     , opportunityGrantInfo
-    , radioButton
     , summary
     , summaryAccommodation
     , textInput
     , ticketSalesOpenCountdown
+    , ticketTypesSetters
     , ticketsHtmlId
-    , tooltip
     , view
     )
 
-import Dict
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html
 import Html.Attributes
 import Html.Events
-import Id exposing (Id)
 import List.Extra as List
 import List.Nonempty exposing (Nonempty(..))
 import Money
@@ -35,9 +31,8 @@ import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValid
 import Quantity exposing (Quantity)
 import RichText exposing (Inline(..), RichText(..), Shared)
 import Route exposing (Route(..))
-import SeqDict
 import String.Nonempty
-import Stripe exposing (CurrentCurrency(..), LocalCurrency, Price, PriceId, ProductId(..), StripeCurrency)
+import Stripe exposing (CurrentCurrency, LocalCurrency, Price, PriceId, ProductId(..), StripeCurrency)
 import Theme
 import Types exposing (FrontendMsg(..), InitData2, LoadedModel)
 import Ui
@@ -51,6 +46,14 @@ import Ui.Shadow
 allTicketTypes : TicketTypes a -> List a
 allTicketTypes a =
     [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
+
+
+ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)
+ticketTypesSetters =
+    [ \value record -> { record | campfireTicket = value }
+    , \value record -> { record | singleRoomTicket = value }
+    , \value record -> { record | sharedRoomTicket = value }
+    ]
 
 
 view : TicketTypes TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
@@ -385,8 +388,6 @@ attendeesView initData model =
               else
                 Ui.none
             , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
-
-            -- , carbonOffsetForm model.showCarbonOffsetTooltip model.form
             ]
         ]
 
@@ -414,23 +415,22 @@ accommodationView ticketTypes initData model =
                 , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
                 ]
             ]
-        , List.map2
-            (\ticket price ->
-                viewAccom model.form.count True price ticket model
+        , List.map4
+            (\ticket price count setter ->
+                viewAccom count True price ticket initData
+                    |> Ui.map (\count2 -> setter count2 model.form.count)
             )
             (allTicketTypes ticketTypes)
             (allTicketTypes initData.prices)
+            (allTicketTypes model.form.count)
+            ticketTypesSetters
             |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
             |> Ui.map (\formCount -> FormChanged { form | count = formCount })
         ]
 
 
-viewAccom : TicketTypes NonNegative -> Bool -> Price -> TicketType -> LoadedModel -> Ui.Element (TicketTypes NonNegative)
-viewAccom formCount ticketAvailable price ticket2 model =
-    let
-        count =
-            ticket2.getter formCount
-    in
+viewAccom : NonNegative -> Bool -> Price -> TicketType -> InitData2 -> Ui.Element NonNegative
+viewAccom count ticketAvailable price ticket2 initData =
     Ui.column
         [ Ui.width Ui.fill
         , Ui.height Ui.fill
@@ -448,17 +448,17 @@ viewAccom formCount ticketAvailable price ticket2 model =
             [ Ui.alignBottom ]
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
-                (Ui.text (Theme.stripePriceText (Quantity.toFloatQuantity price.amount) model.currentCurrency))
+                (Ui.text (Theme.stripePriceText (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
             , if ticketAvailable then
                 if NonNegative.toInt count > 0 then
                     Theme.numericField
                         "Tickets"
                         (NonNegative.toInt count)
-                        (\value -> ticket2.setter (Result.withDefault count (NonNegative.fromInt value)) formCount)
+                        (\value -> Result.withDefault count (NonNegative.fromInt value))
 
                 else
                     Ui.el
-                        (Theme.submitButtonAttributes (ticket2.setter NonNegative.one formCount) ticketAvailable)
+                        (Theme.submitButtonAttributes NonNegative.one ticketAvailable)
                         (Ui.el
                             [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
                             (Ui.text "Select")
@@ -477,8 +477,6 @@ type alias TicketType =
     { name : String
     , description : String
     , image : String
-    , getter : TicketTypes TicketType -> NonNegative
-    , setter : NonNegative -> TicketTypes TicketType -> TicketTypes TicketType
     }
 
 
@@ -523,7 +521,7 @@ formView ticketTypes initData model =
     Ui.column
         [ Ui.spacing 60 ]
         [ Ui.none
-        , opportunityGrant form initData model
+        , opportunityGrant form initData
         , summary ticketTypes initData model
         , Ui.column
             (Ui.spacing 24 :: Theme.contentAttributes)
@@ -665,8 +663,8 @@ noShrink =
     Html.Attributes.style "flex-shrink" "0" |> Ui.htmlAttribute
 
 
-opportunityGrant : PurchaseForm -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
-opportunityGrant form initData model =
+opportunityGrant : PurchaseForm -> InitData2 -> Ui.Element FrontendMsg
+opportunityGrant form initData =
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
         [ Theme.h2 "🫶 Opportunity grants"
@@ -699,7 +697,7 @@ opportunityGrant form initData model =
                                 (Ui.text
                                     (Theme.stripePriceText
                                         (Quantity.toFloatQuantity initData.prices.singleRoomTicket.amount)
-                                        model.currentCurrency
+                                        initData.currentCurrency
                                     )
                                 )
                             ]
@@ -817,11 +815,9 @@ summary ticketTypes initData model =
         accomTotal : Quantity Int StripeCurrency
         accomTotal =
             List.map2
-                (\ticket price ->
-                    Quantity.multiplyBy (NonNegative.toInt (ticket.getter model.form.count)) price.amount
-                )
-                (allTicketTypes ticketTypes)
+                (\price count -> Quantity.multiplyBy (NonNegative.toInt count) price.amount)
                 (allTicketTypes initData.prices)
+                (allTicketTypes model.form.count)
                 |> Quantity.sum
     in
     Ui.column
@@ -832,18 +828,18 @@ summary ticketTypes initData model =
             Ui.text "No accommodation bookings"
 
           else
-            summaryAccommodation ticketTypes initData model model.form.count
+            summaryAccommodation ticketTypes initData model.form.count
         , case grant of
             Err _ ->
                 Ui.none
 
-            Ok 0 ->
+            Ok (Quantity.Quantity 0) ->
                 Ui.none
 
             Ok grant2 ->
                 Ui.text
                     ("Opportunity grant: "
-                        ++ Theme.localPriceText grant2 model.currentCurrency
+                        ++ Theme.localPriceText grant2 initData.currentCurrency
                     )
         , "Total: "
             ++ Theme.stripePriceText
@@ -851,29 +847,29 @@ summary ticketTypes initData model =
                     (Quantity.toFloatQuantity accomTotal)
                     (Result.withDefault Quantity.zero grant
                         |> Quantity.toFloatQuantity
-                        |> Quantity.at model.currentCurrency.conversionRate
+                        |> Quantity.at initData.currentCurrency.conversionRate
                     )
                 )
-                model.currentCurrency
+                initData.currentCurrency
             |> Theme.h3
         ]
 
 
-summaryAccommodation : TicketTypes TicketType -> InitData2 -> LoadedModel -> TicketTypes NonNegative -> Ui.Element msg
-summaryAccommodation ticketTypes initData model ticketCount =
-    List.map2
-        (\ticket price ->
+summaryAccommodation : TicketTypes TicketType -> InitData2 -> TicketTypes NonNegative -> Ui.Element msg
+summaryAccommodation ticketTypes initData ticketCount =
+    List.map3
+        (\ticket price count ->
             let
                 total : Quantity Int StripeCurrency
                 total =
-                    Quantity.multiplyBy (NonNegative.toInt (ticket.getter ticketCount)) price.amount
+                    Quantity.multiplyBy (NonNegative.toInt count) price.amount
             in
             if Quantity.greaterThanZero total then
                 ticket.name
                     ++ " x "
-                    ++ NonNegative.toString (ticket.getter ticketCount)
+                    ++ NonNegative.toString count
                     ++ " – "
-                    ++ Theme.stripePriceText (Quantity.toFloatQuantity total) model.currentCurrency
+                    ++ Theme.stripePriceText (Quantity.toFloatQuantity total) initData.currentCurrency
                     |> Ui.text
                     |> Just
 
@@ -882,89 +878,9 @@ summaryAccommodation ticketTypes initData model ticketCount =
         )
         (allTicketTypes ticketTypes)
         (allTicketTypes initData.prices)
+        (allTicketTypes ticketCount)
         |> List.filterMap identity
         |> Ui.column [ Ui.width Ui.shrink ]
-
-
-carbonOffsetForm : Bool -> PurchaseForm -> Ui.Element FrontendMsg
-carbonOffsetForm showCarbonOffsetTooltip form =
-    Ui.column
-        [ Ui.spacing 24
-        , Ui.paddingWith { left = 16, right = 16, top = 32, bottom = 16 }
-        , Ui.border 2
-        , Ui.borderColor (Ui.rgb 94 176 125)
-        , Ui.rounded 12
-        , Ui.el
-            [ Ui.width Ui.shrink
-            , (if showCarbonOffsetTooltip then
-                tooltip "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)"
-
-               else
-                Ui.none
-              )
-                |> Ui.below
-            , Ui.move { x = 8, y = -20, z = 0 }
-            , Ui.background Theme.lightTheme.background
-            ]
-            (Ui.el
-                [ Ui.Events.onClick Types.PressedShowCarbonOffsetTooltip, Ui.padding 8 ]
-                (Ui.row [ Ui.width Ui.shrink ]
-                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "🌲 Carbon offsetting ")
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 12 ] (Ui.text "ℹ️")
-                    ]
-                )
-            )
-            |> Ui.inFront
-        ]
-        [ Ui.none
-        , Ui.column
-            [ Ui.width Ui.shrink, Ui.spacing 8 ]
-            [ Ui.Prose.paragraph
-                [ Ui.width Ui.shrink, Ui.Font.weight 600 ]
-                [ Ui.text "What will be your primary method of travelling to the event?" ]
-
-            -- , TravelMode.all
-            --     |> List.map
-            --         (\choice ->
-            --             radioButton "travel-mode" (TravelMode.toString choice) (Just choice == form.primaryModeOfTravel)
-            --                 |> map
-            --                     (\() ->
-            --                         if Just choice == form.primaryModeOfTravel then
-            --                             FormChanged { form | primaryModeOfTravel = Nothing }
-            --                         else
-            --                             FormChanged { form | primaryModeOfTravel = Just choice }
-            --                     )
-            --         )
-            --     |> column []
-            -- , case ( form.submitStatus, form.primaryModeOfTravel ) of
-            --     ( NotSubmitted PressedSubmit, Nothing ) ->
-            --         errorText "Please select one of the above"
-            --     _ ->
-            --         none
-            ]
-        ]
-
-
-radioButton : String -> String -> Bool -> Ui.Element ()
-radioButton groupName text isChecked =
-    Html.label
-        [ Html.Attributes.style "padding" "6px"
-        , Html.Attributes.style "white-space" "normal"
-        , Html.Attributes.style "line-height" "24px"
-        ]
-        [ Html.input
-            [ Html.Attributes.type_ "radio"
-            , Html.Attributes.checked isChecked
-            , Html.Attributes.name groupName
-            , Html.Events.onClick ()
-            , Html.Attributes.style "transform" "translateY(-2px)"
-            , Html.Attributes.style "margin" "0 8px 0 0"
-            ]
-            []
-        , Html.text text
-        ]
-        |> Ui.html
-        |> Ui.el [ Ui.width Ui.shrink ]
 
 
 textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
@@ -1016,14 +932,3 @@ errorText error =
         , Ui.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
         [ Ui.text error ]
-
-
-tooltip : String -> Ui.Element msg
-tooltip text =
-    Ui.Prose.paragraph
-        [ Ui.paddingXY 12 8
-        , Ui.background (Ui.rgb 255 255 255)
-        , Ui.width (Ui.px 300)
-        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
-        ]
-        [ Ui.text text ]

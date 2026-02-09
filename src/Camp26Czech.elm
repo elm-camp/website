@@ -433,9 +433,6 @@ campfireTicket =
     { name = "Camping Spot"
     , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
     , image = ""
-    , productId = Id.fromString "prod_TmIy0Mltqmgzg5"
-    , getter = .campfireTicket
-    , setter = \v m -> { m | campfireTicket = v }
     }
 
 
@@ -444,9 +441,6 @@ singleRoomTicket =
     { name = "Single Room"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
-    , productId = Id.fromString "prod_TmJ0n8liux9A3d"
-    , getter = .singleRoomTicket
-    , setter = \v m -> { m | singleRoomTicket = v }
     }
 
 
@@ -455,7 +449,4 @@ sharedRoomTicket =
     { name = "Shared Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
-    , productId = Id.fromString "prod_TmIzrbSouU0bYE"
-    , getter = .sharedRoomTicket
-    , setter = \v m -> { m | sharedRoomTicket = v }
     }
