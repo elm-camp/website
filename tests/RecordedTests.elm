@@ -67,7 +67,14 @@ handleHttpRequests overrides fileData { currentRequest } =
 
         _ ->
             if currentRequest.url == "https://api.stripe.com/v1/prices" then
-                StringHttpResponse { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty } stripePricesResponse
+                StringHttpResponse
+                    { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty }
+                    stripePricesResponse
+
+            else if currentRequest.url == "https://api.stripe.com/v1/checkout/sessions" then
+                StringHttpResponse
+                    { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty }
+                    """{"id":"123"}"""
 
             else
                 UnhandledHttpRequest

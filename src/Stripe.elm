@@ -285,19 +285,14 @@ headers =
 
 loadCheckout : String -> Id StripeSessionId -> Command FrontendOnly toMsg msg
 loadCheckout publicApiKey sid =
-    toJsMessage "loadCheckout"
-        [ ( "id", Id.encode sid )
-        , ( "publicApiKey", E.string publicApiKey )
-        ]
-
-
-toJsMessage : String -> List ( String, E.Value ) -> Command FrontendOnly toMsg msg
-toJsMessage msg values =
     Command.sendToJs
         "stripe_to_js"
         stripe_to_js
         (E.object
-            (( "msg", E.string msg ) :: values)
+            [ ( "msg", E.string "loadCheckout" )
+            , ( "id", Id.encode sid )
+            , ( "publicApiKey", E.string publicApiKey )
+            ]
         )
 
 

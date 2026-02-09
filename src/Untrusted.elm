@@ -39,10 +39,10 @@ purchaseForm (Untrusted form) =
     case
         T3
             (PurchaseForm.validateEmailAddress (EmailAddress.toString form.billingEmail))
-            (Quantity.greaterThanZero form.grantContribution)
+            (Quantity.lessThanZero form.grantContribution)
             (PurchaseForm.validateAttendees form.count (List.map PurchaseForm.unvalidateAttendee form.attendees))
     of
-        T3 (Ok billingEmail) True (Ok attendeesOk) ->
+        T3 (Ok billingEmail) False (Ok attendeesOk) ->
             { attendees = attendeesOk
             , count = form.count
             , billingEmail = billingEmail
