@@ -162,7 +162,7 @@ stripePriceText price currentCurrency =
         amount =
             Quantity.at_ currentCurrency.conversionRate price |> Quantity.unwrap |> round
     in
-    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (amount // 100)
+    Money.toNativeSymbol currentCurrency.currency ++ " " ++ String.fromInt (amount // 100)
 
 
 localPriceText : Quantity Int LocalCurrency -> CurrentCurrency -> String

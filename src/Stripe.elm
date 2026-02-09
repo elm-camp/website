@@ -37,6 +37,7 @@ import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
 import Quantity exposing (Quantity, Rate)
+import SeqDict exposing (SeqDict)
 import Url exposing (percentEncode)
 import Url.Builder
 
@@ -51,7 +52,7 @@ type alias Price =
 
 type ConversionRateStatus
     = LoadingConversionRate
-    | LoadedConversionRate (Dict String (Quantity Float (Rate StripeCurrency LocalCurrency)))
+    | LoadedConversionRate (SeqDict Money.Currency (Quantity Float (Rate StripeCurrency LocalCurrency)))
     | LoadingConversionRateFailed Http.Error
 
 

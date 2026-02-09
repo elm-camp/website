@@ -190,10 +190,7 @@ tryLoading loadingModel =
                 , initData = initData
                 , form = PurchaseForm.init
                 , route = Route.decode loadingModel.url
-                , showCarbonOffsetTooltip = False
-                , isOrganiser = loadingModel.isOrganiser
                 , backendModel = Nothing
-                , pressedAudioButton = False
                 , logoModel = View.Logo.init
                 , elmUiState = loadingModel.elmUiState
                 , conversionRate = LoadingConversionRate
@@ -212,7 +209,22 @@ tryLoading loadingModel =
                             , expect =
                                 Http.expectJson
                                     GotConversionRate
-                                    (D.field "rates" (D.dict (D.map Quantity.unsafe D.float)))
+                                    (D.map
+                                        (\dict ->
+                                            List.filterMap
+                                                (\( key, value ) ->
+                                                    case Money.fromString key of
+                                                        Just key2 ->
+                                                            Just ( key2, Quantity.unsafe value )
+
+                                                        Nothing ->
+                                                            Nothing
+                                                )
+                                                (Dict.toList dict)
+                                                |> SeqDict.fromList
+                                        )
+                                        (D.field "rates" (D.dict D.float))
+                                    )
                             }
 
                     Err () ->
@@ -270,7 +282,7 @@ updateLoaded msg model =
             ( { model | showTooltip = True }, Command.none )
 
         MouseDown ->
-            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Command.none )
+            ( { model | showTooltip = False }, Command.none )
 
         DownloadTicketSalesReminder ->
             ( model, downloadTicketSalesReminder )
@@ -324,9 +336,6 @@ updateLoaded msg model =
                 |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
                 |> Task.attempt (\_ -> SetViewport)
             )
-
-        PressedShowCarbonOffsetTooltip ->
-            ( { model | showCarbonOffsetTooltip = True }, Command.none )
 
         SetViewport ->
             ( model, Command.none )

@@ -69,11 +69,8 @@ type alias LoadedModel =
     , form : PurchaseForm
     , route : Route
     , showTooltip : Bool
-    , showCarbonOffsetTooltip : Bool
-    , isOrganiser : Bool
     , backendModel : Maybe BackendModel
     , logoModel : View.Logo.Model
-    , pressedAudioButton : Bool
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
     }
@@ -282,7 +279,6 @@ type FrontendMsg
     | FormChanged PurchaseForm
     | PressedSubmitForm
     | PressedCancelForm
-    | PressedShowCarbonOffsetTooltip
     | SetViewport
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)
@@ -290,7 +286,7 @@ type FrontendMsg
     | Noop
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
-    | GotConversionRate (Result Http.Error (Dict String (Quantity Float (Rate StripeCurrency LocalCurrency))))
+    | GotConversionRate (Result Http.Error (SeqDict Money.Currency (Quantity Float (Rate StripeCurrency LocalCurrency))))
 
 
 type ToBackend
