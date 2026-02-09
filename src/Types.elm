@@ -287,6 +287,7 @@ type FrontendMsg
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
     | GotConversionRate (Result Http.Error (SeqDict Money.Currency (Quantity Float (Rate StripeCurrency LocalCurrency))))
+    | SelectedCurrency Money.Currency
 
 
 type ToBackend

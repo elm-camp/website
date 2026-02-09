@@ -215,7 +215,7 @@ tryLoading loadingModel =
                                                 (\( key, value ) ->
                                                     case Money.fromString key of
                                                         Just key2 ->
-                                                            Just ( key2, Quantity.unsafe value )
+                                                            Just ( key2, Quantity.unsafe (1 / value) )
 
                                                         Nothing ->
                                                             Nothing
@@ -381,6 +381,21 @@ updateLoaded msg model =
 
                 Err error ->
                     { model | conversionRate = LoadingConversionRateFailed error }
+            , Command.none
+            )
+
+        SelectedCurrency currency ->
+            ( case ( model.initData, model.conversionRate ) of
+                ( Ok initData, LoadedConversionRate dict ) ->
+                    case SeqDict.get currency dict of
+                        Just conversionRate ->
+                            { model | initData = Ok { initData | currentCurrency = { currency = currency, conversionRate = conversionRate } } }
+
+                        Nothing ->
+                            model
+
+                _ ->
+                    model
             , Command.none
             )
 

@@ -20,7 +20,9 @@ module View.Sales exposing
 
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
+import Html exposing (Html)
 import Html.Attributes
+import Html.Events
 import List.Extra
 import List.Nonempty exposing (Nonempty(..))
 import Money
@@ -29,8 +31,9 @@ import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValid
 import Quantity exposing (Quantity)
 import RichText exposing (Inline(..), RichText(..), Shared)
 import Route exposing (Route(..))
+import SeqDict
 import String.Nonempty
-import Stripe exposing (CurrentCurrency, LocalCurrency, Price, PriceId, ProductId(..), StripeCurrency)
+import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, Price, PriceId, ProductId(..), StripeCurrency)
 import Theme
 import Types exposing (FrontendMsg(..), InitData2, LoadedModel)
 import Ui
@@ -78,6 +81,20 @@ view ticketTypes ticketSalesOpenAt model =
                             [ Ui.el
                                 Theme.contentAttributes
                                 (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
+                            , currencyDropdown
+                                initData.currentCurrency.currency
+                                (case model.conversionRate of
+                                    LoadingConversionRate ->
+                                        []
+
+                                    LoadedConversionRate dict ->
+                                        SeqDict.keys dict
+
+                                    LoadingConversionRateFailed error ->
+                                        []
+                                )
+                                |> Ui.html
+                                |> Ui.map SelectedCurrency
                             , accommodationView ticketTypes initData model
                             , attendeesView initData model
                             , formView ticketTypes initData model
@@ -88,6 +105,28 @@ view ticketTypes ticketSalesOpenAt model =
                    )
             )
         ]
+
+
+currencyDropdown : Money.Currency -> List Money.Currency -> Html Money.Currency
+currencyDropdown selected currencies =
+    Html.select
+        [ Html.Attributes.value (Money.toString selected)
+        , Html.Events.onInput (\text -> Money.fromString text |> Maybe.withDefault selected)
+        , Html.Attributes.style "width" "300px"
+        , Html.Attributes.style "padding" "7px 8px"
+        , Html.Attributes.style "font-size" "16px"
+        , Html.Attributes.style "cursor" "pointer"
+        ]
+        (List.map
+            (\currency ->
+                Html.option
+                    [ Html.Attributes.value (Money.toString currency)
+                    , Html.Attributes.selected (currency == selected)
+                    ]
+                    [ Html.text (Money.toName { plural = False } currency ++ " (" ++ Money.toString currency ++ ")") ]
+            )
+            currencies
+        )
 
 
 attendSectionId =
