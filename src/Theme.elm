@@ -28,6 +28,7 @@ module Theme exposing
 
 import Color
 import Dict exposing (Dict)
+import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Http as Http
 import Html exposing (Html)
 import Html.Attributes
@@ -188,8 +189,8 @@ panel attrs x =
         x
 
 
-submitButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
-submitButtonAttributes onPress isEnabled =
+submitButtonAttributes : HtmlId -> msg -> Bool -> List (Ui.Attribute msg)
+submitButtonAttributes htmlId onPress isEnabled =
     [ Ui.width Ui.shrink
     , Ui.background
         (if isEnabled then
@@ -205,6 +206,7 @@ submitButtonAttributes onPress isEnabled =
     , Ui.Font.weight 600
     , Ui.Font.color (Ui.rgb 255 255 255)
     , Ui.Input.button onPress
+    , Ui.id (Dom.idToString htmlId)
     ]
 
 

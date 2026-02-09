@@ -247,7 +247,7 @@ ticketSalesOpenCountdown ticketSalesOpenAt now =
                 --                (Ui.text t)
                 --       )
                 , Ui.el
-                    (Theme.submitButtonAttributes DownloadTicketSalesReminder True
+                    (Theme.submitButtonAttributes (Dom.id "downloadTicketSalesReminder") DownloadTicketSalesReminder True
                         ++ [ Ui.width (Ui.px 200)
                            , Ui.centerX
                            , Ui.Font.size 20
@@ -558,6 +558,7 @@ viewAccom count ticketAvailable price ticket2 initData =
                         , Ui.Font.weight 600
                         , Ui.Font.color (Ui.rgb 255 255 255)
                         , Ui.Input.button NonNegative.one
+                        , Ui.id ("selectTicket_" ++ ticket2.name)
                         ]
                         (Ui.text "Select")
 
@@ -591,7 +592,7 @@ formView ticketTypes initData model =
         submitButton : Element FrontendMsg
         submitButton =
             Ui.el
-                (Theme.submitButtonAttributes PressedSubmitForm True)
+                (Theme.submitButtonAttributes (Dom.id "submitForm") PressedSubmitForm True)
                 (Ui.row
                     [ Ui.width Ui.shrink, Ui.Font.center, Ui.Font.exactWhitespace ]
                     [ Ui.text
@@ -626,6 +627,7 @@ formView ticketTypes initData model =
         , Ui.column
             (Ui.spacing 24 :: Theme.contentAttributes)
             [ textInput
+                (Dom.id "billingEmail")
                 model.form
                 (\a -> FormChanged { form | billingEmail = a })
                 "Billing email address"
@@ -684,12 +686,14 @@ attendeeForm model i attendee =
         model.window
         [ Ui.width Ui.fill, Ui.spacing 8 ]
         [ textInput
+            (Dom.id ("attendeeName_" ++ String.fromInt i))
             model.form
             (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | name = a } model.form.attendees })
             "Name"
             PurchaseForm.validateName
             attendee.name
         , textInput
+            (Dom.id ("attendeeCountry_" ++ String.fromInt i))
             model.form
             (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | country = a } model.form.attendees })
             "Country you live in"
@@ -703,6 +707,7 @@ attendeeForm model i attendee =
             )
             attendee.country
         , textInput
+            (Dom.id ("attendeeCity_" ++ String.fromInt i))
             model.form
             (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | originCity = a } model.form.attendees })
             "City/town"
@@ -764,6 +769,7 @@ opportunityGrant form initData =
                             [ noShrink, Ui.alignTop, Ui.move { x = 0, y = 7, z = 0 } ]
                             (Ui.text (Money.toNativeSymbol initData.currentCurrency.currency))
                         , textInput
+                            (Dom.id "opportunityGrant_textInput")
                             form
                             (\a -> FormChanged { form | grantContribution = a })
                             ""
@@ -917,11 +923,11 @@ textInputHeight =
     38
 
 
-textInput : PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
-textInput form onChange title validator text =
+textInput : HtmlId -> PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
+textInput id form onChange title validator text =
     let
         label =
-            Ui.Input.label ("textInput_" ++ title) [ Ui.width Ui.shrink, Ui.Font.weight 600 ] (Ui.text title)
+            Ui.Input.label (Dom.idToString id) [ Ui.width Ui.shrink, Ui.Font.weight 600 ] (Ui.text title)
     in
     Ui.column
         [ Ui.spacing 4, Ui.alignTop ]
