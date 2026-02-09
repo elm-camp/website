@@ -31,6 +31,7 @@ import Dict exposing (Dict)
 import Effect.Http as Http
 import Html exposing (Html)
 import Html.Attributes
+import Icons
 import Money
 import Quantity exposing (Quantity, Rate)
 import Route exposing (Route(..))
@@ -303,35 +304,39 @@ footer =
         )
 
 
+numericFieldButtonAttributes onChange =
+    [ Ui.background colors.green
+    , Ui.padding 16
+    , Ui.rounded 8
+    , Ui.alignBottom
+    , Ui.width Ui.shrink
+    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+    , Ui.Font.color colors.white
+    , Ui.Input.button onChange
+    , Ui.contentCenterX
+    ]
+
+
 numericField : String -> Int -> (Int -> msg) -> Ui.Element msg
 numericField title value onChange =
     Ui.row [ Ui.spacing 5 ]
         [ Ui.el
-            (normalButtonAttributes (onChange (value - 1))
-                ++ [ Ui.background colors.green
-                   , Ui.Font.color colors.white
-                   , Ui.width (Ui.px 50)
-                   ]
-            )
-            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "-"))
+            (numericFieldButtonAttributes (onChange (value - 1)))
+            (Ui.html Icons.minus)
         , Ui.el
             [ Ui.width Ui.fill
             , Ui.background (Ui.rgb 255 255 255)
-            , Ui.padding 16
             , Ui.rounded 8
             , Ui.alignBottom
-            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
             , Ui.Font.weight 600
+            , Ui.Font.size 24
+            , Ui.Font.center
+            , Ui.centerY
             ]
             (Ui.text (String.fromInt value))
         , Ui.el
-            (normalButtonAttributes (onChange (value + 1))
-                ++ [ Ui.background colors.green
-                   , Ui.Font.color colors.white
-                   , Ui.width (Ui.px 50)
-                   ]
-            )
-            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "+"))
+            (numericFieldButtonAttributes (onChange (value + 1)))
+            (Ui.html Icons.plus)
         ]
 
 

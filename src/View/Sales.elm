@@ -529,11 +529,25 @@ viewAccom count ticketAvailable price ticket2 initData =
 
                 else
                     Ui.el
-                        (Theme.submitButtonAttributes NonNegative.one ticketAvailable)
-                        (Ui.el
-                            [ Ui.width Ui.shrink, Ui.centerX, Ui.Font.weight 600, Ui.Font.color (Ui.rgb 255 255 255) ]
-                            (Ui.text "Select")
-                        )
+                        [ Ui.background
+                            (if True then
+                                Ui.rgb 92 176 126
+
+                             else
+                                Ui.rgb 137 141 137
+                            )
+                        , Ui.height (Ui.px 56)
+                        , Ui.Font.center
+                        , Ui.contentCenterY
+                        , Ui.rounded 8
+                        , Ui.alignBottom
+                        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+                        , Ui.Font.weight 600
+                        , Ui.Font.color (Ui.rgb 255 255 255)
+                        , Ui.Input.button NonNegative.one
+                        , Ui.Font.color (Ui.rgb 255 255 255)
+                        ]
+                        (Ui.text "Select")
 
               else if ticket2.name == "Campfire Ticket" then
                 Ui.text "Waitlist"
