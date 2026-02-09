@@ -725,6 +725,11 @@ noShrink =
 
 opportunityGrant : PurchaseForm -> InitData2 -> Ui.Element FrontendMsg
 opportunityGrant form initData =
+    let
+        ticketPrice : Quantity Int StripeCurrency
+        ticketPrice =
+            initData.prices.singleRoomTicket.amount
+    in
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
         [ Theme.h2 "🫶 Opportunity grants"
@@ -741,7 +746,7 @@ opportunityGrant form initData =
                         [ Ui.width (Ui.px 100), noShrink ]
                         [ Ui.el
                             [ noShrink, Ui.alignTop, Ui.paddingXY 0 3 ]
-                            (Ui.text (Money.toNativeSymbol initData.stripeCurrency))
+                            (Ui.text (Money.toNativeSymbol initData.currentCurrency.currency))
                         , textInput
                             form
                             (\a -> FormChanged { form | grantContribution = a })
@@ -756,20 +761,23 @@ opportunityGrant form initData =
                                 [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
                                 (Ui.text
                                     (Theme.stripePriceText
-                                        (Quantity.toFloatQuantity initData.prices.singleRoomTicket.amount)
+                                        (Quantity.toFloatQuantity ticketPrice)
                                         initData.currentCurrency
                                     )
                                 )
                             ]
-                        , Ui.Input.sliderHorizontal
+                        , sliderHorizontal
                             []
-                            { onChange = \a -> FormChanged { form | grantContribution = String.fromFloat (a / 100) }
+                            { onChange = \a -> FormChanged { form | grantContribution = PurchaseForm.unvalidateGrantContribution (Quantity.round a) }
                             , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
-                            , min = 0
-                            , max = 75000
-                            , value = (String.toFloat form.grantContribution |> Maybe.withDefault 0) * 100
+                            , min = Quantity.zero
+                            , max = Quantity.at_ initData.currentCurrency.conversionRate (Quantity.toFloatQuantity ticketPrice)
+                            , value =
+                                PurchaseForm.validateGrantContribution form.grantContribution
+                                    |> Result.withDefault Quantity.zero
+                                    |> Quantity.toFloatQuantity
                             , thumb = Nothing
-                            , step = Just 1000
+                            , step = Just (Quantity.unsafe 100)
                             }
                         , Ui.row
                             [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
@@ -781,6 +789,31 @@ opportunityGrant form initData =
                 ]
             ]
         ]
+
+
+sliderHorizontal :
+    List (Ui.Attribute msg)
+    ->
+        { label : Ui.Input.Label
+        , onChange : Quantity Float unit -> msg
+        , min : Quantity Float unit
+        , max : Quantity Float unit
+        , value : Quantity Float unit
+        , thumb : Maybe (Ui.Input.Thumb msg)
+        , step : Maybe (Quantity Float unit)
+        }
+    -> Element msg
+sliderHorizontal attributes input =
+    Ui.Input.sliderHorizontal
+        attributes
+        { label = input.label
+        , onChange = \value -> Quantity.unsafe value |> input.onChange
+        , min = Quantity.unwrap input.min
+        , max = Quantity.unwrap input.max
+        , value = Quantity.unwrap input.value
+        , thumb = input.thumb
+        , step = Maybe.map Quantity.unwrap input.step
+        }
 
 
 

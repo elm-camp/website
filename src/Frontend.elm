@@ -411,7 +411,30 @@ updateLoaded msg model =
                 ( Ok initData, LoadedConversionRate dict ) ->
                     case SeqDict.get currency dict of
                         Just conversionRate ->
-                            { model | initData = Ok { initData | currentCurrency = { currency = currency, conversionRate = conversionRate } } }
+                            let
+                                form =
+                                    model.form
+                            in
+                            { model
+                                | initData =
+                                    Ok { initData | currentCurrency = { currency = currency, conversionRate = conversionRate } }
+                                , form =
+                                    case PurchaseForm.validateGrantContribution form.grantContribution of
+                                        Ok value ->
+                                            { form
+                                                | grantContribution =
+                                                    -- Convert contribution text to proportionally equal value in new currency
+                                                    Quantity.at
+                                                        initData.currentCurrency.conversionRate
+                                                        (Quantity.toFloatQuantity value)
+                                                        |> Quantity.at_ conversionRate
+                                                        |> Quantity.round
+                                                        |> PurchaseForm.unvalidateGrantContribution
+                                            }
+
+                                        Err _ ->
+                                            form
+                            }
 
                         Nothing ->
                             model

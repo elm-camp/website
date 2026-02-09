@@ -10,6 +10,7 @@ module PurchaseForm exposing
     , init
     , initTicketCount
     , unvalidateAttendee
+    , unvalidateGrantContribution
     , validateAttendees
     , validateEmailAddress
     , validateForm
@@ -117,6 +118,11 @@ validateGrantContribution s =
 
                 else
                     Quantity.unsafe (x * 100) |> Ok
+
+
+unvalidateGrantContribution : Quantity Int LocalCurrency -> String
+unvalidateGrantContribution value =
+    Quantity.unwrap value // 100 |> String.fromInt
 
 
 validateName : String -> Result String Name
