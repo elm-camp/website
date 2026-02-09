@@ -149,6 +149,7 @@ tests fileData =
                 , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
                 , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tab1.click 100 (Dom.id "submitForm")
+                , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Tickets purchased!" ])
                 ]
             )
         ]
