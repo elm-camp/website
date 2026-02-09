@@ -18,19 +18,17 @@ module PurchaseForm exposing
     )
 
 import EmailAddress exposing (EmailAddress)
-import List.Nonempty exposing (Nonempty(..))
 import Name exposing (Name)
 import NonNegative exposing (NonNegative)
 import Quantity exposing (Quantity, Rate)
 import String.Nonempty exposing (NonemptyString)
 import Stripe exposing (LocalCurrency, StripeCurrency)
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
-import TravelMode exposing (TravelMode)
 
 
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
-    , attendees : Nonempty AttendeeForm
+    , attendees : List AttendeeForm
     , count : TicketTypes NonNegative
     , billingEmail : String
     , grantContribution : String
@@ -40,7 +38,7 @@ type alias PurchaseForm =
 init : PurchaseForm
 init =
     { submitStatus = NotSubmitted NotPressedSubmit
-    , attendees = Nonempty defaultAttendee []
+    , attendees = []
     , count = initTicketCount
     , billingEmail = ""
     , grantContribution = "0"
@@ -48,7 +46,7 @@ init =
 
 
 type alias PurchaseFormValidated =
-    { attendees : Nonempty AttendeeFormValidated
+    { attendees : List AttendeeFormValidated
     , count : TicketTypes NonNegative
     , billingEmail : EmailAddress
     , grantContribution : Quantity Float StripeCurrency
@@ -72,29 +70,23 @@ initTicketCount =
 
 type alias AttendeeForm =
     { name : String
-    , email : String
     , country : String
     , originCity : String
-    , primaryModeOfTravel : Maybe TravelMode
     }
 
 
 defaultAttendee : AttendeeForm
 defaultAttendee =
     { name = ""
-    , email = ""
     , country = ""
     , originCity = ""
-    , primaryModeOfTravel = Nothing
     }
 
 
 type alias AttendeeFormValidated =
     { name : Name
-    , email : EmailAddress
     , country : NonemptyString
     , originCity : NonemptyString
-    , primaryModeOfTravel : Maybe TravelMode
     }
 
 
@@ -146,32 +138,25 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateAttendees : Nonempty AttendeeForm -> Result String (Nonempty AttendeeFormValidated)
+validateAttendees : List AttendeeForm -> Result String (List AttendeeFormValidated)
 validateAttendees attendees =
     let
         attendeesValidated : List AttendeeFormValidated
         attendeesValidated =
-            List.Nonempty.toList attendees |> List.filterMap validateAttendee
+            List.filterMap validateAttendee attendees
     in
-    case List.Nonempty.fromList attendeesValidated of
-        Just list ->
-            if List.Nonempty.length list == List.Nonempty.length attendees then
-                Ok list
+    if List.length attendeesValidated == List.length attendees then
+        Ok attendeesValidated
 
-            else
-                Err "Invalid attendees"
-
-        Nothing ->
-            Err "Invalid attendees"
+    else
+        Err "Invalid attendees"
 
 
 unvalidateAttendee : AttendeeFormValidated -> AttendeeForm
 unvalidateAttendee attendee =
     { name = Name.toString attendee.name
-    , email = EmailAddress.toString attendee.email
     , country = String.Nonempty.toString attendee.country
     , originCity = String.Nonempty.toString attendee.originCity
-    , primaryModeOfTravel = attendee.primaryModeOfTravel
     }
 
 
@@ -201,23 +186,18 @@ validateAttendee form =
         name =
             validateName form.name
 
-        emailAddress =
-            validateEmailAddress form.email
-
         country =
             String.Nonempty.fromString form.country
 
         originCity =
             String.Nonempty.fromString form.originCity
     in
-    case T4 name emailAddress country originCity of
-        T4 (Ok nameOk) (Ok emailAddressOk) (Just countryOk) (Just originCityOk) ->
+    case T3 name country originCity of
+        T3 (Ok nameOk) (Just countryOk) (Just originCityOk) ->
             Just
                 { name = nameOk
-                , email = emailAddressOk
                 , country = countryOk
                 , originCity = originCityOk
-                , primaryModeOfTravel = form.primaryModeOfTravel
                 }
 
         _ ->

@@ -20,10 +20,8 @@ module View.Sales exposing
 
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
-import Html
 import Html.Attributes
-import Html.Events
-import List.Extra as List
+import List.Extra
 import List.Nonempty exposing (Nonempty(..))
 import Money
 import NonNegative exposing (NonNegative)
@@ -36,7 +34,6 @@ import Stripe exposing (CurrentCurrency, LocalCurrency, Price, PriceId, ProductI
 import Theme
 import Types exposing (FrontendMsg(..), InitData2, LoadedModel)
 import Ui
-import Ui.Events
 import Ui.Font
 import Ui.Input
 import Ui.Prose
@@ -358,7 +355,7 @@ attendeesView initData model =
 
         attendeeCount : Int
         attendeeCount =
-            List.Nonempty.length form.attendees
+            List.length form.attendees
     in
     Ui.column
         Theme.contentAttributes
@@ -372,16 +369,11 @@ attendeesView initData model =
             [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
             , Ui.column
                 [ Ui.spacing 16 ]
-                (List.indexedMap (attendeeForm (attendeeCount > 1) model) (List.Nonempty.toList form.attendees))
+                (List.indexedMap (attendeeForm (attendeeCount > 1) model) form.attendees)
             , if attendeeCount < 10 then
                 Ui.el
                     (Theme.normalButtonAttributes
-                        (FormChanged
-                            { form
-                                | attendees =
-                                    List.Nonempty.append form.attendees (Nonempty PurchaseForm.defaultAttendee [])
-                            }
-                        )
+                        (FormChanged { form | attendees = form.attendees ++ [ PurchaseForm.defaultAttendee ] })
                     )
                     (Ui.text "Add another attendee")
 
@@ -586,19 +578,13 @@ attendeeForm showRemove model i attendee =
         [ Ui.width Ui.fill, Ui.spacing 16 ]
         [ textInput
             model.form
-            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | name = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | name = a } model.form.attendees })
             "Name"
             PurchaseForm.validateName
             attendee.name
         , textInput
             model.form
-            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | email = a } model.form.attendees })
-            "Email"
-            PurchaseForm.validateEmailAddress
-            attendee.email
-        , textInput
-            model.form
-            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | country = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | country = a } model.form.attendees })
             "Country you live in"
             (\text ->
                 case String.Nonempty.fromString text of
@@ -611,7 +597,7 @@ attendeeForm showRemove model i attendee =
             attendee.country
         , textInput
             model.form
-            (\a -> FormChanged { form | attendees = nonemptySetAt i { attendee | originCity = a } model.form.attendees })
+            (\a -> FormChanged { form | attendees = List.Extra.setAt i { attendee | originCity = a } model.form.attendees })
             "City/town"
             (\text ->
                 case String.Nonempty.fromString text of
@@ -626,12 +612,7 @@ attendeeForm showRemove model i attendee =
             Ui.el
                 (Theme.normalButtonAttributes
                     (FormChanged
-                        { form
-                            | attendees =
-                                List.removeIfIndex (\j -> i == j) (List.Nonempty.toList model.form.attendees)
-                                    |> List.Nonempty.fromList
-                                    |> Maybe.withDefault model.form.attendees
-                        }
+                        { form | attendees = List.Extra.removeIfIndex (\j -> i == j) model.form.attendees }
                     )
                     ++ [ Ui.width (Ui.px 100)
                        , Ui.alignTop
@@ -823,7 +804,7 @@ summary ticketTypes initData model =
     Ui.column
         (Ui.spacing 10 :: Theme.contentAttributes)
         [ Theme.h2 "Summary"
-        , Ui.text ("Attendees x " ++ String.fromInt (List.Nonempty.length model.form.attendees))
+        , Ui.text ("Attendees x " ++ String.fromInt (List.length model.form.attendees))
         , if model.form.count == PurchaseForm.initTicketCount then
             Ui.text "No accommodation bookings"
 

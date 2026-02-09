@@ -40,7 +40,7 @@ purchaseForm (Untrusted form) =
         T3
             (PurchaseForm.validateEmailAddress (EmailAddress.toString form.billingEmail))
             (Quantity.greaterThanZero form.grantContribution)
-            (PurchaseForm.validateAttendees (List.Nonempty.map PurchaseForm.unvalidateAttendee form.attendees))
+            (PurchaseForm.validateAttendees (List.map PurchaseForm.unvalidateAttendee form.attendees))
     of
         T3 (Ok billingEmail) True (Ok attendeesOk) ->
             { attendees = attendeesOk

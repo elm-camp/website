@@ -1,7 +1,5 @@
 module Admin exposing
     ( attendees
-    , attendeesDetail
-    , attendeesPending
     , loadProdBackend
     , quickTable
     , toString
@@ -17,12 +15,10 @@ module Admin exposing
     )
 
 import Effect.Command as Command exposing (Command)
-import EmailAddress
 import Env
 import Html
 import Id exposing (Id)
 import List.Extra
-import List.Nonempty exposing (Nonempty)
 import Name
 import SeqDict exposing (SeqDict)
 import String.Nonempty
@@ -30,12 +26,7 @@ import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
 import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, TicketsEnabled(..))
 import Ui
-import Ui.Anim
-import Ui.Events
 import Ui.Font
-import Ui.Input
-import Ui.Layout
-import Ui.Prose
 
 
 view : LoadedModel -> Ui.Element FrontendMsg
@@ -144,14 +135,12 @@ viewExpiredOrders orders =
         ]
         ([ Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
          , quickTable (orders |> SeqDict.values)
-            [ \order -> attendeesPending order |> String.join ", "
-            , \order -> attendeesDetail (\a -> EmailAddress.toString a.email) order |> String.join ", "
+            [ \order -> List.map (\a -> Name.toString a.name) order.form.attendees |> String.join ", "
 
             --, \order -> toString order.form.accommodationBookings
             -- , .form >> .grantApply >> Debug.toString
             -- , .form >> .grantContribution >> Debug.toString
-            -- , .form >> .sponsorship >> Debug.toString
-            , \order -> attendeesDetail (\a -> String.Nonempty.toString a.country) order |> String.join ", "
+            , \order -> List.map (\a -> String.Nonempty.toString a.country) order.form.attendees |> String.join ", "
             ]
          ]
          -- ++ (orders |> SeqDict.toList |> List.indexedMap viewPendingOrder)
@@ -182,7 +171,7 @@ viewExpiredOrders2 orders =
         ordersCleaned =
             orders
                 |> SeqDict.toList
-                |> List.concatMap (\( _, value ) -> attendeesPending value)
+                |> List.concatMap (\( _, value ) -> List.map (\a -> Name.toString a.name) value.form.attendees)
                 |> List.Extra.unique
                 |> List.sort
     in
@@ -206,7 +195,7 @@ viewPendingOrder idx ( id, order ) =
     Ui.row
         [ Ui.Font.size 14, Ui.spacing 12 ]
         [ Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.fromInt (idx + 1)))
-        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (attendeesPending order)))
+        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (List.map (\a -> Name.toString a.name) order.form.attendees)))
 
         -- , Element.text <| Debug.toString order
         ]
@@ -214,17 +203,7 @@ viewPendingOrder idx ( id, order ) =
 
 attendees : Types.CompletedOrder -> List String
 attendees order =
-    List.Nonempty.toList order.form.attendees |> List.map (\a -> Name.toString a.name)
-
-
-attendeesPending : Types.PendingOrder -> List String
-attendeesPending order =
-    List.Nonempty.toList order.form.attendees |> List.map (\a -> Name.toString a.name)
-
-
-attendeesDetail : (a -> b) -> { c | form : { d | attendees : Nonempty a } } -> List String
-attendeesDetail fn order =
-    List.Nonempty.toList order.form.attendees |> List.map (\a -> fn a |> toString)
+    List.map (\a -> Name.toString a.name) order.form.attendees
 
 
 loadProdBackend : Command restriction toMsg msg
