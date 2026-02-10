@@ -14,6 +14,7 @@ module Theme exposing
     , h3
     , isMobile
     , lightTheme
+    , maxWidth
     , normalButtonAttributes
     , numericField
     , panel
@@ -76,9 +77,15 @@ greenTheme =
 
 contentAttributes : List (Ui.Attribute msg)
 contentAttributes =
-    [ Ui.widthMax 800
+    [ maxWidth
     , Ui.centerX
+    , Ui.paddingXY 16 0
     ]
+
+
+maxWidth : Ui.Attribute msg
+maxWidth =
+    Ui.widthMax 800
 
 
 isMobile : Size -> Bool

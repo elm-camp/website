@@ -3,7 +3,6 @@ module View.Sales exposing
     , accommodationView
     , errorHtmlId
     , errorText
-    , formView
     , goToTicketSales
     , opportunityGrant
     , opportunityGrantInfo
@@ -44,38 +43,118 @@ import Ui.Shadow
 view : TicketTypes TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
 view ticketTypes ticketSalesOpenAt model =
     let
-        ticketsAreLive =
-            detailedCountdown ticketSalesOpenAt model.now == Nothing
+        form =
+            model.form
     in
     Ui.column
-        Theme.contentAttributes
-        [ --if ticketsAreLive then
-          --    Ui.none
-          --
-          --  else
-          --    Ui.column Theme.contentAttributes [ ticketInfo model ]
-          Ui.column
-            [ Ui.spacing 60
-            , Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId)
-            ]
-            (Ui.el
-                Theme.contentAttributes
-                (RichText.view model opportunityGrantInfo)
-                :: (case ( ticketsAreLive, model.initData ) of
-                        ( True, Ok initData ) ->
-                            [ Ui.el
-                                Theme.contentAttributes
-                                (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
-                            , accommodationView ticketTypes initData model
-                            , attendeesView initData model
-                            , formView ticketTypes initData model
-                            ]
+        []
+        [ Ui.el Theme.contentAttributes (RichText.view model opportunityGrantInfo)
+        , Ui.column
+            [ Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId) ]
+            (case ( detailedCountdown ticketSalesOpenAt model.now == Nothing, model.initData ) of
+                ( True, Ok initData ) ->
+                    [ Ui.el
+                        Theme.contentAttributes
+                        (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
+                    , Ui.column
+                        [ Ui.spacing 32 ]
+                        [ accommodationView ticketTypes initData model
+                        , Ui.el Theme.contentAttributes (attendeesView initData model)
+                        , Ui.el Theme.contentAttributes (opportunityGrant form initData model)
+                        , Ui.el Theme.contentAttributes (summary ticketTypes initData model)
+                        , Ui.column
+                            (Ui.spacing 24 :: Theme.contentAttributes)
+                            [ textInput
+                                (Dom.id "billingEmail")
+                                model.form
+                                (\a -> FormChanged { form | billingEmail = a })
+                                "Billing email address"
+                                PurchaseForm.validateEmailAddress
+                                form.billingEmail
+                            , case form.submitStatus of
+                                NotSubmitted _ ->
+                                    Ui.none
 
-                        _ ->
-                            []
-                   )
+                                Submitting ->
+                                    Ui.none
+
+                                SubmitBackendError err ->
+                                    Ui.Prose.paragraph
+                                        [ Ui.border 1
+                                        , Ui.borderColor (Ui.rgb 200 0 0)
+                                        , Ui.background (Ui.rgb 255 240 240)
+                                        , Ui.width Ui.shrink
+                                        , Ui.paddingXY 16 16
+                                        , Ui.rounded 8
+                                        ]
+                                        [ Ui.text err ]
+                            , RichText.view
+                                model
+                                [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
+                                , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
+                                , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
+                                ]
+                            , if Theme.isMobile model.window then
+                                Ui.column
+                                    [ Ui.spacing 16 ]
+                                    [ Ui.row [ Ui.spacing 8 ] [ submitButton form, cancelButton ]
+                                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
+                                    ]
+
+                              else
+                                Ui.row [ Ui.spacing 16 ]
+                                    [ cancelButton
+                                    , submitButton form
+                                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
+                                    ]
+                            , RichText.view
+                                model
+                                [ Paragraph
+                                    [ Text "Problem with something above? Get in touch with the team at "
+                                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                                    , Text "."
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+
+                _ ->
+                    []
             )
         ]
+
+
+submitButton : PurchaseForm -> Element FrontendMsg
+submitButton form =
+    Ui.el
+        (Theme.submitButtonAttributes (Dom.id "submitForm") PressedSubmitForm True)
+        (Ui.row
+            [ Ui.width Ui.shrink, Ui.Font.center, Ui.Font.exactWhitespace ]
+            [ Ui.text
+                (--if purchaseable ticket.productId model.slotsRemaining then
+                 "Purchase "
+                 --else
+                 --   "Waitlist"
+                )
+            , case form.submitStatus of
+                NotSubmitted _ ->
+                    Ui.none
+
+                Submitting ->
+                    Theme.spinnerWhite
+
+                SubmitBackendError _ ->
+                    Ui.none
+            ]
+        )
+
+
+cancelButton : Element FrontendMsg
+cancelButton =
+    Ui.el
+        (Theme.normalButtonAttributes PressedCancelForm)
+        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
 
 
 listMoveToStart : a -> List a -> List a
@@ -216,7 +295,7 @@ detailedCountdown target now =
 ticketSalesOpenCountdown : Time.Posix -> Time.Posix -> Ui.Element FrontendMsg
 ticketSalesOpenCountdown ticketSalesOpenAt now =
     Ui.column
-        (Theme.contentAttributes ++ [ Ui.spacing 20 ])
+        (Ui.spacing 20 :: Theme.contentAttributes)
         (case detailedCountdown ticketSalesOpenAt now of
             Nothing ->
                 [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
@@ -407,12 +486,14 @@ accommodationView ticketTypes initData model =
             (PurchaseForm.allTicketTypes model.form.count)
             PurchaseForm.ticketTypesSetters
             |> Theme.rowToColumnWhen model.window [ Ui.spacing 16 ]
+            |> Ui.el [ Ui.widthMax 1000, Ui.centerX, Ui.paddingXY 16 0 ]
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
             initData.currentCurrency.currency
             model.conversionRate
             |> Ui.map SelectedCurrency
+            |> Ui.el Theme.contentAttributes
         ]
 
 
@@ -482,105 +563,6 @@ type alias TicketType =
 
 purchaseable ticket model =
     True
-
-
-formView : TicketTypes TicketType -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
-formView ticketTypes initData model =
-    let
-        form : PurchaseForm
-        form =
-            model.form
-
-        submitButton : Element FrontendMsg
-        submitButton =
-            Ui.el
-                (Theme.submitButtonAttributes (Dom.id "submitForm") PressedSubmitForm True)
-                (Ui.row
-                    [ Ui.width Ui.shrink, Ui.Font.center, Ui.Font.exactWhitespace ]
-                    [ Ui.text
-                        (--if purchaseable ticket.productId model.slotsRemaining then
-                         "Purchase "
-                         --else
-                         --   "Waitlist"
-                        )
-                    , case form.submitStatus of
-                        NotSubmitted _ ->
-                            Ui.none
-
-                        Submitting ->
-                            Theme.spinnerWhite
-
-                        SubmitBackendError _ ->
-                            Ui.none
-                    ]
-                )
-
-        cancelButton : Element FrontendMsg
-        cancelButton =
-            Ui.el
-                (Theme.normalButtonAttributes PressedCancelForm)
-                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
-    in
-    Ui.column
-        [ Ui.spacing 60 ]
-        [ Ui.none
-        , opportunityGrant form initData model
-        , summary ticketTypes initData model
-        , Ui.column
-            (Ui.spacing 24 :: Theme.contentAttributes)
-            [ textInput
-                (Dom.id "billingEmail")
-                model.form
-                (\a -> FormChanged { form | billingEmail = a })
-                "Billing email address"
-                PurchaseForm.validateEmailAddress
-                form.billingEmail
-            , case form.submitStatus of
-                NotSubmitted _ ->
-                    Ui.none
-
-                Submitting ->
-                    Ui.none
-
-                SubmitBackendError err ->
-                    Ui.Prose.paragraph
-                        [ Ui.border 1
-                        , Ui.borderColor (Ui.rgb 200 0 0)
-                        , Ui.background (Ui.rgb 255 240 240)
-                        , Ui.width Ui.shrink
-                        , Ui.paddingXY 16 16
-                        , Ui.rounded 8
-                        ]
-                        [ Ui.text err ]
-            , RichText.view
-                model
-                [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
-                , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
-                , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
-                ]
-            , if Theme.isMobile model.window then
-                Ui.column
-                    [ Ui.spacing 16 ]
-                    [ Ui.row [ Ui.spacing 8 ] [ submitButton, cancelButton ]
-                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
-                    ]
-
-              else
-                Ui.row [ Ui.spacing 16 ]
-                    [ cancelButton
-                    , submitButton
-                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
-                    ]
-            , RichText.view
-                model
-                [ Paragraph
-                    [ Text "Problem with something above? Get in touch with the team at "
-                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                    , Text "."
-                    ]
-                ]
-            ]
-        ]
 
 
 submitFormError : Quantity Float (Quantity.Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Element msg

@@ -113,14 +113,14 @@ view model =
     Ui.column
         [ Ui.spacing 32 ]
         [ Ui.column
-            (Ui.paddingXY 16 0 :: Theme.contentAttributes)
+            []
             [ header model
             , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
-            , RichText.view model intro
+            , Ui.el Theme.contentAttributes (RichText.view model intro)
             , View.Sales.view ticketTypes ticketSalesOpenAt model
-            , RichText.view model venueAndAccess
-            , organisers model.window
-            , RichText.view model sponsors
+            , Ui.el Theme.contentAttributes (RichText.view model venueAndAccess)
+            , Ui.el Theme.contentAttributes (organisers model.window)
+            , Ui.el Theme.contentAttributes (RichText.view model sponsors)
             ]
         , Theme.footer
         ]
@@ -271,7 +271,7 @@ header config =
     in
     if Theme.isMobile config.window then
         Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.width Ui.shrink, Ui.paddingXY 24 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ Ui.column
