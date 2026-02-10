@@ -98,7 +98,7 @@ currencyDropdown stripeCurrency selected currencies =
 
                 LoadedConversionRate dict ->
                     SeqDict.keys dict
-                        |> List.sortBy Money.toString
+                        |> List.sortBy (Money.toName { plural = False })
                         |> listMoveToStart Money.USD
                         |> listMoveToStart Money.EUR
 
@@ -274,112 +274,6 @@ goToTicketSales =
         (Ui.text "Tickets on sale now! ⬇️")
 
 
-
---ticketInfo : LoadedModel -> Ui.Element msg
---ticketInfo model =
---    let
---        -- Get prices for each ticket type
---        formatTicketPrice productId =
---            model.prices
---                |> SeqDict.get (Id.fromString productId)
---                |> Maybe.map (\price -> Theme.priceText price.price)
---                |> Maybe.withDefault "Price not available"
---
---        offsitePrice =
---            formatTicketPrice Product.ticket.offsite
---
---        campingPrice =
---            formatTicketPrice Product.ticket.campingSpot
---
---        singlePrice =
---            formatTicketPrice Product.ticket.singleRoom
---
---        doublePrice =
---            formatTicketPrice Product.ticket.doubleRoom
---
---        dormPrice =
---            formatTicketPrice Product.ticket.groupRoom
---
---        -- Calculate example prices
---        exampleTickets3 =
---            model.prices
---                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
---                |> Maybe.map (\price -> Theme.priceAmount price.price * 3)
---                |> Maybe.withDefault 0
---
---        exampleDorm =
---            model.prices
---                |> SeqDict.get (Id.fromString Product.ticket.groupRoom)
---                |> Maybe.map (\price -> Theme.priceAmount price.price)
---                |> Maybe.withDefault 0
---
---        exampleTotal1 =
---            exampleTickets3 + exampleDorm
---
---        examplePerson1 =
---            exampleTotal1 / 3
---
---        exampleTicket1 =
---            model.prices
---                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
---                |> Maybe.map (\price -> Theme.priceAmount price.price)
---                |> Maybe.withDefault 0
---
---        exampleSingle =
---            model.prices
---                |> SeqDict.get (Id.fromString Product.ticket.singleRoom)
---                |> Maybe.map (\price -> Theme.priceAmount price.price)
---                |> Maybe.withDefault 0
---
---        exampleTotal2 =
---            exampleTicket1 + exampleSingle
---
---        -- Get a reference price for formatting
---        refPrice =
---            model.prices
---                |> SeqDict.get (Id.fromString Product.ticket.attendanceTicket)
---                |> Maybe.map .price
---
---        formatPrice amount =
---            case refPrice of
---                Just price ->
---                    Theme.priceText { price | amount = round (amount * 100) }
---
---                Nothing ->
---                    "Price not available"
---    in
---    [ Section "Tickets"
---        [ Paragraph [ Text "There is a mix of room types — singles, doubles, dorm style rooms suitable for up to four people. Attendees will self-organize to distribute among the rooms and share bathrooms. The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds are beautiful and include woodland, a swimming lake and a firepit." ]
---        , Paragraph [ Text "Each attendee will need to purchase ticket. If you purchase a shared room ticket, please let up know who you are sharing with. If possisble, purchase shared room tickets for everyone in your room in one transaction." ]
---        , Section "All tickets include full access to the event 18th - 21st June 2024 and all meals."
---            [ BulletList
---                [ Text ("Staying offsite – " ++ offsitePrice) ]
---                [ Paragraph [ Text "You will organise your own accommodation elsewhere." ] ]
---            , BulletList
---                [ if campingPrice == "£0" || campingPrice == "$0" then
---                    Text "Camping space – Free"
---
---                  else
---                    Text ("Camping space – " ++ campingPrice)
---                ]
---                [ Paragraph [ Text "Bring your own tent or campervan and stay on site" ]
---                , Paragraph [ Text "Showers & toilets provided" ]
---                ]
---            , BulletList
---                [ Text ("Shared room – " ++ dormPrice) ]
---                [ Paragraph [ Text "Suitable for a couple or up to 4 people in twin beds" ]
---                ]
---            , BulletList
---                [ Text ("Single room – " ++ singlePrice) ]
---                [ Paragraph [ Text "Limited availability" ]
---                ]
---            ]
---        , Paragraph [ Text "This year's venue has capacity for 75 attendees. Our plan is to maximise opportunity to attend by encouraging folks to share rooms." ]
---        ]
---    ]
---        |> RichText.view model
-
-
 ticketsHtmlId : HtmlId
 ticketsHtmlId =
     Dom.id "tickets"
@@ -414,7 +308,7 @@ attendeesView initData model =
             List.length form.attendees
     in
     Ui.column
-        Theme.contentAttributes
+        (Ui.spacing 16 :: Theme.contentAttributes)
         [ Ui.column
             []
             [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
@@ -422,9 +316,7 @@ attendeesView initData model =
             ]
         , Ui.column
             [ Ui.spacing 20 ]
-            [ Ui.column
-                [ Ui.spacing 16 ]
-                (List.indexedMap (attendeeForm model) form.attendees)
+            [ Ui.column [ Ui.spacing 16 ] (List.indexedMap (attendeeForm model) form.attendees)
             , if attendeeCount < 10 then
                 Theme.rowToColumnWhen
                     model.window
@@ -435,7 +327,7 @@ attendeesView initData model =
                         )
                         (Ui.text "Add attendee")
                     , case ( form.submitStatus, PurchaseForm.validateAttendees form.count form.attendees ) of
-                        ( NotSubmitted PressedSubmit, Err error ) ->
+                        ( NotSubmitted PressedSubmit, Err (Just error) ) ->
                             errorText error
 
                         _ ->
@@ -445,7 +337,7 @@ attendeesView initData model =
               else
                 Ui.none
             , Ui.Prose.paragraph
-                [ Ui.width Ui.shrink ]
+                [ Ui.width Ui.shrink, Ui.paddingXY 0 4 ]
                 [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
             ]
         ]
@@ -542,7 +434,7 @@ viewAccom count ticketAvailable price ticket2 initData =
             [ Ui.alignBottom, Ui.spacing 8 ]
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
-                (Ui.text (stripePriceText (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
+                (Ui.text (localPriceTextFromStripe (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
             , if ticketAvailable then
                 if NonNegative.toInt count > 0 then
                     Theme.numericField
@@ -632,7 +524,7 @@ formView ticketTypes initData model =
     Ui.column
         [ Ui.spacing 60 ]
         [ Ui.none
-        , opportunityGrant form initData
+        , opportunityGrant form initData model
         , summary ticketTypes initData model
         , Ui.column
             (Ui.spacing 24 :: Theme.contentAttributes)
@@ -666,17 +558,19 @@ formView ticketTypes initData model =
                 , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
                 , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
                 ]
-            , if model.window.width > 600 then
+            , if Theme.isMobile model.window then
+                Ui.column
+                    [ Ui.spacing 16 ]
+                    [ Ui.row [ Ui.spacing 8 ] [ submitButton, cancelButton ]
+                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
+                    ]
+
+              else
                 Ui.row [ Ui.spacing 16 ]
                     [ cancelButton
                     , submitButton
                     , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
                     ]
-
-              else
-                Ui.column
-                    [ Ui.spacing 16 ]
-                    [ submitButton, cancelButton, Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form ]
             , RichText.view
                 model
                 [ Paragraph
@@ -771,12 +665,62 @@ noShrink =
     Html.Attributes.style "flex-shrink" "0" |> Ui.htmlAttribute
 
 
-opportunityGrant : PurchaseForm -> InitData2 -> Ui.Element FrontendMsg
-opportunityGrant form initData =
+opportunityGrant : PurchaseForm -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
+opportunityGrant form initData model =
     let
         ticketPrice : Quantity Int StripeCurrency
         ticketPrice =
             initData.prices.singleRoomTicket.amount
+
+        valueInput =
+            Ui.row
+                [ Ui.width (Ui.px 130), noShrink, Ui.spacing 2 ]
+                [ Ui.el
+                    [ noShrink, Ui.alignTop, Ui.move { x = 0, y = 7, z = 0 } ]
+                    (Ui.text (Money.toNativeSymbol initData.currentCurrency.currency))
+                , textInput
+                    (Dom.id "opportunityGrant_textInput")
+                    form
+                    (\a -> FormChanged { form | grantContribution = a })
+                    ""
+                    PurchaseForm.validateGrantContribution
+                    form.grantContribution
+                ]
+
+        slider =
+            Ui.column [ Ui.width (Ui.portion 3) ]
+                [ Ui.row [ Ui.width (Ui.portion 3) ]
+                    [ Ui.el
+                        [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ]
+                        (Ui.text (localPriceText Quantity.zero initData.currentCurrency))
+                    , Ui.el
+                        [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
+                        (Ui.text
+                            (localPriceTextFromStripe
+                                (Quantity.toFloatQuantity ticketPrice)
+                                initData.currentCurrency
+                            )
+                        )
+                    ]
+                , sliderHorizontal
+                    []
+                    { onChange = \a -> FormChanged { form | grantContribution = PurchaseForm.unvalidateGrantContribution (Quantity.round a) }
+                    , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
+                    , min = Quantity.zero
+                    , max = Quantity.at_ initData.currentCurrency.conversionRate (Quantity.toFloatQuantity ticketPrice)
+                    , value =
+                        PurchaseForm.validateGrantContribution form.grantContribution
+                            |> Result.withDefault Quantity.zero
+                            |> Quantity.toFloatQuantity
+                    , thumb = Nothing
+                    , step = Just (Quantity.unsafe 100)
+                    }
+                , Ui.row
+                    [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
+                    [ Ui.el [ Ui.width Ui.shrink ] (Ui.text "No contribution")
+                    , Ui.el [ Ui.width Ui.shrink, Ui.alignRight ] (Ui.text "Donate full attendance")
+                    ]
+                ]
     in
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
@@ -787,59 +731,18 @@ opportunityGrant form initData =
                 [ Ui.width Ui.shrink ]
                 [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
             ]
-        , Theme.panel []
-            [ Ui.column [ Ui.width Ui.shrink ]
+        , Theme.panel
+            []
+            [ Ui.column
+                [ Ui.width Ui.shrink, Ui.spacing 16 ]
                 [ Ui.Prose.paragraph
-                    [ Ui.width Ui.shrink ]
+                    [ Ui.width Ui.shrink, Ui.paddingXY 0 4 ]
                     [ Ui.text "All amounts are helpful and 100% of the donation (less payment processing fees) will be put to good use supporting expenses for our grantees!" ]
-                , Ui.row [ Ui.spacing 30 ]
-                    [ Ui.row
-                        [ Ui.width (Ui.px 100), noShrink, Ui.spacing 2 ]
-                        [ Ui.el
-                            [ noShrink, Ui.alignTop, Ui.move { x = 0, y = 7, z = 0 } ]
-                            (Ui.text (Money.toNativeSymbol initData.currentCurrency.currency))
-                        , textInput
-                            (Dom.id "opportunityGrant_textInput")
-                            form
-                            (\a -> FormChanged { form | grantContribution = a })
-                            ""
-                            PurchaseForm.validateGrantContribution
-                            form.grantContribution
-                        ]
-                    , Ui.column [ Ui.width (Ui.portion 3) ]
-                        [ Ui.row [ Ui.width (Ui.portion 3) ]
-                            [ Ui.el
-                                [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ]
-                                (Ui.text (stripePriceText Quantity.zero initData.currentCurrency))
-                            , Ui.el
-                                [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
-                                (Ui.text
-                                    (stripePriceText
-                                        (Quantity.toFloatQuantity ticketPrice)
-                                        initData.currentCurrency
-                                    )
-                                )
-                            ]
-                        , sliderHorizontal
-                            []
-                            { onChange = \a -> FormChanged { form | grantContribution = PurchaseForm.unvalidateGrantContribution (Quantity.round a) }
-                            , label = Ui.Input.labelHidden "Opportunity grant contribution value selection slider"
-                            , min = Quantity.zero
-                            , max = Quantity.at_ initData.currentCurrency.conversionRate (Quantity.toFloatQuantity ticketPrice)
-                            , value =
-                                PurchaseForm.validateGrantContribution form.grantContribution
-                                    |> Result.withDefault Quantity.zero
-                                    |> Quantity.toFloatQuantity
-                            , thumb = Nothing
-                            , step = Just (Quantity.unsafe 100)
-                            }
-                        , Ui.row
-                            [ Ui.width (Ui.portion 3), Ui.paddingXY 0 10 ]
-                            [ Ui.el [ Ui.width Ui.shrink ] (Ui.text "No contribution")
-                            , Ui.el [ Ui.width Ui.shrink, Ui.alignRight ] (Ui.text "Donate full attendance")
-                            ]
-                        ]
-                    ]
+                , if Theme.isMobile model.window then
+                    Ui.column [ Ui.spacing 8 ] [ valueInput, slider ]
+
+                  else
+                    Ui.row [ Ui.spacing 32 ] [ valueInput, slider ]
                 ]
             ]
         ]
@@ -884,6 +787,12 @@ summary ticketTypes initData model =
                 (PurchaseForm.allTicketTypes initData.prices)
                 (PurchaseForm.allTicketTypes model.form.count)
                 |> Quantity.sum
+
+        total : Quantity Float LocalCurrency
+        total =
+            Quantity.plus
+                (Quantity.toFloatQuantity accomTotal |> Quantity.at_ initData.currentCurrency.conversionRate)
+                (Result.withDefault Quantity.zero grant |> Quantity.toFloatQuantity)
     in
     Ui.column
         Theme.contentAttributes
@@ -906,33 +815,51 @@ summary ticketTypes initData model =
                 Ok grant2 ->
                     Ui.text ("Opportunity grant: " ++ localPriceText grant2 initData.currentCurrency)
             , "Total: "
-                ++ stripePriceText
-                    (Quantity.plus
-                        (Quantity.toFloatQuantity accomTotal)
-                        (Result.withDefault Quantity.zero grant
-                            |> Quantity.toFloatQuantity
-                            |> Quantity.at initData.currentCurrency.conversionRate
-                        )
-                    )
-                    initData.currentCurrency
+                ++ localPriceText (Quantity.round total) initData.currentCurrency
+                ++ (if initData.currentCurrency.currency == initData.stripeCurrency then
+                        ""
+
+                    else
+                        " ("
+                            ++ stripePriceText
+                                (Quantity.at initData.currentCurrency.conversionRate total |> Quantity.round)
+                                initData
+                            ++ ")"
+                   )
                 |> Theme.h3
             ]
         ]
 
 
-stripePriceText : Quantity Float StripeCurrency -> CurrentCurrency -> String
-stripePriceText price currentCurrency =
+localPriceTextFromStripe : Quantity Float StripeCurrency -> CurrentCurrency -> String
+localPriceTextFromStripe amount currentCurrency =
     let
-        amount : Int
-        amount =
-            Quantity.at_ currentCurrency.conversionRate price |> Quantity.unwrap |> round
+        amount2 : Int
+        amount2 =
+            Quantity.at_ currentCurrency.conversionRate amount |> Quantity.unwrap |> round
     in
-    Money.toNativeSymbol currentCurrency.currency ++ " " ++ String.fromInt (amount // 100)
+    Money.toNativeSymbol currentCurrency.currency ++ " " ++ formatNumber (amount2 // 100)
 
 
 localPriceText : Quantity Int LocalCurrency -> CurrentCurrency -> String
-localPriceText price currentCurrency =
-    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (Quantity.unwrap price // 100)
+localPriceText amount currentCurrency =
+    Money.toNativeSymbol currentCurrency.currency ++ " " ++ formatNumber (Quantity.unwrap amount // 100)
+
+
+stripePriceText : Quantity Int StripeCurrency -> InitData2 -> String
+stripePriceText amount initData =
+    Money.toNativeSymbol initData.stripeCurrency ++ " " ++ formatNumber (Quantity.unwrap amount // 100)
+
+
+formatNumber : Int -> String
+formatNumber value =
+    String.fromInt value
+        |> String.toList
+        |> List.reverse
+        |> List.Extra.greedyGroupsOf 3
+        |> List.reverse
+        |> List.map (\a -> List.reverse a |> String.fromList)
+        |> String.join ","
 
 
 summaryAccommodation : TicketTypes TicketType -> InitData2 -> TicketTypes NonNegative -> Ui.Element msg
@@ -949,7 +876,7 @@ summaryAccommodation ticketTypes initData ticketCount =
                     ++ " x "
                     ++ NonNegative.toString count
                     ++ " – "
-                    ++ stripePriceText (Quantity.toFloatQuantity total) initData.currentCurrency
+                    ++ localPriceTextFromStripe (Quantity.toFloatQuantity total) initData.currentCurrency
                     |> Ui.text
                     |> Just
 
@@ -972,7 +899,10 @@ textInput : HtmlId -> PurchaseForm -> (String -> msg) -> String -> (String -> Re
 textInput id form onChange title validator text =
     let
         label =
-            Ui.Input.label (Dom.idToString id) [ Ui.width Ui.shrink, Ui.Font.weight 600 ] (Ui.text title)
+            Ui.Input.label
+                (Dom.idToString id)
+                [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.paddingXY 4 0 ]
+                (Ui.text title)
     in
     Ui.column
         [ Ui.spacing 4, Ui.alignTop ]
@@ -996,7 +926,7 @@ textInput id form onChange title validator text =
             }
         , case ( form.submitStatus, validator text ) of
             ( NotSubmitted PressedSubmit, Err error ) ->
-                errorText error
+                Ui.el [ Ui.paddingXY 4 0 ] (errorText error)
 
             _ ->
                 Ui.none

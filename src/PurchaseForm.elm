@@ -146,7 +146,7 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateAttendees : TicketTypes NonNegative -> List AttendeeForm -> Result String (List AttendeeFormValidated)
+validateAttendees : TicketTypes NonNegative -> List AttendeeForm -> Result (Maybe String) (List AttendeeFormValidated)
 validateAttendees ticketCount attendees =
     let
         totalTicketCount : Int
@@ -162,13 +162,13 @@ validateAttendees ticketCount attendees =
     in
     if attendeesValidatedCount == List.length attendees then
         if totalTicketCount > attendeesValidatedCount then
-            Err "Not enough attendees listed. Please include at least one attendee for each ticket."
+            Err (Just "Not enough attendees listed. Please include at least one attendee for each ticket.")
 
         else
             Ok attendeesValidated
 
     else
-        Err ""
+        Err Nothing
 
 
 unvalidateAttendee : AttendeeFormValidated -> AttendeeForm

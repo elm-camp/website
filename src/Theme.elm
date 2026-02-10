@@ -20,21 +20,14 @@ module Theme exposing
     , rowToColumnWhen
     , spinnerWhite
     , submitButtonAttributes
-    , toggleButton
-    , toggleButtonAttributes
     )
 
 import Color
-import Dict exposing (Dict)
 import Effect.Browser.Dom as Dom exposing (HtmlId)
-import Effect.Http as Http
 import Html exposing (Html)
 import Html.Attributes
 import Icons
-import Money
-import Quantity exposing (Quantity, Rate)
 import Route exposing (Route(..))
-import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, Price, StripeCurrency)
 import Ui
 import Ui.Accessibility
 import Ui.Font
@@ -190,33 +183,6 @@ submitButtonAttributes htmlId onPress isEnabled =
     , Ui.Font.color (Ui.rgb 255 255 255)
     , Ui.Input.button onPress
     , Ui.id (Dom.idToString htmlId)
-    ]
-
-
-toggleButton : String -> Bool -> msg -> Ui.Element msg
-toggleButton label isActive onPress =
-    Ui.el
-        (toggleButtonAttributes onPress isActive)
-        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text label))
-
-
-toggleButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
-toggleButtonAttributes onPress isActive =
-    [ Ui.background
-        (if isActive then
-            colors.green
-
-         else
-            colors.lightGrey
-        )
-    , Ui.padding 16
-    , Ui.rounded 8
-    , Ui.width Ui.shrink
-    , Ui.alignBottom
-    , Ui.Input.button onPress
-    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-    , Ui.Font.weight 600
-    , Ui.Font.color (Ui.rgb 255 255 255)
     ]
 
 
