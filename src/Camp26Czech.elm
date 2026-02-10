@@ -53,9 +53,7 @@ view model =
             []
             [ header model
             , ticketSalesOpenCountdown model.now
-            , Ui.el Theme.contentAttributes (RichText.view model intro)
-            , Ui.el Theme.contentAttributes (RichText.view model venueAndAccess)
-            , Ui.el Theme.contentAttributes (RichText.view model opportunityGrantInfo)
+            , Ui.el Theme.contentAttributes (RichText.view model content)
             , Ui.el Theme.contentAttributes (organisers model.window)
             , Ui.el Theme.contentAttributes (RichText.view model sponsors)
             ]
@@ -213,8 +211,8 @@ sponsors =
     ]
 
 
-intro : List RichText
-intro =
+content : List RichText
+content =
     [ Section "Elm Camp 2026 - Olomouc, Czechia"
         [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czech Republic!" ]
         , HorizontalLine
@@ -242,12 +240,7 @@ intro =
             }
           ]
         ]
-    ]
-
-
-venueAndAccess : List RichText
-venueAndAccess =
-    [ Section
+    , Section
         "The venue and access"
         [ Section
             "The venue"
@@ -280,20 +273,7 @@ venueAndAccess =
                 ]
             ]
         ]
-    , Section "Organisers"
-        [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
-        ]
-    ]
-
-
-opportunityGrant : String
-opportunityGrant =
-    "🫶 Opportunity grant"
-
-
-opportunityGrantInfo : List RichText
-opportunityGrantInfo =
-    [ Section opportunityGrant
+    , Section opportunityGrant
         [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
         , Section "🤗 Opportunity grant applications"
             [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
@@ -305,7 +285,15 @@ opportunityGrantInfo =
             , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
             ]
         ]
+    , Section "Organisers"
+        [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
+        ]
     ]
+
+
+opportunityGrant : String
+opportunityGrant =
+    "🫶 Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix
