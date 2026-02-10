@@ -278,7 +278,6 @@ type FrontendMsg
     | DownloadTicketSalesReminder
     | FormChanged PurchaseForm
     | PressedSubmitForm
-    | PressedCancelForm
     | SetViewport
     | AdminPullBackendModel
     | AdminPullBackendModelResponse (Result Http.Error BackendModel)

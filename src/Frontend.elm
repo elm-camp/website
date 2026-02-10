@@ -324,13 +324,6 @@ updateLoaded msg model =
                 Err () ->
                     ( model, Command.none )
 
-        PressedCancelForm ->
-            ( model
-            , Dom.getElement View.Sales.ticketsHtmlId
-                |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
-                |> Task.attempt (\_ -> SetViewport)
-            )
-
         SetViewport ->
             ( model, Command.none )
 
@@ -695,6 +688,9 @@ loadedView model =
 
         Camp25US ->
             Camp25US.view model
+
+        TicketPurchaseRoute ->
+            View.Sales.view Camp26Czech.ticketTypes model
 
 
 returnToHomepageButton : Ui.Element msg

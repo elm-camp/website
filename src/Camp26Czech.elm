@@ -1,6 +1,9 @@
 module Camp26Czech exposing
-    ( campfireTicket
+    ( TicketType
+    , campfireTicket
+    , detailedCountdown
     , header
+    , opportunityGrant
     , sharedRoomTicket
     , singleRoomTicket
     , ticketSalesOpenAt
@@ -9,19 +12,19 @@ module Camp26Czech exposing
     )
 
 import Camp
+import Effect.Browser.Dom as Dom
 import Helpers
-import Id exposing (Id)
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
 import RichText exposing (Inline(..), RichText(..))
 import Route
 import Theme exposing (Size)
 import Time
-import Types exposing (CompletedOrder, FrontendMsg, LoadedModel)
+import Types exposing (CompletedOrder, FrontendMsg(..), LoadedModel)
 import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
+import Ui.Shadow
 import View.Logo
-import View.Sales exposing (TicketType)
 
 
 meta : Camp.Meta
@@ -38,74 +41,8 @@ location =
     "🇨🇿 Olomouc, Czech Republic"
 
 
-ticket :
-    { attendanceTicket : String
-    , offsite : String
-    , campingSpot : String
-    , singleRoom : String
-    , doubleRoom : String
-    , groupRoom : String
-    }
-ticket =
-    { attendanceTicket = ""
-    , offsite = ""
-    , campingSpot = "prod_TmIy0Mltqmgzg5"
-    , singleRoom = "prod_TmJ0n8liux9A3d"
-    , doubleRoom = "prod_TmIzrbSouU0bYE"
-    , groupRoom = ""
-    }
-
-
-sponsorship : { bronze : String, silver : String, gold : String }
-sponsorship =
-    { bronze = ""
-    , silver = "prod_RzWTill7eglkFc"
-    , gold = "prod_RzWVRbQ0spItOf"
-    }
-
-
 type alias Sponsorship =
     { name : String, price : Int, productId : String, description : String, features : List String }
-
-
-sponsorshipItems : List Sponsorship
-sponsorshipItems =
-    [ { name = "Bronze"
-      , price = 50000
-      , productId = sponsorship.bronze
-      , description = "You will be a minor supporter of Elm Camp 2026."
-      , features =
-            [ "Thank you tweet"
-            , "Logo on website"
-            , "Small logo on shared slide during the opening and closing sessions"
-            ]
-      }
-    , { name = "Silver"
-      , price = 100000
-      , productId = sponsorship.silver
-      , description = "You will be a major supporter of Elm Camp 2026."
-      , features =
-            [ "Thank you tweet"
-            , "Logo on website"
-            , "Small logo on shared slide during the opening and closing sessions"
-            , "Small logo on a slide displayed between sessions throughout the event"
-            , "One campfire ticket"
-            ]
-      }
-    , { name = "Gold"
-      , price = 250000
-      , productId = sponsorship.gold
-      , description = "You will be a pivotal supporter of Elm Camp 2026."
-      , features =
-            [ "Thank you tweet"
-            , "Dedicated \"thank you\" slide during the opening and closing sessions"
-            , "Large logo on a slide displayed between sessions throughout the event"
-            , "Two campfire tickets or one single room ticket"
-            , "A self-written snippet on the website about your use of Elm and an optional CTA if you are hiring"
-            , "A rollup or poster (provided by you) visible inside the venue during the event"
-            ]
-      }
-    ]
 
 
 view : LoadedModel -> Element FrontendMsg
@@ -115,15 +52,139 @@ view model =
         [ Ui.column
             []
             [ header model
-            , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
+            , ticketSalesOpenCountdown model.now
             , Ui.el Theme.contentAttributes (RichText.view model intro)
-            , View.Sales.view ticketTypes ticketSalesOpenAt model
             , Ui.el Theme.contentAttributes (RichText.view model venueAndAccess)
+            , Ui.el Theme.contentAttributes (RichText.view model opportunityGrantInfo)
             , Ui.el Theme.contentAttributes (organisers model.window)
             , Ui.el Theme.contentAttributes (RichText.view model sponsors)
             ]
         , Theme.footer
         ]
+
+
+ticketSalesOpenCountdown : Time.Posix -> Ui.Element FrontendMsg
+ticketSalesOpenCountdown now =
+    Ui.column
+        (Ui.spacing 20 :: Theme.contentAttributes)
+        (case detailedCountdown now of
+            Nothing ->
+                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+
+            Just countdownElement ->
+                [ countdownElement
+
+                --, DateFormat.format
+                --    [ DateFormat.yearNumber
+                --    , DateFormat.text "-"
+                --    , DateFormat.monthFixed
+                --    , DateFormat.text "-"
+                --    , DateFormat.dayOfMonthFixed
+                --    , DateFormat.text " "
+                --    , DateFormat.hourMilitaryFixed
+                --    , DateFormat.text ":"
+                --    , DateFormat.minuteFixed
+                --    ]
+                --    timeZone
+                --    ticketSalesOpenAt
+                --    |> (\t ->
+                --            Ui.el
+                --                [ Ui.width Ui.shrink
+                --                , Ui.centerX
+                --                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                --                ]
+                --                (Ui.text t)
+                --       )
+                , Ui.el
+                    (Theme.submitButtonAttributes (Dom.id "downloadTicketSalesReminder") DownloadTicketSalesReminder True
+                        ++ [ Ui.width (Ui.px 200)
+                           , Ui.centerX
+                           , Ui.Font.size 20
+                           ]
+                    )
+                    (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
+                , Ui.text " "
+                ]
+        )
+
+
+detailedCountdown : Time.Posix -> Maybe (Ui.Element msg)
+detailedCountdown now =
+    Nothing
+
+
+
+--let
+--    target2 =
+--        Time.posixToMillis ticketSalesOpenAt
+--
+--    now2 =
+--        Time.posixToMillis now
+--
+--    secondsRemaining =
+--        (target2 - now2) // 1000
+--
+--    days =
+--        secondsRemaining // (60 * 60 * 24)
+--
+--    hours =
+--        modBy 24 (secondsRemaining // (60 * 60))
+--
+--    minutes =
+--        modBy 60 (secondsRemaining // 60)
+--
+--    formatDays =
+--        if days > 1 then
+--            Just (String.fromInt days ++ " days")
+--
+--        else if days == 1 then
+--            Just "1 day"
+--
+--        else
+--            Nothing
+--
+--    formatHours =
+--        if hours > 0 then
+--            Just (String.fromInt hours ++ "h")
+--
+--        else
+--            Nothing
+--
+--    formatMinutes =
+--        if minutes > 0 then
+--            Just (String.fromInt minutes ++ "m")
+--
+--        else
+--            Nothing
+--
+--    output =
+--        String.join " "
+--            (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
+--in
+--if secondsRemaining < 0 then
+--    Nothing
+--
+--else
+--    Ui.Prose.paragraph
+--        (Theme.contentAttributes ++ [ Ui.Font.center ])
+--        [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
+--        |> Just
+
+
+goToTicketSales : Ui.Element FrontendMsg
+goToTicketSales =
+    Ui.el
+        [ Ui.width Ui.fill
+        , Ui.background (Ui.rgb 255 172 98)
+        , Ui.paddingXY 24 16
+        , Ui.rounded 8
+        , Ui.Font.color (Ui.rgb 0 0 0)
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.link (Route.encode Nothing Route.TicketPurchaseRoute)
+        ]
+        (Ui.text "Tickets now on sale!")
 
 
 sponsors : List RichText
@@ -221,6 +282,28 @@ venueAndAccess =
         ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
+        ]
+    ]
+
+
+opportunityGrant : String
+opportunityGrant =
+    "🫶 Opportunity grant"
+
+
+opportunityGrantInfo : List RichText
+opportunityGrantInfo =
+    [ Section opportunityGrant
+        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
+        , Section "🤗 Opportunity grant applications"
+            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
+            , Paragraph
+                [ Text "Please apply by sending an email to "
+                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                , Text ". The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process."
+                ]
+            , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
+            ]
         ]
     ]
 
@@ -420,6 +503,13 @@ ticketTypes =
     { campfireTicket = campfireTicket
     , singleRoomTicket = singleRoomTicket
     , sharedRoomTicket = sharedRoomTicket
+    }
+
+
+type alias TicketType =
+    { name : String
+    , description : String
+    , image : String
     }
 
 

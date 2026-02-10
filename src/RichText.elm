@@ -36,6 +36,7 @@ type Inline
     = Bold String
     | Italic String
     | Link String Route
+    | LinkWithFragment String Route String
     | Code String
     | Text String
     | ExternalLink String String
@@ -140,10 +141,10 @@ viewRichText shared depth item =
                 []
                 ((case depth of
                     [] ->
-                        h1 id shared.window title
+                        h1 shared.window title
 
                     [ _ ] ->
-                        h2 id title
+                        h2 title
 
                     _ ->
                         Html.h3
@@ -301,8 +302,12 @@ paddingTop px =
     Html.Attributes.style "padding-top" (String.fromInt px ++ "px")
 
 
-h1 : String -> Size -> String -> Html msg
-h1 id window title =
+h1 : Size -> String -> Html msg
+h1 window title =
+    let
+        id =
+            Url.percentEncode title
+    in
     Html.h1
         [ Html.Attributes.id id
         , Html.Attributes.style
@@ -327,8 +332,12 @@ h1 id window title =
         ]
 
 
-h2 : String -> String -> Html msg
-h2 id title =
+h2 : String -> Html msg
+h2 title =
+    let
+        id =
+            Url.percentEncode title
+    in
     Html.h2
         [ Html.Attributes.id id
         , Html.Attributes.style "font-size" "24px"
@@ -358,6 +367,13 @@ inlineView shared inline =
         Link text url ->
             Html.a
                 [ Html.Attributes.href (Route.encode Nothing url)
+                , colorAttribute Theme.lightTheme.link
+                ]
+                [ Html.text text ]
+
+        LinkWithFragment text url fragment ->
+            Html.a
+                [ Html.Attributes.href (Route.encode (Just fragment) url)
                 , colorAttribute Theme.lightTheme.link
                 ]
                 [ Html.text text ]

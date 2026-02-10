@@ -242,6 +242,7 @@ footer =
     Ui.el
         [ Ui.paddingXY 24 16
         , Ui.alignBottom
+        , Ui.background (Ui.rgb 29 50 45)
         ]
         (Ui.row
             ([ Ui.spacing 10

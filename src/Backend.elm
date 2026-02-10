@@ -27,7 +27,6 @@ import Lamdera as LamderaCore
 import List.Extra as List
 import List.Nonempty
 import Money
-import Name
 import NonNegative exposing (NonNegative)
 import Postmark
 import PurchaseForm exposing (PurchaseFormValidated, TicketTypes)
@@ -38,7 +37,6 @@ import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), 
 import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
-import View.Sales as Sales exposing (TicketType)
 
 
 app :

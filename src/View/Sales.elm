@@ -1,19 +1,9 @@
 module View.Sales exposing
-    ( TicketType
-    , accommodationView
-    , errorHtmlId
-    , errorText
-    , goToTicketSales
-    , opportunityGrant
-    , opportunityGrantInfo
-    , summary
-    , summaryAccommodation
-    , textInput
-    , ticketSalesOpenCountdown
-    , ticketsHtmlId
+    ( errorHtmlId
     , view
     )
 
+import Camp26Czech exposing (TicketType)
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html exposing (Html)
@@ -40,88 +30,91 @@ import Ui.Prose
 import Ui.Shadow
 
 
-view : TicketTypes TicketType -> Time.Posix -> LoadedModel -> Ui.Element FrontendMsg
-view ticketTypes ticketSalesOpenAt model =
+view : TicketTypes TicketType -> LoadedModel -> Ui.Element FrontendMsg
+view ticketTypes model =
     let
         form =
             model.form
     in
     Ui.column
-        []
-        [ Ui.el Theme.contentAttributes (RichText.view model opportunityGrantInfo)
+        [ Ui.spacing 20 ]
+        [ Camp26Czech.header model
         , Ui.column
             [ Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId) ]
-            (case ( detailedCountdown ticketSalesOpenAt model.now == Nothing, model.initData ) of
+            (case ( Camp26Czech.detailedCountdown model.now == Nothing, model.initData ) of
                 ( True, Ok initData ) ->
                     [ Ui.el
                         Theme.contentAttributes
-                        (RichText.h1 attendSectionId model.window "Attend Elm Camp" |> Ui.html)
+                        (RichText.h1 model.window "Attend Elm Camp" |> Ui.html)
                     , Ui.column
                         [ Ui.spacing 32 ]
                         [ accommodationView ticketTypes initData model
-                        , Ui.el Theme.contentAttributes (attendeesView initData model)
-                        , Ui.el Theme.contentAttributes (opportunityGrant form initData model)
-                        , Ui.el Theme.contentAttributes (summary ticketTypes initData model)
-                        , Ui.column
-                            (Ui.spacing 24 :: Theme.contentAttributes)
-                            [ textInput
-                                (Dom.id "billingEmail")
-                                model.form
-                                (\a -> FormChanged { form | billingEmail = a })
-                                "Billing email address"
-                                PurchaseForm.validateEmailAddress
-                                form.billingEmail
-                            , case form.submitStatus of
-                                NotSubmitted _ ->
-                                    Ui.none
-
-                                Submitting ->
-                                    Ui.none
-
-                                SubmitBackendError err ->
-                                    Ui.Prose.paragraph
-                                        [ Ui.border 1
-                                        , Ui.borderColor (Ui.rgb 200 0 0)
-                                        , Ui.background (Ui.rgb 255 240 240)
-                                        , Ui.width Ui.shrink
-                                        , Ui.paddingXY 16 16
-                                        , Ui.rounded 8
-                                        ]
-                                        [ Ui.text err ]
-                            , RichText.view
-                                model
-                                [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
-                                , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
-                                , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
-                                ]
-                            , if Theme.isMobile model.window then
-                                Ui.column
-                                    [ Ui.spacing 16 ]
-                                    [ Ui.row [ Ui.spacing 8 ] [ submitButton form, cancelButton ]
-                                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
-                                    ]
-
-                              else
-                                Ui.row [ Ui.spacing 16 ]
-                                    [ cancelButton
-                                    , submitButton form
-                                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
-                                    ]
-                            , RichText.view
-                                model
-                                [ Paragraph
-                                    [ Text "Problem with something above? Get in touch with the team at "
-                                    , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                                    , Text "."
-                                    ]
-                                ]
-                            ]
+                        , attendeesView initData model
+                        , opportunityGrant form initData model
+                        , summary ticketTypes initData model
+                        , purchaseView initData model
                         ]
                     ]
 
                 _ ->
                     []
             )
+        , Theme.footer
+        ]
+
+
+purchaseView : InitData2 -> LoadedModel -> Element FrontendMsg
+purchaseView initData model =
+    let
+        form =
+            model.form
+    in
+    Ui.column
+        (Ui.spacing 24 :: Theme.contentAttributes)
+        [ textInput
+            (Dom.id "billingEmail")
+            model.form
+            (\a -> FormChanged { form | billingEmail = a })
+            "Billing email address"
+            PurchaseForm.validateEmailAddress
+            form.billingEmail
+        , case form.submitStatus of
+            NotSubmitted _ ->
+                Ui.none
+
+            Submitting ->
+                Ui.none
+
+            SubmitBackendError err ->
+                Ui.Prose.paragraph
+                    [ Ui.border 1
+                    , Ui.borderColor (Ui.rgb 200 0 0)
+                    , Ui.background (Ui.rgb 255 240 240)
+                    , Ui.width Ui.shrink
+                    , Ui.paddingXY 16 16
+                    , Ui.rounded 8
+                    ]
+                    [ Ui.text err ]
+        , RichText.view
+            model
+            [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
+            , Image { source = "/sponsors/cofoundry.png", maxWidth = Just 100, caption = [] }
+            , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
+            ]
+        , Theme.rowToColumnWhen
+            model.window
+            [ Ui.spacing 16 ]
+            [ submitButton form
+            , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
+            ]
+        , RichText.view
+            model
+            [ Paragraph
+                [ Text "Problem with something above? Get in touch with the team at "
+                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                , Text "."
+                ]
+            ]
         ]
 
 
@@ -148,13 +141,6 @@ submitButton form =
                     Ui.none
             ]
         )
-
-
-cancelButton : Element FrontendMsg
-cancelButton =
-    Ui.el
-        (Theme.normalButtonAttributes PressedCancelForm)
-        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Cancel"))
 
 
 listMoveToStart : a -> List a -> List a
@@ -225,154 +211,9 @@ currencyDropdown stripeCurrency selected currencies =
         ]
 
 
-attendSectionId =
-    "attend-elm-camp"
-
-
-detailedCountdown : Time.Posix -> Time.Posix -> Maybe (Ui.Element msg)
-detailedCountdown target now =
-    Nothing
-
-
-
---let
---    target2 =
---        Time.posixToMillis target
---
---    now2 =
---        Time.posixToMillis now
---
---    secondsRemaining =
---        (target2 - now2) // 1000
---
---    days =
---        secondsRemaining // (60 * 60 * 24)
---
---    hours =
---        modBy 24 (secondsRemaining // (60 * 60))
---
---    minutes =
---        modBy 60 (secondsRemaining // 60)
---
---    formatDays =
---        if days > 1 then
---            Just (String.fromInt days ++ " days")
---
---        else if days == 1 then
---            Just "1 day"
---
---        else
---            Nothing
---
---    formatHours =
---        if hours > 0 then
---            Just (String.fromInt hours ++ "h")
---
---        else
---            Nothing
---
---    formatMinutes =
---        if minutes > 0 then
---            Just (String.fromInt minutes ++ "m")
---
---        else
---            Nothing
---
---    output =
---        String.join " "
---            (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
---in
---if secondsRemaining < 0 then
---    Nothing
---
---else
---    Ui.Prose.paragraph
---        (Theme.contentAttributes ++ [ Ui.Font.center ])
---        [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
---        |> Just
-
-
-ticketSalesOpenCountdown : Time.Posix -> Time.Posix -> Ui.Element FrontendMsg
-ticketSalesOpenCountdown ticketSalesOpenAt now =
-    Ui.column
-        (Ui.spacing 20 :: Theme.contentAttributes)
-        (case detailedCountdown ticketSalesOpenAt now of
-            Nothing ->
-                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
-
-            Just countdownElement ->
-                [ countdownElement
-
-                --, DateFormat.format
-                --    [ DateFormat.yearNumber
-                --    , DateFormat.text "-"
-                --    , DateFormat.monthFixed
-                --    , DateFormat.text "-"
-                --    , DateFormat.dayOfMonthFixed
-                --    , DateFormat.text " "
-                --    , DateFormat.hourMilitaryFixed
-                --    , DateFormat.text ":"
-                --    , DateFormat.minuteFixed
-                --    ]
-                --    timeZone
-                --    ticketSalesOpenAt
-                --    |> (\t ->
-                --            Ui.el
-                --                [ Ui.width Ui.shrink
-                --                , Ui.centerX
-                --                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
-                --                ]
-                --                (Ui.text t)
-                --       )
-                , Ui.el
-                    (Theme.submitButtonAttributes (Dom.id "downloadTicketSalesReminder") DownloadTicketSalesReminder True
-                        ++ [ Ui.width (Ui.px 200)
-                           , Ui.centerX
-                           , Ui.Font.size 20
-                           ]
-                    )
-                    (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
-                , Ui.text " "
-                ]
-        )
-
-
-goToTicketSales : Ui.Element FrontendMsg
-goToTicketSales =
-    Ui.el
-        [ Ui.width Ui.fill
-        , Ui.background (Ui.rgb 255 172 98)
-        , Ui.padding 16
-        , Ui.rounded 8
-        , Ui.Font.color (Ui.rgb 0 0 0)
-        , Ui.alignBottom
-        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-        , Ui.Font.weight 600
-        , Ui.link (Route.encode (Just attendSectionId) Route.HomepageRoute)
-        ]
-        (Ui.text "Tickets on sale now! ⬇️")
-
-
 ticketsHtmlId : HtmlId
 ticketsHtmlId =
     Dom.id "tickets"
-
-
-opportunityGrantInfo : List RichText
-opportunityGrantInfo =
-    [ Section "🫶 Opportunity grant"
-        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
-        , Section "🤗 Opportunity grant applications"
-            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
-            , Paragraph
-                [ Text "Please apply by sending an email to "
-                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                , Text ". The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process."
-                ]
-            , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
-            ]
-        ]
-    ]
 
 
 attendeesView : InitData2 -> LoadedModel -> Ui.Element FrontendMsg
@@ -390,7 +231,7 @@ attendeesView initData model =
         (Ui.spacing 16 :: Theme.contentAttributes)
         [ Ui.column
             []
-            [ RichText.h2 "attendee-details" "🎟️ Attendee Details" |> Ui.html
+            [ RichText.h2 "🎟️ Attendee Details" |> Ui.html
             , Ui.text "Please enter details for each person attending Elm camp, then select your accommodation below."
             ]
         , Ui.column
@@ -434,10 +275,11 @@ accommodationView ticketTypes initData model =
         form =
             model.form
     in
-    Ui.column [ Ui.spacing 20 ]
+    Ui.column
+        [ Ui.spacing 20 ]
         [ Ui.column
             Theme.contentAttributes
-            [ Theme.h2 "🏕️ Ticket type"
+            [ RichText.h2 "🏕️ Ticket type" |> Ui.html
             , RichText.view
                 model
                 [ Paragraph [ Text "Please select one accommodation option per attendee." ]
@@ -552,13 +394,6 @@ viewAccom count ticketAvailable price ticket2 initData =
                 Ui.text "Sold out!"
             ]
         ]
-
-
-type alias TicketType =
-    { name : String
-    , description : String
-    , image : String
-    }
 
 
 purchaseable ticket model =
@@ -708,10 +543,16 @@ opportunityGrant form initData model =
         (Ui.spacing 20 :: Theme.contentAttributes)
         [ Ui.column
             []
-            [ Theme.h2 "🫶 Opportunity grants"
-            , Ui.Prose.paragraph
-                [ Ui.width Ui.shrink ]
-                [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+            [ RichText.h2 "🫶 Opportunity grants" |> Ui.html
+            , RichText.view
+                model
+                [ Paragraph [ Text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+                , Paragraph
+                    [ Text "If you are looking to apply for an opportunity grant "
+                    , LinkWithFragment "click here" Route.HomepageRoute Camp26Czech.opportunityGrant
+                    , Text "."
+                    ]
+                ]
             ]
         , Theme.panel
             []
@@ -778,7 +619,7 @@ summary ticketTypes initData model =
     in
     Ui.column
         Theme.contentAttributes
-        [ Theme.h2 "Summary"
+        [ RichText.h2 "Summary" |> Ui.html
         , Ui.column
             [ Ui.spacing 8 ]
             [ Ui.text ("Attendees x " ++ String.fromInt (List.length model.form.attendees))

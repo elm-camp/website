@@ -20,6 +20,7 @@ type Route
     | Camp23Denmark
     | Camp24Uk
     | Camp25US
+    | TicketPurchaseRoute
 
 
 decode : Url -> Route
@@ -35,6 +36,7 @@ decode url =
         , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Denmark
         , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
         , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
+        , Url.Parser.s "tickets" |> Url.Parser.map TicketPurchaseRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -89,6 +91,9 @@ encode fragment route =
 
             Camp25US ->
                 [ "25-us" ]
+
+            TicketPurchaseRoute ->
+                [ "tickets" ]
         )
         (case route of
             HomepageRoute ->
@@ -124,6 +129,9 @@ encode fragment route =
                 []
 
             Camp25US ->
+                []
+
+            TicketPurchaseRoute ->
                 []
         )
         ++ (case fragment of
