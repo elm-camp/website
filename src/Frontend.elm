@@ -305,27 +305,21 @@ updateLoaded msg model =
                         form =
                             model.form
                     in
-                    case ( form.submitStatus, PurchaseForm.validateForm initData.currentCurrency.conversionRate form ) of
-                        ( NotSubmitted _, Just purchaseFormValidated ) ->
-                            ( { model | form = { form | submitStatus = Submitting } }
-                            , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
-                            )
-
-                        ( NotSubmitted _, Nothing ) ->
-                            let
-                                _ =
-                                    Debug.log "form invalid" ()
-                            in
-                            ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                            , jumpToId View.Sales.errorHtmlId 110
-                            )
+                    case form.submitStatus of
+                        Submitting ->
+                            ( model, Command.none )
 
                         _ ->
-                            let
-                                _ =
-                                    Debug.log "Form already submitted" "Form already submitted"
-                            in
-                            ( model, Command.none )
+                            case PurchaseForm.validateForm initData.currentCurrency.conversionRate form of
+                                Ok purchaseFormValidated ->
+                                    ( { model | form = { form | submitStatus = Submitting } }
+                                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                                    )
+
+                                Err _ ->
+                                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
+                                    , jumpToId View.Sales.errorHtmlId 110
+                                    )
 
                 Err () ->
                     ( model, Command.none )
@@ -575,6 +569,7 @@ view model =
             , Ui.Font.family [ Ui.Font.typeface "Open Sans", Ui.Font.sansSerif ]
             , Ui.Font.size 16
             , Ui.Font.weight 500
+            , Ui.height Ui.fill
             , Ui.background Theme.lightTheme.background
             , (case model of
                 Loading _ ->
@@ -686,9 +681,9 @@ loadedView model =
         PaymentCancelRoute ->
             Ui.column
                 [ Ui.width Ui.shrink, Ui.centerX, Ui.centerY, Ui.padding 24, Ui.spacing 16 ]
-                [ Ui.Prose.paragraph
-                    [ Ui.width Ui.shrink, Ui.Font.size 20 ]
-                    [ Ui.text "You cancelled your ticket purchase" ]
+                [ Ui.el
+                    [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                    (Ui.text "You cancelled your ticket purchase")
                 , returnToHomepageButton
                 ]
 
@@ -714,6 +709,7 @@ returnToHomepageButton =
         , Ui.width Ui.shrink
         , Ui.link (Route.encode Nothing HomepageRoute)
         , Ui.contentCenterX
+        , Ui.centerX
         ]
         (Ui.text "Return to homepage")
 

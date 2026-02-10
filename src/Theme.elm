@@ -14,13 +14,11 @@ module Theme exposing
     , h3
     , isMobile
     , lightTheme
-    , localPriceText
     , normalButtonAttributes
     , numericField
     , panel
     , rowToColumnWhen
     , spinnerWhite
-    , stripePriceText
     , submitButtonAttributes
     , toggleButton
     , toggleButtonAttributes
@@ -155,21 +153,6 @@ fontFace weight name fontFamilyName =
   src: url(/fonts/""" ++ name ++ """.ttf) format('truetype');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD, U+2192, U+2713;
 }"""
-
-
-stripePriceText : Quantity Float StripeCurrency -> CurrentCurrency -> String
-stripePriceText price currentCurrency =
-    let
-        amount : Int
-        amount =
-            Quantity.at_ currentCurrency.conversionRate price |> Quantity.unwrap |> round
-    in
-    Money.toNativeSymbol currentCurrency.currency ++ " " ++ String.fromInt (amount // 100)
-
-
-localPriceText : Quantity Int LocalCurrency -> CurrentCurrency -> String
-localPriceText price currentCurrency =
-    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (Quantity.unwrap price // 100)
 
 
 panel : List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg

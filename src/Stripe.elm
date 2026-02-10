@@ -206,7 +206,19 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
             , ( "cancel_url", Url.Builder.crossOrigin Env.domain [ cancelPath ] [] )
             , ( "customer_email", EmailAddress.toString emailAddress )
             ]
-                ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
+                ++ (List.filter
+                        (\item ->
+                            case item of
+                                Priced priced ->
+                                    priced.quantity > 0
+
+                                Unpriced unpriced ->
+                                    unpriced.amountDecimal > 0 && unpriced.quantity > 0
+                        )
+                        items
+                        |> List.indexedMap itemToStripeAttrs
+                        |> List.concat
+                   )
                 |> formBody
     in
     Http.task

@@ -532,7 +532,7 @@ viewAccom count ticketAvailable price ticket2 initData =
             [ Ui.alignBottom, Ui.spacing 8 ]
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
-                (Ui.text (Theme.stripePriceText (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
+                (Ui.text (stripePriceText (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
             , if ticketAvailable then
                 if NonNegative.toInt count > 0 then
                     Theme.numericField
@@ -641,7 +641,15 @@ formView ticketTypes initData model =
                     Ui.none
 
                 SubmitBackendError err ->
-                    Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text err ]
+                    Ui.Prose.paragraph
+                        [ Ui.border 1
+                        , Ui.borderColor (Ui.rgb 200 0 0)
+                        , Ui.background (Ui.rgb 255 240 240)
+                        , Ui.width Ui.shrink
+                        , Ui.paddingXY 16 16
+                        , Ui.rounded 8
+                        ]
+                        [ Ui.text err ]
             , RichText.view
                 model
                 [ Paragraph [ Text "Your order will be processed by Elm Camp's fiscal host:" ]
@@ -649,10 +657,16 @@ formView ticketTypes initData model =
                 , Paragraph [ Text "By purchasing you agree to the event ", Link "Code of Conduct" CodeOfConductRoute ]
                 ]
             , if model.window.width > 600 then
-                Ui.row [ Ui.spacing 16 ] [ cancelButton, submitButton ]
+                Ui.row [ Ui.spacing 16 ]
+                    [ cancelButton
+                    , submitButton
+                    , Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form
+                    ]
 
               else
-                Ui.column [ Ui.spacing 16 ] [ submitButton, cancelButton ]
+                Ui.column
+                    [ Ui.spacing 16 ]
+                    [ submitButton, cancelButton, Ui.Lazy.lazy2 submitFormError initData.currentCurrency.conversionRate form ]
             , RichText.view
                 model
                 [ Paragraph
@@ -663,6 +677,16 @@ formView ticketTypes initData model =
                 ]
             ]
         ]
+
+
+submitFormError : Quantity Float (Quantity.Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Element msg
+submitFormError conversionRate form =
+    case ( form.submitStatus, PurchaseForm.validateForm conversionRate form ) of
+        ( NotSubmitted PressedSubmit, Err error ) ->
+            Ui.el [ errorFontColor ] (Ui.text error)
+
+        _ ->
+            Ui.none
 
 
 attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
@@ -780,11 +804,11 @@ opportunityGrant form initData =
                         [ Ui.row [ Ui.width (Ui.portion 3) ]
                             [ Ui.el
                                 [ Ui.width Ui.shrink, Ui.paddingXY 0 10 ]
-                                (Ui.text (Theme.stripePriceText Quantity.zero initData.currentCurrency))
+                                (Ui.text (stripePriceText Quantity.zero initData.currentCurrency))
                             , Ui.el
                                 [ Ui.width Ui.shrink, Ui.paddingXY 0 10, Ui.alignRight ]
                                 (Ui.text
-                                    (Theme.stripePriceText
+                                    (stripePriceText
                                         (Quantity.toFloatQuantity ticketPrice)
                                         initData.currentCurrency
                                     )
@@ -872,12 +896,9 @@ summary ticketTypes initData model =
                 Ui.none
 
             Ok grant2 ->
-                Ui.text
-                    ("Opportunity grant: "
-                        ++ Theme.localPriceText grant2 initData.currentCurrency
-                    )
+                Ui.text ("Opportunity grant: " ++ localPriceText grant2 initData.currentCurrency)
         , "Total: "
-            ++ Theme.stripePriceText
+            ++ stripePriceText
                 (Quantity.plus
                     (Quantity.toFloatQuantity accomTotal)
                     (Result.withDefault Quantity.zero grant
@@ -888,6 +909,21 @@ summary ticketTypes initData model =
                 initData.currentCurrency
             |> Theme.h3
         ]
+
+
+stripePriceText : Quantity Float StripeCurrency -> CurrentCurrency -> String
+stripePriceText price currentCurrency =
+    let
+        amount : Int
+        amount =
+            Quantity.at_ currentCurrency.conversionRate price |> Quantity.unwrap |> round
+    in
+    Money.toNativeSymbol currentCurrency.currency ++ " " ++ String.fromInt (amount // 100)
+
+
+localPriceText : Quantity Int LocalCurrency -> CurrentCurrency -> String
+localPriceText price currentCurrency =
+    Money.toNativeSymbol currentCurrency.currency ++ String.fromInt (Quantity.unwrap price // 100)
 
 
 summaryAccommodation : TicketTypes TicketType -> InitData2 -> TicketTypes NonNegative -> Ui.Element msg
@@ -904,7 +940,7 @@ summaryAccommodation ticketTypes initData ticketCount =
                     ++ " x "
                     ++ NonNegative.toString count
                     ++ " – "
-                    ++ Theme.stripePriceText (Quantity.toFloatQuantity total) initData.currentCurrency
+                    ++ stripePriceText (Quantity.toFloatQuantity total) initData.currentCurrency
                     |> Ui.text
                     |> Just
 
@@ -974,7 +1010,12 @@ errorText : String -> Ui.Element msg
 errorText error =
     Ui.Prose.paragraph
         [ Ui.width Ui.shrink
-        , Ui.Font.color (Ui.rgb 172 0 0)
+        , errorFontColor
         , Ui.htmlAttribute (Dom.idToAttribute errorHtmlId)
         ]
         [ Ui.text error ]
+
+
+errorFontColor : Ui.Attribute msg
+errorFontColor =
+    Ui.Font.color (Ui.rgb 172 0 0)

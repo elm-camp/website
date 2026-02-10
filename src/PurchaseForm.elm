@@ -179,7 +179,7 @@ unvalidateAttendee attendee =
     }
 
 
-validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Maybe PurchaseFormValidated
+validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Result String PurchaseFormValidated
 validateForm conversionRate form =
     case
         T3
@@ -188,15 +188,25 @@ validateForm conversionRate form =
             (validateAttendees form.count form.attendees)
     of
         T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
-            { attendees = attendeesOk
-            , count = form.count
-            , billingEmail = billingEmail
-            , grantContribution = Quantity.at conversionRate (Quantity.toFloatQuantity grantContribution)
-            }
-                |> Just
+            let
+                totalTickets : Int
+                totalTickets =
+                    List.foldl NonNegative.add NonNegative.zero (allTicketTypes form.count)
+                        |> NonNegative.toInt
+            in
+            if Quantity.greaterThanZero grantContribution || totalTickets > 0 then
+                { attendees = attendeesOk
+                , count = form.count
+                , billingEmail = billingEmail
+                , grantContribution = Quantity.at conversionRate (Quantity.toFloatQuantity grantContribution)
+                }
+                    |> Ok
+
+            else
+                Err "You haven't selected anything to purchase"
 
         _ ->
-            Nothing
+            Err "One or more fields have errors"
 
 
 validateAttendee : AttendeeForm -> Maybe AttendeeFormValidated
