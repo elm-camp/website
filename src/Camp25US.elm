@@ -25,7 +25,7 @@ view model =
         [ Ui.height Ui.fill ]
         [ Ui.column
             (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
+            [ Theme.rowToColumnWhen
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image [ Ui.width (Ui.px 300) ]

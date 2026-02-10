@@ -168,7 +168,7 @@ validateAttendees ticketCount attendees =
             Ok attendeesValidated
 
     else
-        Err "Invalid attendees"
+        Err ""
 
 
 unvalidateAttendee : AttendeeFormValidated -> AttendeeForm
@@ -206,7 +206,7 @@ validateForm conversionRate form =
                 Err "You haven't selected anything to purchase"
 
         _ ->
-            Err "One or more fields have errors"
+            Err ""
 
 
 validateAttendee : AttendeeForm -> Maybe AttendeeFormValidated

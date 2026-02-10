@@ -1,7 +1,6 @@
 module View.Sales exposing
     ( TicketType
     , accommodationView
-    , attendeeForm
     , errorHtmlId
     , errorText
     , formView
@@ -423,20 +422,31 @@ attendeesView initData model =
             ]
         , Ui.column
             [ Ui.spacing 20 ]
-            [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20 ] (Ui.text "Attendees")
-            , Ui.column
+            [ Ui.column
                 [ Ui.spacing 16 ]
                 (List.indexedMap (attendeeForm model) form.attendees)
             , if attendeeCount < 10 then
-                Ui.el
-                    (Theme.normalButtonAttributes
-                        (FormChanged { form | attendees = form.attendees ++ [ PurchaseForm.defaultAttendee ] })
-                    )
-                    (Ui.text "Add attendee")
+                Theme.rowToColumnWhen
+                    model.window
+                    [ Ui.spacing 16 ]
+                    [ Ui.el
+                        (Theme.normalButtonAttributes
+                            (FormChanged { form | attendees = form.attendees ++ [ PurchaseForm.defaultAttendee ] })
+                        )
+                        (Ui.text "Add attendee")
+                    , case ( form.submitStatus, PurchaseForm.validateAttendees form.count form.attendees ) of
+                        ( NotSubmitted PressedSubmit, Err error ) ->
+                            errorText error
+
+                        _ ->
+                            Ui.none
+                    ]
 
               else
                 Ui.none
-            , Ui.Prose.paragraph [ Ui.width Ui.shrink ] [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
+            , Ui.Prose.paragraph
+                [ Ui.width Ui.shrink ]
+                [ Ui.text "We collect this info so we can estimate the carbon footprint of your trip. We pay Ecologi to offset some of the environmental impact (this is already priced in and doesn't change the shown ticket price)" ]
             ]
         ]
 
@@ -504,7 +514,7 @@ accommodationView ticketTypes initData model =
             (PurchaseForm.allTicketTypes initData.prices)
             (PurchaseForm.allTicketTypes model.form.count)
             PurchaseForm.ticketTypesSetters
-            |> Theme.rowToColumnWhen 700 model.window [ Ui.spacing 16 ]
+            |> Theme.rowToColumnWhen model.window [ Ui.spacing 16 ]
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
@@ -694,19 +704,8 @@ attendeeForm model i attendee =
     let
         form =
             model.form
-
-        columnWhen =
-            700
-
-        removeButtonAlignment =
-            if model.window.width > columnWhen then
-                -- This depends on the size of the text input labels.
-                15
-
-            else
-                0
     in
-    Theme.rowToColumnWhen columnWhen
+    Theme.rowToColumnWhen
         model.window
         [ Ui.width Ui.fill, Ui.spacing 8 ]
         [ textInput
@@ -752,7 +751,11 @@ attendeeForm model i attendee =
             , Html.Attributes.title "Remove attendee" |> Ui.htmlAttribute
             , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
             , Ui.alignTop
-            , Ui.move { x = 0, y = 27, z = 0 }
+            , if Theme.isMobile model.window then
+                Ui.noAttr
+
+              else
+                Ui.move { x = 0, y = 27, z = 0 }
             , Ui.Input.button
                 (FormChanged { form | attendees = List.Extra.removeIfIndex (\j -> i == j) model.form.attendees })
             , Ui.Font.color (Ui.rgb 255 255 255)
@@ -777,10 +780,13 @@ opportunityGrant form initData =
     in
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
-        [ Theme.h2 "🫶 Opportunity grants"
-        , Ui.Prose.paragraph
-            [ Ui.width Ui.shrink ]
-            [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+        [ Ui.column
+            []
+            [ Theme.h2 "🫶 Opportunity grants"
+            , Ui.Prose.paragraph
+                [ Ui.width Ui.shrink ]
+                [ Ui.text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
+            ]
         , Theme.panel []
             [ Ui.column [ Ui.width Ui.shrink ]
                 [ Ui.Prose.paragraph
@@ -880,34 +886,37 @@ summary ticketTypes initData model =
                 |> Quantity.sum
     in
     Ui.column
-        (Ui.spacing 10 :: Theme.contentAttributes)
+        Theme.contentAttributes
         [ Theme.h2 "Summary"
-        , Ui.text ("Attendees x " ++ String.fromInt (List.length model.form.attendees))
-        , if model.form.count == PurchaseForm.initTicketCount then
-            Ui.text "No accommodation bookings"
+        , Ui.column
+            [ Ui.spacing 8 ]
+            [ Ui.text ("Attendees x " ++ String.fromInt (List.length model.form.attendees))
+            , if model.form.count == PurchaseForm.initTicketCount then
+                Ui.text "No accommodation bookings"
 
-          else
-            summaryAccommodation ticketTypes initData model.form.count
-        , case grant of
-            Err _ ->
-                Ui.none
+              else
+                summaryAccommodation ticketTypes initData model.form.count
+            , case grant of
+                Err _ ->
+                    Ui.none
 
-            Ok (Quantity.Quantity 0) ->
-                Ui.none
+                Ok (Quantity.Quantity 0) ->
+                    Ui.none
 
-            Ok grant2 ->
-                Ui.text ("Opportunity grant: " ++ localPriceText grant2 initData.currentCurrency)
-        , "Total: "
-            ++ stripePriceText
-                (Quantity.plus
-                    (Quantity.toFloatQuantity accomTotal)
-                    (Result.withDefault Quantity.zero grant
-                        |> Quantity.toFloatQuantity
-                        |> Quantity.at initData.currentCurrency.conversionRate
+                Ok grant2 ->
+                    Ui.text ("Opportunity grant: " ++ localPriceText grant2 initData.currentCurrency)
+            , "Total: "
+                ++ stripePriceText
+                    (Quantity.plus
+                        (Quantity.toFloatQuantity accomTotal)
+                        (Result.withDefault Quantity.zero grant
+                            |> Quantity.toFloatQuantity
+                            |> Quantity.at initData.currentCurrency.conversionRate
+                        )
                     )
-                )
-                initData.currentCurrency
-            |> Theme.h3
+                    initData.currentCurrency
+                |> Theme.h3
+            ]
         ]
 
 

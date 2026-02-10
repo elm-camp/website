@@ -90,7 +90,7 @@ contentAttributes =
 
 isMobile : Size -> Bool
 isMobile a =
-    a.width < 800
+    a.width <= 700
 
 
 css : Html msg
@@ -220,17 +220,13 @@ toggleButtonAttributes onPress isActive =
     ]
 
 
-rowToColumnWhen : Int -> Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
-rowToColumnWhen width window attrs children =
-    if window.width > width then
-        Ui.row
-            attrs
-            children
+rowToColumnWhen : Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
+rowToColumnWhen window attrs children =
+    if isMobile window then
+        Ui.column attrs children
 
     else
-        Ui.column
-            attrs
-            children
+        Ui.row attrs children
 
 
 spinnerWhite : Ui.Element msg

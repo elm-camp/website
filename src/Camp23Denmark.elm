@@ -25,7 +25,7 @@ view model =
         [ Ui.column
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
+            [ Theme.rowToColumnWhen
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image
