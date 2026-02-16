@@ -301,7 +301,7 @@ type BackendMsg
     | OnConnected SessionId ClientId
     | CreatedCheckoutSession SessionId ClientId PurchaseFormValidated (Result Http.Error ( Id StripeSessionId, Time.Posix ))
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
-    | ConfirmationEmailSent (Id StripeSessionId) (Result Http.Error ())
+    | ConfirmationEmailSent (Id StripeSessionId) (Result Postmark.SendEmailError ())
     | ErrorEmailSent (Result Postmark.SendEmailError ())
 
 

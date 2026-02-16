@@ -21,6 +21,12 @@ import Lamdera as LamderaCore exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
 import LamderaRPC exposing (Headers, HttpBody(..), HttpRequest, RPCResult(..), StatusCode(..))
+import List.Nonempty exposing (Nonempty(..))
+import Name
+import NonNegative
+import Postmark
+import PurchaseForm exposing (PurchaseFormValidated)
+import Quantity
 import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
@@ -72,61 +78,46 @@ purchaseCompletedEndpoint _ model headers json =
             case webhook of
                 StripeSessionCompleted stripeSessionId ->
                     case SeqDict.get stripeSessionId model.pendingOrder of
-                        Just _ ->
-                            -- let
-                            --     maybeTicket : Maybe Tickets.Ticket
-                            --     maybeTicket =
-                            --         case Backend.priceIdToProductId model order.priceId of
-                            --             Just productId ->
-                            --                 SeqDict.get productId Tickets.dict
-                            --             Nothing ->
-                            --                 Nothing
-                            -- in
-                            -- case maybeTicket of
-                            --     Just ticket ->
-                            -- let
-                            --     { subject, textBody, htmlBody } =
-                            --         confirmationEmail ticket
-                            -- in
-                            ( response, model, Cmd.none )
+                        Just order ->
+                            let
+                                { subject, textBody, htmlBody } =
+                                    confirmationEmail ticket
+                            in
+                            ( response
+                            , { model
+                                | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                , orders =
+                                    SeqDict.insert
+                                        stripeSessionId
+                                        { submitTime = order.submitTime
+                                        , form = order.form
+                                        , emailResult = SendingEmail
+                                        }
+                                        model.orders
+                              }
+                            , Postmark.sendEmail
+                                (ConfirmationEmailSent stripeSessionId)
+                                Env.postmarkApiKey
+                                { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
+                                , to =
+                                    Nonempty
+                                        { name =
+                                            case order.form.attendees of
+                                                head :: _ ->
+                                                    Name.toString head.name
 
-                        -- ( response
-                        -- , { model
-                        --     | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
-                        --     , orders =
-                        --         SeqDict.insert
-                        --             stripeSessionId
-                        --             { priceId = order.priceId
-                        --             , submitTime = order.submitTime
-                        --             , form = order.form
-                        --             , emailResult = SendingEmail
-                        --             }
-                        --             model.orders
-                        --   }
-                        -- , Postmark.sendEmail
-                        --     (ConfirmationEmailSent stripeSessionId)
-                        --     Env.postmarkApiKey
-                        --     { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
-                        --     , to =
-                        --         Nonempty
-                        --             { name = order.form.attendees |> List.head |> Maybe.map (.name >> Name.toString) |> Maybe.withDefault "Attendee"
-                        --             , email = order.form.billingEmail
-                        --             }
-                        --             []
-                        --     , subject = subject
-                        --     , body = Postmark.BodyBoth htmlBody textBody
-                        --     , messageStream = "outbound"
-                        --     }
-                        -- )
-                        -- Nothing ->
-                        --     let
-                        --         error =
-                        --             "Ticket not found: priceId"
-                        --                 ++ Id.toString order.priceId
-                        --                 ++ ", stripeSessionId: "
-                        --                 ++ Id.toString stripeSessionId
-                        --     in
-                        --     ( Err (Http.BadBody error), model, Backend.errorEmail error )
+                                                [] ->
+                                                    "Attendee"
+                                        , email = order.form.billingEmail
+                                        }
+                                        []
+                                , subject = subject
+                                , body = Postmark.HtmlAndTextBody htmlBody textBody
+                                , messageStream = Postmark.TransactionalEmail
+                                , attachments = Postmark.noAttachments
+                                }
+                            )
+
                         Nothing ->
                             let
                                 error =
@@ -144,18 +135,36 @@ purchaseCompletedEndpoint _ model headers json =
             ( Err (HttpCore.BadBody errorText), model, Backend.errorEmail errorText )
 
 
-confirmationEmail : TicketType -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail : PurchaseFormValidated -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
 confirmationEmail ticket =
-    { subject =
-        String.Nonempty.append
-            ticket.name
-            (NonemptyString ' ' " purchase confirmation")
+    { subject = NonemptyString 'P' "urchase confirmation"
     , textBody =
-        "This is a confirmation email for your purchase of "
-            ++ ticket.name
-            ++ "\n("
-            ++ ticket.description
-            ++ ")\n\n"
+        "This is a confirmation email for your purchase of:\n\n"
+            ++ (List.map2
+                    (\count ticketType ->
+                        if count == NonNegative.zero then
+                            Nothing
+
+                        else
+                            NonNegative.toString count
+                                ++ " x "
+                                ++ ticketType.name
+                                ++ " ("
+                                ++ ticketType.description
+                                ++ ")\n\n"
+                                |> Just
+                    )
+                    (PurchaseForm.allTicketTypes ticket.count)
+                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                    |> List.filterMap identity
+                    |> String.join ""
+               )
+            ++ (if Quantity.greaterThanZero ticket.grantContribution then
+                    0
+
+                else
+                    0
+               )
             ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
             ++ "You can review the schedule at "
             ++ Env.domain
@@ -166,11 +175,32 @@ confirmationEmail ticket =
     , htmlBody =
         Html.div
             []
-            [ Html.div []
-                [ Html.text "This is a confirmation email for your purchase of the "
-                , Html.b [] [ Html.text ticket.name ]
+            [ Html.div
+                [ Attributes.paddingBottom "16px" ]
+                [ Html.text "This is a confirmation email for your purchase of:"
                 ]
-            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text (" (" ++ ticket.description ++ ")") ]
+            , List.map2
+                (\count ticketType ->
+                    if count == NonNegative.zero then
+                        Nothing
+
+                    else
+                        Html.span
+                            [ Attributes.paddingBottom "16px" ]
+                            [ Html.text (NonNegative.toString count ++ " x ")
+                            , Html.b [] [ Html.text ticketType.name ]
+                            , Html.text
+                                (" ("
+                                    ++ ticketType.description
+                                    ++ ")"
+                                )
+                            ]
+                            |> Just
+                )
+                (PurchaseForm.allTicketTypes ticket.count)
+                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                |> List.filterMap identity
+                |> Html.div []
             , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
             , Html.div []
                 [ Html.a

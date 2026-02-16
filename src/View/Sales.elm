@@ -201,7 +201,7 @@ currencyDropdown stripeCurrency selected currencies =
                 ]
                 (Ui.text "Exchange Rate API")
             , Ui.text
-                (". The selected currency is for viewing purposes only. "
+                (". The selected currency is for viewing purposes. "
                     ++ Money.toName { plural = False } stripeCurrency
                     ++ " ("
                     ++ Money.toString stripeCurrency
