@@ -196,15 +196,10 @@ confirmationEmail purchaseForm stripeCurrency =
                         Nothing
 
                     else
-                        Html.span
+                        Html.div
                             [ Attributes.paddingBottom "16px" ]
-                            [ Html.text (NonNegative.toString count ++ " x ")
-                            , Html.b [] [ Html.text ticketType.name ]
-                            , Html.text
-                                (" ("
-                                    ++ ticketType.description
-                                    ++ ")"
-                                )
+                            [ Html.b [] [ Html.text (NonNegative.toString count ++ " x " ++ ticketType.name) ]
+                            , Html.text (" (" ++ ticketType.description ++ ")")
                             ]
                             |> Just
                 )
@@ -212,6 +207,21 @@ confirmationEmail purchaseForm stripeCurrency =
                 (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
                 |> List.filterMap identity
                 |> Html.div []
+            , if Quantity.greaterThanZero purchaseForm.grantContribution then
+                Html.div
+                    [ Attributes.paddingBottom "16px" ]
+                    [ Html.b
+                        []
+                        [ View.Sales.stripePriceText
+                            (Quantity.round purchaseForm.grantContribution)
+                            { stripeCurrency = stripeCurrency }
+                            |> Html.text
+                        ]
+                    , Html.text " grant contribution\n\n"
+                    ]
+
+              else
+                Html.text ""
             , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
             , Html.div []
                 [ Html.a

@@ -14,10 +14,11 @@ import Json.Encode
 import LamderaRPC
 import RPC
 import Route
+import SeqDict
 import Test.Html.Query
 import Test.Html.Selector
 import Time
-import Types exposing (BackendModel, BackendMsg, FrontendModel, FrontendMsg, ToBackend, ToFrontend)
+import Types exposing (BackendModel, BackendMsg, EmailResult(..), FrontendModel, FrontendMsg, ToBackend, ToFrontend)
 import Unsafe
 import Url exposing (Url)
 
@@ -165,22 +166,39 @@ tests fileData =
                 , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
                 , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tab1.click 100 (Dom.id "submitForm")
-                , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Tickets purchased!" ])
+                , T.checkState 100
+                    (\data ->
+                        case data.portRequests of
+                            head :: _ ->
+                                if head.portName == "stripe_to_js" && head.clientId == tab1.clientId then
+                                    Ok ()
+
+                                else
+                                    Err "Frontend doesn't trigger Stripe checkout"
+
+                            [] ->
+                                Err "Frontend doesn't trigger Stripe checkout"
+                    )
                 , T.checkBackend
                     100
                     (\backend ->
                         let
-                            ( response, backend2, cmds ) =
+                            ( response, backend2, _ ) =
                                 RPC.lamdera_handleEndpoints
                                     Json.Encode.null
                                     stripePurchaseWebhookResponse
                                     backend
                         in
                         if Debug.log "response" response == LamderaRPC.ResultString "dev" then
-                            Ok ()
+                            case SeqDict.toList backend2.orders of
+                                [ _ ] ->
+                                    Ok ()
+
+                                _ ->
+                                    Err "Completed order is missing"
 
                         else
-                            Err ""
+                            Err "Stripe webhook got an error response"
                     )
                 ]
             )
