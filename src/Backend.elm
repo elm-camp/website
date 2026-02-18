@@ -19,24 +19,29 @@ import Effect.Process
 import Effect.Subscription as Subscription exposing (Subscription)
 import Effect.Task as Task
 import Effect.Time as Time
+import Email.Html as Html
+import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
 import Env
 import HttpHelpers
 import Id exposing (Id)
+import Json.Decode
 import Lamdera as LamderaCore
 import List.Extra as List
-import List.Nonempty
+import List.Nonempty exposing (Nonempty(..))
 import Money
+import Name
 import NonNegative exposing (NonNegative)
 import Postmark
 import PurchaseForm exposing (PurchaseFormValidated, TicketTypes)
 import Quantity
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
-import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId)
+import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
 import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
+import View.Sales
 
 
 app :
@@ -160,7 +165,6 @@ update msg model =
                 Err error ->
                     ( { model | prices = FailedToLoadTicketPrices error }
                     , errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error)
-                        |> Command.fromCmd "GotPrices failed email"
                     )
 
         OnConnected _ clientId ->
@@ -237,7 +241,7 @@ update msg model =
                     ( model
                     , Command.batch
                         [ SubmitFormResponse (Err err) |> Lamdera.sendToFrontend clientId
-                        , errorEmail err |> Command.fromCmd "Send email"
+                        , errorEmail err
                         ]
                     )
 
@@ -264,7 +268,6 @@ update msg model =
                             ++ " stripeSessionId: "
                             ++ Id.toString stripeSessionId
                         )
-                        |> Command.fromCmd "ExpiredStripeSession email"
                     )
 
         ConfirmationEmailSent stripeSessionId result ->
@@ -291,17 +294,86 @@ update msg model =
                                         model.orders
                               }
                             , errorEmail ("Confirmation email failed: " ++ HttpHelpers.postmarkSendEmailErrorToString error)
-                                |> Command.fromCmd "Confirmation email failed"
                             )
 
                 Nothing ->
                     ( model
                     , errorEmail ("StripeSessionId not found for confirmation email: " ++ Id.toString stripeSessionId)
-                        |> Command.fromCmd "StripeSessionId not found email"
                     )
 
         ErrorEmailSent _ ->
             ( model, Command.none )
+
+        StripeWebhookResponse { endpoint, json } ->
+            case endpoint of
+                "stripe" ->
+                    case model.prices of
+                        Types.LoadedTicketPrices stripeCurrency _ ->
+                            case Json.Decode.decodeString Stripe.decodeWebhook json of
+                                Ok webhook ->
+                                    case webhook of
+                                        StripeSessionCompleted stripeSessionId ->
+                                            case SeqDict.get stripeSessionId model.pendingOrder of
+                                                Just order ->
+                                                    let
+                                                        { subject, textBody, htmlBody } =
+                                                            confirmationEmail order.form stripeCurrency
+                                                    in
+                                                    ( { model
+                                                        | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                                        , orders =
+                                                            SeqDict.insert
+                                                                stripeSessionId
+                                                                { submitTime = order.submitTime
+                                                                , form = order.form
+                                                                , emailResult = SendingEmail
+                                                                }
+                                                                model.orders
+                                                      }
+                                                    , Postmark.sendEmail
+                                                        (ConfirmationEmailSent stripeSessionId)
+                                                        Env.postmarkApiKey
+                                                        { from = { name = "elm-camp", email = elmCampEmailAddress }
+                                                        , to =
+                                                            Nonempty
+                                                                { name =
+                                                                    case order.form.attendees of
+                                                                        head :: _ ->
+                                                                            Name.toString head.name
+
+                                                                        [] ->
+                                                                            "Attendee"
+                                                                , email = order.form.billingEmail
+                                                                }
+                                                                []
+                                                        , subject = subject
+                                                        , body = Postmark.HtmlAndTextBody htmlBody textBody
+                                                        , messageStream = Postmark.TransactionalEmail
+                                                        , attachments = Postmark.noAttachments
+                                                        }
+                                                        |> Command.fromCmd "Purchase email"
+                                                    )
+
+                                                Nothing ->
+                                                    let
+                                                        error =
+                                                            "Stripe session not found: stripeSessionId: "
+                                                                ++ Id.toString stripeSessionId
+                                                    in
+                                                    ( model, errorEmail error )
+
+                                Err error ->
+                                    ( model
+                                    , "Failed to decode webhook: " ++ Json.Decode.errorToString error |> errorEmail
+                                    )
+
+                        _ ->
+                            ( model
+                            , errorEmail "Stripe webhook occurred but prices aren't loaded on the backend"
+                            )
+
+                _ ->
+                    ( model, Command.none )
     )
         |> (\( newModel, cmd ) ->
                 let
@@ -415,7 +487,7 @@ sessionIdToStripeSessionId sessionId model =
             )
 
 
-errorEmail : String -> Cmd BackendMsg
+errorEmail : String -> Command BackendOnly ToFrontend BackendMsg
 errorEmail errorMessage =
     case List.Nonempty.fromList Env.developerEmails of
         Just to ->
@@ -438,11 +510,104 @@ errorEmail errorMessage =
                 , messageStream = Postmark.TransactionalEmail
                 , attachments = Postmark.noAttachments
                 }
+                |> Command.fromCmd "Error email"
 
         Nothing ->
-            Cmd.none
+            Command.none
 
 
 elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
     Unsafe.emailAddress "team@elm.camp"
+
+
+confirmationEmail : PurchaseFormValidated -> Money.Currency -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail purchaseForm stripeCurrency =
+    { subject = NonemptyString 'P' "urchase confirmation"
+    , textBody =
+        "This is a confirmation email for your purchase of:\n\n"
+            ++ (List.map2
+                    (\count ticketType ->
+                        if count == NonNegative.zero then
+                            Nothing
+
+                        else
+                            NonNegative.toString count
+                                ++ " x "
+                                ++ ticketType.name
+                                ++ " ("
+                                ++ ticketType.description
+                                ++ ")\n\n"
+                                |> Just
+                    )
+                    (PurchaseForm.allTicketTypes purchaseForm.count)
+                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                    |> List.filterMap identity
+                    |> String.join ""
+               )
+            ++ (if Quantity.greaterThanZero purchaseForm.grantContribution then
+                    View.Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }
+                        ++ " grant contribution\n\n"
+
+                else
+                    ""
+               )
+            ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
+            ++ "You can review the schedule at "
+            ++ Env.domain
+            ++ "/#schedule"
+            ++ ". If you have any questions, email us at "
+            ++ EmailAddress.toString elmCampEmailAddress
+            ++ " (or just reply to this email)"
+    , htmlBody =
+        Html.div
+            []
+            [ Html.div
+                [ Attributes.paddingBottom "16px" ]
+                [ Html.text "This is a confirmation email for your purchase of:"
+                ]
+            , List.map2
+                (\count ticketType ->
+                    if count == NonNegative.zero then
+                        Nothing
+
+                    else
+                        Html.div
+                            [ Attributes.paddingBottom "16px" ]
+                            [ Html.b [] [ Html.text (NonNegative.toString count ++ " x " ++ ticketType.name) ]
+                            , Html.text (" (" ++ ticketType.description ++ ")")
+                            ]
+                            |> Just
+                )
+                (PurchaseForm.allTicketTypes purchaseForm.count)
+                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                |> List.filterMap identity
+                |> Html.div []
+            , if Quantity.greaterThanZero purchaseForm.grantContribution then
+                Html.div
+                    [ Attributes.paddingBottom "16px" ]
+                    [ Html.b
+                        []
+                        [ View.Sales.stripePriceText
+                            (Quantity.round purchaseForm.grantContribution)
+                            { stripeCurrency = stripeCurrency }
+                            |> Html.text
+                        ]
+                    , Html.text " grant contribution\n\n"
+                    ]
+
+              else
+                Html.text ""
+            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
+            , Html.div []
+                [ Html.a
+                    [ Attributes.href (Env.domain ++ "/#schedule") ]
+                    [ Html.text "You can review the schedule here" ]
+                , Html.text ". If you have any questions, email us at "
+                , Html.a
+                    [ Attributes.href ("mailto:" ++ EmailAddress.toString elmCampEmailAddress) ]
+                    [ Html.text (EmailAddress.toString elmCampEmailAddress) ]
+                , Html.text " (or just reply to this email)"
+                ]
+            ]
+    }

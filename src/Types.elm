@@ -303,6 +303,7 @@ type BackendMsg
     | ExpiredStripeSession (Id StripeSessionId) (Result Http.Error ())
     | ConfirmationEmailSent (Id StripeSessionId) (Result Postmark.SendEmailError ())
     | ErrorEmailSent (Result Postmark.SendEmailError ())
+    | StripeWebhookResponse { endpoint : String, json : String }
 
 
 type alias InitData2 =
