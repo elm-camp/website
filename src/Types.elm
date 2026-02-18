@@ -241,7 +241,7 @@ type alias CompletedOrder =
 type EmailResult
     = SendingEmail
     | EmailSuccess
-    | EmailFailed Http.Error
+    | EmailFailed Postmark.SendEmailError
 
 
 type OrderStatus

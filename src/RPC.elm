@@ -22,6 +22,7 @@ import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
 import LamderaRPC exposing (Headers, HttpBody(..), HttpRequest, RPCResult(..), StatusCode(..))
 import List.Nonempty exposing (Nonempty(..))
+import Money
 import Name
 import NonNegative
 import Postmark
@@ -32,6 +33,7 @@ import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (Webhook(..))
 import Task exposing (Task)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
+import View.Sales
 
 
 backendModelEndpoint : SessionId -> BackendModel -> HttpRequest -> ( RPCResult, BackendModel, Cmd BackendMsg )
@@ -62,81 +64,89 @@ purchaseCompletedEndpoint :
     SessionId
     -> BackendModel
     -> Headers
-    -> Json.Value
-    -> ( Result HttpCore.Error Json.Value, BackendModel, Cmd BackendMsg )
+    -> String
+    -> ( Result HttpCore.Error String, BackendModel, Cmd BackendMsg )
 purchaseCompletedEndpoint _ model headers json =
     let
         response =
             if Env.isProduction then
-                Ok (E.string "prod")
+                Ok "prod"
 
             else
-                Ok (E.string "dev")
+                Ok "dev"
     in
-    case D.decodeValue Stripe.decodeWebhook json of
-        Ok webhook ->
-            case webhook of
-                StripeSessionCompleted stripeSessionId ->
-                    case SeqDict.get stripeSessionId model.pendingOrder of
-                        Just order ->
-                            let
-                                { subject, textBody, htmlBody } =
-                                    confirmationEmail ticket
-                            in
-                            ( response
-                            , { model
-                                | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
-                                , orders =
-                                    SeqDict.insert
-                                        stripeSessionId
-                                        { submitTime = order.submitTime
-                                        , form = order.form
-                                        , emailResult = SendingEmail
+    case model.prices of
+        Types.LoadedTicketPrices stripeCurrency _ ->
+            case D.decodeString Stripe.decodeWebhook json |> Debug.log "b" of
+                Ok webhook ->
+                    case webhook of
+                        StripeSessionCompleted stripeSessionId ->
+                            case SeqDict.get stripeSessionId model.pendingOrder |> Debug.log "a" of
+                                Just order ->
+                                    let
+                                        { subject, textBody, htmlBody } =
+                                            confirmationEmail order.form stripeCurrency
+                                    in
+                                    ( response
+                                    , { model
+                                        | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                        , orders =
+                                            SeqDict.insert
+                                                stripeSessionId
+                                                { submitTime = order.submitTime
+                                                , form = order.form
+                                                , emailResult = SendingEmail
+                                                }
+                                                model.orders
+                                      }
+                                    , Postmark.sendEmail
+                                        (ConfirmationEmailSent stripeSessionId)
+                                        Env.postmarkApiKey
+                                        { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
+                                        , to =
+                                            Nonempty
+                                                { name =
+                                                    case order.form.attendees of
+                                                        head :: _ ->
+                                                            Name.toString head.name
+
+                                                        [] ->
+                                                            "Attendee"
+                                                , email = order.form.billingEmail
+                                                }
+                                                []
+                                        , subject = subject
+                                        , body = Postmark.HtmlAndTextBody htmlBody textBody
+                                        , messageStream = Postmark.TransactionalEmail
+                                        , attachments = Postmark.noAttachments
                                         }
-                                        model.orders
-                              }
-                            , Postmark.sendEmail
-                                (ConfirmationEmailSent stripeSessionId)
-                                Env.postmarkApiKey
-                                { from = { name = "elm-camp", email = Backend.elmCampEmailAddress }
-                                , to =
-                                    Nonempty
-                                        { name =
-                                            case order.form.attendees of
-                                                head :: _ ->
-                                                    Name.toString head.name
+                                    )
 
-                                                [] ->
-                                                    "Attendee"
-                                        , email = order.form.billingEmail
-                                        }
-                                        []
-                                , subject = subject
-                                , body = Postmark.HtmlAndTextBody htmlBody textBody
-                                , messageStream = Postmark.TransactionalEmail
-                                , attachments = Postmark.noAttachments
-                                }
-                            )
+                                Nothing ->
+                                    let
+                                        error =
+                                            "Stripe session not found: stripeSessionId: "
+                                                ++ Id.toString stripeSessionId
+                                    in
+                                    ( Err (HttpCore.BadBody error), model, Backend.errorEmail error )
 
-                        Nothing ->
-                            let
-                                error =
-                                    "Stripe session not found: stripeSessionId: "
-                                        ++ Id.toString stripeSessionId
-                            in
-                            ( Err (HttpCore.BadBody error), model, Backend.errorEmail error )
+                Err error ->
+                    let
+                        errorText =
+                            "Failed to decode webhook: "
+                                ++ D.errorToString error
+                    in
+                    ( Err (HttpCore.BadBody errorText), model, Backend.errorEmail errorText )
 
-        Err error ->
-            let
-                errorText =
-                    "Failed to decode webhook: "
-                        ++ D.errorToString error
-            in
-            ( Err (HttpCore.BadBody errorText), model, Backend.errorEmail errorText )
+        _ ->
+            ( Err (HttpCore.BadBody "Internal error")
+            , model
+            , Backend.errorEmail "Stripe webhook occurred but prices aren't loaded on the backend"
+            )
 
 
-confirmationEmail : PurchaseFormValidated -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
-confirmationEmail ticket =
+confirmationEmail : PurchaseFormValidated -> Money.Currency -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail purchaseForm stripeCurrency =
     { subject = NonemptyString 'P' "urchase confirmation"
     , textBody =
         "This is a confirmation email for your purchase of:\n\n"
@@ -154,16 +164,17 @@ confirmationEmail ticket =
                                 ++ ")\n\n"
                                 |> Just
                     )
-                    (PurchaseForm.allTicketTypes ticket.count)
+                    (PurchaseForm.allTicketTypes purchaseForm.count)
                     (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
                     |> List.filterMap identity
                     |> String.join ""
                )
-            ++ (if Quantity.greaterThanZero ticket.grantContribution then
-                    0
+            ++ (if Quantity.greaterThanZero purchaseForm.grantContribution then
+                    View.Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }
+                        ++ " grant contribution\n\n"
 
                 else
-                    0
+                    ""
                )
             ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
             ++ "You can review the schedule at "
@@ -197,7 +208,7 @@ confirmationEmail ticket =
                             ]
                             |> Just
                 )
-                (PurchaseForm.allTicketTypes ticket.count)
+                (PurchaseForm.allTicketTypes purchaseForm.count)
                 (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
                 |> List.filterMap identity
                 |> Html.div []
@@ -229,7 +240,7 @@ lamdera_handleEndpoints : Json.Value -> HttpRequest -> BackendModel -> ( RPCResu
 lamdera_handleEndpoints reqRaw req model =
     case req.endpoint of
         "stripe" ->
-            LamderaRPC.handleEndpointJson purchaseCompletedEndpoint req model
+            LamderaRPC.handleEndpointString purchaseCompletedEndpoint req model
 
         "backend-model" ->
             LamderaRPC.handleEndpoint backendModelEndpoint req model

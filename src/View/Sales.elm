@@ -1,5 +1,6 @@
 module View.Sales exposing
     ( errorHtmlId
+    , stripePriceText
     , view
     )
 
@@ -669,7 +670,7 @@ localPriceText amount currentCurrency =
     Money.toNativeSymbol currentCurrency.currency ++ " " ++ formatNumber (Quantity.unwrap amount // 100)
 
 
-stripePriceText : Quantity Int StripeCurrency -> InitData2 -> String
+stripePriceText : Quantity Int StripeCurrency -> { a | stripeCurrency : Money.Currency } -> String
 stripePriceText amount initData =
     Money.toNativeSymbol initData.stripeCurrency ++ " " ++ formatNumber (Quantity.unwrap amount // 100)
 

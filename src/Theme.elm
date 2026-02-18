@@ -255,7 +255,8 @@ footer =
             [ footerButton HomepageRoute "Homepage"
             , footerButton CodeOfConductRoute "Code of Conduct"
             , footerButton UnconferenceFormatRoute "Unconference Guidelines"
-            , footerButton ElmCampArchiveRoute "Elm Camp Archives"
+            , footerButton ElmCampArchiveRoute "Archives"
+            , footerButton TicketPurchaseRoute "Tickets"
             ]
         )
 

@@ -41,10 +41,6 @@ location =
     "🇨🇿 Olomouc, Czech Republic"
 
 
-type alias Sponsorship =
-    { name : String, price : Int, productId : String, description : String, features : List String }
-
-
 view : LoadedModel -> Element FrontendMsg
 view model =
     Ui.column

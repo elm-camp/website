@@ -164,16 +164,6 @@ update msg model =
                     )
 
         OnConnected _ clientId ->
-            --( model
-            --, Lamdera.sendToFrontend
-            --    clientId
-            --    (InitData
-            --        { prices = model.prices
-            --        , slotsRemaining = Inventory.slotsRemaining model
-            --        , ticketsEnabled = model.ticketsEnabled
-            --        }
-            --    )
-            --)
             case model.prices of
                 NotLoadingTicketPrices ->
                     ( { model | prices = LoadingTicketPrices }
@@ -210,6 +200,7 @@ update msg model =
             case result of
                 Ok ( stripeSessionId, submitTime ) ->
                     let
+                        existingStripeSessions : List (Id StripeSessionId)
                         existingStripeSessions =
                             SeqDict.filter
                                 (\_ data -> data.sessionId == sessionId)
@@ -299,7 +290,7 @@ update msg model =
                                         { order | emailResult = EmailFailed error }
                                         model.orders
                               }
-                            , errorEmail ("Confirmation email failed: " ++ HttpHelpers.httpErrorToString error)
+                            , errorEmail ("Confirmation email failed: " ++ HttpHelpers.postmarkSendEmailErrorToString error)
                                 |> Command.fromCmd "Confirmation email failed"
                             )
 

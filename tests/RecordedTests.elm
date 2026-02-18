@@ -1,4 +1,4 @@
-module MyTests exposing (main, setup, tests)
+module RecordedTests exposing (main, setup, stripePurchaseWebhookResponse, tests)
 
 import Backend
 import Bytes exposing (Bytes)
@@ -11,6 +11,9 @@ import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..),
 import Frontend
 import Json.Decode
 import Json.Encode
+import LamderaRPC
+import RPC
+import Route
 import Test.Html.Query
 import Test.Html.Selector
 import Time
@@ -74,10 +77,15 @@ handleHttpRequests overrides fileData { currentRequest } =
             else if currentRequest.url == "https://api.stripe.com/v1/checkout/sessions" then
                 StringHttpResponse
                     { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty }
-                    """{"id":"123"}"""
+                    ("""{"id":\"""" ++ stripeSessionId ++ "\"}")
 
             else
                 UnhandledHttpRequest
+
+
+stripeSessionId : String
+stripeSessionId =
+    "cs_live_b11eNtNWg68DgbLFAUbiuhiUxjDXJqqOxXhFTqG0iaimcgQjayLSRJlK4Z"
 
 
 {-| You can change parts of this function represented with `...`.
@@ -150,17 +158,61 @@ tests fileData =
             "/"
             { width = 881, height = 1312 }
             (\tab1 ->
-                [ tab1.click 100 (Dom.id "selectTicket_Single Room")
+                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tab1.click 100 (Dom.id "selectTicket_Single Room")
                 , tab1.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tab1.input 100 (Dom.id "attendeeCountry_0") "Sweden"
                 , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
                 , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tab1.click 100 (Dom.id "submitForm")
                 , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Tickets purchased!" ])
+                , T.checkBackend
+                    100
+                    (\backend ->
+                        let
+                            ( response, backend2, cmds ) =
+                                RPC.lamdera_handleEndpoints
+                                    Json.Encode.null
+                                    stripePurchaseWebhookResponse
+                                    backend
+                        in
+                        if Debug.log "response" response == LamderaRPC.ResultString "dev" then
+                            Ok ()
+
+                        else
+                            Err ""
+                    )
                 ]
             )
         ]
     ]
+
+
+stripePurchaseWebhookResponse : LamderaRPC.HttpRequest
+stripePurchaseWebhookResponse =
+    { body =
+        "{\n  \"id\": \"evt_1T28zeHHD80VvsjK4Juvu6pm\",\n  \"object\": \"event\",\n  \"api_version\": \"2020-03-02\",\n  \"created\": 1771414354,\n  \"data\": {\n    \"object\": {\n      \"id\": \""
+            ++ stripeSessionId
+            ++ "\",\n      \"object\": \"checkout.session\",\n      \"adaptive_pricing\": {\n        \"enabled\": true\n      },\n      \"after_expiration\": null,\n      \"allow_promotion_codes\": true,\n      \"amount_subtotal\": 2427,\n      \"amount_total\": 2427,\n      \"automatic_tax\": {\n        \"enabled\": false,\n        \"liability\": null,\n        \"provider\": null,\n        \"status\": null\n      },\n      \"billing_address_collection\": null,\n      \"branding_settings\": {\n        \"background_color\": \"#ffffff\",\n        \"border_style\": \"rounded\",\n        \"button_color\": \"#62b6ce\",\n        \"display_name\": \"Cofoundry Ltd\",\n        \"font_family\": \"default\",\n        \"icon\": {\n          \"file\": \"file_1MjQFxHHD80VvsjK6qqVMCl0\",\n          \"type\": \"file\"\n        },\n        \"logo\": {\n          \"file\": \"file_1MjQFkHHD80VvsjKFF7tUO9t\",\n          \"type\": \"file\"\n        }\n      },\n      \"cancel_url\": \"http://localhost:8000/stripeCancel\",\n      \"client_reference_id\": null,\n      \"client_secret\": null,\n      \"collected_information\": {\n        \"business_name\": null,\n        \"individual_name\": null,\n        \"shipping_details\": null\n      },\n      \"consent\": null,\n      \"consent_collection\": null,\n      \"created\": 1771414277,\n      \"currency\": \"czk\",\n      \"currency_conversion\": null,\n      \"custom_fields\": [],\n      \"custom_text\": {\n        \"after_submit\": null,\n        \"shipping_address\": null,\n        \"submit\": null,\n        \"terms_of_service_acceptance\": null\n      },\n      \"customer\": \"cus_U09IBJBVAmennB\",\n      \"customer_account\": null,\n      \"customer_creation\": \"always\",\n      \"customer_details\": {\n        \"address\": {\n          \"city\": null,\n          \"country\": \"SE\",\n          \"line1\": null,\n          \"line2\": null,\n          \"postal_code\": null,\n          \"state\": null\n        },\n        \"business_name\": null,\n        \"email\": \"martinsstewart@gmail.com\",\n        \"individual_name\": null,\n        \"name\": \"Martin Stewart\",\n        \"phone\": null,\n        \"tax_exempt\": \"none\",\n        \"tax_ids\": []\n      },\n      \"customer_email\": \"martinsstewart@gmail.com\",\n      \"discounts\": [],\n      \"expires_at\": 1771416076,\n      \"invoice\": null,\n      \"invoice_creation\": {\n        \"enabled\": false,\n        \"invoice_data\": {\n          \"account_tax_ids\": null,\n          \"custom_fields\": null,\n          \"description\": null,\n          \"footer\": null,\n          \"issuer\": null,\n          \"metadata\": {},\n          \"rendering_options\": null\n        }\n      },\n      \"livemode\": true,\n      \"locale\": null,\n      \"metadata\": {},\n      \"mode\": \"payment\",\n      \"origin_context\": null,\n      \"payment_intent\": \"pi_3T28yPHHD80VvsjK12neihui\",\n      \"payment_link\": null,\n      \"payment_method_collection\": \"always\",\n      \"payment_method_configuration_details\": {\n        \"id\": \"pmc_1MjOXdHHD80VvsjKu0s7ebsQ\",\n        \"parent\": null\n      },\n      \"payment_method_options\": {\n        \"card\": {\n          \"request_three_d_secure\": \"automatic\"\n        }\n      },\n      \"payment_method_types\": [\n        \"card\",\n        \"link\"\n      ],\n      \"payment_status\": \"paid\",\n      \"permissions\": null,\n      \"phone_number_collection\": {\n        \"enabled\": false\n      },\n      \"recovered_from\": null,\n      \"saved_payment_method_options\": {\n        \"allow_redisplay_filters\": [\n          \"always\"\n        ],\n        \"payment_method_remove\": \"disabled\",\n        \"payment_method_save\": null\n      },\n      \"setup_intent\": null,\n      \"shipping\": null,\n      \"shipping_address_collection\": null,\n      \"shipping_options\": [],\n      \"shipping_rate\": null,\n      \"status\": \"complete\",\n      \"submit_type\": null,\n      \"subscription\": null,\n      \"success_url\": \"http://localhost:8000/stripeSuccess?email-address=martinsstewart%40gmail.com\",\n      \"total_details\": {\n        \"amount_discount\": 0,\n        \"amount_shipping\": 0,\n        \"amount_tax\": 0\n      },\n      \"ui_mode\": \"hosted\",\n      \"url\": null,\n      \"wallet_options\": null\n    }\n  },\n  \"livemode\": true,\n  \"pending_webhooks\": 1,\n  \"request\": {\n    \"id\": null,\n    \"idempotency_key\": null\n  },\n  \"type\": \"checkout.session.completed\"\n}"
+            |> LamderaRPC.BodyString
+    , endpoint = "stripe"
+    , headers =
+        Dict.fromList
+            [ ( "accept", "*/*; q=0.5, application/json" )
+            , ( "accept-encoding", "gzip" )
+            , ( "cache-control", "no-cache" )
+            , ( "content-length", "4269" )
+            , ( "content-type", "application/json; charset=utf-8" )
+            , ( "host", "05d4-83-241-179-18.ngrok-free.app" )
+            , ( "stripe-signature", "t=1771414354,v1=aad0b5e49fa55fc6757c968fffa2d68344bf9e0d1217c46c80f265f81d5af494" )
+            , ( "user-agent", "Stripe/1.0 (+https://stripe.com/docs/webhooks)" )
+            , ( "x-forwarded-for", "3.18.12.63" )
+            , ( "x-forwarded-host", "05d4-83-241-179-18.ngrok-free.app" )
+            , ( "x-forwarded-proto", "https" )
+            ]
+    , requestId = "7d1b0988-40b4-45c8-9431-b970a449b74c"
+    , sessionId = "bd9dac76a974cafe44ff49a3a3761ccda8a05eec"
+    }
 
 
 stripePricesResponse : String
