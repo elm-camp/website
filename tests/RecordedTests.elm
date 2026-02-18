@@ -8,13 +8,17 @@ import Duration
 import Effect.Browser.Dom as Dom
 import Effect.Lamdera as Lamdera
 import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..), MultipleFilesUpload(..), PointerOptions(..))
+import EmailAddress exposing (EmailAddress)
 import Frontend
 import Json.Decode
 import Json.Encode
 import LamderaRPC
+import List.Extra
+import Parser
 import RPC
 import Route
 import SeqDict
+import String.Nonempty
 import Test.Html.Query
 import Test.Html.Selector
 import Time
@@ -44,6 +48,57 @@ domain =
 fileRequests : Dict String String
 fileRequests =
     Dict.empty
+
+
+isPurchaseConfirmationEmail : EmailAddress -> HttpRequest -> Bool
+isPurchaseConfirmationEmail emailAddress httpRequest =
+    if httpRequest.url == "https://api.postmarkapp.com/email" then
+        case httpRequest.body of
+            T.JsonBody value ->
+                case Json.Decode.decodeValue decodePostmark value |> Debug.log "httpRequests" of
+                    Ok ( subject, to, body ) ->
+                        (emailAddress == to)
+                            && (subject == String.Nonempty.toString Backend.confirmationEmailSubject)
+
+                    Err _ ->
+                        False
+
+            _ ->
+                False
+
+    else
+        False
+
+
+decodePostmark : Json.Decode.Decoder ( String, EmailAddress, String )
+decodePostmark =
+    Json.Decode.map3 (\subject to body -> ( subject, to, body ))
+        (Json.Decode.field "Subject" Json.Decode.string)
+        (Json.Decode.field "To" Json.Decode.string
+            |> Json.Decode.andThen
+                (\to ->
+                    case String.split "<" to of
+                        [ _, email ] ->
+                            case EmailAddress.fromString (String.dropRight 1 email) of
+                                Just emailAddress ->
+                                    Json.Decode.succeed emailAddress
+
+                                Nothing ->
+                                    Json.Decode.fail "Invalid email address"
+
+                        [ email ] ->
+                            case EmailAddress.fromString email of
+                                Just emailAddress ->
+                                    Json.Decode.succeed emailAddress
+
+                                Nothing ->
+                                    Json.Decode.fail "Invalid email address"
+
+                        _ ->
+                            Json.Decode.fail "Invalid email address"
+                )
+        )
+        (Json.Decode.field "TextBody" Json.Decode.string)
 
 
 handleHttpRequests : Dict String String -> Dict String Bytes -> { currentRequest : HttpRequest, data : T.Data FrontendModel BackendModel } -> HttpResponse
@@ -85,6 +140,11 @@ handleHttpRequests overrides fileData { currentRequest } =
                     { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty }
                     exchangeRateResponse
 
+            else if currentRequest.url == "https://api.postmarkapp.com/email" then
+                StringHttpResponse
+                    { url = currentRequest.url, statusCode = 200, statusText = "OK", headers = Dict.empty }
+                    """{"ErrorCode":0,"Message":""}"""
+
             else
                 UnhandledHttpRequest
 
@@ -92,6 +152,11 @@ handleHttpRequests overrides fileData { currentRequest } =
 stripeSessionId : String
 stripeSessionId =
     "cs_live_b11eNtNWg68DgbLFAUbiuhiUxjDXJqqOxXhFTqG0iaimcgQjayLSRJlK4Z"
+
+
+svenMail : EmailAddress
+svenMail =
+    Unsafe.emailAddress "sven@svenmail.se"
 
 
 {-| You can change parts of this function represented with `...`.
@@ -169,7 +234,7 @@ tests fileData =
                 , tab1.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tab1.input 100 (Dom.id "attendeeCountry_0") "Sweden"
                 , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tab1.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
                 , tab1.click 100 (Dom.id "submitForm")
                 , T.checkState 100
                     (\data ->
@@ -184,7 +249,35 @@ tests fileData =
                             [] ->
                                 Err "Frontend doesn't trigger Stripe checkout"
                     )
+                , T.checkState
+                    100
+                    (\data ->
+                        let
+                            purchaseConfirmations : Int
+                            purchaseConfirmations =
+                                List.Extra.count (isPurchaseConfirmationEmail svenMail) data.httpRequests
+                        in
+                        if purchaseConfirmations == 0 then
+                            Ok ()
+
+                        else
+                            Err ("Expected 0 purchase confirmation but got " ++ String.fromInt purchaseConfirmations)
+                    )
                 , T.backendUpdate 100 (StripeWebhookResponse stripePurchaseWebhookResponse)
+                , T.checkState
+                    100
+                    (\data ->
+                        let
+                            purchaseConfirmations : Int
+                            purchaseConfirmations =
+                                List.Extra.count (isPurchaseConfirmationEmail svenMail) data.httpRequests
+                        in
+                        if purchaseConfirmations == 1 then
+                            Ok ()
+
+                        else
+                            Err ("Expected 1 purchase confirmation but got " ++ String.fromInt purchaseConfirmations)
+                    )
 
                 --, T.andThen
                 --    100

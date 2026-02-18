@@ -1,6 +1,7 @@
 module Backend exposing
     ( app
     , app_
+    , confirmationEmailSubject
     , elmCampEmailAddress
     , errorEmail
     , init
@@ -351,7 +352,6 @@ update msg model =
                                                         , messageStream = Postmark.TransactionalEmail
                                                         , attachments = Postmark.noAttachments
                                                         }
-                                                        |> Command.fromCmd "Purchase email"
                                                     )
 
                                                 Nothing ->
@@ -510,7 +510,6 @@ errorEmail errorMessage =
                 , messageStream = Postmark.TransactionalEmail
                 , attachments = Postmark.noAttachments
                 }
-                |> Command.fromCmd "Error email"
 
         Nothing ->
             Command.none
@@ -521,9 +520,14 @@ elmCampEmailAddress =
     Unsafe.emailAddress "team@elm.camp"
 
 
+confirmationEmailSubject : NonemptyString
+confirmationEmailSubject =
+    NonemptyString 'P' "urchase confirmation"
+
+
 confirmationEmail : PurchaseFormValidated -> Money.Currency -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
 confirmationEmail purchaseForm stripeCurrency =
-    { subject = NonemptyString 'P' "urchase confirmation"
+    { subject = confirmationEmailSubject
     , textBody =
         "This is a confirmation email for your purchase of:\n\n"
             ++ (List.map2
