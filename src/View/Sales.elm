@@ -297,21 +297,15 @@ accommodationView ticketTypes initData model =
                             formCount2 =
                                 setter count2 model.form.count
 
-                            totalTicketsPrevious : Int
-                            totalTicketsPrevious =
-                                List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes model.form.count)
-                                    |> NonNegative.toInt
-
                             totalTickets : Int
                             totalTickets =
-                                List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes formCount2)
-                                    |> NonNegative.toInt
+                                PurchaseForm.totalTickets formCount2
                         in
                         FormChanged
                             { form
                                 | count = formCount2
                                 , attendees =
-                                    if totalTicketsPrevious < totalTickets then
+                                    if PurchaseForm.totalTickets model.form.count < totalTickets then
                                         if List.length form.attendees < totalTickets then
                                             form.attendees ++ [ PurchaseForm.defaultAttendee ]
 
@@ -363,41 +357,85 @@ viewAccom count ticketAvailable price ticket2 initData =
             [ Ui.el
                 [ Ui.width Ui.shrink, Ui.Font.bold, Ui.Font.size 36 ]
                 (Ui.text (localPriceTextFromStripe (Quantity.toFloatQuantity price.amount) initData.currentCurrency))
-            , if ticketAvailable then
-                if NonNegative.toInt count > 0 then
-                    Theme.numericField
-                        htmlIdPrefix
-                        (NonNegative.toInt count)
-                        (\value -> Result.withDefault count (NonNegative.fromInt value))
+            , if NonNegative.toInt count > 0 then
+                numericField
+                    htmlIdPrefix
+                    ticketAvailable
+                    (NonNegative.toInt count)
+                    (\value -> Result.withDefault count (NonNegative.fromInt value))
 
-                else
-                    Ui.el
-                        [ Ui.background
-                            (if True then
-                                Ui.rgb 92 176 126
+              else if ticketAvailable then
+                Ui.el
+                    [ Ui.background
+                        (if True then
+                            Ui.rgb 92 176 126
 
-                             else
-                                Ui.rgb 137 141 137
-                            )
-                        , Ui.height (Ui.px 56)
-                        , Ui.Font.center
-                        , Ui.contentCenterY
-                        , Ui.rounded 8
-                        , Ui.alignBottom
-                        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-                        , Ui.Font.weight 600
-                        , Ui.Font.color (Ui.rgb 255 255 255)
-                        , Ui.Input.button NonNegative.one
-                        , Ui.id htmlIdPrefix
-                        ]
-                        (Ui.text "Select")
-
-              else if ticket2.name == "Campfire Ticket" then
-                Ui.text "Waitlist"
+                         else
+                            Ui.rgb 137 141 137
+                        )
+                    , Ui.height (Ui.px 56)
+                    , Ui.Font.center
+                    , Ui.contentCenterY
+                    , Ui.rounded 8
+                    , Ui.alignBottom
+                    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+                    , Ui.Font.weight 600
+                    , Ui.Font.color (Ui.rgb 255 255 255)
+                    , Ui.Input.button NonNegative.one
+                    , Ui.id htmlIdPrefix
+                    ]
+                    (Ui.text "Select")
 
               else
                 Ui.text "Sold out!"
             ]
+        ]
+
+
+numericField : String -> Bool -> Int -> (Int -> msg) -> Ui.Element msg
+numericField htmlIdPrefix canIncrement value onChange =
+    Ui.row [ Ui.spacing 5 ]
+        [ Ui.el
+            [ Ui.background Theme.colors.green
+            , Ui.id (htmlIdPrefix ++ "_minus")
+            , Ui.padding 16
+            , Ui.rounded 8
+            , Ui.alignBottom
+            , Ui.width Ui.shrink
+            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+            , Ui.Font.color Theme.colors.white
+            , Ui.Input.button (onChange (value - 1))
+            , Ui.contentCenterX
+            ]
+            (Ui.html Icons.minus)
+        , Ui.el
+            [ Ui.width Ui.fill
+            , Ui.background (Ui.rgb 255 255 255)
+            , Ui.rounded 8
+            , Ui.alignBottom
+            , Ui.Font.weight 600
+            , Ui.Font.size 24
+            , Ui.Font.center
+            , Ui.centerY
+            ]
+            (Ui.text (String.fromInt value))
+        , Ui.el
+            [ if canIncrement then
+                Ui.background Theme.colors.green
+
+              else
+                Ui.background Theme.colors.lightGrey
+            , Ui.id (htmlIdPrefix ++ "_plus")
+            , Ui.padding 16
+            , Ui.rounded 8
+            , Ui.alignBottom
+            , Ui.width Ui.shrink
+            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+            , Ui.Font.color Theme.colors.white
+            , Ui.Input.button (onChange (value + 1))
+            , Ui.contentCenterX
+            ]
+            (Ui.html Icons.plus)
         ]
 
 

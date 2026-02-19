@@ -16,7 +16,6 @@ module Theme exposing
     , lightTheme
     , maxWidth
     , normalButtonAttributes
-    , numericField
     , panel
     , rowToColumnWhen
     , spinnerWhite
@@ -259,44 +258,6 @@ footer =
             , footerButton TicketPurchaseRoute "Tickets"
             ]
         )
-
-
-numericFieldButtonAttributes : HtmlId -> msg -> List (Ui.Attribute msg)
-numericFieldButtonAttributes htmlId onChange =
-    [ Ui.background colors.green
-    , Ui.id (Dom.idToString htmlId)
-    , Ui.padding 16
-    , Ui.rounded 8
-    , Ui.alignBottom
-    , Ui.width Ui.shrink
-    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-    , Ui.Font.color colors.white
-    , Ui.Input.button onChange
-    , Ui.contentCenterX
-    ]
-
-
-numericField : String -> Int -> (Int -> msg) -> Ui.Element msg
-numericField htmlIdPrefix value onChange =
-    Ui.row [ Ui.spacing 5 ]
-        [ Ui.el
-            (numericFieldButtonAttributes (Dom.id (htmlIdPrefix ++ "_minus")) (onChange (value - 1)))
-            (Ui.html Icons.minus)
-        , Ui.el
-            [ Ui.width Ui.fill
-            , Ui.background (Ui.rgb 255 255 255)
-            , Ui.rounded 8
-            , Ui.alignBottom
-            , Ui.Font.weight 600
-            , Ui.Font.size 24
-            , Ui.Font.center
-            , Ui.centerY
-            ]
-            (Ui.text (String.fromInt value))
-        , Ui.el
-            (numericFieldButtonAttributes (Dom.id (htmlIdPrefix ++ "_plus")) (onChange (value + 1)))
-            (Ui.html Icons.plus)
-        ]
 
 
 normalButtonAttributes : msg -> List (Ui.Attribute msg)
