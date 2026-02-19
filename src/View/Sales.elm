@@ -390,7 +390,7 @@ viewAccom count ticketAvailable price ticket2 initData =
                     , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
                     , Ui.Font.weight 600
                     , Ui.Font.color (Ui.rgb 255 255 255)
-                    , Ui.Input.button NonNegative.one
+                    , Ui.attrIf ticketAvailable (Ui.Input.button NonNegative.one)
                     , Ui.id htmlIdPrefix
                     ]
                     (if ticketAvailable then
@@ -443,7 +443,7 @@ numericField htmlIdPrefix canIncrement value onChange =
             , Ui.width Ui.shrink
             , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
             , Ui.Font.color Theme.colors.white
-            , Ui.Input.button (onChange (value + 1))
+            , Ui.attrIf canIncrement (Ui.Input.button (onChange (value + 1)))
             , Ui.contentCenterX
             ]
             (Ui.html Icons.plus)

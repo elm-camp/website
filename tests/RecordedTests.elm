@@ -353,8 +353,7 @@ tests fileData =
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     { width = 881, height = 1312 }
                     (\tab2 ->
-                        [ tab2.click 100 (Dom.id "selectTicket_Single Room")
-                        , tab2.checkView
+                        [ tab2.checkView
                             100
                             (\html ->
                                 Test.Html.Query.count
