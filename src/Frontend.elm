@@ -523,7 +523,7 @@ updateFromBackendLoaded msg model =
         SlotRemainingChanged slotsRemaining ->
             case model.initData of
                 Ok initData ->
-                    ( { model | initData = Ok { initData | slotsRemaining = slotsRemaining } }, Command.none )
+                    ( { model | initData = Ok { initData | ticketsAlreadyPurchased = slotsRemaining } }, Command.none )
 
                 Err () ->
                     ( model, Command.none )

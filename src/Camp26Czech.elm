@@ -3,10 +3,13 @@ module Camp26Czech exposing
     , campfireTicket
     , detailedCountdown
     , header
+    , maxAttendees
+    , maxRooms
     , opportunityGrant
     , sharedRoomTicket
     , singleRoomTicket
     , ticketSalesOpenAt
+    , ticketSalesOpenCountdown
     , ticketTypes
     , view
     )
@@ -104,65 +107,61 @@ ticketSalesOpenCountdown now =
 
 detailedCountdown : Time.Posix -> Maybe (Ui.Element msg)
 detailedCountdown now =
-    Nothing
+    let
+        target2 =
+            Time.posixToMillis ticketSalesOpenAt
 
+        now2 =
+            Time.posixToMillis now
 
+        secondsRemaining =
+            (target2 - now2) // 1000
 
---let
---    target2 =
---        Time.posixToMillis ticketSalesOpenAt
---
---    now2 =
---        Time.posixToMillis now
---
---    secondsRemaining =
---        (target2 - now2) // 1000
---
---    days =
---        secondsRemaining // (60 * 60 * 24)
---
---    hours =
---        modBy 24 (secondsRemaining // (60 * 60))
---
---    minutes =
---        modBy 60 (secondsRemaining // 60)
---
---    formatDays =
---        if days > 1 then
---            Just (String.fromInt days ++ " days")
---
---        else if days == 1 then
---            Just "1 day"
---
---        else
---            Nothing
---
---    formatHours =
---        if hours > 0 then
---            Just (String.fromInt hours ++ "h")
---
---        else
---            Nothing
---
---    formatMinutes =
---        if minutes > 0 then
---            Just (String.fromInt minutes ++ "m")
---
---        else
---            Nothing
---
---    output =
---        String.join " "
---            (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
---in
---if secondsRemaining < 0 then
---    Nothing
---
---else
---    Ui.Prose.paragraph
---        (Theme.contentAttributes ++ [ Ui.Font.center ])
---        [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
---        |> Just
+        days =
+            secondsRemaining // (60 * 60 * 24)
+
+        hours =
+            modBy 24 (secondsRemaining // (60 * 60))
+
+        minutes =
+            modBy 60 (secondsRemaining // 60)
+
+        formatDays =
+            if days > 1 then
+                Just (String.fromInt days ++ " days")
+
+            else if days == 1 then
+                Just "1 day"
+
+            else
+                Nothing
+
+        formatHours =
+            if hours > 0 then
+                Just (String.fromInt hours ++ "h")
+
+            else
+                Nothing
+
+        formatMinutes =
+            if minutes > 0 then
+                Just (String.fromInt minutes ++ "m")
+
+            else
+                Nothing
+
+        output =
+            String.join " "
+                (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
+    in
+    if secondsRemaining < 0 then
+        Nothing
+
+    else
+        Ui.Prose.paragraph
+            (Theme.contentAttributes ++ [ Ui.Font.center ])
+            [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
+            |> Just
 
 
 goToTicketSales : Ui.Element FrontendMsg
@@ -455,31 +454,14 @@ organisers window =
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
 
 
+maxRooms : number
+maxRooms =
+    40
+
+
 maxAttendees : number
 maxAttendees =
     80
-
-
-
---
---maxForAccommodationType : Accommodation -> number
---maxForAccommodationType t =
---    case t of
---        Offsite ->
---            -- Effectively no limit, the attendee limit should hit first
---            80
---
---        Campsite ->
---            20
---
---        Single ->
---            6
---
---        Double ->
---            15
---
---        Group ->
---            4
 
 
 ticketTypes : TicketTypes TicketType

@@ -38,12 +38,12 @@ view ticketTypes model =
             model.form
     in
     Ui.column
-        [ Ui.spacing 20 ]
+        [ Ui.spacing 20, Ui.height Ui.fill ]
         [ Camp26Czech.header model
         , Ui.column
             [ Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId) ]
-            (case ( Camp26Czech.detailedCountdown model.now == Nothing, model.initData ) of
-                ( True, Ok initData ) ->
+            (case ( Camp26Czech.detailedCountdown model.now, model.initData ) of
+                ( Nothing, Ok initData ) ->
                     [ Ui.el
                         Theme.contentAttributes
                         (RichText.h1 model.window "Attend Elm Camp" |> Ui.html)
@@ -58,7 +58,7 @@ view ticketTypes model =
                     ]
 
                 _ ->
-                    []
+                    [ Camp26Czech.ticketSalesOpenCountdown model.now ]
             )
         , Theme.footer
         ]
@@ -342,6 +342,10 @@ accommodationView ticketTypes initData model =
 
 viewAccom : NonNegative -> Bool -> Price -> TicketType -> InitData2 -> Ui.Element NonNegative
 viewAccom count ticketAvailable price ticket2 initData =
+    let
+        htmlIdPrefix =
+            "selectTicket_" ++ ticket2.name
+    in
     Ui.column
         [ Ui.width Ui.fill
         , Ui.height Ui.fill
@@ -362,7 +366,7 @@ viewAccom count ticketAvailable price ticket2 initData =
             , if ticketAvailable then
                 if NonNegative.toInt count > 0 then
                     Theme.numericField
-                        "Tickets"
+                        htmlIdPrefix
                         (NonNegative.toInt count)
                         (\value -> Result.withDefault count (NonNegative.fromInt value))
 
@@ -384,7 +388,7 @@ viewAccom count ticketAvailable price ticket2 initData =
                         , Ui.Font.weight 600
                         , Ui.Font.color (Ui.rgb 255 255 255)
                         , Ui.Input.button NonNegative.one
-                        , Ui.id ("selectTicket_" ++ ticket2.name)
+                        , Ui.id htmlIdPrefix
                         ]
                         (Ui.text "Select")
 

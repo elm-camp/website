@@ -261,8 +261,10 @@ footer =
         )
 
 
-numericFieldButtonAttributes onChange =
+numericFieldButtonAttributes : HtmlId -> msg -> List (Ui.Attribute msg)
+numericFieldButtonAttributes htmlId onChange =
     [ Ui.background colors.green
+    , Ui.id (Dom.idToString htmlId)
     , Ui.padding 16
     , Ui.rounded 8
     , Ui.alignBottom
@@ -275,10 +277,10 @@ numericFieldButtonAttributes onChange =
 
 
 numericField : String -> Int -> (Int -> msg) -> Ui.Element msg
-numericField title value onChange =
+numericField htmlIdPrefix value onChange =
     Ui.row [ Ui.spacing 5 ]
         [ Ui.el
-            (numericFieldButtonAttributes (onChange (value - 1)))
+            (numericFieldButtonAttributes (Dom.id (htmlIdPrefix ++ "_minus")) (onChange (value - 1)))
             (Ui.html Icons.minus)
         , Ui.el
             [ Ui.width Ui.fill
@@ -292,7 +294,7 @@ numericField title value onChange =
             ]
             (Ui.text (String.fromInt value))
         , Ui.el
-            (numericFieldButtonAttributes (onChange (value + 1)))
+            (numericFieldButtonAttributes (Dom.id (htmlIdPrefix ++ "_plus")) (onChange (value + 1)))
             (Ui.html Icons.plus)
         ]
 

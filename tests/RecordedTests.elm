@@ -159,6 +159,11 @@ svenMail =
     Unsafe.emailAddress "sven@svenmail.se"
 
 
+sessionId0 : Lamdera.SessionId
+sessionId0 =
+    Lamdera.sessionIdFromString "sessionId0"
+
+
 {-| You can change parts of this function represented with `...`.
 The rest needs to remain unchanged in order for the test generator to be able to add new tests.
 
@@ -210,6 +215,28 @@ tests fileData =
                 , tab1.clickLink 100 "/23-denmark"
                 , tab1.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Dallund Castle, Denmark" ])
+                ]
+            )
+        ]
+    , T.start
+        "Show countdown"
+        (Duration.subtractFrom Camp26Czech.ticketSalesOpenAt (Duration.hours 25))
+        config
+        [ T.connectFrontend
+            0
+            sessionId0
+            "/"
+            { width = 881, height = 1312 }
+            (\_ -> [])
+        , T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\tab1 ->
+                [ tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
+                , tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
                 ]
             )
         ]
@@ -273,33 +300,15 @@ tests fileData =
                                 List.Extra.count (isPurchaseConfirmationEmail svenMail) data.httpRequests
                         in
                         if purchaseConfirmations == 1 then
-                            Ok ()
+                            if SeqDict.size data.backend.orders == 1 then
+                                Ok ()
+
+                            else
+                                Err ("Expected 1 order on the backend but found " ++ String.fromInt (SeqDict.size data.backend.orders))
 
                         else
                             Err ("Expected 1 purchase confirmation but got " ++ String.fromInt purchaseConfirmations)
                     )
-
-                --, T.andThen
-                --    100
-                --    (\data ->
-                --        let
-                --            ( response, backend2, _ ) =
-                --                RPC.lamdera_handleEndpoints
-                --                    Json.Encode.null
-                --                    stripePurchaseWebhookResponse
-                --                    backend
-                --        in
-                --        if Debug.log "response" response == LamderaRPC.ResultString "dev" then
-                --            case SeqDict.toList backend2.orders of
-                --                [ _ ] ->
-                --                    Ok ()
-                --
-                --                _ ->
-                --                    Err "Completed order is missing"
-                --
-                --        else
-                --            Err "Stripe webhook got an error response"
-                --    )
                 ]
             )
         ]
@@ -320,40 +329,33 @@ tests fileData =
             { width = 881, height = 1312 }
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , List.range 1 40
+                , List.range 0 39
                     |> List.concatMap
                         (\index ->
-                            [ tab1.click 100 (Dom.id "selectTicket_Single Room")
-                            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
-                            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
-                            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
-                            ]
+                            (if index == 0 then
+                                tab1.click 100 (Dom.id "selectTicket_Single Room")
+
+                             else
+                                tab1.click 100 (Dom.id "selectTicket_Single Room_plus")
+                            )
+                                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
+                                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
+                                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
+                                   ]
                         )
                     |> T.collapsableGroup "Purchase a bunch of tickets"
                 , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tab1.click 100 (Dom.id "submitForm")
-
-                --, T.checkBackend
-                --    100
-                --    (\backend ->
-                --        let
-                --            ( response, backend2, _ ) =
-                --                RPC.lamdera_handleEndpoints
-                --                    Json.Encode.null
-                --                    stripePurchaseWebhookResponse
-                --                    backend
-                --        in
-                --        if Debug.log "response" response == LamderaRPC.ResultString "dev" then
-                --            case SeqDict.toList backend2.orders of
-                --                [ _ ] ->
-                --                    Ok ()
-                --
-                --                _ ->
-                --                    Err "Completed order is missing"
-                --
-                --        else
-                --            Err "Stripe webhook got an error response"
-                --    )
+                , T.connectFrontend
+                    100
+                    (Lamdera.sessionIdFromString "session ID 2")
+                    (Route.encode Nothing Route.TicketPurchaseRoute)
+                    { width = 881, height = 1312 }
+                    (\_ ->
+                        [ tab1.click 100 (Dom.id "selectTicket_Single Room")
+                        , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
+                        ]
+                    )
                 ]
             )
         ]

@@ -188,7 +188,7 @@ update msg model =
                     , Lamdera.sendToFrontend
                         clientId
                         ({ prices = prices
-                         , slotsRemaining = totalTicketCount model.orders
+                         , ticketsAlreadyPurchased = totalTicketCount model.orders
                          , ticketsEnabled = model.ticketsEnabled
                          , stripeCurrency = stripeCurrency
                          , currentCurrency = { currency = stripeCurrency, conversionRate = Quantity.unsafe 1 }

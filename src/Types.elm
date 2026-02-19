@@ -309,7 +309,7 @@ type BackendMsg
 type alias InitData2 =
     { prices : { campfireTicket : Price, singleRoomTicket : Price, sharedRoomTicket : Price }
     , stripeCurrency : Money.Currency
-    , slotsRemaining : TicketTypes NonNegative
+    , ticketsAlreadyPurchased : TicketTypes NonNegative
     , ticketsEnabled : TicketsEnabled
     , currentCurrency : { currency : Money.Currency, conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency) }
     }
