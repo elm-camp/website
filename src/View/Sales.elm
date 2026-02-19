@@ -316,7 +316,16 @@ accommodationView ticketTypes initData model =
                                         List.Extra.remove PurchaseForm.defaultAttendee form.attendees
                             }
                     )
-                    (viewAccom count (ticket.available model.form.count) price ticket initData)
+                    (viewAccom
+                        count
+                        (ticket.available
+                            initData.ticketsAlreadyPurchased
+                            (setter (NonNegative.increment count) model.form.count)
+                        )
+                        price
+                        ticket
+                        initData
+                    )
             )
             (PurchaseForm.allTicketTypes ticketTypes)
             (PurchaseForm.allTicketTypes initData.prices)

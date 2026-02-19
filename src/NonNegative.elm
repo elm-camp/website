@@ -1,4 +1,4 @@
-module NonNegative exposing (NonNegative, add, fromInt, increment, one, toInt, toString, zero)
+module NonNegative exposing (NonNegative, fromInt, increment, one, plus, sum, toInt, toString, zero)
 
 
 type NonNegative
@@ -29,9 +29,14 @@ one =
     NonNegative 1
 
 
-add : NonNegative -> NonNegative -> NonNegative
-add (NonNegative a) (NonNegative b) =
+plus : NonNegative -> NonNegative -> NonNegative
+plus (NonNegative a) (NonNegative b) =
     a + b |> NonNegative
+
+
+sum : List NonNegative -> NonNegative
+sum list =
+    List.foldl plus zero list
 
 
 toInt : NonNegative -> Int

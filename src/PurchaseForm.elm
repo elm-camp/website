@@ -152,7 +152,7 @@ validateAttendees ticketCount attendees =
     let
         totalTicketCount : Int
         totalTicketCount =
-            List.foldl NonNegative.add NonNegative.zero (allTicketTypes ticketCount) |> NonNegative.toInt
+            List.foldl NonNegative.plus NonNegative.zero (allTicketTypes ticketCount) |> NonNegative.toInt
 
         attendeesValidated : List AttendeeFormValidated
         attendeesValidated =
@@ -182,7 +182,7 @@ unvalidateAttendee attendee =
 
 totalTickets : TicketTypes NonNegative -> Int
 totalTickets count =
-    List.foldl NonNegative.add NonNegative.zero (allTicketTypes count)
+    List.foldl NonNegative.plus NonNegative.zero (allTicketTypes count)
         |> NonNegative.toInt
 
 

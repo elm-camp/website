@@ -477,7 +477,7 @@ type alias TicketType =
     { name : String
     , description : String
     , image : String
-    , available : TicketTypes NonNegative -> Bool
+    , available : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
     }
 
 
@@ -486,7 +486,8 @@ campfireTicket =
     { name = "Camping Spot"
     , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
     , image = ""
-    , available = \count -> PurchaseForm.totalTickets count < maxAttendees
+    , available =
+        \ticketsAlreadyPurchased count -> PurchaseForm.totalTickets ticketsAlreadyPurchased + PurchaseForm.totalTickets count <= maxAttendees
     }
 
 
@@ -495,7 +496,17 @@ singleRoomTicket =
     { name = "Single Room"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
-    , available = \count -> NonNegative.toInt (NonNegative.add count.singleRoomTicket count.sharedRoomTicket) < maxRooms
+    , available =
+        \ticketsAlreadyPurchased count ->
+            NonNegative.toInt
+                (NonNegative.sum
+                    [ count.singleRoomTicket
+                    , count.sharedRoomTicket
+                    , ticketsAlreadyPurchased.singleRoomTicket
+                    , ticketsAlreadyPurchased.sharedRoomTicket
+                    ]
+                )
+                <= maxRooms
     }
 
 
@@ -505,11 +516,11 @@ sharedRoomTicket =
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
     , available =
-        \count ->
+        \ticketsAlreadyPurchased count ->
             let
                 doublesLeft : Int
                 doublesLeft =
-                    (maxRooms - NonNegative.toInt count.singleRoomTicket) * 2
+                    (maxRooms - (NonNegative.toInt count.singleRoomTicket + NonNegative.toInt ticketsAlreadyPurchased.singleRoomTicket)) * 2
             in
-            NonNegative.toInt count.sharedRoomTicket < doublesLeft
+            NonNegative.toInt count.sharedRoomTicket + NonNegative.toInt ticketsAlreadyPurchased.sharedRoomTicket <= doublesLeft
     }

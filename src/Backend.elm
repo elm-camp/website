@@ -39,7 +39,7 @@ import Quantity
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 import View.Sales
@@ -188,7 +188,7 @@ update msg model =
                     , Lamdera.sendToFrontend
                         clientId
                         ({ prices = prices
-                         , ticketsAlreadyPurchased = totalTicketCount model.orders
+                         , ticketsAlreadyPurchased = totalTicketCount model.pendingOrder model.orders
                          , ticketsEnabled = model.ticketsEnabled
                          , stripeCurrency = stripeCurrency
                          , currentCurrency = { currency = stripeCurrency, conversionRate = Quantity.unsafe 1 }
@@ -377,28 +377,35 @@ update msg model =
     )
         |> (\( newModel, cmd ) ->
                 let
-                    newSlotsRemaining =
-                        totalTicketCount newModel.orders
+                    ticketsAlreadyPurchased : TicketTypes NonNegative
+                    ticketsAlreadyPurchased =
+                        totalTicketCount newModel.pendingOrder newModel.orders
                 in
-                if totalTicketCount model.orders == newSlotsRemaining then
+                if totalTicketCount model.pendingOrder model.orders == ticketsAlreadyPurchased then
                     ( newModel, cmd )
 
                 else
-                    ( newModel, Command.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
+                    ( newModel, Command.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged ticketsAlreadyPurchased) ] )
            )
 
 
-totalTicketCount : SeqDict k CompletedOrder -> TicketTypes NonNegative
-totalTicketCount orders =
+totalTicketCount :
+    SeqDict (Id StripeSessionId) PendingOrder
+    -> SeqDict (Id StripeSessionId) CompletedOrder
+    -> TicketTypes NonNegative
+totalTicketCount pendingOrders orders =
     SeqDict.foldl
-        (\_ order count ->
-            { campfireTicket = NonNegative.add count.campfireTicket order.form.count.campfireTicket
-            , singleRoomTicket = NonNegative.add count.singleRoomTicket order.form.count.singleRoomTicket
-            , sharedRoomTicket = NonNegative.add count.sharedRoomTicket order.form.count.sharedRoomTicket
+        (\_ form count ->
+            { campfireTicket = NonNegative.plus count.campfireTicket form.count.campfireTicket
+            , singleRoomTicket = NonNegative.plus count.singleRoomTicket form.count.singleRoomTicket
+            , sharedRoomTicket = NonNegative.plus count.sharedRoomTicket form.count.sharedRoomTicket
             }
         )
         PurchaseForm.initTicketCount
-        orders
+        (SeqDict.union
+            (SeqDict.map (\_ order -> order.form) pendingOrders)
+            (SeqDict.map (\_ order -> order.form) orders)
+        )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
@@ -408,9 +415,14 @@ updateFromFrontend sessionId clientId msg model =
             case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
                 ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
                     let
-                        availability : TicketTypes NonNegative
-                        availability =
-                            totalTicketCount model.orders
+                        ticketsAvailable : Bool
+                        ticketsAvailable =
+                            List.map
+                                (\ticket ->
+                                    ticket.available purchaseForm.count (totalTicketCount model.pendingOrder model.orders)
+                                )
+                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                |> List.all identity
 
                         opportunityGrantItems : List CheckoutItem
                         opportunityGrantItems =
