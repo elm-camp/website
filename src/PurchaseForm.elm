@@ -11,6 +11,8 @@ module PurchaseForm exposing
     , init
     , initTicketCount
     , ticketTypesSetters
+    , totalRooms
+    , totalTickets
     , unvalidateAttendee
     , unvalidateGrantContribution
     , validateAttendees
@@ -179,6 +181,18 @@ unvalidateAttendee attendee =
     }
 
 
+totalTickets : TicketTypes NonNegative -> Int
+totalTickets count =
+    List.foldl NonNegative.add NonNegative.zero (allTicketTypes count)
+        |> NonNegative.toInt
+
+
+totalRooms : TicketTypes NonNegative -> Int
+totalRooms count =
+    List.foldl NonNegative.add NonNegative.zero (roomTicketTypes count)
+        |> NonNegative.toInt
+
+
 validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Result String PurchaseFormValidated
 validateForm conversionRate form =
     case
@@ -188,13 +202,7 @@ validateForm conversionRate form =
             (validateAttendees form.count form.attendees)
     of
         T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
-            let
-                totalTickets : Int
-                totalTickets =
-                    List.foldl NonNegative.add NonNegative.zero (allTicketTypes form.count)
-                        |> NonNegative.toInt
-            in
-            if Quantity.greaterThanZero grantContribution || totalTickets > 0 then
+            if Quantity.greaterThanZero grantContribution || totalTickets form.count > 0 then
                 { attendees = attendeesOk
                 , count = form.count
                 , billingEmail = billingEmail
@@ -236,6 +244,11 @@ validateAttendee form =
 allTicketTypes : TicketTypes a -> List a
 allTicketTypes a =
     [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
+
+
+roomTicketTypes : TicketTypes a -> List a
+roomTicketTypes a =
+    [ a.singleRoomTicket, a.sharedRoomTicket ]
 
 
 ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)

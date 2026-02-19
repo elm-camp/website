@@ -17,6 +17,7 @@ module Camp26Czech exposing
 import Camp
 import Effect.Browser.Dom as Dom
 import Helpers
+import NonNegative exposing (NonNegative)
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
 import RichText exposing (Inline(..), RichText(..))
 import Route
@@ -476,6 +477,7 @@ type alias TicketType =
     { name : String
     , description : String
     , image : String
+    , available : TicketTypes NonNegative -> Bool
     }
 
 
@@ -484,6 +486,7 @@ campfireTicket =
     { name = "Camping Spot"
     , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
     , image = ""
+    , available = \count -> PurchaseForm.totalTickets count < maxAttendees
     }
 
 
@@ -492,6 +495,7 @@ singleRoomTicket =
     { name = "Single Room"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
+    , available = \count -> PurchaseForm.totalRooms count < maxRooms
     }
 
 
@@ -500,4 +504,5 @@ sharedRoomTicket =
     { name = "Shared Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
+    , available = \count -> PurchaseForm.totalRooms count < maxRooms
     }

@@ -290,39 +290,39 @@ accommodationView ticketTypes initData model =
             ]
         , List.map4
             (\ticket price count setter ->
-                viewAccom count True price ticket initData
-                    |> Ui.map
-                        (\count2 ->
-                            let
-                                formCount2 : TicketTypes NonNegative
-                                formCount2 =
-                                    setter count2 model.form.count
+                Ui.map
+                    (\count2 ->
+                        let
+                            formCount2 : TicketTypes NonNegative
+                            formCount2 =
+                                setter count2 model.form.count
 
-                                totalTicketsPrevious : Int
-                                totalTicketsPrevious =
-                                    List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes model.form.count)
-                                        |> NonNegative.toInt
+                            totalTicketsPrevious : Int
+                            totalTicketsPrevious =
+                                List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes model.form.count)
+                                    |> NonNegative.toInt
 
-                                totalTickets : Int
-                                totalTickets =
-                                    List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes formCount2)
-                                        |> NonNegative.toInt
-                            in
-                            FormChanged
-                                { form
-                                    | count = formCount2
-                                    , attendees =
-                                        if totalTicketsPrevious < totalTickets then
-                                            if List.length form.attendees < totalTickets then
-                                                form.attendees ++ [ PurchaseForm.defaultAttendee ]
-
-                                            else
-                                                form.attendees
+                            totalTickets : Int
+                            totalTickets =
+                                List.foldl NonNegative.add NonNegative.zero (PurchaseForm.allTicketTypes formCount2)
+                                    |> NonNegative.toInt
+                        in
+                        FormChanged
+                            { form
+                                | count = formCount2
+                                , attendees =
+                                    if totalTicketsPrevious < totalTickets then
+                                        if List.length form.attendees < totalTickets then
+                                            form.attendees ++ [ PurchaseForm.defaultAttendee ]
 
                                         else
-                                            List.Extra.remove PurchaseForm.defaultAttendee form.attendees
-                                }
-                        )
+                                            form.attendees
+
+                                    else
+                                        List.Extra.remove PurchaseForm.defaultAttendee form.attendees
+                            }
+                    )
+                    (viewAccom count (ticket.available model.form.count) price ticket initData)
             )
             (PurchaseForm.allTicketTypes ticketTypes)
             (PurchaseForm.allTicketTypes initData.prices)
@@ -399,10 +399,6 @@ viewAccom count ticketAvailable price ticket2 initData =
                 Ui.text "Sold out!"
             ]
         ]
-
-
-purchaseable ticket model =
-    True
 
 
 submitFormError : Quantity Float (Quantity.Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Element msg

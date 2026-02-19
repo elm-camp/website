@@ -351,9 +351,9 @@ tests fileData =
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     { width = 881, height = 1312 }
-                    (\_ ->
-                        [ tab1.click 100 (Dom.id "selectTicket_Single Room")
-                        , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
+                    (\tab2 ->
+                        [ tab2.click 100 (Dom.id "selectTicket_Single Room")
+                        , tab2.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
                         ]
                     )
                 ]
