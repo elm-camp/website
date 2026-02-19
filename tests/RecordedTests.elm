@@ -9,6 +9,7 @@ import Effect.Browser.Dom as Dom
 import Effect.Lamdera as Lamdera
 import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..), MultipleFilesUpload(..), PointerOptions(..))
 import EmailAddress exposing (EmailAddress)
+import Expect
 import Frontend
 import Json.Decode
 import Json.Encode
@@ -353,7 +354,13 @@ tests fileData =
                     { width = 881, height = 1312 }
                     (\tab2 ->
                         [ tab2.click 100 (Dom.id "selectTicket_Single Room")
-                        , tab2.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
+                        , tab2.checkView
+                            100
+                            (\html ->
+                                Test.Html.Query.count
+                                    (Expect.equal 2)
+                                    (Test.Html.Query.findAll [ Test.Html.Selector.exactText "Sold out!" ] html)
+                            )
                         ]
                     )
                 ]
