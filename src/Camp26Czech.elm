@@ -495,7 +495,7 @@ singleRoomTicket =
     { name = "Single Room"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
-    , available = \count -> PurchaseForm.totalRooms count < maxRooms
+    , available = \count -> NonNegative.toInt (NonNegative.add count.singleRoomTicket count.sharedRoomTicket) < maxRooms
     }
 
 
@@ -504,5 +504,12 @@ sharedRoomTicket =
     { name = "Shared Room"
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
-    , available = \count -> PurchaseForm.totalRooms count < maxRooms
+    , available =
+        \count ->
+            let
+                doublesLeft : Int
+                doublesLeft =
+                    (maxRooms - NonNegative.toInt count.singleRoomTicket) * 2
+            in
+            NonNegative.toInt count.sharedRoomTicket < doublesLeft
     }

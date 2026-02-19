@@ -6,6 +6,7 @@ module Theme exposing
     , colors
     , contentAttributes
     , css
+    , disabled
     , fontFace
     , footer
     , glow
@@ -129,6 +130,11 @@ colors =
     , white = Ui.rgb 255 255 255
     , red = Ui.rgb 234 87 59
     }
+
+
+disabled : Ui.Color
+disabled =
+    Ui.rgb 137 141 137
 
 
 colorWithAlpha : Float -> Ui.Color -> Ui.Color

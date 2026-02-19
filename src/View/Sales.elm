@@ -364,14 +364,14 @@ viewAccom count ticketAvailable price ticket2 initData =
                     (NonNegative.toInt count)
                     (\value -> Result.withDefault count (NonNegative.fromInt value))
 
-              else if ticketAvailable then
+              else
                 Ui.el
                     [ Ui.background
-                        (if True then
+                        (if ticketAvailable then
                             Ui.rgb 92 176 126
 
                          else
-                            Ui.rgb 137 141 137
+                            Theme.disabled
                         )
                     , Ui.height (Ui.px 56)
                     , Ui.Font.center
@@ -384,10 +384,12 @@ viewAccom count ticketAvailable price ticket2 initData =
                     , Ui.Input.button NonNegative.one
                     , Ui.id htmlIdPrefix
                     ]
-                    (Ui.text "Select")
+                    (if ticketAvailable then
+                        Ui.text "Select"
 
-              else
-                Ui.text "Sold out!"
+                     else
+                        Ui.text "Sold out!"
+                    )
             ]
         ]
 
@@ -424,7 +426,7 @@ numericField htmlIdPrefix canIncrement value onChange =
                 Ui.background Theme.colors.green
 
               else
-                Ui.background Theme.colors.lightGrey
+                Ui.background Theme.disabled
             , Ui.id (htmlIdPrefix ++ "_plus")
             , Ui.padding 16
             , Ui.rounded 8

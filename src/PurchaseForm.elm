@@ -11,7 +11,6 @@ module PurchaseForm exposing
     , init
     , initTicketCount
     , ticketTypesSetters
-    , totalRooms
     , totalTickets
     , unvalidateAttendee
     , unvalidateGrantContribution
@@ -187,12 +186,6 @@ totalTickets count =
         |> NonNegative.toInt
 
 
-totalRooms : TicketTypes NonNegative -> Int
-totalRooms count =
-    List.foldl NonNegative.add NonNegative.zero (roomTicketTypes count)
-        |> NonNegative.toInt
-
-
 validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Result String PurchaseFormValidated
 validateForm conversionRate form =
     case
@@ -244,11 +237,6 @@ validateAttendee form =
 allTicketTypes : TicketTypes a -> List a
 allTicketTypes a =
     [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
-
-
-roomTicketTypes : TicketTypes a -> List a
-roomTicketTypes a =
-    [ a.singleRoomTicket, a.sharedRoomTicket ]
 
 
 ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)
