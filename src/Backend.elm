@@ -438,32 +438,36 @@ updateFromFrontend sessionId clientId msg model =
                             else
                                 []
                     in
-                    ( model
-                    , Time.now
-                        |> Task.andThen
-                            (\now ->
-                                Stripe.createCheckoutSession
-                                    { items =
-                                        List.map3
-                                            (\ticket price count ->
-                                                Stripe.Priced
-                                                    { name = ticket.name
-                                                    , priceId = price.priceId
-                                                    , quantity = NonNegative.toInt count
-                                                    }
-                                            )
-                                            (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
-                                            (PurchaseForm.allTicketTypes prices)
-                                            (PurchaseForm.allTicketTypes purchaseForm.count)
-                                            ++ opportunityGrantItems
-                                    , emailAddress = purchaseForm.billingEmail
-                                    , now = now
-                                    , expiresInMinutes = 30
-                                    }
-                                    |> Task.map (\res -> ( res, now ))
-                            )
-                        |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
-                    )
+                    if ticketsAvailable then
+                        ( model
+                        , Time.now
+                            |> Task.andThen
+                                (\now ->
+                                    Stripe.createCheckoutSession
+                                        { items =
+                                            List.map3
+                                                (\ticket price count ->
+                                                    Stripe.Priced
+                                                        { name = ticket.name
+                                                        , priceId = price.priceId
+                                                        , quantity = NonNegative.toInt count
+                                                        }
+                                                )
+                                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                                (PurchaseForm.allTicketTypes prices)
+                                                (PurchaseForm.allTicketTypes purchaseForm.count)
+                                                ++ opportunityGrantItems
+                                        , emailAddress = purchaseForm.billingEmail
+                                        , now = now
+                                        , expiresInMinutes = 30
+                                        }
+                                        |> Task.map (\res -> ( res, now ))
+                                )
+                            |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
+                        )
+
+                    else
+                        ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Sorry, tickets are sold out.")) )
 
                 _ ->
                     ( model, Command.none )
