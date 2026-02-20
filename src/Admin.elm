@@ -1,24 +1,16 @@
 module Admin exposing
     ( attendees
-    , loadProdBackend
     , quickTable
-    , toString
     , view
     , viewAdmin
     , viewExpiredOrders
-    , viewExpiredOrders2
     , viewOrder
     , viewOrders
-    , viewPendingOrder
-    , viewPrices
-    , viewTicketsEnabled
     )
 
-import Effect.Command as Command exposing (Command)
 import Env
 import Html
 import Id exposing (Id)
-import List.Extra
 import Name
 import SeqDict exposing (SeqDict)
 import String.Nonempty
@@ -41,14 +33,6 @@ view model =
 
 viewAdmin : BackendModel -> Ui.Element FrontendMsg
 viewAdmin backendModel =
-    -- type alias BackendModel =
-    --     { orders : SeqDict (Id StripeSessionId) Order
-    --     , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
-    --     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
-    --     , prices : SeqDict (Id ProductId) Price2
-    --     , time : Time.Posix
-    --     , ticketsEnabled : TicketsEnabled
-    --     }
     let
         numberOfOrders =
             List.length (SeqDict.toList backendModel.orders)
@@ -67,57 +51,22 @@ viewAdmin backendModel =
         [ Ui.padding 24
         , Ui.spacing 40
         ]
-        [ if Env.mode == Env.Development then
+        [ if Env.isProduction then
+            Ui.none
+
+          else
             Ui.el
                 (Theme.normalButtonAttributes AdminPullBackendModel)
                 (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Pull Backend Model from prod"))
-
-          else
-            Ui.none
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
         , viewOrders backendModel.orders
-
-        -- , viewExpiredOrders2 backendModel.expiredOrders
         , viewExpiredOrders backendModel.expiredOrders
-
-        --, viewPendingOrder backendModel.pendingOrder
-        --, viewExpiredOrders backendModel.expiredOrders
-        --, viewPrices backendModel.prices
-        --, viewTicketsEnabled backendModel.ticketsEnabled
-        ]
-
-
-viewTicketsEnabled : TicketsEnabled -> Ui.Element msg
-viewTicketsEnabled ticketsEnabled =
-    Ui.column
-        []
-        [ Ui.text "TicketsEnabled:"
-        , case ticketsEnabled of
-            TicketsEnabled ->
-                Ui.text "TicketsEnabled"
-
-            TicketsDisabled d ->
-                Ui.text ("TicketsDisabled" ++ d.adminMessage)
-        ]
-
-
-viewPrices : SeqDict (Id ProductId) Price -> Ui.Element msg
-viewPrices prices =
-    Ui.column
-        []
-        [ Ui.text "Prices TODO"
-
-        -- , Codec.encodeToString 2 (Types.assocListCodec Types.price2Codec) prices |> Element.text
         ]
 
 
 viewOrders : SeqDict (Id StripeSessionId) Types.CompletedOrder -> Ui.Element msg
 viewOrders orders =
-    let
-        n =
-            orders |> SeqDict.toList |> List.length
-    in
     Ui.column
         [ Ui.spacing 12
         ]
@@ -164,23 +113,6 @@ quickTable collection fns =
         |> Ui.html
 
 
-viewExpiredOrders2 : SeqDict (Id StripeSessionId) Types.PendingOrder -> Ui.Element msg
-viewExpiredOrders2 orders =
-    let
-        ordersCleaned : List String
-        ordersCleaned =
-            orders
-                |> SeqDict.toList
-                |> List.concatMap (\( _, value ) -> List.map (\a -> Name.toString a.name) value.form.attendees)
-                |> List.Extra.unique
-                |> List.sort
-    in
-    Ui.column
-        [ Ui.spacing 8
-        ]
-        (Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Participants: " ++ String.fromInt (List.length ordersCleaned))) :: (ordersCleaned |> List.indexedMap (\k s -> Ui.row [ Ui.width Ui.shrink, Ui.Font.size 14, Ui.spacing 8 ] [ Ui.text (String.fromInt (k + 1)), Ui.text s ])))
-
-
 viewOrder : Int -> ( Id StripeSessionId, Types.CompletedOrder ) -> Ui.Element msg
 viewOrder idx ( id, order ) =
     Ui.row
@@ -190,51 +122,6 @@ viewOrder idx ( id, order ) =
         ]
 
 
-viewPendingOrder : Int -> ( Id StripeSessionId, Types.PendingOrder ) -> Ui.Element msg
-viewPendingOrder idx ( id, order ) =
-    Ui.row
-        [ Ui.Font.size 14, Ui.spacing 12 ]
-        [ Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.fromInt (idx + 1)))
-        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (List.map (\a -> Name.toString a.name) order.form.attendees)))
-
-        -- , Element.text <| Debug.toString order
-        ]
-
-
 attendees : Types.CompletedOrder -> List String
 attendees order =
     List.map (\a -> Name.toString a.name) order.form.attendees
-
-
-loadProdBackend : Command restriction toMsg msg
-loadProdBackend =
-    let
-        x =
-            1
-
-        -- pass =
-        --     Env.adminPassword
-    in
-    Command.none
-
-
-
--- debugSeqDict assoc =
---     assoc
---         |> SeqDict.toList
---         |> List.map
---             (\data ->
---                 Element.column
---                     [ width fill
---                     ]
---                     [ paragraph [] [ Element.text (Debug.toString data) ]
---                     ]
---             )
---         |> Element.column []
-
-
-toString : a -> String
-toString x =
-    -- swap back to the original implementation when developing
-    -- Debug.toString x
-    "<toString neutered>"
