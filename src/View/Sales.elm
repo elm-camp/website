@@ -31,7 +31,7 @@ import Ui.Prose
 import Ui.Shadow
 
 
-view : TicketTypes TicketType -> LoadedModel -> Ui.Element FrontendMsg
+view : TicketTypes TicketType -> LoadedModel -> Element FrontendMsg
 view ticketTypes model =
     let
         form =
@@ -217,7 +217,7 @@ ticketsHtmlId =
     Dom.id "tickets"
 
 
-attendeesView : InitData2 -> LoadedModel -> Ui.Element FrontendMsg
+attendeesView : InitData2 -> LoadedModel -> Element FrontendMsg
 attendeesView initData model =
     let
         form : PurchaseForm
@@ -270,7 +270,7 @@ attendeesView initData model =
 --}
 
 
-accommodationView : TicketTypes TicketType -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
+accommodationView : TicketTypes TicketType -> InitData2 -> LoadedModel -> Element FrontendMsg
 accommodationView ticketTypes initData model =
     let
         form =
@@ -343,7 +343,7 @@ accommodationView ticketTypes initData model =
         ]
 
 
-viewAccom : NonNegative -> Bool -> Price -> TicketType -> InitData2 -> Ui.Element NonNegative
+viewAccom : NonNegative -> Bool -> Price -> TicketType -> InitData2 -> Element NonNegative
 viewAccom count ticketAvailable price ticket2 initData =
     let
         htmlIdPrefix =
@@ -403,7 +403,7 @@ viewAccom count ticketAvailable price ticket2 initData =
         ]
 
 
-numericField : String -> Bool -> Int -> (Int -> msg) -> Ui.Element msg
+numericField : String -> Bool -> Int -> (Int -> msg) -> Element msg
 numericField htmlIdPrefix canIncrement value onChange =
     Ui.row [ Ui.spacing 5 ]
         [ Ui.el
@@ -460,7 +460,7 @@ submitFormError conversionRate form =
             Ui.none
 
 
-attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Ui.Element FrontendMsg
+attendeeForm : LoadedModel -> Int -> PurchaseForm.AttendeeForm -> Element FrontendMsg
 attendeeForm model i attendee =
     let
         form =
@@ -532,7 +532,7 @@ noShrink =
     Html.Attributes.style "flex-shrink" "0" |> Ui.htmlAttribute
 
 
-opportunityGrant : PurchaseForm -> InitData2 -> LoadedModel -> Ui.Element FrontendMsg
+opportunityGrant : PurchaseForm -> InitData2 -> LoadedModel -> Element FrontendMsg
 opportunityGrant form initData model =
     let
         ticketPrice : Quantity Int StripeCurrency
@@ -646,7 +646,7 @@ sliderHorizontal attributes input =
         }
 
 
-summary : TicketTypes TicketType -> InitData2 -> LoadedModel -> Ui.Element msg
+summary : TicketTypes TicketType -> InitData2 -> LoadedModel -> Element msg
 summary ticketTypes initData model =
     let
         grant : Result String (Quantity Int LocalCurrency)
@@ -735,7 +735,7 @@ formatNumber value =
         |> String.join ","
 
 
-summaryAccommodation : TicketTypes TicketType -> InitData2 -> TicketTypes NonNegative -> Ui.Element msg
+summaryAccommodation : TicketTypes TicketType -> InitData2 -> TicketTypes NonNegative -> Element msg
 summaryAccommodation ticketTypes initData ticketCount =
     List.map3
         (\ticket price count ->
@@ -768,7 +768,7 @@ textInputHeight =
     38
 
 
-textInput : HtmlId -> PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Ui.Element msg
+textInput : HtmlId -> PurchaseForm -> (String -> msg) -> String -> (String -> Result String value) -> String -> Element msg
 textInput id form onChange title validator text =
     let
         label =
@@ -818,7 +818,7 @@ errorHtmlId =
     Dom.id "error"
 
 
-errorText : String -> Ui.Element msg
+errorText : String -> Element msg
 errorText error =
     Ui.Prose.paragraph
         [ Ui.width Ui.shrink

@@ -61,7 +61,7 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : Time.Posix -> Ui.Element FrontendMsg
+ticketSalesOpenCountdown : Time.Posix -> Element FrontendMsg
 ticketSalesOpenCountdown now =
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
@@ -106,7 +106,7 @@ ticketSalesOpenCountdown now =
         )
 
 
-detailedCountdown : Time.Posix -> Maybe (Ui.Element msg)
+detailedCountdown : Time.Posix -> Maybe (Element msg)
 detailedCountdown now =
     let
         target2 =
@@ -165,7 +165,7 @@ detailedCountdown now =
             |> Just
 
 
-goToTicketSales : Ui.Element FrontendMsg
+goToTicketSales : Element FrontendMsg
 goToTicketSales =
     Ui.el
         [ Ui.width Ui.fill

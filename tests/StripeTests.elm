@@ -3,7 +3,7 @@ module StripeTests exposing (rpcTest)
 import Backend
 import Dict
 import Expect
-import Json.Encode
+import Json.Encode as E
 import LamderaRPC
 import RPC
 import RecordedTests
@@ -19,7 +19,7 @@ rpcTest =
                 let
                     ( result, _, _ ) =
                         RPC.lamdera_handleEndpoints
-                            (Json.Encode.object [])
+                            (E.object [])
                             RecordedTests.stripePurchaseWebhookResponse
                             (Tuple.first Backend.init)
                 in

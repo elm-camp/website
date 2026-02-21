@@ -11,7 +11,7 @@ import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..),
 import EmailAddress exposing (EmailAddress)
 import Expect
 import Frontend
-import Json.Decode
+import Json.Decode as D
 import Json.Encode
 import LamderaRPC
 import List.Extra
@@ -60,8 +60,8 @@ isPurchaseConfirmationEmail emailAddress httpRequest =
     if httpRequest.url == "https://api.postmarkapp.com/email" then
         case httpRequest.body of
             T.JsonBody value ->
-                case Json.Decode.decodeValue decodePostmark value |> Debug.log "httpRequests" of
-                    Ok ( subject, to, body ) ->
+                case D.decodeValue decodePostmark value |> Debug.log "httpRequests" of
+                    Ok ( subject, to, _ ) ->
                         (emailAddress == to)
                             && (subject == String.Nonempty.toString Backend.confirmationEmailSubject)
 
@@ -75,35 +75,35 @@ isPurchaseConfirmationEmail emailAddress httpRequest =
         False
 
 
-decodePostmark : Json.Decode.Decoder ( String, EmailAddress, String )
+decodePostmark : D.Decoder ( String, EmailAddress, String )
 decodePostmark =
-    Json.Decode.map3 (\subject to body -> ( subject, to, body ))
-        (Json.Decode.field "Subject" Json.Decode.string)
-        (Json.Decode.field "To" Json.Decode.string
-            |> Json.Decode.andThen
+    D.map3 (\subject to body -> ( subject, to, body ))
+        (D.field "Subject" D.string)
+        (D.field "To" D.string
+            |> D.andThen
                 (\to ->
                     case String.split "<" to of
                         [ _, email ] ->
                             case EmailAddress.fromString (String.dropRight 1 email) of
                                 Just emailAddress ->
-                                    Json.Decode.succeed emailAddress
+                                    D.succeed emailAddress
 
                                 Nothing ->
-                                    Json.Decode.fail "Invalid email address"
+                                    D.fail "Invalid email address"
 
                         [ email ] ->
                             case EmailAddress.fromString email of
                                 Just emailAddress ->
-                                    Json.Decode.succeed emailAddress
+                                    D.succeed emailAddress
 
                                 Nothing ->
-                                    Json.Decode.fail "Invalid email address"
+                                    D.fail "Invalid email address"
 
                         _ ->
-                            Json.Decode.fail "Invalid email address"
+                            D.fail "Invalid email address"
                 )
         )
-        (Json.Decode.field "TextBody" Json.Decode.string)
+        (D.field "TextBody" D.string)
 
 
 handleHttpRequests : Dict String String -> Dict String Bytes -> { currentRequest : HttpRequest, data : T.Data FrontendModel BackendModel } -> HttpResponse
@@ -616,16 +616,15 @@ purchaseSingleRoomTickets :
 purchaseSingleRoomTickets count tab1 =
     List.concatMap
         (\index ->
-            (if index == 0 then
+            [ if index == 0 then
                 tab1.click 100 (Dom.id "selectTicket_Single Room")
 
-             else
+              else
                 tab1.click 100 (Dom.id "selectTicket_Single Room_plus")
-            )
-                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
-                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
-                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
-                   ]
+            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
+            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
+            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
+            ]
         )
         (List.range 0 (count - 1))
         |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " single room tickets")
@@ -644,16 +643,15 @@ purchaseSharedRoomTickets offset count tab1 =
                 attendanceIndex =
                     offset + index
             in
-            (if index == 0 then
+            [ if index == 0 then
                 tab1.click 100 (Dom.id "selectTicket_Shared Room")
 
-             else
+              else
                 tab1.click 100 (Dom.id "selectTicket_Shared Room_plus")
-            )
-                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
-                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
-                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
-                   ]
+            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+            ]
         )
         (List.range 0 (count - 1))
         |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " shared room tickets")
@@ -672,16 +670,15 @@ purchasecampfireTickets offset count tab1 =
                 attendanceIndex =
                     offset + index
             in
-            (if index == 0 then
+            [ if index == 0 then
                 tab1.click 100 (Dom.id "selectTicket_Attendance only")
 
-             else
+              else
                 tab1.click 100 (Dom.id "selectTicket_Attendance only_plus")
-            )
-                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
-                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
-                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
-                   ]
+            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+            ]
         )
         (List.range 0 (count - 1))
         |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " campfire tickets")

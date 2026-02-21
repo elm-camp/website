@@ -26,7 +26,7 @@ import EmailAddress exposing (EmailAddress)
 import Env
 import HttpHelpers
 import Id exposing (Id)
-import Json.Decode
+import Json.Decode as D
 import Lamdera as LamderaCore
 import List.Extra as List
 import List.Nonempty exposing (Nonempty(..))
@@ -310,7 +310,7 @@ update msg model =
                 "stripe" ->
                     case model.prices of
                         Types.LoadedTicketPrices stripeCurrency _ ->
-                            case Json.Decode.decodeString Stripe.decodeWebhook json of
+                            case D.decodeString Stripe.decodeWebhook json of
                                 Ok webhook ->
                                     case webhook of
                                         StripeSessionCompleted stripeSessionId ->
@@ -364,7 +364,7 @@ update msg model =
 
                                 Err error ->
                                     ( model
-                                    , "Failed to decode webhook: " ++ Json.Decode.errorToString error |> errorEmail
+                                    , "Failed to decode webhook: " ++ D.errorToString error |> errorEmail
                                     )
 
                         _ ->
@@ -564,7 +564,7 @@ confirmationEmail purchaseForm stripeCurrency =
                     (PurchaseForm.allTicketTypes purchaseForm.count)
                     (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
                     |> List.filterMap identity
-                    |> String.join ""
+                    |> String.concat
                )
             ++ (if Quantity.greaterThanZero purchaseForm.grantContribution then
                     View.Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }

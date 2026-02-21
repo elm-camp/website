@@ -12,7 +12,7 @@ import Lamdera as LamderaCore exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
 import LamderaRPC exposing (Headers, HttpBody(..), HttpRequest, RPCResult(..), StatusCode(..))
-import Task exposing (Task)
+import Task as TaskCore exposing (Task)
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToFrontend(..))
 
 
@@ -80,9 +80,9 @@ lamdera_handleEndpoints reqRaw req model =
                       else
                         LamderaRPC.ResultString "dev"
                     , model
-                    , Task.perform
+                    , TaskCore.perform
                         (\() -> StripeWebhookResponse { endpoint = req.endpoint, json = string })
-                        (Task.succeed ())
+                        (TaskCore.succeed ())
                     )
 
                 _ ->
