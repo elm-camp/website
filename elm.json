@@ -4,7 +4,9 @@
         "src",
         "vendored/mdgriffith/elm-ui/2.0.0/src",
         "vendored/mdgriffith/elm-animator/2.0.0/src",
-        "vendored/martinsstewart/elm-email/1.0.1/src"
+        "vendored/martinsstewart/elm-email/1.0.1/src",
+        "vendored/lamdera/fusion/src",
+        "generated"
     ],
     "elm-version": "0.19.1",
     "dependencies": {

@@ -327,28 +327,6 @@ updateLoaded msg model =
         SetViewport ->
             ( model, Command.none )
 
-        AdminPullBackendModel ->
-            ( model
-            , postJsonBytes
-                Types.w3_decode_BackendModel
-                -- (Json.Encode.string Env.adminPassword)
-                (E.string "adjust me when developing locally")
-                "http://localhost:8001/https://elm.camp/_r/backend-model"
-                |> Task.attempt AdminPullBackendModelResponse
-            )
-
-        AdminPullBackendModelResponse res ->
-            case res of
-                Ok backendModel ->
-                    ( { model | backendModel = Just backendModel }, Command.none )
-
-                Err err ->
-                    let
-                        _ =
-                            Debug.log "Failed to pull backend model" err
-                    in
-                    ( model, Command.none )
-
         Types.LogoMsg logoMsg ->
             ( { model | logoModel = View.Logo.update logoMsg model.logoModel }, Command.none )
 
@@ -430,6 +408,12 @@ updateLoaded msg model =
                     model
             , Command.none
             )
+
+        FusionPatch patch ->
+            Debug.todo ""
+
+        FusionQuery ->
+            Debug.todo ""
 
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
@@ -536,8 +520,8 @@ updateFromBackendLoaded msg model =
                 Err () ->
                     ( model, Command.none )
 
-        AdminInspectResponse backendModel ->
-            ( { model | backendModel = Just backendModel }, Command.none )
+        AdminInspectResponse backendModel value ->
+            ( { model | backendModel = Just ( backendModel, value ) }, Command.none )
 
 
 view : FrontendModel -> Effect.Browser.Document FrontendMsg

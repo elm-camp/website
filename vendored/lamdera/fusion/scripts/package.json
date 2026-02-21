@@ -1,0 +1,13 @@
+{
+    "devDependencies": {
+        "elm-codegen": "^0.6.1",
+        "elm-format": "^0.8.8",
+        "elm-pages": "^3.0.26",
+        "elm-review": "^2.13.4",
+        "elm-test-rs": "^3.0.1-0"
+    },
+    "scripts": {
+        "start": "bun elm-pages run src/Main.elm"
+    },
+    "license": "BSD-3-Clause"
+}
