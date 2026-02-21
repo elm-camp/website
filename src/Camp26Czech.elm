@@ -483,11 +483,10 @@ type alias TicketType =
 
 campfireTicket : TicketType
 campfireTicket =
-    { name = "Camping Spot"
-    , description = "Bring your own tent or campervan and stay on site. Showers & toilets provided."
+    { name = "Attendance only"
+    , description = "Book a room offsite or bring your own tent or campervan and stay on site. Showers & toilets provided."
     , image = ""
-    , available =
-        \ticketsAlreadyPurchased count -> PurchaseForm.totalTickets ticketsAlreadyPurchased + PurchaseForm.totalTickets count <= maxAttendees
+    , available = attendeesAreValid
     }
 
 
@@ -497,17 +496,25 @@ singleRoomTicket =
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
     , available =
-        \ticketsAlreadyPurchased count ->
-            NonNegative.toInt
-                (NonNegative.sum
-                    [ count.singleRoomTicket
-                    , count.sharedRoomTicket
-                    , ticketsAlreadyPurchased.singleRoomTicket
-                    , ticketsAlreadyPurchased.sharedRoomTicket
-                    ]
-                )
-                <= maxRooms
+        \alreadyPurchased count ->
+            attendeesAreValid alreadyPurchased count && roomsAreValid alreadyPurchased count
     }
+
+
+attendeesAreValid : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
+attendeesAreValid ticketsAlreadyPurchased count =
+    PurchaseForm.totalTickets ticketsAlreadyPurchased + PurchaseForm.totalTickets count <= maxAttendees
+
+
+roomsAreValid : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
+roomsAreValid ticketsAlreadyPurchased count =
+    List.sum
+        [ NonNegative.toInt count.singleRoomTicket * 2
+        , NonNegative.toInt count.sharedRoomTicket
+        , NonNegative.toInt ticketsAlreadyPurchased.singleRoomTicket * 2
+        , NonNegative.toInt ticketsAlreadyPurchased.sharedRoomTicket
+        ]
+        <= (maxRooms * 2)
 
 
 sharedRoomTicket : TicketType
@@ -516,11 +523,6 @@ sharedRoomTicket =
     , description = "Suitable for a couple or twin share for 3 nights."
     , image = ""
     , available =
-        \ticketsAlreadyPurchased count ->
-            let
-                doublesLeft : Int
-                doublesLeft =
-                    (maxRooms - (NonNegative.toInt count.singleRoomTicket + NonNegative.toInt ticketsAlreadyPurchased.singleRoomTicket)) * 2
-            in
-            NonNegative.toInt count.sharedRoomTicket + NonNegative.toInt ticketsAlreadyPurchased.sharedRoomTicket <= doublesLeft
+        \alreadyPurchased count ->
+            attendeesAreValid alreadyPurchased count && roomsAreValid alreadyPurchased count
     }

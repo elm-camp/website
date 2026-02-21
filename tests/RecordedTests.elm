@@ -490,6 +490,122 @@ tests fileData =
                 ]
             )
         ]
+    , T.start
+        "All tickets sold out"
+        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\tab1 ->
+                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchasecampfireTickets 0 Camp26Czech.maxAttendees tab1
+                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tab1.click 100 (Dom.id "submitForm")
+                , T.connectFrontend
+                    100
+                    (Lamdera.sessionIdFromString "session ID 2")
+                    (Route.encode Nothing Route.TicketPurchaseRoute)
+                    { width = 881, height = 1312 }
+                    (\tab2 ->
+                        [ tab2.checkView
+                            100
+                            (\html ->
+                                Test.Html.Query.count
+                                    (Expect.equal 3)
+                                    (Test.Html.Query.findAll [ Test.Html.Selector.exactText "Sold out!" ] html)
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    , T.start
+        "All tickets and rooms sold out"
+        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\tab1 ->
+                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets Camp26Czech.maxRooms tab1
+                , purchasecampfireTickets Camp26Czech.maxRooms (Camp26Czech.maxAttendees - Camp26Czech.maxRooms) tab1
+                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tab1.click 100 (Dom.id "submitForm")
+                , T.connectFrontend
+                    100
+                    (Lamdera.sessionIdFromString "session ID 2")
+                    (Route.encode Nothing Route.TicketPurchaseRoute)
+                    { width = 881, height = 1312 }
+                    (\tab2 ->
+                        [ tab2.checkView
+                            100
+                            (\html ->
+                                Test.Html.Query.count
+                                    (Expect.equal 3)
+                                    (Test.Html.Query.findAll [ Test.Html.Selector.exactText "Sold out!" ] html)
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
+    , T.start
+        "All but one room sold out (which is then sold out via shared room tickets)"
+        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            { width = 881, height = 1312 }
+            (\tab1 ->
+                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
+                , purchaseSharedRoomTickets (Camp26Czech.maxRooms - 1) 2 tab1
+                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tab1.click 100 (Dom.id "submitForm")
+                , T.connectFrontend
+                    100
+                    (Lamdera.sessionIdFromString "session ID 2")
+                    (Route.encode Nothing Route.TicketPurchaseRoute)
+                    { width = 881, height = 1312 }
+                    (\tab2 ->
+                        [ tab2.checkView
+                            100
+                            (\html ->
+                                Test.Html.Query.count
+                                    (Expect.equal 2)
+                                    (Test.Html.Query.findAll [ Test.Html.Selector.exactText "Sold out!" ] html)
+                            )
+                        ]
+                    )
+                ]
+            )
+        ]
     ]
 
 
@@ -512,7 +628,63 @@ purchaseSingleRoomTickets count tab1 =
                    ]
         )
         (List.range 0 (count - 1))
-        |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " single room tickets tickets")
+        |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " single room tickets")
+
+
+purchaseSharedRoomTickets :
+    Int
+    -> Int
+    -> T.FrontendActions toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+    -> T.Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+purchaseSharedRoomTickets offset count tab1 =
+    List.concatMap
+        (\index ->
+            let
+                attendanceIndex : Int
+                attendanceIndex =
+                    offset + index
+            in
+            (if index == 0 then
+                tab1.click 100 (Dom.id "selectTicket_Shared Room")
+
+             else
+                tab1.click 100 (Dom.id "selectTicket_Shared Room_plus")
+            )
+                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+                   ]
+        )
+        (List.range 0 (count - 1))
+        |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " shared room tickets")
+
+
+purchasecampfireTickets :
+    Int
+    -> Int
+    -> T.FrontendActions toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+    -> T.Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
+purchasecampfireTickets offset count tab1 =
+    List.concatMap
+        (\index ->
+            let
+                attendanceIndex : Int
+                attendanceIndex =
+                    offset + index
+            in
+            (if index == 0 then
+                tab1.click 100 (Dom.id "selectTicket_Attendance only")
+
+             else
+                tab1.click 100 (Dom.id "selectTicket_Attendance only_plus")
+            )
+                :: [ tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+                   , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+                   , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+                   ]
+        )
+        (List.range 0 (count - 1))
+        |> T.collapsableGroup ("Purchase " ++ String.fromInt count ++ " campfire tickets")
 
 
 stripePurchaseWebhookResponse : { json : String, endpoint : String }

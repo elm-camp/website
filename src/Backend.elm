@@ -422,6 +422,7 @@ updateFromFrontend sessionId clientId msg model =
                                     ticket.available purchaseForm.count (totalTicketCount model.pendingOrder model.orders)
                                 )
                                 (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                |> Debug.log "a"
                                 |> List.all identity
 
                         opportunityGrantItems : List CheckoutItem
