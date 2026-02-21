@@ -27,6 +27,8 @@ import Effect.Browser.Navigation exposing (Key)
 import Effect.Http as Http
 import Effect.Lamdera exposing (ClientId, SessionId)
 import Effect.Time as Time
+import Fusion
+import Fusion.Patch
 import Id exposing (Id)
 import Money
 import NonNegative exposing (NonNegative)
@@ -69,7 +71,7 @@ type alias LoadedModel =
     , form : PurchaseForm
     , route : Route
     , showTooltip : Bool
-    , backendModel : Maybe BackendModel
+    , backendModel : Maybe ( BackendModel, Fusion.Value )
     , logoModel : View.Logo.Model
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
@@ -279,14 +281,14 @@ type FrontendMsg
     | FormChanged PurchaseForm
     | PressedSubmitForm
     | SetViewport
-    | AdminPullBackendModel
-    | AdminPullBackendModelResponse (Result Http.Error BackendModel)
     | LogoMsg View.Logo.Msg
     | Noop
     | ElmUiMsg Ui.Msg
     | ScrolledToFragment
     | GotConversionRate (Result Http.Error (SeqDict Money.Currency (Quantity Float (Rate StripeCurrency LocalCurrency))))
     | SelectedCurrency Money.Currency
+    | FusionPatch Fusion.Patch.Patch
+    | FusionQuery
 
 
 type ToBackend
@@ -320,7 +322,7 @@ type ToFrontend
     | SubmitFormResponse (Result String (Id StripeSessionId))
     | SlotRemainingChanged (TicketTypes NonNegative)
     | TicketsEnabledChanged TicketsEnabled
-    | AdminInspectResponse BackendModel
+    | AdminInspectResponse BackendModel Fusion.Value
 
 
 type TicketsEnabled

@@ -24,6 +24,7 @@ import Email.Html as Html
 import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
 import Env
+import Fusion.Generated.Types
 import HttpHelpers
 import Id exposing (Id)
 import Json.Decode as D
@@ -485,7 +486,11 @@ updateFromFrontend sessionId clientId msg model =
 
         AdminInspect pass ->
             if pass == Env.adminPassword then
-                ( model, Lamdera.sendToFrontend clientId (AdminInspectResponse model) )
+                ( model
+                , Lamdera.sendToFrontend
+                    clientId
+                    (AdminInspectResponse model (Fusion.Generated.Types.toValue_BackendModel model))
+                )
 
             else
                 ( model, Command.none )

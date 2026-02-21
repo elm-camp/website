@@ -9,6 +9,10 @@ module Admin exposing
     )
 
 import Env
+import Fusion
+import Fusion.Editor
+import Fusion.Generated.TypeDict
+import Fusion.Generated.TypeDict.Types
 import Html
 import Id exposing (Id)
 import Name
@@ -24,15 +28,15 @@ import Ui.Font
 view : LoadedModel -> Ui.Element FrontendMsg
 view model =
     case model.backendModel of
-        Just backendModel ->
-            viewAdmin backendModel
+        Just ( backendModel, value ) ->
+            viewAdmin backendModel value
 
         Nothing ->
             Ui.text "loading"
 
 
-viewAdmin : BackendModel -> Ui.Element FrontendMsg
-viewAdmin backendModel =
+viewAdmin : BackendModel -> Fusion.Value -> Ui.Element FrontendMsg
+viewAdmin backendModel value =
     let
         numberOfOrders =
             List.length (SeqDict.toList backendModel.orders)
@@ -51,17 +55,18 @@ viewAdmin backendModel =
         [ Ui.padding 24
         , Ui.spacing 40
         ]
-        [ if Env.isProduction then
-            Ui.none
-
-          else
-            Ui.el
-                (Theme.normalButtonAttributes AdminPullBackendModel)
-                (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "Pull Backend Model from prod"))
-        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
+        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
         , viewOrders backendModel.orders
         , viewExpiredOrders backendModel.expiredOrders
+        , Fusion.Editor.value
+            { typeDict = Fusion.Generated.TypeDict.typeDict
+            , type_ = Just Fusion.Generated.TypeDict.Types.type_BackendModel
+            , editMsg = FusionPatch
+            , queryMsg = \_ -> FusionQuery
+            }
+            value
+            |> Ui.html
         ]
 
 
