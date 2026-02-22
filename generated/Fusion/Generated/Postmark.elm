@@ -1,11 +1,11 @@
 module Fusion.Generated.Postmark exposing
-    ( build_PostmarkError_, build_SendEmailError, build_statusCode__body, patch_PostmarkError_, patch_SendEmailError, patch_statusCode__body
-    , patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, toValue_PostmarkError_, toValue_SendEmailError, toValue_statusCode__body
+    ( build_PostmarkError_, build_SendEmailError, build_UnknownErrorData, patch_PostmarkError_, patch_SendEmailError, patch_UnknownErrorData
+    , patcher_PostmarkError_, patcher_SendEmailError, patcher_UnknownErrorData, toValue_PostmarkError_, toValue_SendEmailError, toValue_UnknownErrorData
     )
 
 {-|
-@docs build_PostmarkError_, build_SendEmailError, build_statusCode__body, patch_PostmarkError_, patch_SendEmailError, patch_statusCode__body
-@docs patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, toValue_PostmarkError_, toValue_SendEmailError, toValue_statusCode__body
+@docs build_PostmarkError_, build_SendEmailError, build_UnknownErrorData, patch_PostmarkError_, patch_SendEmailError, patch_UnknownErrorData
+@docs patcher_PostmarkError_, patcher_SendEmailError, patcher_UnknownErrorData, toValue_PostmarkError_, toValue_SendEmailError, toValue_UnknownErrorData
 -}
 
 
@@ -52,25 +52,7 @@ build_SendEmailError value =
                  ( "UnknownError", [ patch0 ] ) ->
                      Result.map
                          Postmark.UnknownError
-                         (Fusion.Patch.build_Record
-                              (\build_RecordUnpack ->
-                                   Result.map2
-                                       (\statusCode body ->
-                                            { statusCode = statusCode
-                                            , body = body
-                                            }
-                                       )
-                                       (Result.andThen
-                                            Fusion.Patch.build_Int
-                                            (build_RecordUnpack "statusCode")
-                                       )
-                                       (Result.andThen
-                                            Fusion.Patch.build_String
-                                            (build_RecordUnpack "body")
-                                       )
-                              )
-                              patch0
-                         )
+                         (build_UnknownErrorData patch0)
 
                  ( "PostmarkError", [ patch0 ] ) ->
                      Result.map
@@ -95,10 +77,9 @@ build_SendEmailError value =
         value
 
 
-build_statusCode__body :
-    Fusion.Value
-    -> Result Fusion.Patch.Error { statusCode : Int, body : String }
-build_statusCode__body value =
+build_UnknownErrorData :
+    Fusion.Value -> Result Fusion.Patch.Error Postmark.UnknownErrorData
+build_UnknownErrorData value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
              Result.map2
@@ -191,19 +172,7 @@ patch_SendEmailError options patch value =
             Result.map
                 Postmark.UnknownError
                 (Fusion.Patch.maybeApply
-                     { patch =
-                         patch_statusCode__body
-                             Fusion.Patch.patcher_Int
-                             Fusion.Patch.patcher_String
-                     , build =
-                         build_statusCode__body
-                             Fusion.Patch.patcher_Int
-                             Fusion.Patch.patcher_String
-                     , toValue =
-                         toValue_statusCode__body
-                             Fusion.Patch.patcher_Int
-                             Fusion.Patch.patcher_String
-                     }
+                     patcher_UnknownErrorData
                      options
                      patch0
                      arg0
@@ -215,25 +184,7 @@ patch_SendEmailError options patch value =
         ( _, Fusion.Patch.PCustomSame "UnknownError" [ (Just patch0) ], _ ) ->
             Result.map
                 Postmark.UnknownError
-                (Fusion.Patch.buildFromPatch
-                     (Fusion.Patch.build_Record
-                          (\build_RecordUnpack ->
-                               Result.map2
-                                   (\statusCode body ->
-                                        { statusCode = statusCode, body = body }
-                                   )
-                                   (Result.andThen
-                                        Fusion.Patch.build_Int
-                                        (build_RecordUnpack "statusCode")
-                                   )
-                                   (Result.andThen
-                                        Fusion.Patch.build_String
-                                        (build_RecordUnpack "body")
-                                   )
-                          )
-                     )
-                     patch0
-                )
+                (Fusion.Patch.buildFromPatch build_UnknownErrorData patch0)
 
         ( _, Fusion.Patch.PCustomSame "UnknownError" _, _ ) ->
             Result.Err Fusion.Patch.CouldNotBuildValueFromPatch
@@ -303,25 +254,7 @@ patch_SendEmailError options patch value =
 
         ( _, Fusion.Patch.PCustomChange expectedVariant "UnknownError" [ arg0 ], _ ) ->
             if options.force || isCorrectVariant expectedVariant then
-                Result.map
-                    Postmark.UnknownError
-                    (Fusion.Patch.build_Record
-                         (\build_RecordUnpack ->
-                              Result.map2
-                                  (\statusCode body ->
-                                       { statusCode = statusCode, body = body }
-                                  )
-                                  (Result.andThen
-                                       Fusion.Patch.build_Int
-                                       (build_RecordUnpack "statusCode")
-                                  )
-                                  (Result.andThen
-                                       Fusion.Patch.build_String
-                                       (build_RecordUnpack "body")
-                                  )
-                         )
-                         arg0
-                    )
+                Result.map Postmark.UnknownError (build_UnknownErrorData arg0)
 
             else
                 Result.Err Fusion.Patch.Conflict
@@ -358,12 +291,12 @@ patch_SendEmailError options patch value =
             Result.Err (Fusion.Patch.WrongType "patchCustom.lastBranch")
 
 
-patch_statusCode__body :
+patch_UnknownErrorData :
     { force : Bool }
     -> Fusion.Patch.Patch
-    -> { statusCode : Int, body : String }
-    -> Result Fusion.Patch.Error { statusCode : Int, body : String }
-patch_statusCode__body options patch value =
+    -> Postmark.UnknownErrorData
+    -> Result Fusion.Patch.Error Postmark.UnknownErrorData
+patch_UnknownErrorData options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
              case fieldName of
@@ -404,12 +337,11 @@ patcher_SendEmailError =
     }
 
 
-patcher_statusCode__body :
-    Fusion.Patch.Patcher { statusCode : Int, body : String }
-patcher_statusCode__body =
-    { patch = patch_statusCode__body
-    , build = build_statusCode__body
-    , toValue = toValue_statusCode__body
+patcher_UnknownErrorData : Fusion.Patch.Patcher Postmark.UnknownErrorData
+patcher_UnknownErrorData =
+    { patch = patch_UnknownErrorData
+    , build = build_UnknownErrorData
+    , toValue = toValue_UnknownErrorData
     }
 
 
@@ -432,15 +364,7 @@ toValue_SendEmailError : Postmark.SendEmailError -> Fusion.Value
 toValue_SendEmailError value =
     case value of
         Postmark.UnknownError arg0 ->
-            Fusion.VCustom
-                "UnknownError"
-                [ Fusion.VRecord
-                    (Dict.fromList
-                       [ ( "statusCode", Fusion.VInt arg0.statusCode )
-                       , ( "body", Fusion.VString arg0.body )
-                       ]
-                    )
-                ]
+            Fusion.VCustom "UnknownError" [ toValue_UnknownErrorData arg0 ]
 
         Postmark.PostmarkError arg0 ->
             Fusion.VCustom "PostmarkError" [ toValue_PostmarkError_ arg0 ]
@@ -455,8 +379,8 @@ toValue_SendEmailError value =
             Fusion.VCustom "BadUrl" [ Fusion.VString arg0 ]
 
 
-toValue_statusCode__body : { statusCode : Int, body : String } -> Fusion.Value
-toValue_statusCode__body value =
+toValue_UnknownErrorData : Postmark.UnknownErrorData -> Fusion.Value
+toValue_UnknownErrorData value =
     Fusion.VRecord
         (Dict.fromList
              [ ( "statusCode", Fusion.VInt value.statusCode )

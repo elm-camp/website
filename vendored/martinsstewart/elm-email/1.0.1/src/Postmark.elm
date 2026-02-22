@@ -1,6 +1,7 @@
 module Postmark exposing
     ( apiKey, ApiKey, sendEmail, sendEmails, sendEmailTask, sendEmailsTask, Email, EmailBody(..), MessageStream(..), PostmarkError_, SendEmailError(..), SendEmailsError(..)
     , Attachments, noAttachments, attachments
+    , UnknownErrorData
     )
 
 {-|
@@ -137,18 +138,22 @@ type MessageStream
 Some are just normal HTTP errors and others are specific to the Postmark API.
 -}
 type SendEmailError
-    = UnknownError { statusCode : Int, body : String }
+    = UnknownError UnknownErrorData
     | PostmarkError PostmarkError_
     | NetworkError
     | Timeout
     | BadUrl String
 
 
+type alias UnknownErrorData =
+    { statusCode : Int, body : String }
+
+
 {-| Possible errors we might get back when trying to send multiple emails.
 Some are just normal HTTP errors and others are specific to the Postmark API.
 -}
 type SendEmailsError
-    = UnknownError_ { statusCode : Int, body : String }
+    = UnknownError_ UnknownErrorData
     | PostmarkErrors (Nonempty PostmarkError_)
     | NetworkError_
     | Timeout_

@@ -15,9 +15,9 @@ import Fusion.EmailAddress
 import Fusion.Generated.Name
 import Fusion.Generated.Quantity
 import Fusion.Generated.String.Nonempty
+import Fusion.Generated.Stripe
 import Fusion.NonNegative
 import Fusion.Patch
-import Fusion.Stripe
 import PurchaseForm
 
 
@@ -77,7 +77,7 @@ build_PurchaseFormValidated value =
                  (Result.andThen
                       (Fusion.Generated.Quantity.build_Quantity
                            Fusion.Patch.patcher_Float
-                           Fusion.Stripe.patcher_StripeCurrency
+                           Fusion.Generated.Stripe.patcher_StripeCurrency
                       )
                       (build_RecordUnpack "grantContribution")
                  )
@@ -205,7 +205,7 @@ patch_PurchaseFormValidated options patch value =
                          )
                          ((Fusion.Generated.Quantity.patch_Quantity
                                Fusion.Patch.patcher_Float
-                               Fusion.Stripe.patcher_StripeCurrency
+                               Fusion.Generated.Stripe.patcher_StripeCurrency
                           )
                               options
                               fieldPatch
@@ -324,7 +324,7 @@ toValue_PurchaseFormValidated value =
              , ( "grantContribution"
                , (Fusion.Generated.Quantity.toValue_Quantity
                       Fusion.Patch.patcher_Float
-                      Fusion.Stripe.patcher_StripeCurrency
+                      Fusion.Generated.Stripe.patcher_StripeCurrency
                  )
                      value.grantContribution
                )

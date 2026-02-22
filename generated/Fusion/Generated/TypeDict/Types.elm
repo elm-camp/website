@@ -1,11 +1,11 @@
 module Fusion.Generated.TypeDict.Types exposing
     ( typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_PendingOrder, type_TicketPriceStatus
-    , type_TicketsEnabled, type_adminMessage
+    , type_TicketsDisabledData, type_TicketsEnabled
     )
 
 {-|
 @docs typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_PendingOrder, type_TicketPriceStatus
-@docs type_TicketsEnabled, type_adminMessage
+@docs type_TicketsDisabledData, type_TicketsEnabled
 -}
 
 
@@ -16,7 +16,7 @@ import Fusion
 typeDict : Dict.Dict String ( Fusion.Type, List a )
 typeDict =
     Dict.fromList
-        [ ( "adminMessage", ( type_adminMessage, [] ) )
+        [ ( "TicketsDisabledData", ( type_TicketsDisabledData, [] ) )
         , ( "TicketsEnabled", ( type_TicketsEnabled, [] ) )
         , ( "TicketPriceStatus", ( type_TicketPriceStatus, [] ) )
         , ( "PendingOrder", ( type_PendingOrder, [] ) )
@@ -140,6 +140,15 @@ type_TicketPriceStatus =
         ]
 
 
+type_TicketsDisabledData : Fusion.Type
+type_TicketsDisabledData =
+    Fusion.TRecord
+        [ ( "adminMessage"
+          , Fusion.TNamed [ "String" ] "String" [] (Just Fusion.TString)
+          )
+        ]
+
+
 type_TicketsEnabled : Fusion.Type
 type_TicketsEnabled =
     Fusion.TCustom
@@ -147,20 +156,6 @@ type_TicketsEnabled =
         []
         [ ( "TicketsEnabled", [] )
         , ( "TicketsDisabled"
-          , [ Fusion.TRecord
-                [ ( "adminMessage"
-                  , Fusion.TNamed [ "String" ] "String" [] (Just Fusion.TString)
-                  )
-                ]
-            ]
-          )
-        ]
-
-
-type_adminMessage : Fusion.Type
-type_adminMessage =
-    Fusion.TRecord
-        [ ( "adminMessage"
-          , Fusion.TNamed [ "String" ] "String" [] (Just Fusion.TString)
+          , [ Fusion.TNamed [ "Types" ] "TicketsDisabledData" [] Nothing ]
           )
         ]

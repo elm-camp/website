@@ -1,17 +1,17 @@
 module Fusion.Generated.Types exposing
-    ( build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsEnabled
-    , build_adminMessage, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus, patch_TicketsEnabled
-    , patch_adminMessage, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder, patcher_TicketPriceStatus, patcher_TicketsEnabled
-    , patcher_adminMessage, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult, toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsEnabled
-    , toValue_adminMessage
+    ( build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
+    , build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus, patch_TicketsDisabledData
+    , patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder, patcher_TicketPriceStatus, patcher_TicketsDisabledData
+    , patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult, toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData
+    , toValue_TicketsEnabled
     )
 
 {-|
-@docs build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsEnabled
-@docs build_adminMessage, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
-@docs patch_TicketsEnabled, patch_adminMessage, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
-@docs patcher_TicketPriceStatus, patcher_TicketsEnabled, patcher_adminMessage, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
-@docs toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsEnabled, toValue_adminMessage
+@docs build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
+@docs build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
+@docs patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
+@docs patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
+@docs toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData, toValue_TicketsEnabled
 -}
 
 
@@ -215,6 +215,21 @@ build_TicketPriceStatus value =
         value
 
 
+build_TicketsDisabledData :
+    Fusion.Value -> Result Fusion.Patch.Error Types.TicketsDisabledData
+build_TicketsDisabledData value =
+    Fusion.Patch.build_Record
+        (\build_RecordUnpack ->
+             Result.map
+                 (\adminMessage -> { adminMessage = adminMessage })
+                 (Result.andThen
+                      Fusion.Patch.build_String
+                      (build_RecordUnpack "adminMessage")
+                 )
+        )
+        value
+
+
 build_TicketsEnabled :
     Fusion.Value -> Result Fusion.Patch.Error Types.TicketsEnabled
 build_TicketsEnabled value =
@@ -227,38 +242,11 @@ build_TicketsEnabled value =
                  ( "TicketsDisabled", [ patch0 ] ) ->
                      Result.map
                          Types.TicketsDisabled
-                         (Fusion.Patch.build_Record
-                              (\build_RecordUnpack ->
-                                   Result.map
-                                       (\adminMessage ->
-                                            { adminMessage = adminMessage }
-                                       )
-                                       (Result.andThen
-                                            Fusion.Patch.build_String
-                                            (build_RecordUnpack "adminMessage")
-                                       )
-                              )
-                              patch0
-                         )
+                         (build_TicketsDisabledData patch0)
 
                  _ ->
                      Result.Err
                          (Fusion.Patch.WrongType "buildCustom last branch")
-        )
-        value
-
-
-build_adminMessage :
-    Fusion.Value -> Result Fusion.Patch.Error { adminMessage : String }
-build_adminMessage value =
-    Fusion.Patch.build_Record
-        (\build_RecordUnpack ->
-             Result.map
-                 (\adminMessage -> { adminMessage = adminMessage })
-                 (Result.andThen
-                      Fusion.Patch.build_String
-                      (build_RecordUnpack "adminMessage")
-                 )
         )
         value
 
@@ -693,6 +681,32 @@ patch_TicketPriceStatus options patch value =
             Result.Err (Fusion.Patch.WrongType "patchCustom.lastBranch")
 
 
+patch_TicketsDisabledData :
+    { force : Bool }
+    -> Fusion.Patch.Patch
+    -> Types.TicketsDisabledData
+    -> Result Fusion.Patch.Error Types.TicketsDisabledData
+patch_TicketsDisabledData options patch value =
+    Fusion.Patch.patch_Record
+        (\fieldName fieldPatch acc ->
+             case fieldName of
+                 "adminMessage" ->
+                     Result.map
+                         (\adminMessage -> { acc | adminMessage = adminMessage }
+                         )
+                         (Fusion.Patch.patch_String
+                              options
+                              fieldPatch
+                              acc.adminMessage
+                         )
+
+                 _ ->
+                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+        )
+        patch
+        value
+
+
 patch_TicketsEnabled :
     { force : Bool }
     -> Fusion.Patch.Patch
@@ -725,11 +739,7 @@ patch_TicketsEnabled options patch value =
             Result.map
                 Types.TicketsDisabled
                 (Fusion.Patch.maybeApply
-                     { patch = patch_adminMessage Fusion.Patch.patcher_String
-                     , build = build_adminMessage Fusion.Patch.patcher_String
-                     , toValue =
-                         toValue_adminMessage Fusion.Patch.patcher_String
-                     }
+                     patcher_TicketsDisabledData
                      options
                      patch0
                      arg0
@@ -741,21 +751,7 @@ patch_TicketsEnabled options patch value =
         ( _, Fusion.Patch.PCustomSame "TicketsDisabled" [ (Just patch0) ], _ ) ->
             Result.map
                 Types.TicketsDisabled
-                (Fusion.Patch.buildFromPatch
-                     (Fusion.Patch.build_Record
-                          (\build_RecordUnpack ->
-                               Result.map
-                                   (\adminMessage ->
-                                        { adminMessage = adminMessage }
-                                   )
-                                   (Result.andThen
-                                        Fusion.Patch.build_String
-                                        (build_RecordUnpack "adminMessage")
-                                   )
-                          )
-                     )
-                     patch0
-                )
+                (Fusion.Patch.buildFromPatch build_TicketsDisabledData patch0)
 
         ( _, Fusion.Patch.PCustomSame "TicketsDisabled" _, _ ) ->
             Result.Err Fusion.Patch.CouldNotBuildValueFromPatch
@@ -774,51 +770,13 @@ patch_TicketsEnabled options patch value =
             if options.force || isCorrectVariant expectedVariant then
                 Result.map
                     Types.TicketsDisabled
-                    (Fusion.Patch.build_Record
-                         (\build_RecordUnpack ->
-                              Result.map
-                                  (\adminMessage ->
-                                       { adminMessage = adminMessage }
-                                  )
-                                  (Result.andThen
-                                       Fusion.Patch.build_String
-                                       (build_RecordUnpack "adminMessage")
-                                  )
-                         )
-                         arg0
-                    )
+                    (build_TicketsDisabledData arg0)
 
             else
                 Result.Err Fusion.Patch.Conflict
 
         _ ->
             Result.Err (Fusion.Patch.WrongType "patchCustom.lastBranch")
-
-
-patch_adminMessage :
-    { force : Bool }
-    -> Fusion.Patch.Patch
-    -> { adminMessage : String }
-    -> Result Fusion.Patch.Error { adminMessage : String }
-patch_adminMessage options patch value =
-    Fusion.Patch.patch_Record
-        (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "adminMessage" ->
-                     Result.map
-                         (\adminMessage -> { acc | adminMessage = adminMessage }
-                         )
-                         (Fusion.Patch.patch_String
-                              options
-                              fieldPatch
-                              acc.adminMessage
-                         )
-
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
-        )
-        patch
-        value
 
 
 patcher_BackendModel : Fusion.Patch.Patcher Types.BackendModel
@@ -861,19 +819,19 @@ patcher_TicketPriceStatus =
     }
 
 
+patcher_TicketsDisabledData : Fusion.Patch.Patcher Types.TicketsDisabledData
+patcher_TicketsDisabledData =
+    { patch = patch_TicketsDisabledData
+    , build = build_TicketsDisabledData
+    , toValue = toValue_TicketsDisabledData
+    }
+
+
 patcher_TicketsEnabled : Fusion.Patch.Patcher Types.TicketsEnabled
 patcher_TicketsEnabled =
     { patch = patch_TicketsEnabled
     , build = build_TicketsEnabled
     , toValue = toValue_TicketsEnabled
-    }
-
-
-patcher_adminMessage : Fusion.Patch.Patcher { adminMessage : String }
-patcher_adminMessage =
-    { patch = patch_adminMessage
-    , build = build_adminMessage
-    , toValue = toValue_adminMessage
     }
 
 
@@ -992,6 +950,13 @@ toValue_TicketPriceStatus value =
             Fusion.VCustom "TicketCurrenciesDoNotMatch" []
 
 
+toValue_TicketsDisabledData : Types.TicketsDisabledData -> Fusion.Value
+toValue_TicketsDisabledData value =
+    Fusion.VRecord
+        (Dict.fromList [ ( "adminMessage", Fusion.VString value.adminMessage ) ]
+        )
+
+
 toValue_TicketsEnabled : Types.TicketsEnabled -> Fusion.Value
 toValue_TicketsEnabled value =
     case value of
@@ -1001,15 +966,4 @@ toValue_TicketsEnabled value =
         Types.TicketsDisabled arg0 ->
             Fusion.VCustom
                 "TicketsDisabled"
-                [ Fusion.VRecord
-                    (Dict.fromList
-                       [ ( "adminMessage", Fusion.VString arg0.adminMessage ) ]
-                    )
-                ]
-
-
-toValue_adminMessage : { adminMessage : String } -> Fusion.Value
-toValue_adminMessage value =
-    Fusion.VRecord
-        (Dict.fromList [ ( "adminMessage", Fusion.VString value.adminMessage ) ]
-        )
+                [ toValue_TicketsDisabledData arg0 ]
