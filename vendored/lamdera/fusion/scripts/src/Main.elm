@@ -467,7 +467,7 @@ step model =
                     case
                         model.declarations
                             |> Dict.get ("Fusion" :: "Generated" :: "TypeDict" :: moduleName)
-                            |> Maybe.andThen (\( decls, _ ) -> Dict.get ("type_" ++ typeNameString) decls)
+                            |> Maybe.andThen (Tuple.first >> Dict.get ("type_" ++ typeNameString))
                     of
                         Just _ ->
                             -- Do.do (logInfo model <| "Skipping " ++ Generate.fqTypeNameToString head ++ ", already generated") <| \_ ->

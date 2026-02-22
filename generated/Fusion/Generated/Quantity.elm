@@ -1,9 +1,7 @@
-module Fusion.Generated.Quantity exposing
-    ( build_Quantity, patch_Quantity, patcher_Quantity, query_Quantity, toValue_Quantity
-    )
+module Fusion.Generated.Quantity exposing ( build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity )
 
 {-|
-@docs build_Quantity, patch_Quantity, patcher_Quantity, query_Quantity, toValue_Quantity
+@docs build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity
 -}
 
 
@@ -64,30 +62,6 @@ patcher_Quantity numberPatcher unitsPatcher =
     , build = build_Quantity numberPatcher unitsPatcher
     , toValue = toValue_Quantity numberPatcher unitsPatcher
     }
-
-
-query_Quantity :
-    Fusion.Patch.Patcher number
-    -> Fusion.Patch.Patcher units
-    -> Fusion.Query
-    -> Quantity.Quantity number units
-    -> Fusion.Value
-query_Quantity numberPatcher unitsPatcher query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Quantity.Quantity arg0 ->
-                         Fusion.VCustom
-                             "Quantity"
-                             [ numberPatcher.query query arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
 
 
 toValue_Quantity :

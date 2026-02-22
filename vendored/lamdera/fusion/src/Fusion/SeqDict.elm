@@ -2,7 +2,7 @@ module Fusion.SeqDict exposing (build_SeqDict, patch_SeqDict, patcher_SeqDict, t
 
 {-| -}
 
-import Fusion exposing (Query(..), Value(..))
+import Fusion exposing (Value(..))
 import Fusion.Patch exposing (Error(..), Patch(..), Patcher)
 import Fusion.ValueDict as ValueDict exposing (ValueDict)
 import SeqDict exposing (SeqDict)
@@ -14,7 +14,6 @@ patcher_SeqDict keyPatcher valuePatcher =
     { patch = patch_SeqDict keyPatcher valuePatcher
     , build = build_SeqDict keyPatcher valuePatcher
     , toValue = toValue_SeqDict keyPatcher valuePatcher
-    , query = query_SeqDict keyPatcher valuePatcher
     }
 
 
@@ -129,25 +128,3 @@ toValue_SeqDict keyPatcher valuePatcher dict =
                         )
                     )
         }
-
-
-query_SeqDict : Patcher key -> Patcher value -> Fusion.Query -> SeqDict key value -> Result Error Value
-query_SeqDict keyPatcher valuePatcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_SeqDict keyPatcher valuePatcher value)
-
-        QIndexed key child ->
-            keyPatcher.build key
-                |> Result.andThen
-                    (\builtKey ->
-                        case SeqDict.get builtKey value of
-                            Just item ->
-                                valuePatcher.query child item
-
-                            Nothing ->
-                                Err WrongQuery
-                    )
-
-        QRecord _ _ ->
-            Err WrongQuery

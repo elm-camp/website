@@ -113,9 +113,6 @@ suite =
         patcher_Model =
             { patch = patch_Model, build = build_Model, toValue = toValue_Model }
         """, """
-        query_Model : Fusion.Query -> FakeModule.Model -> Fusion.Value
-        query_Model query value =
-        """, """
         toValue_Model : FakeModule.Model -> Fusion.Value
         toValue_Model value =
             case value of

@@ -441,9 +441,6 @@ viewError old new wanted error =
         ( _, Patch.ErrorAtValueWithKey key child ) ->
             HtmlExtra.wrappedRow [ Html.text "at value with key ", value key, Html.text ", ", viewError old new wanted child ]
 
-        ( _, Patch.WrongQuery ) ->
-            HtmlExtra.wrappedRow [ Html.text "wrong query" ]
-
 
 {-| -}
 viewPatchError : Value -> Value -> Value -> Patch.Error -> Html msg

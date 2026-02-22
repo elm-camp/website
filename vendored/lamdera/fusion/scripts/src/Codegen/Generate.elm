@@ -153,35 +153,16 @@ innerGenerate typeName params tipe context =
                         Elm.function
                             (patchersParams ++ [ ( "value", Just typeAnnotation ) ])
                             (\args ->
-                                case List.reverse args of
-                                    value :: _ ->
-                                        toValue value
-                                            |> Elm.withType Gen.Fusion.annotation_.value
-
-                                    _ ->
-                                        Gen.Debug.todo "Internal error: not enough arguments in toValue"
-                            )
-                    )
-
-        queryExpression : Monad Elm.Expression
-        queryExpression =
-            typeToQuery tipe
-                |> Monad.map
-                    (\toQuery ->
-                        Elm.function
-                            (patchersParams
-                                ++ [ ( "query", Just Gen.Fusion.annotation_.query )
-                                   , ( "value", Just typeAnnotation )
-                                   ]
-                            )
-                            (\args ->
-                                case List.reverse args of
-                                    value :: query :: _ ->
-                                        toQuery query value
-                                            |> Elm.withType Gen.Fusion.annotation_.value
-
-                                    _ ->
-                                        Gen.Debug.todo "Internal error: not enough arguments in query"
+                                let
+                                    value : Elm.Expression
+                                    value =
+                                        args
+                                            |> List.reverse
+                                            |> List.head
+                                            |> Maybe.withDefault (Elm.val "value")
+                                in
+                                toValue value
+                                    |> Elm.withType Gen.Fusion.annotation_.value
                             )
                     )
 
@@ -267,10 +248,9 @@ innerGenerate typeName params tipe context =
             toPatchersParams params
     in
     [ maybeDeclareValue ("toValue_" ++ typeNameString) toValueExpression
-    , maybeDeclareValue ("patcher_" ++ typeNameString) (patcherExpression typeNameString params typeAnnotation)
+    , maybeDeclareValue ("patcher_" ++ typeNameString) (Monad.ok <| patcherExpression typeNameString params (Just typeAnnotation))
     , maybeDeclareValue ("patch_" ++ typeNameString) patchExpression
     , maybeDeclareValue ("build_" ++ typeNameString) buildExpression
-    , maybeDeclareValue ("query_" ++ typeNameString) queryExpression
     ]
         |> CodegenResult.combine
         |> CodegenResult.map
@@ -384,8 +364,8 @@ toPatchersParams params =
 patcherExpression :
     String
     -> List String
-    -> Elm.Annotation.Annotation
-    -> Monad Elm.Expression
+    -> Maybe Elm.Annotation.Annotation
+    -> Elm.Expression
 patcherExpression typeName params typeAnnotation =
     Elm.function
         (toPatchersParams params)
@@ -401,9 +381,14 @@ patcherExpression typeName params typeAnnotation =
               )
             ]
                 |> Elm.record
-                |> Elm.withType (Gen.Fusion.Patch.annotation_.patcher typeAnnotation)
+                |> (case typeAnnotation of
+                        Just tipe ->
+                            Elm.withType (Gen.Fusion.Patch.annotation_.patcher tipe)
+
+                        Nothing ->
+                            identity
+                   )
         )
-        |> Monad.ok
 
 
 optionsType : Elm.Annotation.Annotation
@@ -562,15 +547,15 @@ typeToPatch tipe =
             Monad.ok (basicPatch Gen.Fusion.Patch.call_.patch_Json)
 
         TNamed _ _ _ (Just (TList child)) ->
-            Monad.map (\childPatch { options, patch, value } -> Gen.Fusion.Patch.call_.patch_List childPatch options patch value)
+            Monad.map (\childp { options, patch, value } -> Gen.Fusion.Patch.call_.patch_List childp options patch value)
                 (typeToPatcher child)
 
         TNamed _ _ _ (Just (TSet child)) ->
-            Monad.map (\childPatch { options, patch, value } -> Gen.Fusion.Patch.call_.patch_Set childPatch options patch value)
+            Monad.map (\childp { options, patch, value } -> Gen.Fusion.Patch.call_.patch_Set childp options patch value)
                 (typeToPatcher child)
 
         TNamed _ _ _ (Just (TDict keyType valueType)) ->
-            Monad.map2 (\keyPatch valuePatch { options, patch, value } -> Gen.Fusion.Patch.call_.patch_Dict keyPatch valuePatch options patch value)
+            Monad.map2 (\keyp valuep { options, patch, value } -> Gen.Fusion.Patch.call_.patch_Dict keyp valuep options patch value)
                 (typeToPatcher keyType)
                 (typeToPatcher valueType)
 
@@ -619,36 +604,34 @@ typeToPatch tipe =
                                 (Elm.Arg.varWith "fieldName" Elm.Annotation.string)
                                 (Elm.Arg.varWith "fieldPatch" Gen.Fusion.Patch.annotation_.patch)
                                 (Elm.Arg.var "acc")
-                             <|
-                                \patchFieldName fieldPatch acc ->
-                                    Elm.Case.string patchFieldName
-                                        { cases =
-                                            List.map2
-                                                (\( fieldName, _ ) fieldPatcher ->
-                                                    ( fieldName
-                                                    , Elm.apply Gen.Result.values_.map
-                                                        [ Elm.fn (Elm.Arg.var (deduplicateForPatchingRecord fieldName)) <|
-                                                            \newValue ->
-                                                                Elm.updateRecord
-                                                                    [ ( fieldName
-                                                                      , newValue
-                                                                      )
-                                                                    ]
-                                                                    acc
-                                                        , fieldPatcher
-                                                            { options = options
-                                                            , patch = fieldPatch
-                                                            , value = Elm.get fieldName acc
-                                                            }
-                                                        ]
-                                                    )
-                                                )
-                                                fields
-                                                fieldPatches
-                                        , otherwise =
-                                            Gen.Result.make_.err <|
-                                                Gen.Fusion.Patch.make_.unexpectedField patchFieldName
-                                        }
+                             <| \patchFieldName fieldPatch acc ->
+                             Elm.Case.string patchFieldName
+                                 { cases =
+                                     List.map2
+                                         (\( fieldName, _ ) fieldPatcher ->
+                                             ( fieldName
+                                             , Elm.apply Gen.Result.values_.map
+                                                 [ Elm.fn (Elm.Arg.var (deduplicateForPatchingRecord fieldName)) <| \newValue ->
+                                                 Elm.updateRecord
+                                                     [ ( fieldName
+                                                       , newValue
+                                                       )
+                                                     ]
+                                                     acc
+                                                 , fieldPatcher
+                                                     { options = options
+                                                     , patch = fieldPatch
+                                                     , value = Elm.get fieldName acc
+                                                     }
+                                                 ]
+                                             )
+                                         )
+                                         fields
+                                         fieldPatches
+                                 , otherwise =
+                                     Gen.Result.make_.err <|
+                                         Gen.Fusion.Patch.make_.unexpectedField patchFieldName
+                                 }
                             )
                             patch
                             value
@@ -775,7 +758,6 @@ patchCustom variants =
             isCorrectVariant : Context -> ({ b | value : Elm.Expression } -> Elm.Expression -> Elm.Expression)
             isCorrectVariant context { value } expectedName =
                 let
-                    patterns : List Elm.Case.Branch
                     patterns =
                         variants
                             |> List.map
@@ -858,6 +840,49 @@ variantToBranches isNewtype context ( variantName, variantParams ) isCorrect opt
                         (List.range 0 (List.length variantParams - 1))
                     )
 
+        changePattern : Elm.Case.Branch
+        changePattern =
+            Elm.Case.branch
+                (Elm.Arg.triple
+                    Elm.Arg.ignore
+                    (Elm.Arg.customType "Fusion.Patch.PCustomChange"
+                        (\expectedVariant _ args -> ( expectedVariant, args ))
+                        |> Elm.Arg.item (Elm.Arg.var "expectedVariant")
+                        |> Elm.Arg.item (Elm.Arg.string variantName)
+                        |> Elm.Arg.item
+                            (Elm.Arg.list identity
+                                |> Elm.Arg.items
+                                    (List.map
+                                        (\i ->
+                                            Elm.Arg.var
+                                                ("arg" ++ String.fromInt i)
+                                        )
+                                        (List.range 0 (List.length variantParams - 1))
+                                    )
+                            )
+                    )
+                    Elm.Arg.ignore
+                )
+                (\( _, ( expectedVariant, patches ), _ ) ->
+                    Elm.ifThen
+                        (Elm.Op.or (Elm.get "force" options) <| isCorrect expectedVariant)
+                        (arbitraryResultMap
+                            (Elm.value
+                                { importFrom = context.currentModule
+                                , name = variantName
+                                , annotation = Nothing
+                                }
+                            )
+                            (List.map2 (\{ build } patch -> build patch)
+                                variantParams
+                                patches
+                            )
+                            -- Work around a type inference time explosion
+                            |> Elm.withType (Elm.Annotation.maybe (Elm.Annotation.var "a"))
+                        )
+                        (err Patch.Conflict)
+                )
+
         samePattern : Elm.Case.Branch
         samePattern =
             let
@@ -899,6 +924,51 @@ variantToBranches isNewtype context ( variantName, variantParams ) isCorrect opt
                         |> Elm.withType (Elm.Annotation.maybe (Elm.Annotation.var "a"))
                 )
 
+        samePatternConflict : Elm.Case.Branch
+        samePatternConflict =
+            Elm.Case.branch
+                (Elm.Arg.triple
+                    Elm.Arg.ignore
+                    (Elm.Arg.customType "Fusion.Patch.PCustomSame"
+                        (\_ args -> args)
+                        |> Elm.Arg.item (Elm.Arg.string variantName)
+                        |> Elm.Arg.item Elm.Arg.ignore
+                    )
+                    (Elm.Arg.customType "False" ())
+                )
+                (\_ -> err Patch.Conflict)
+
+        samePatternBuild : Elm.Case.Branch
+        samePatternBuild =
+            Elm.Case.branch
+                (Elm.Arg.triple
+                    Elm.Arg.ignore
+                    (Elm.Arg.customType "Fusion.Patch.PCustomSame"
+                        (\_ args -> args)
+                        |> Elm.Arg.item (Elm.Arg.string variantName)
+                        |> Elm.Arg.item (patchesArg True)
+                    )
+                    Elm.Arg.ignore
+                )
+                (\( _, patches, _ ) ->
+                    arbitraryResultMap
+                        (Elm.value
+                            { importFrom = context.currentModule
+                            , name = variantName
+                            , annotation = Nothing
+                            }
+                        )
+                        (List.map2
+                            (\{ build } patch ->
+                                Gen.Fusion.Patch.buildFromPatch build patch
+                            )
+                            variantParams
+                            patches
+                        )
+                        -- Work around a type inference time explosion
+                        |> Elm.withType (Elm.Annotation.maybe (Elm.Annotation.var "a"))
+                )
+
         samePatternUnbuildable : Elm.Case.Branch
         samePatternUnbuildable =
             Elm.Case.branch
@@ -922,95 +992,6 @@ variantToBranches isNewtype context ( variantName, variantParams ) isCorrect opt
         )
 
     else
-        let
-            samePatternConflict : Elm.Case.Branch
-            samePatternConflict =
-                Elm.Case.branch
-                    (Elm.Arg.triple
-                        Elm.Arg.ignore
-                        (Elm.Arg.customType "Fusion.Patch.PCustomSame"
-                            (\_ args -> args)
-                            |> Elm.Arg.item (Elm.Arg.string variantName)
-                            |> Elm.Arg.item Elm.Arg.ignore
-                        )
-                        (Elm.Arg.customType "False" ())
-                    )
-                    (\_ -> err Patch.Conflict)
-
-            samePatternBuild : Elm.Case.Branch
-            samePatternBuild =
-                Elm.Case.branch
-                    (Elm.Arg.triple
-                        Elm.Arg.ignore
-                        (Elm.Arg.customType "Fusion.Patch.PCustomSame"
-                            (\_ args -> args)
-                            |> Elm.Arg.item (Elm.Arg.string variantName)
-                            |> Elm.Arg.item (patchesArg True)
-                        )
-                        Elm.Arg.ignore
-                    )
-                    (\( _, patches, _ ) ->
-                        arbitraryResultMap
-                            (Elm.value
-                                { importFrom = context.currentModule
-                                , name = variantName
-                                , annotation = Nothing
-                                }
-                            )
-                            (List.map2
-                                (\{ build } patch ->
-                                    Gen.Fusion.Patch.buildFromPatch build patch
-                                )
-                                variantParams
-                                patches
-                            )
-                            -- Work around a type inference time explosion
-                            |> Elm.withType (Elm.Annotation.maybe (Elm.Annotation.var "a"))
-                    )
-
-            changePattern : Elm.Case.Branch
-            changePattern =
-                Elm.Case.branch
-                    (Elm.Arg.triple
-                        Elm.Arg.ignore
-                        (Elm.Arg.customType "Fusion.Patch.PCustomChange"
-                            (\expectedVariant _ args -> ( expectedVariant, args ))
-                            |> Elm.Arg.item (Elm.Arg.var "expectedVariant")
-                            |> Elm.Arg.item (Elm.Arg.string variantName)
-                            |> Elm.Arg.item
-                                (Elm.Arg.list identity
-                                    |> Elm.Arg.items
-                                        (List.map
-                                            (\i ->
-                                                Elm.Arg.var
-                                                    ("arg" ++ String.fromInt i)
-                                            )
-                                            (List.range 0 (List.length variantParams - 1))
-                                        )
-                                )
-                        )
-                        Elm.Arg.ignore
-                    )
-                    (\( _, ( expectedVariant, patches ), _ ) ->
-                        Elm.ifThen
-                            (Elm.Op.or (Elm.get "force" options) <| isCorrect expectedVariant)
-                            (arbitraryResultMap
-                                (Elm.value
-                                    { importFrom = context.currentModule
-                                    , name = variantName
-                                    , annotation = Nothing
-                                    }
-                                )
-                                (List.map2 (\{ build } patch -> build patch)
-                                    variantParams
-                                    patches
-                                )
-                                -- Work around a type inference time explosion
-                                |> Elm.withType (Elm.Annotation.maybe (Elm.Annotation.var "a"))
-                            )
-                            (err Patch.Conflict)
-                    )
-        in
         ( if List.isEmpty variantParams then
             [ samePattern, samePatternConflict, samePatternBuild ]
 
@@ -1075,9 +1056,6 @@ err error =
                     Gen.Fusion.Patch.make_.errorAtValueWithKey
                         (valueToExpression key)
                         (errorToExpression child)
-
-                Patch.WrongQuery ->
-                    Gen.Fusion.Patch.make_.wrongQuery
     in
     Gen.Result.make_.err (errorToExpression error)
 
@@ -1248,12 +1226,6 @@ callPatcher moduleName typeName params =
     call "patcher" moduleName typeName params
 
 
-callQuery : ModuleName -> String -> List Type -> Monad (Elm.Expression -> Elm.Expression -> Elm.Expression)
-callQuery moduleName typeName params =
-    call "query" moduleName typeName params
-        |> Monad.map (\f query value -> Elm.apply f [ query, value ])
-
-
 call : String -> ModuleName -> String -> List Type -> Monad Elm.Expression
 call name moduleName typeName params =
     params
@@ -1369,9 +1341,8 @@ typeToBuild tipe =
             callBuild moduleName typeName params
 
         TVar name ->
-            Monad.ok <|
-                \value ->
-                    Elm.apply (Elm.get "build" <| Elm.val <| name ++ "Patcher") [ value ]
+            Monad.ok <| \value ->
+            Elm.apply (Elm.get "build" <| Elm.val <| name ++ "Patcher") [ value ]
 
         TUnit ->
             Monad.ok Gen.Fusion.Patch.build_Unit
@@ -1465,57 +1436,56 @@ buildCustom variants =
                     Elm.fn2
                         (Elm.Arg.var "name")
                         (Elm.Arg.var "params")
-                    <|
-                        \name params ->
-                            let
-                                normalBranches : List Elm.Case.Branch
-                                normalBranches =
-                                    List.map2
-                                        (\( variantName, variantParams ) builder ->
-                                            Elm.Case.branch
-                                                (Elm.Arg.tuple
-                                                    (Elm.Arg.string variantName)
-                                                    (Elm.Arg.list identity
-                                                        |> Elm.Arg.items
-                                                            (List.map
-                                                                (\i ->
-                                                                    Elm.Arg.var
-                                                                        ("patch" ++ String.fromInt i)
-                                                                )
-                                                                (List.range 0 (List.length variantParams - 1))
-                                                            )
+                    <| \name params ->
+                    let
+                        normalBranches : List Elm.Case.Branch
+                        normalBranches =
+                            List.map2
+                                (\( variantName, variantParams ) builder ->
+                                    Elm.Case.branch
+                                        (Elm.Arg.tuple
+                                            (Elm.Arg.string variantName)
+                                            (Elm.Arg.list identity
+                                                |> Elm.Arg.items
+                                                    (List.map
+                                                        (\i ->
+                                                            Elm.Arg.var
+                                                                ("patch" ++ String.fromInt i)
+                                                        )
+                                                        (List.range 0 (List.length variantParams - 1))
                                                     )
-                                                )
-                                                (\( _, res ) ->
-                                                    arbitraryResultMap
-                                                        (Elm.value
-                                                            { importFrom = context.currentModule
-                                                            , name = variantName
-                                                            , annotation = Nothing
-                                                            }
-                                                        )
-                                                        (List.map2 identity
-                                                            builder
-                                                            res
-                                                        )
-                                                        -- Work around a type inference time explosion
-                                                        |> Elm.withType
-                                                            (Elm.Annotation.result
-                                                                (Elm.Annotation.var "e")
-                                                                (Elm.Annotation.var "a")
-                                                            )
-                                                )
+                                            )
                                         )
-                                        variants
-                                        builders
-                            in
-                            normalBranches
-                                ++ [ Elm.Case.branch Elm.Arg.ignore (\_ -> err (Patch.WrongType "buildCustom last branch")) ]
-                                |> Elm.Case.custom (Elm.tuple name params)
-                                    (Elm.Annotation.tuple
-                                        Elm.Annotation.string
-                                        (Elm.Annotation.list Gen.Fusion.Patch.annotation_.patch)
-                                    )
+                                        (\( _, res ) ->
+                                            arbitraryResultMap
+                                                (Elm.value
+                                                    { importFrom = context.currentModule
+                                                    , name = variantName
+                                                    , annotation = Nothing
+                                                    }
+                                                )
+                                                (List.map2 identity
+                                                    builder
+                                                    res
+                                                )
+                                                -- Work around a type inference time explosion
+                                                |> Elm.withType
+                                                    (Elm.Annotation.result
+                                                        (Elm.Annotation.var "e")
+                                                        (Elm.Annotation.var "a")
+                                                    )
+                                        )
+                                )
+                                variants
+                                builders
+                    in
+                    normalBranches
+                        ++ [ Elm.Case.branch Elm.Arg.ignore (\_ -> err (Patch.WrongType "buildCustom last branch")) ]
+                        |> Elm.Case.custom (Elm.tuple name params)
+                            (Elm.Annotation.tuple
+                                Elm.Annotation.string
+                                (Elm.Annotation.list Gen.Fusion.Patch.annotation_.patch)
+                            )
             )
 
 
@@ -1671,10 +1641,10 @@ typeToExpression tipe =
         TCustom name params variants ->
             let
                 variantToExpression : ( String, List Type ) -> Elm.Expression
-                variantToExpression ( variantName, variantArgs ) =
+                variantToExpression ( vname, vargs ) =
                     Elm.tuple
-                        (Elm.string variantName)
-                        (listWith typeToExpression variantArgs)
+                        (Elm.string vname)
+                        (listWith typeToExpression vargs)
             in
             Gen.Fusion.make_.tCustom
                 (Elm.string name)
@@ -1778,7 +1748,7 @@ typeToValue tipe =
             Monad.ok Gen.Fusion.make_.vBytes
 
         TNamed _ _ _ (Just TJson) ->
-            Monad.ok Gen.Fusion.Patch.call_.toValue_Json
+            Monad.ok Gen.Fusion.make_.vString
 
         TNamed _ _ _ (Just (TList child)) ->
             Monad.map Gen.Fusion.Patch.call_.toValue_List
@@ -1831,7 +1801,6 @@ typeToValue tipe =
                     Monad.map2
                         (\converters context ->
                             let
-                                pattern : Elm.Arg (List Elm.Expression)
                                 pattern =
                                     variantToPattern context.currentModule
                                         variantName
@@ -1877,158 +1846,6 @@ typeToValue tipe =
 
         TGenericRecord _ _ ->
             errFromExpression (CodegenResult.errorFromString "typeToValue: TGenericRecord") (\e _ -> e)
-
-
-typeToQuery : Type -> Monad (Elm.Expression -> Elm.Expression -> Elm.Expression)
-typeToQuery tipe =
-    case tipe of
-        TNamed _ _ _ (Just TInt) ->
-            Monad.ok (\_ -> Gen.Fusion.make_.vInt)
-
-        TNamed _ _ _ (Just TFloat) ->
-            Monad.ok (\_ -> Gen.Fusion.make_.vFloat)
-
-        TNamed _ _ _ (Just TString) ->
-            Monad.ok Gen.Fusion.Patch.call_.query_String
-
-        TNamed _ _ _ (Just TBool) ->
-            Monad.ok (\_ -> Gen.Fusion.make_.vBool)
-
-        TNamed _ _ _ (Just TChar) ->
-            Monad.ok (\_ -> Gen.Fusion.make_.vChar)
-
-        TNamed _ _ _ (Just TNever) ->
-            Monad.ok (\_ -> Gen.Basics.never)
-
-        TNamed _ _ _ (Just TBytes) ->
-            Monad.ok (\_ -> Gen.Fusion.make_.vBytes)
-
-        TNamed _ _ _ (Just TJson) ->
-            Monad.ok Gen.Fusion.Patch.call_.query_Json
-
-        TNamed _ _ _ (Just (TList child)) ->
-            Monad.map Gen.Fusion.Patch.call_.query_List
-                (typeToPatcher child)
-
-        TNamed _ _ _ (Just (TSet child)) ->
-            Monad.map Gen.Fusion.Patch.query_Set
-                (typeToPatcher child)
-
-        TNamed _ _ _ (Just (TDict keyType valueType)) ->
-            Monad.map2 Gen.Fusion.Patch.query_Dict
-                (typeToPatcher keyType)
-                (typeToPatcher valueType)
-
-        TNamed moduleName typeName params (Just TOrder) ->
-            callQuery moduleName typeName params
-
-        TNamed moduleName typeName params (Just (TMaybe _)) ->
-            callQuery moduleName typeName params
-
-        TNamed moduleName typeName params (Just (TResult _ _)) ->
-            callQuery moduleName typeName params
-
-        TNamed moduleName typeName params Nothing ->
-            callQuery moduleName typeName params
-
-        TVar name ->
-            Monad.ok <| \query value -> Elm.apply (Elm.get "query" <| Elm.val <| name ++ "Patcher") [ query, value ]
-
-        TUnit ->
-            Monad.ok <| \_ _ -> Gen.Fusion.make_.vUnit
-
-        TTuple l r ->
-            Monad.map2 Gen.Fusion.Patch.call_.query_Tuple
-                (typeToPatcher l)
-                (typeToPatcher r)
-
-        TTriple l m r ->
-            Monad.map3 Gen.Fusion.Patch.call_.query_Triple
-                (typeToPatcher l)
-                (typeToPatcher m)
-                (typeToPatcher r)
-
-        TCustom _ _ variants ->
-            let
-                -- TODO: query args using QIndexed
-                variantToBranch : ( String, List Type ) -> Monad (Elm.Expression -> Elm.Case.Branch)
-                variantToBranch ( variantName, variantParams ) =
-                    Monad.map2
-                        (\queries context query ->
-                            let
-                                pattern : Elm.Arg (List Elm.Expression)
-                                pattern =
-                                    variantToPattern context.currentModule
-                                        variantName
-                                        (List.indexedMap
-                                            (\i _ -> Elm.Arg.var ("arg" ++ String.fromInt i))
-                                            variantParams
-                                        )
-                            in
-                            Elm.Case.branch pattern
-                                (\args ->
-                                    Gen.Fusion.make_.vCustom
-                                        (Elm.string variantName)
-                                        (Elm.list <| List.map2 (\argQuery arg -> argQuery query arg) queries args)
-                                )
-                        )
-                        (variantParams
-                            |> Monad.combineMap typeToQuery
-                        )
-                        CodegenOk
-            in
-            variants
-                |> Monad.combineMap variantToBranch
-                |> Monad.map
-                    (\branches query value ->
-                        Gen.Fusion.caseOf_.query query
-                            { qLoad =
-                                Elm.Case.custom value Elm.Annotation.unit (List.map (\branch -> branch query) branches)
-                                    |> Gen.Result.make_.ok
-                            , qPartial =
-                                Elm.Case.custom value Elm.Annotation.unit (List.map (\branch -> branch query) branches)
-                                    |> Gen.Result.make_.ok
-                            , qRecord = \_ _ -> Gen.Result.make_.err Gen.Fusion.Patch.make_.wrongQuery
-                            , qIndexed = \_ _ -> Gen.Debug.todo "custom - qIndexed"
-                            }
-                    )
-
-        TRecord fields ->
-            -- TODO: query fields using QRecord
-            fields
-                |> Monad.combineMap
-                    (\( fieldName, fieldType ) ->
-                        Monad.map
-                            (\fieldQuery ->
-                                ( fieldName
-                                , \query value ->
-                                    Elm.tuple
-                                        (Elm.string fieldName)
-                                        (fieldQuery query (Elm.get fieldName value))
-                                )
-                            )
-                            (typeToQuery fieldType)
-                    )
-                |> Monad.map
-                    (\list query value ->
-                        Gen.Fusion.caseOf_.query query
-                            { qLoad =
-                                List.map (\( _, f ) -> f query value) list
-                                    |> Gen.Dict.fromList
-                                    |> Gen.Fusion.make_.vRecord
-                                    |> Gen.Result.make_.ok
-                            , qPartial =
-                                List.map (\( _, f ) -> f query value) list
-                                    |> Gen.Dict.fromList
-                                    |> Gen.Fusion.make_.vRecord
-                                    |> Gen.Result.make_.ok
-                            , qRecord = \_ _ -> Gen.Debug.todo "record - qRecord"
-                            , qIndexed = \_ _ -> Gen.Result.make_.err Gen.Fusion.Patch.make_.wrongQuery
-                            }
-                    )
-
-        TGenericRecord _ _ ->
-            errFromExpression (CodegenResult.errorFromString "typeToQuery: TGenericRecord") (\e _ _ -> e)
 
 
 listWith : (a -> Elm.Expression) -> List a -> Elm.Expression

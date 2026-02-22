@@ -1,9 +1,7 @@
-module Fusion.Generated.Effect.Http exposing
-    ( build_Error, patch_Error, patcher_Error, query_Error, toValue_Error
-    )
+module Fusion.Generated.Effect.Http exposing ( build_Error, patch_Error, patcher_Error, toValue_Error )
 
 {-|
-@docs build_Error, patch_Error, patcher_Error, query_Error, toValue_Error
+@docs build_Error, patch_Error, patcher_Error, toValue_Error
 -}
 
 
@@ -199,39 +197,6 @@ patch_Error options patch value =
 patcher_Error : Fusion.Patch.Patcher Effect.Http.Error
 patcher_Error =
     { patch = patch_Error, build = build_Error, toValue = toValue_Error }
-
-
-query_Error : Fusion.Query -> Effect.Http.Error -> Fusion.Value
-query_Error query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Effect.Http.BadUrl arg0 ->
-                         Fusion.VCustom
-                             "BadUrl"
-                             [ Fusion.Patch.query_String query arg0 ]
-
-                     Effect.Http.Timeout ->
-                         Fusion.VCustom "Timeout" []
-
-                     Effect.Http.NetworkError ->
-                         Fusion.VCustom "NetworkError" []
-
-                     Effect.Http.BadStatus arg0 ->
-                         Fusion.VCustom "BadStatus" [ Fusion.VInt arg0 ]
-
-                     Effect.Http.BadBody arg0 ->
-                         Fusion.VCustom
-                             "BadBody"
-                             [ Fusion.Patch.query_String query arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
 
 
 toValue_Error : Effect.Http.Error -> Fusion.Value

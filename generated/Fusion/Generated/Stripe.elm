@@ -1,13 +1,11 @@
 module Fusion.Generated.Stripe exposing
     ( build_Price, build_PriceId, build_StripeSessionId, patch_Price, patch_PriceId, patch_StripeSessionId
-    , patcher_Price, patcher_PriceId, patcher_StripeSessionId, query_Price, query_PriceId, query_StripeSessionId, toValue_Price
-    , toValue_PriceId, toValue_StripeSessionId
+    , patcher_Price, patcher_PriceId, patcher_StripeSessionId, toValue_Price, toValue_PriceId, toValue_StripeSessionId
     )
 
 {-|
 @docs build_Price, build_PriceId, build_StripeSessionId, patch_Price, patch_PriceId, patch_StripeSessionId
-@docs patcher_Price, patcher_PriceId, patcher_StripeSessionId, query_Price, query_PriceId, query_StripeSessionId
-@docs toValue_Price, toValue_PriceId, toValue_StripeSessionId
+@docs patcher_Price, patcher_PriceId, patcher_StripeSessionId, toValue_Price, toValue_PriceId, toValue_StripeSessionId
 -}
 
 
@@ -181,71 +179,6 @@ patcher_StripeSessionId =
     , build = build_StripeSessionId
     , toValue = toValue_StripeSessionId
     }
-
-
-query_Price : Fusion.Query -> Stripe.Price -> Fusion.Value
-query_Price query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "priceId"
-                            , (Fusion.Generated.Id.query_Id patcher_PriceId)
-                                  query
-                                  value.priceId
-                            )
-                          , ( "amount"
-                            , (Fusion.Generated.Quantity.query_Quantity
-                                   Fusion.Patch.patcher_Int
-                                   Fusion.Stripe.patcher_StripeCurrency
-                              )
-                                  query
-                                  value.amount
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-
-query_PriceId : Fusion.Query -> Stripe.PriceId -> Fusion.Value
-query_PriceId query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Stripe.PriceId arg0 ->
-                         Fusion.VCustom "PriceId" [ Basics.never arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
-
-
-query_StripeSessionId : Fusion.Query -> Stripe.StripeSessionId -> Fusion.Value
-query_StripeSessionId query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Stripe.StripeSessionId arg0 ->
-                         Fusion.VCustom "StripeSessionId" [ Basics.never arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
 
 
 toValue_Price : Stripe.Price -> Fusion.Value
