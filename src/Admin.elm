@@ -54,6 +54,8 @@ viewAdmin backendModel value =
     Ui.column
         [ Ui.padding 24
         , Ui.spacing 40
+        , Ui.background (Ui.rgb 200 200 200)
+        , Ui.height Ui.fill
         ]
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
