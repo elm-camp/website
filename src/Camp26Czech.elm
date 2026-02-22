@@ -34,7 +34,7 @@ import View.Logo
 meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-    , tag = "Michigan, US 2026"
+    , tag = "Olomouc, Czech Republic 2026"
     , location = location
     , dates = "Mon 15th - Thur 18th June 2026"
     }
@@ -289,7 +289,7 @@ content =
 
 opportunityGrant : String
 opportunityGrant =
-    "🫶 Opportunity grant"
+    "\u{1FAF6} Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix
@@ -492,7 +492,7 @@ campfireTicket =
 
 singleRoomTicket : TicketType
 singleRoomTicket =
-    { name = "Single Room"
+    { name = "Single Room with en-suite"
     , description = "Private room for a single attendee for 3 nights."
     , image = ""
     , available =
@@ -519,8 +519,8 @@ roomsAreValid ticketsAlreadyPurchased count =
 
 sharedRoomTicket : TicketType
 sharedRoomTicket =
-    { name = "Shared Room"
-    , description = "Suitable for a couple or twin share for 3 nights."
+    { name = "Shared Room with en-suite"
+    , description = "Suitable for couples or up to 4 individuals sharing for 3 nights. Both twin and double beds available. If you are booking separately, please let us know who you expect to be sharing with."
     , image = ""
     , available =
         \alreadyPurchased count ->
