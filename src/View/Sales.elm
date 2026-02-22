@@ -284,8 +284,8 @@ accommodationView ticketTypes initData model =
             , RichText.view
                 model
                 [ Paragraph [ Text "Please select one accommodation option per attendee." ]
-                , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to the type of ticket purchased. Bathroom facilities are shared." ]
-                , Paragraph [ Text "The facilities for those who wish to bring a tent or campervan and camp are excellent. The surrounding grounds and countryside are beautiful and include woodland, a swimming lake and a firepit." ]
+                , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to your stated sharing preferences and the type of ticket purchased. All rooms have en-suite facilities." ]
+                , Paragraph [ Text "Toilet and shower facilities can be accessed in the building for those who wish to bring a tent or campervan and camp. The surrounding grounds and countryside are beautiful and include woodland and a lake." ]
                 ]
             ]
         , List.map4
@@ -593,7 +593,7 @@ opportunityGrant form initData model =
         (Ui.spacing 20 :: Theme.contentAttributes)
         [ Ui.column
             []
-            [ RichText.h2 "🫶 Opportunity grants" |> Ui.html
+            [ RichText.h2 "\u{1FAF6} Opportunity grants" |> Ui.html
             , RichText.view
                 model
                 [ Paragraph [ Text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
