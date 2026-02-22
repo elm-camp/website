@@ -3,8 +3,7 @@ module Fusion.Patch exposing
     , patch, merge, applyQueryResult
     , build_Array, build_Bool, build_Bytes, build_Char, build_Dict, build_Float, build_Int, build_Json, build_List, build_Never, build_Posix, build_Record, build_Set, build_String, build_Triple, build_Tuple, build_Unit, build_Custom
     , patch_Array, patch_Bool, patch_Bytes, patch_Char, patch_Dict, patch_Float, patch_Int, patch_Json, patch_List, patch_Never, patch_Posix, patch_Record, patch_Set, patch_String, patch_Triple, patch_Tuple, patch_Unit, patcher_Array, patcher_Bool, patcher_Bytes, patcher_Char, patcher_Dict, patcher_Float, patcher_Int, patcher_Json, patcher_List, patcher_Never, patcher_Posix, patcher_Set, patcher_String, patcher_Triple, patcher_Tuple, patcher_Unit
-    , toValue_Array, toValue_Dict, toValue_Json, toValue_List, toValue_Never, toValue_Posix, toValue_Set, toValue_Triple, toValue_Tuple
-    , query_Array, query_Dict, query_Json, query_List, query_Never, query_Posix, query_Set, query_String, query_Triple, query_Tuple
+    , toValue_Array, toValue_Dict, toValue_List, toValue_Never, toValue_Posix, toValue_Set, toValue_Triple, toValue_Tuple
     , maybeApply, buildFromPatch, simplify, map
     )
 
@@ -27,12 +26,7 @@ module Fusion.Patch exposing
 
 # To Value
 
-@docs toValue_Array, toValue_Dict, toValue_Json, toValue_List, toValue_Never, toValue_Posix, toValue_Set, toValue_Triple, toValue_Tuple
-
-
-# Query
-
-@docs query_Array, query_Dict, query_Json, query_List, query_Never, query_Posix, query_Set, query_String, query_Triple, query_Tuple
+@docs toValue_Array, toValue_Dict, toValue_List, toValue_Never, toValue_Posix, toValue_Set, toValue_Triple, toValue_Tuple
 
 
 # Utilities
@@ -91,7 +85,6 @@ type Error
     | MissingField String
     | MissingValue
     | UnexpectedField String
-    | WrongQuery
 
 
 {-| -}
@@ -122,7 +115,6 @@ type alias Patcher a =
     { patch : { force : Bool } -> Patch -> a -> Result Error a
     , build : Value -> Result Error a
     , toValue : a -> Value
-    , query : Query -> a -> Result Error Value
     }
 
 
@@ -606,18 +598,12 @@ foldlResult func acc list =
                     e
 
 
-paginationSize : number
-paginationSize =
-    20
-
-
 {-| -}
 patcher_Int : Patcher Int
 patcher_Int =
     { patch = patch_Int
     , build = build_Int
     , toValue = VInt
-    , query = query_Int
     }
 
 
@@ -647,18 +633,12 @@ build_Int p =
             Err (WrongType "Patch.")
 
 
-query_Int : Query -> Int -> Result Error Value
-query_Int _ value =
-    Ok (VInt value)
-
-
 {-| -}
 patcher_Float : Patcher Float
 patcher_Float =
     { patch = patch_Float
     , build = build_Float
     , toValue = VFloat
-    , query = query_Float
     }
 
 
@@ -688,18 +668,12 @@ build_Float p =
             Err (WrongType "Patch.build_Float")
 
 
-query_Float : Query -> Float -> Result Error Value
-query_Float _ value =
-    Ok (VFloat value)
-
-
 {-| -}
 patcher_String : Patcher String
 patcher_String =
     { patch = patch_String
     , build = build_String
-    , toValue = toValue_String
-    , query = query_String
+    , toValue = VString
     }
 
 
@@ -729,39 +703,12 @@ build_String p =
             Err (WrongType "Patch.build_String")
 
 
-toValue_String : String -> Value
-toValue_String string =
-    if String.length string > 100 then
-        VPartialString
-            { length = String.length string
-            , partial = String.left 100 string
-            }
-
-    else
-        VString string
-
-
-{-| -}
-query_String : Query -> String -> Result Error Value
-query_String query string =
-    case query of
-        QLoad ->
-            Ok (VString string)
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
-
-
 {-| -}
 patcher_Json : Patcher Json.Encode.Value
 patcher_Json =
     { patch = patch_Json
     , build = build_Json
-    , toValue = toValue_Json
-    , query = query_Json
+    , toValue = \v -> VString (Json.Encode.encode 0 v)
     }
 
 
@@ -802,29 +749,11 @@ build_Json p =
 
 
 {-| -}
-toValue_Json : Json.Encode.Value -> Value
-toValue_Json v =
-    VString (Json.Encode.encode 0 v)
-
-
-{-| -}
-query_Json : Query -> Json.Encode.Value -> Result Error Value
-query_Json query v =
-    let
-        string : String
-        string =
-            Json.Encode.encode 0 v
-    in
-    query_String query string
-
-
-{-| -}
 patcher_Char : Patcher Char
 patcher_Char =
     { patch = patch_Char
     , build = build_Char
     , toValue = VChar
-    , query = query_Char
     }
 
 
@@ -855,11 +784,6 @@ build_Char p =
             Err (WrongType "Patch.build_Char")
 
 
-query_Char : Query -> Char -> Result Error Value
-query_Char _ value =
-    Ok (VChar value)
-
-
 {-| Patcher for the `Bool` type.
 -}
 patcher_Bool : Patcher Bool
@@ -867,7 +791,6 @@ patcher_Bool =
     { patch = patch_Bool
     , build = build_Bool
     , toValue = VBool
-    , query = query_Bool
     }
 
 
@@ -899,19 +822,13 @@ build_Bool p =
             Err (WrongType "Patch.build_Bool")
 
 
-query_Bool : Query -> Bool -> Result Error Value
-query_Bool _ value =
-    Ok (VBool value)
-
-
 {-| Patcher for the `()` type.
 -}
 patcher_Unit : Patcher ()
 patcher_Unit =
     { patch = patch_Unit
     , build = build_Unit
-    , toValue = always VUnit
-    , query = \_ _ -> Ok VUnit
+    , toValue = \_ -> VUnit
     }
 
 
@@ -944,7 +861,6 @@ patcher_Bytes =
     { patch = patch_Bytes
     , build = build_Bytes
     , toValue = VBytes
-    , query = \_ value -> Ok (VBytes value)
     }
 
 
@@ -1022,7 +938,6 @@ patcher_Tuple lpatcher rpatcher =
     { patch = patch_Tuple lpatcher rpatcher
     , build = build_Tuple lpatcher rpatcher
     , toValue = toValue_Tuple lpatcher rpatcher
-    , query = query_Tuple lpatcher rpatcher
     }
 
 
@@ -1059,26 +974,6 @@ build_Tuple lpatcher rpatcher p =
 
 
 {-| -}
-query_Tuple : Patcher a -> Patcher b -> Query -> ( a, b ) -> Result Error Value
-query_Tuple lpatcher rpatcher query ( lvalue, rvalue ) =
-    case query of
-        QLoad ->
-            Ok (toValue_Tuple lpatcher rpatcher ( lvalue, rvalue ))
-
-        QIndexed (VInt 0) child ->
-            Result.mapError ErrorAtFirst (lpatcher.query child lvalue)
-
-        QIndexed (VInt 1) child ->
-            Result.mapError ErrorAtSecond (rpatcher.query child rvalue)
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
-
-
-{-| -}
 toValue_Tuple : Patcher a -> Patcher b -> ( a, b ) -> Value
 toValue_Tuple lpatcher rpatcher ( l, r ) =
     VTuple (lpatcher.toValue l) (rpatcher.toValue r)
@@ -1095,7 +990,6 @@ patcher_Triple lpatcher mpatcher rpatcher =
     { patch = patch_Triple lpatcher mpatcher rpatcher
     , build = build_Triple lpatcher mpatcher rpatcher
     , toValue = toValue_Triple lpatcher mpatcher rpatcher
-    , query = query_Triple lpatcher mpatcher rpatcher
     }
 
 
@@ -1140,29 +1034,6 @@ toValue_Triple lpatcher mpatcher rpatcher ( l, m, r ) =
     VTriple (lpatcher.toValue l) (mpatcher.toValue m) (rpatcher.toValue r)
 
 
-{-| -}
-query_Triple : Patcher a -> Patcher b -> Patcher c -> Query -> ( a, b, c ) -> Result Error Value
-query_Triple lpatcher mpatcher rpatcher query ( lvalue, mvalue, rvalue ) =
-    case query of
-        QLoad ->
-            Ok (toValue_Triple lpatcher mpatcher rpatcher ( lvalue, mvalue, rvalue ))
-
-        QIndexed (VInt 0) child ->
-            Result.mapError ErrorAtFirst (lpatcher.query child lvalue)
-
-        QIndexed (VInt 1) child ->
-            Result.mapError ErrorAtSecond (mpatcher.query child mvalue)
-
-        QIndexed (VInt 2) child ->
-            Result.mapError ErrorAtThird (rpatcher.query child rvalue)
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
-
-
 {-| Patcher for lists.
 -}
 patcher_List : Patcher item -> Patcher (List item)
@@ -1170,7 +1041,6 @@ patcher_List patcher =
     { patch = patch_List patcher
     , build = build_List patcher
     , toValue = toValue_List patcher
-    , query = query_List patcher
     }
 
 
@@ -1253,40 +1123,8 @@ toValue_List : Patcher item -> List item -> Value
 toValue_List patcher value =
     VList
         { cursor = 0
-        , items =
-            List.indexedMap
-                (\i v ->
-                    if i < paginationSize then
-                        patcher.toValue v
-
-                    else
-                        VUnloaded
-                )
-                value
+        , items = List.map (\v -> patcher.toValue v) value
         }
-
-
-{-| -}
-query_List : Patcher item -> Query -> List item -> Result Error Value
-query_List patcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_List patcher value)
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed (VInt index) child ->
-            case List.Extra.getAt index value of
-                Just item ->
-                    patcher.query child item
-                        |> Result.mapError (ErrorAtIndex index)
-
-                Nothing ->
-                    Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
 
 
 {-| -}
@@ -1295,7 +1133,6 @@ patcher_Set patcher =
     { patch = patch_Set patcher
     , build = build_Set patcher
     , toValue = toValue_Set patcher
-    , query = query_Set patcher
     }
 
 
@@ -1328,38 +1165,8 @@ toValue_Set patcher value =
         { cursor = 0
         , items =
             Set.toList value
-                |> List.indexedMap
-                    (\i item ->
-                        if i < paginationSize then
-                            patcher.toValue item
-
-                        else
-                            VUnloaded
-                    )
+                |> List.map (\item -> patcher.toValue item)
         }
-
-
-{-| -}
-query_Set : Patcher comparable -> Query -> Set comparable -> Result Error Value
-query_Set patcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_Set patcher value)
-
-        QIndexed (VInt index) child ->
-            case List.Extra.getAt index (Set.toList value) of
-                Just item ->
-                    patcher.query child item
-                        |> Result.mapError (ErrorAtIndex index)
-
-                Nothing ->
-                    Err WrongQuery
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
 
 
 {-| -}
@@ -1368,7 +1175,6 @@ patcher_Array patcher =
     { patch = patch_Array patcher
     , build = build_Array patcher
     , toValue = toValue_Array patcher
-    , query = query_Array patcher
     }
 
 
@@ -1395,35 +1201,11 @@ toValue_Array patcher value =
 
 
 {-| -}
-query_Array : Patcher item -> Query -> Array item -> Result Error Value
-query_Array patcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_Array patcher value)
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed (VInt index) child ->
-            case Array.get index value of
-                Just item ->
-                    patcher.query child item
-                        |> Result.mapError (ErrorAtIndex index)
-
-                Nothing ->
-                    Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
-
-
-{-| -}
 patcher_Dict : Patcher comparable -> Patcher value -> Patcher (Dict comparable value)
 patcher_Dict keyPatcher valuePatcher =
     { patch = patch_Dict keyPatcher valuePatcher
     , build = build_Dict keyPatcher valuePatcher
     , toValue = toValue_Dict keyPatcher valuePatcher
-    , query = query_Dict keyPatcher valuePatcher
     }
 
 
@@ -1531,40 +1313,13 @@ toValue_Dict keyPatcher valuePatcher dict =
         { cursor = 0
         , items =
             Dict.toList dict
-                |> List.indexedMap
-                    (\i ( key, value ) ->
+                |> List.map
+                    (\( key, value ) ->
                         ( keyPatcher.toValue key
-                        , if i < paginationSize then
-                            valuePatcher.toValue value
-
-                          else
-                            VUnloaded
+                        , valuePatcher.toValue value
                         )
                     )
         }
-
-
-{-| -}
-query_Dict : Patcher comparable -> Patcher value -> Query -> Dict comparable value -> Result Error Value
-query_Dict keyPatcher valuePatcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_Dict keyPatcher valuePatcher value)
-
-        QIndexed key child ->
-            keyPatcher.build key
-                |> Result.andThen
-                    (\builtKey ->
-                        case Dict.get builtKey value of
-                            Just item ->
-                                valuePatcher.query child item
-
-                            Nothing ->
-                                Err WrongQuery
-                    )
-
-        QRecord _ _ ->
-            Err WrongQuery
 
 
 {-| -}
@@ -1584,14 +1339,13 @@ patcher_Never =
     { patch = patch_Never
     , build = build_Never
     , toValue = toValue_Never
-    , query = query_Never
     }
 
 
 {-| -}
 patch_Never : { force : Bool } -> Patch -> Never -> Result Error Never
-patch_Never _ _ ever =
-    never ever
+patch_Never _ _ found =
+    Ok found
 
 
 {-| -}
@@ -1602,14 +1356,8 @@ build_Never _ =
 
 {-| -}
 toValue_Never : Never -> Value
-toValue_Never ever =
-    never ever
-
-
-{-| -}
-query_Never : Query -> Never -> Result Error Value
-query_Never _ ever =
-    never ever
+toValue_Never =
+    never
 
 
 {-| -}
@@ -1618,7 +1366,6 @@ patcher_Posix =
     { patch = patch_Posix
     , build = build_Posix
     , toValue = toValue_Posix
-    , query = query_Posix
     }
 
 
@@ -1652,12 +1399,6 @@ build_Posix p =
 toValue_Posix : Time.Posix -> Value
 toValue_Posix p =
     VInt <| Time.posixToMillis p
-
-
-{-| -}
-query_Posix : Query -> Time.Posix -> Result Error Value
-query_Posix _ p =
-    Ok (toValue_Posix p)
 
 
 {-| -}
@@ -2168,9 +1909,4 @@ map to from patcher =
             value
                 |> from
                 |> patcher.toValue
-    , query =
-        \query value ->
-            value
-                |> from
-                |> patcher.query query
     }

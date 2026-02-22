@@ -1,13 +1,11 @@
 module Fusion.Generated.Postmark exposing
     ( build_PostmarkError_, build_SendEmailError, build_statusCode__body, patch_PostmarkError_, patch_SendEmailError, patch_statusCode__body
-    , patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, query_PostmarkError_, query_SendEmailError, query_statusCode__body, toValue_PostmarkError_
-    , toValue_SendEmailError, toValue_statusCode__body
+    , patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, toValue_PostmarkError_, toValue_SendEmailError, toValue_statusCode__body
     )
 
 {-|
 @docs build_PostmarkError_, build_SendEmailError, build_statusCode__body, patch_PostmarkError_, patch_SendEmailError, patch_statusCode__body
-@docs patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, query_PostmarkError_, query_SendEmailError, query_statusCode__body
-@docs toValue_PostmarkError_, toValue_SendEmailError, toValue_statusCode__body
+@docs patcher_PostmarkError_, patcher_SendEmailError, patcher_statusCode__body, toValue_PostmarkError_, toValue_SendEmailError, toValue_statusCode__body
 -}
 
 
@@ -413,115 +411,6 @@ patcher_statusCode__body =
     , build = build_statusCode__body
     , toValue = toValue_statusCode__body
     }
-
-
-query_PostmarkError_ : Fusion.Query -> Postmark.PostmarkError_ -> Fusion.Value
-query_PostmarkError_ query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "errorCode", Fusion.VInt value.errorCode )
-                          , ( "message"
-                            , Fusion.Patch.query_String query value.message
-                            )
-                          , ( "to"
-                            , Fusion.Patch.query_List
-                                  Fusion.EmailAddress.patcher_EmailAddress
-                                  query
-                                  value.to
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-
-query_SendEmailError : Fusion.Query -> Postmark.SendEmailError -> Fusion.Value
-query_SendEmailError query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Postmark.UnknownError arg0 ->
-                         Fusion.VCustom
-                             "UnknownError"
-                             [ case query of
-                                 Fusion.QLoad ->
-                                     Result.Ok
-                                         (Fusion.VRecord
-                                              (Dict.fromList
-                                                   [ ( "statusCode"
-                                                     , Fusion.VInt
-                                                           arg0.statusCode
-                                                     )
-                                                   , ( "body"
-                                                     , Fusion.Patch.query_String
-                                                           query
-                                                           arg0.body
-                                                     )
-                                                   ]
-                                              )
-                                         )
-
-                                 Fusion.QRecord arg_0 fusionQuery ->
-                                     Debug.todo "record - qRecord"
-
-                                 Fusion.QIndexed fusionValue fusionQuery ->
-                                     Result.Err Fusion.Patch.WrongQuery
-                             ]
-
-                     Postmark.PostmarkError arg0 ->
-                         Fusion.VCustom
-                             "PostmarkError"
-                             [ query_PostmarkError_ query arg0 ]
-
-                     Postmark.NetworkError ->
-                         Fusion.VCustom "NetworkError" []
-
-                     Postmark.Timeout ->
-                         Fusion.VCustom "Timeout" []
-
-                     Postmark.BadUrl arg0 ->
-                         Fusion.VCustom
-                             "BadUrl"
-                             [ Fusion.Patch.query_String query arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
-
-
-query_statusCode__body :
-    Fusion.Query -> { statusCode : Int, body : String } -> Fusion.Value
-query_statusCode__body query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "statusCode", Fusion.VInt value.statusCode )
-                          , ( "body"
-                            , Fusion.Patch.query_String query value.body
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
 
 
 toValue_PostmarkError_ : Postmark.PostmarkError_ -> Fusion.Value

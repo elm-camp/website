@@ -1,9 +1,7 @@
-module Fusion.Generated.String.Nonempty exposing
-    ( build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, query_NonemptyString, toValue_NonemptyString
-    )
+module Fusion.Generated.String.Nonempty exposing ( build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString )
 
 {-|
-@docs build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, query_NonemptyString, toValue_NonemptyString
+@docs build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString
 -}
 
 
@@ -70,28 +68,6 @@ patcher_NonemptyString =
     , build = build_NonemptyString
     , toValue = toValue_NonemptyString
     }
-
-
-query_NonemptyString :
-    Fusion.Query -> String.Nonempty.NonemptyString -> Fusion.Value
-query_NonemptyString query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     String.Nonempty.NonemptyString arg0 arg1 ->
-                         Fusion.VCustom
-                             "NonemptyString"
-                             [ Fusion.VChar arg0
-                             , Fusion.Patch.query_String query arg1
-                             ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
 
 
 toValue_NonemptyString : String.Nonempty.NonemptyString -> Fusion.Value

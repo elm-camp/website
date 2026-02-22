@@ -11,18 +11,18 @@ This repository contains two things:
 1. Clone this repository
 2. Add the `src` folder to your `elm.json`'s `source-directories`
 3. In the `scripts` folder
-   1. `bun install`
-   2. `bun elm-codegen install`
+   1. `yarn`
+   2. `yarn elm-codegen install`
 
 ### Every time you change your types
 Example (ran from your project's folder):
 ```sh
-bunx elm-pages run path/to/scripts/src/Main.elm elm.json generated Types.UserDb
+npx elm-pages run path/to/scripts/src/Main.elm elm.json generated Types.UserDb
 ```
 
 General structure (ran from anywhere):
 ```sh
-bunx elm-pages run path/to/scripts/src/Main.elm path/to/your/elm.json path/to/directory/you/want/generated/code/in The.List.Of.Types You.Want.To.Edit Defaults.To Types.BackendType
+npx elm-pages run path/to/scripts/src/Main.elm path/to/your/elm.json path/to/directory/you/want/generated/code/in The.List.Of.Types You.Want.To.Edit Defaults.To Types.BackendType
 ```
 
 ## Using the editor

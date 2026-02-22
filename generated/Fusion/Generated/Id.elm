@@ -1,9 +1,7 @@
-module Fusion.Generated.Id exposing
-    ( build_Id, patch_Id, patcher_Id, query_Id, toValue_Id
-    )
+module Fusion.Generated.Id exposing ( build_Id, patch_Id, patcher_Id, toValue_Id )
 
 {-|
-@docs build_Id, patch_Id, patcher_Id, query_Id, toValue_Id
+@docs build_Id, patch_Id, patcher_Id, toValue_Id
 -}
 
 
@@ -64,25 +62,6 @@ patcher_Id aPatcher =
     , build = build_Id aPatcher
     , toValue = toValue_Id aPatcher
     }
-
-
-query_Id : Fusion.Patch.Patcher a -> Fusion.Query -> Id.Id a -> Fusion.Value
-query_Id aPatcher query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (case value of
-                     Id.Id arg0 ->
-                         Fusion.VCustom
-                             "Id"
-                             [ Fusion.Patch.query_String query arg0 ]
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Debug.todo "custom - qIndexed"
 
 
 toValue_Id : Fusion.Patch.Patcher a -> Id.Id a -> Fusion.Value

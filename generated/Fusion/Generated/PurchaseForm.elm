@@ -1,13 +1,11 @@
 module Fusion.Generated.PurchaseForm exposing
     ( build_AttendeeFormValidated, build_PurchaseFormValidated, build_TicketTypes, patch_AttendeeFormValidated, patch_PurchaseFormValidated, patch_TicketTypes
-    , patcher_AttendeeFormValidated, patcher_PurchaseFormValidated, patcher_TicketTypes, query_AttendeeFormValidated, query_PurchaseFormValidated, query_TicketTypes, toValue_AttendeeFormValidated
-    , toValue_PurchaseFormValidated, toValue_TicketTypes
+    , patcher_AttendeeFormValidated, patcher_PurchaseFormValidated, patcher_TicketTypes, toValue_AttendeeFormValidated, toValue_PurchaseFormValidated, toValue_TicketTypes
     )
 
 {-|
 @docs build_AttendeeFormValidated, build_PurchaseFormValidated, build_TicketTypes, patch_AttendeeFormValidated, patch_PurchaseFormValidated, patch_TicketTypes
-@docs patcher_AttendeeFormValidated, patcher_PurchaseFormValidated, patcher_TicketTypes, query_AttendeeFormValidated, query_PurchaseFormValidated, query_TicketTypes
-@docs toValue_AttendeeFormValidated, toValue_PurchaseFormValidated, toValue_TicketTypes
+@docs patcher_AttendeeFormValidated, patcher_PurchaseFormValidated, patcher_TicketTypes, toValue_AttendeeFormValidated, toValue_PurchaseFormValidated, toValue_TicketTypes
 -}
 
 
@@ -286,114 +284,6 @@ patcher_TicketTypes aPatcher =
     , build = build_TicketTypes aPatcher
     , toValue = toValue_TicketTypes aPatcher
     }
-
-
-query_AttendeeFormValidated :
-    Fusion.Query -> PurchaseForm.AttendeeFormValidated -> Fusion.Value
-query_AttendeeFormValidated query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "name"
-                            , Fusion.Generated.Name.query_Name query value.name
-                            )
-                          , ( "country"
-                            , Fusion.Generated.String.Nonempty.query_NonemptyString
-                                  query
-                                  value.country
-                            )
-                          , ( "originCity"
-                            , Fusion.Generated.String.Nonempty.query_NonemptyString
-                                  query
-                                  value.originCity
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-
-query_PurchaseFormValidated :
-    Fusion.Query -> PurchaseForm.PurchaseFormValidated -> Fusion.Value
-query_PurchaseFormValidated query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "attendees"
-                            , Fusion.Patch.query_List
-                                  patcher_AttendeeFormValidated
-                                  query
-                                  value.attendees
-                            )
-                          , ( "count"
-                            , (query_TicketTypes
-                                   Fusion.NonNegative.patcher_NonNegative
-                              )
-                                  query
-                                  value.count
-                            )
-                          , ( "billingEmail"
-                            , Fusion.EmailAddress.query_EmailAddress
-                                  query
-                                  value.billingEmail
-                            )
-                          , ( "grantContribution"
-                            , (Fusion.Generated.Quantity.query_Quantity
-                                   Fusion.Patch.patcher_Float
-                                   Fusion.Stripe.patcher_StripeCurrency
-                              )
-                                  query
-                                  value.grantContribution
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
-
-
-query_TicketTypes :
-    Fusion.Patch.Patcher a
-    -> Fusion.Query
-    -> PurchaseForm.TicketTypes a
-    -> Fusion.Value
-query_TicketTypes aPatcher query value =
-    case query of
-        Fusion.QLoad ->
-            Result.Ok
-                (Fusion.VRecord
-                     (Dict.fromList
-                          [ ( "campfireTicket"
-                            , aPatcher.query query value.campfireTicket
-                            )
-                          , ( "singleRoomTicket"
-                            , aPatcher.query query value.singleRoomTicket
-                            )
-                          , ( "sharedRoomTicket"
-                            , aPatcher.query query value.sharedRoomTicket
-                            )
-                          ]
-                     )
-                )
-
-        Fusion.QRecord arg_0 fusionQuery ->
-            Debug.todo "record - qRecord"
-
-        Fusion.QIndexed fusionValue fusionQuery ->
-            Result.Err Fusion.Patch.WrongQuery
 
 
 toValue_AttendeeFormValidated :

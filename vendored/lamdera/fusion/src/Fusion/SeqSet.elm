@@ -2,9 +2,8 @@ module Fusion.SeqSet exposing (build_SeqSet, patch_SeqSet, patcher_SeqSet, toVal
 
 {-| -}
 
-import Fusion exposing (Query(..), Value(..))
+import Fusion exposing (Value(..))
 import Fusion.Patch exposing (Error(..), Patch, Patcher, patch_List)
-import List.Extra
 import Result.Extra
 import SeqSet exposing (SeqSet)
 
@@ -15,7 +14,6 @@ patcher_SeqSet patcher =
     { patch = patch_SeqSet patcher
     , build = build_SeqSet patcher
     , toValue = toValue_SeqSet patcher
-    , query = query_SeqSet patcher
     }
 
 
@@ -50,26 +48,3 @@ toValue_SeqSet patcher value =
             SeqSet.toList value
                 |> List.map (\item -> patcher.toValue item)
         }
-
-
-{-| -}
-query_SeqSet : Patcher value -> Query -> SeqSet value -> Result Error Value
-query_SeqSet patcher query value =
-    case query of
-        QLoad ->
-            Ok (toValue_SeqSet patcher value)
-
-        QIndexed (VInt index) child ->
-            case List.Extra.getAt index (SeqSet.toList value) of
-                Just item ->
-                    patcher.query child item
-                        |> Result.mapError (ErrorAtIndex index)
-
-                Nothing ->
-                    Err WrongQuery
-
-        QRecord _ _ ->
-            Err WrongQuery
-
-        QIndexed _ _ ->
-            Err WrongQuery
