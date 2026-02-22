@@ -1,7 +1,7 @@
-module Fusion.Generated.TypeDict.Postmark exposing ( typeDict, type_PostmarkError_, type_SendEmailError, type_statusCode__body )
+module Fusion.Generated.TypeDict.Postmark exposing ( typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData )
 
 {-|
-@docs typeDict, type_PostmarkError_, type_SendEmailError, type_statusCode__body
+@docs typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData
 -}
 
 
@@ -13,7 +13,7 @@ typeDict : Dict.Dict String ( Fusion.Type, List a )
 typeDict =
     Dict.fromList
         [ ( "PostmarkError_", ( type_PostmarkError_, [] ) )
-        , ( "statusCode__body", ( type_statusCode__body, [] ) )
+        , ( "UnknownErrorData", ( type_UnknownErrorData, [] ) )
         , ( "SendEmailError", ( type_SendEmailError, [] ) )
         ]
 
@@ -52,15 +52,7 @@ type_SendEmailError =
         "SendEmailError"
         []
         [ ( "UnknownError"
-          , [ Fusion.TRecord
-                [ ( "statusCode"
-                  , Fusion.TNamed [ "Basics" ] "Int" [] (Just Fusion.TInt)
-                  )
-                , ( "body"
-                  , Fusion.TNamed [ "String" ] "String" [] (Just Fusion.TString)
-                  )
-                ]
-            ]
+          , [ Fusion.TNamed [ "Postmark" ] "UnknownErrorData" [] Nothing ]
           )
         , ( "PostmarkError"
           , [ Fusion.TNamed [ "Postmark" ] "PostmarkError_" [] Nothing ]
@@ -73,8 +65,8 @@ type_SendEmailError =
         ]
 
 
-type_statusCode__body : Fusion.Type
-type_statusCode__body =
+type_UnknownErrorData : Fusion.Type
+type_UnknownErrorData =
     Fusion.TRecord
         [ ( "statusCode"
           , Fusion.TNamed [ "Basics" ] "Int" [] (Just Fusion.TInt)

@@ -14,6 +14,7 @@ module Types exposing
     , Sponsorship(..)
     , StripePaymentId(..)
     , TicketPriceStatus(..)
+    , TicketsDisabledData
     , TicketsEnabled(..)
     , ToBackend(..)
     , ToFrontend(..)
@@ -327,7 +328,11 @@ type ToFrontend
 
 type TicketsEnabled
     = TicketsEnabled
-    | TicketsDisabled { adminMessage : String }
+    | TicketsDisabled TicketsDisabledData
+
+
+type alias TicketsDisabledData =
+    { adminMessage : String }
 
 
 maxSlotsAvailable : number

@@ -2,12 +2,12 @@ module Stripe exposing
     ( CheckoutItem(..)
     , ConversionRateStatus(..)
     , CurrentCurrency
-    , LocalCurrency
+    , LocalCurrency(..)
     , Price
     , PriceData
     , PriceId(..)
     , ProductId(..)
-    , StripeCurrency
+    , StripeCurrency(..)
     , StripeSessionId(..)
     , Webhook(..)
     , cancelPath
@@ -61,11 +61,11 @@ type alias CurrentCurrency =
 
 
 type StripeCurrency
-    = StripeCurrency
+    = StripeCurrency Never
 
 
 type LocalCurrency
-    = LocalCurrency
+    = LocalCurrency Never
 
 
 localCurrency : Money.Currency

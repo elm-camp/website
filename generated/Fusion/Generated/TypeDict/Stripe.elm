@@ -1,7 +1,9 @@
-module Fusion.Generated.TypeDict.Stripe exposing ( typeDict, type_Price, type_PriceId, type_StripeSessionId )
+module Fusion.Generated.TypeDict.Stripe exposing
+    ( typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId
+    )
 
 {-|
-@docs typeDict, type_Price, type_PriceId, type_StripeSessionId
+@docs typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId
 -}
 
 
@@ -14,6 +16,7 @@ typeDict =
     Dict.fromList
         [ ( "PriceId", ( type_PriceId, [] ) )
         , ( "Price", ( type_Price, [] ) )
+        , ( "StripeCurrency", ( type_StripeCurrency, [] ) )
         , ( "StripeSessionId", ( type_StripeSessionId, [] ) )
         ]
 
@@ -46,6 +49,17 @@ type_PriceId =
         "PriceId"
         []
         [ ( "PriceId"
+          , [ Fusion.TNamed [ "Basics" ] "Never" [] (Just Fusion.TNever) ]
+          )
+        ]
+
+
+type_StripeCurrency : Fusion.Type
+type_StripeCurrency =
+    Fusion.TCustom
+        "StripeCurrency"
+        []
+        [ ( "StripeCurrency"
           , [ Fusion.TNamed [ "Basics" ] "Never" [] (Just Fusion.TNever) ]
           )
         ]
