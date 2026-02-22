@@ -236,6 +236,40 @@ content =
             }
           ]
         ]
+    , Section "Prospective Schedule:"
+        [ BulletList
+            [ Bold "Mon 15th June" ]
+            [ Paragraph [ Text "3pm arrivals & halls officially open" ]
+            , Paragraph [ Text "Settle into accomodation" ]
+            , Paragraph [ Text "Opening of session board" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Evening stroll" ]
+            ]
+        , BulletList
+            [ Bold "Tue 16th June" ]
+            [ Paragraph [ Text "Breakfast" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Lunch" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Activities and informal chats" ]
+            ]
+        , BulletList
+            [ Bold "Wed 17th June" ]
+            [ Paragraph [ Text "Breakfast" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Lunch" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Unconference wrap-up & party" ]
+            ]
+        , BulletList
+            [ Bold "Thu 18th June" ]
+            [ Paragraph [ Text "Grab and go breakfast" ]
+            , Paragraph [ Text "Depart hotel by 10am" ]
+            , Paragraph [ Text "Activities around Olomouc" ]
+            ]
+        ]
     , Section
         "The venue and access"
         [ Section
@@ -272,13 +306,13 @@ content =
     , Section opportunityGrant
         [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
         , Section "🤗 Opportunity grant applications"
-            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the combination of ticket, accommodations and travel expenses, please get in touch with a brief paragraph about what motivates you to attend Elm Camp and how an opportunity grant could help." ]
+            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the cost, please select an opportunity grant ticket and we'll get in touch to help." ]
             , Paragraph
-                [ Text "Please apply by sending an email to "
+                [ Text "If you have any questions send an email to "
                 , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                , Text ". The final date for applications is the 8th of May. Decisions will be communicated directly to each applicant by 14th of May. Elm Camp grant decisions are made by the Elm Camp organizers using a blind selection process."
+                , Text ". Elm Camp grant decisions are made by the Elm Camp organizers."
                 ]
-            , Paragraph [ Text "All applicants and grant recipients will remain confidential. In the unlikely case that there are unused funds, the amount will be publicly communicated and saved for future Elm Camp grants." ]
+            , Paragraph [ Text "All grant recipients will remain confidential. Any unused funds are saved for future Elm Camp grants." ]
             ]
         ]
     , Section "Organisers"
