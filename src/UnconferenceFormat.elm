@@ -1,5 +1,6 @@
 module UnconferenceFormat exposing (view)
 
+import Helpers
 import RichText exposing (Inline(..), RichText(..))
 
 
@@ -16,7 +17,11 @@ view =
         , Section "Plan"
             [ BulletList
                 [ Bold "Before Elm Camp" ]
-                [ Paragraph [ Text "People can start proposing presentations before Elm camp in #elm-camp-26 channel on Elm Craft discord which is a place for conversations and coordinating travel." ]
+                [ Paragraph
+                    [ Text "People can start proposing presentations before Elm camp in Elmcraft Discord: "
+                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
+                    , Text " which is a place for conversations before, during and after the camp. You can also use this channel to coordinate travel plans."
+                    ]
                 , Paragraph [ Text "There are no pre-planned sessions." ]
                 , Paragraph [ Text "We'll start with 2 tracks. If needed, more concurrent sessions may be scheduled during the unconference." ]
                 , Paragraph [ Text "Sessions will be offered in 30 minute and 1 hour blocks." ]
