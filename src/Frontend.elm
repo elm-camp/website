@@ -410,10 +410,10 @@ updateLoaded msg model =
             )
 
         FusionPatch patch ->
-            Debug.todo ""
+            ( model, Command.none )
 
         FusionQuery ->
-            Debug.todo ""
+            ( model, Command.none )
 
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
