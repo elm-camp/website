@@ -334,8 +334,10 @@ accommodationView ticketTypes initData model =
             (PurchaseForm.allTicketTypes initData.prices)
             (PurchaseForm.allTicketTypes model.form.count)
             PurchaseForm.ticketTypesSetters
-            |> List.append
-                [ viewOpportunityGrantCta ]
+            -- The opportunity grant cta is presented as and alongside the other
+            -- tickets to try and encourage more folks to actually apply. It's
+            -- not a ticket though: it's a link to the application form!
+            |> List.append [ viewOpportunityGrantCta ]
             |> Theme.rowToColumnWhen model.window [ Ui.spacing 16, Ui.wrap ]
             |> Ui.el [ Ui.widthMax 1200, Ui.centerX, Ui.paddingXY 16 0 ]
         , Ui.Lazy.lazy3
