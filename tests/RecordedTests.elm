@@ -22,6 +22,7 @@ import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Test.Html.Query
 import Test.Html.Selector
+import Theme exposing (Size)
 import Time
 import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), FrontendModel, FrontendMsg, ToBackend(..), ToFrontend)
 import Unsafe
@@ -176,6 +177,11 @@ sessionId0 =
     Lamdera.sessionIdFromString "sessionId0"
 
 
+windowSize : Size
+windowSize =
+    { width = 800, height = 1200 }
+
+
 {-| You can change parts of this function represented with `...`.
 The rest needs to remain unchanged in order for the test generator to be able to add new tests.
 
@@ -211,7 +217,7 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 "/code-of-conduct"
                 , tab1.checkView 100
@@ -238,13 +244,13 @@ tests fileData =
             0
             sessionId0
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
                 , tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
@@ -260,13 +266,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , tab1.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
@@ -332,13 +338,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , purchaseSingleRoomTickets Camp26Czech.maxRooms tab1
@@ -348,7 +354,7 @@ tests fileData =
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab2.checkView
                             100
@@ -370,13 +376,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
@@ -386,7 +392,7 @@ tests fileData =
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab2.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
                         , purchaseSingleRoomTickets 1 tab2
@@ -404,19 +410,19 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                         , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
@@ -438,19 +444,19 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                         , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
@@ -495,13 +501,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , purchasecampfireTickets 0 Camp26Czech.maxAttendees tab1
@@ -511,7 +517,7 @@ tests fileData =
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab2.checkView
                             100
@@ -533,13 +539,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , purchaseSingleRoomTickets Camp26Czech.maxRooms tab1
@@ -550,7 +556,7 @@ tests fileData =
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab2.checkView
                             100
@@ -572,13 +578,13 @@ tests fileData =
             0
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\_ -> [])
         , T.connectFrontend
             100
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
-            { width = 881, height = 1312 }
+            windowSize
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
@@ -589,7 +595,7 @@ tests fileData =
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
-                    { width = 881, height = 1312 }
+                    windowSize
                     (\tab2 ->
                         [ tab2.checkView
                             100
