@@ -1,41 +1,48 @@
 module Backend exposing
     ( app
     , app_
+    , confirmationEmailSubject
     , elmCampEmailAddress
     , errorEmail
     , init
-    , priceIdToProductId
     , sessionIdToStripeSessionId
     , subscriptions
     , update
     , updateFromFrontend
     )
 
-import Camp26Czech.Inventory as Inventory
-import Camp26Czech.Product as Product
-import Camp26Czech.Tickets as Tickets
+import Camp26Czech
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
+import Effect.Http as Http
 import Effect.Lamdera as Lamdera exposing (ClientId, SessionId)
 import Effect.Process
 import Effect.Subscription as Subscription exposing (Subscription)
 import Effect.Task as Task
 import Effect.Time as Time
+import Email.Html as Html
+import Email.Html.Attributes as Attributes
 import EmailAddress exposing (EmailAddress)
 import Env
+import Fusion.Generated.Types
 import HttpHelpers
 import Id exposing (Id)
+import Json.Decode as D
 import Lamdera as LamderaCore
 import List.Extra as List
-import List.Nonempty
+import List.Nonempty exposing (Nonempty(..))
+import Money
 import Name
+import NonNegative exposing (NonNegative)
 import Postmark
-import PurchaseForm exposing (PurchaseFormValidated)
+import PurchaseForm exposing (PurchaseFormValidated, TicketTypes)
 import Quantity
-import SeqDict
+import Route exposing (Route(..))
+import Sales
+import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
-import Stripe exposing (PriceId, ProductId(..), StripeSessionId)
-import Types exposing (BackendModel, BackendMsg(..), EmailResult(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 
@@ -69,10 +76,9 @@ init =
     ( { orders = SeqDict.empty
       , pendingOrder = SeqDict.empty
       , expiredOrders = SeqDict.empty
-      , prices = SeqDict.empty
+      , prices = NotLoadingTicketPrices
       , time = Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
-      , backendInitialized = False
       }
     , Command.none
     )
@@ -89,94 +95,119 @@ subscriptions _ =
 update : BackendMsg -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 update msg model =
     (case msg of
-        GotTime _ ->
-            ( model, Command.none )
+        GotTime time ->
+            let
+                ( expiredOrders, remainingOrders ) =
+                    SeqDict.partition
+                        (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
+                        model.pendingOrder
+            in
+            ( { model
+                | time = time
+                , pendingOrder = remainingOrders
+                , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
+              }
+            , Command.batch
+                [ Stripe.getPrices |> Task.attempt GotPrices
+                , List.map
+                    (\stripeSessionId ->
+                        Stripe.expireSession stripeSessionId
+                            |> Task.attempt (ExpiredStripeSession stripeSessionId)
+                    )
+                    (SeqDict.keys expiredOrders)
+                    |> Command.batch
+                ]
+            )
 
-        --let
-        --    ( expiredOrders, remainingOrders ) =
-        --        SeqDict.partition
-        --            (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
-        --            model.pendingOrder
-        --in
-        --( { model
-        --    | time = time
-        --    , pendingOrder = remainingOrders
-        --    , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
-        --  }
-        --, Command.batch
-        --    [ Stripe.getPrices |> Task.attempt GotPrices
-        --    , List.map
-        --        (\stripeSessionId ->
-        --            Stripe.expireSession stripeSessionId
-        --                |> Task.attempt (ExpiredStripeSession stripeSessionId)
-        --        )
-        --        (SeqDict.keys expiredOrders)
-        --        |> Command.batch
-        --    ]
-        --)
         GotPrices result ->
             case result of
                 Ok prices ->
-                    ( { model
-                        | prices =
+                    let
+                        dict : SeqDict (Id ProductId) PriceData
+                        dict =
                             List.filterMap
                                 (\price ->
                                     if price.isActive then
-                                        Just ( price.productId, { priceId = price.priceId, price = price.price } )
+                                        Just ( price.productId, price )
 
                                     else
                                         Nothing
                                 )
                                 prices
                                 |> SeqDict.fromList
+                    in
+                    ( { model
+                        | prices =
+                            case
+                                ( SeqDict.get (Id.fromString "prod_TmIy0Mltqmgzg5") dict
+                                , SeqDict.get (Id.fromString "prod_TmJ0n8liux9A3d") dict
+                                , SeqDict.get (Id.fromString "prod_TmIzrbSouU0bYE") dict
+                                )
+                            of
+                                ( Just campfirePrice, Just singleRoomPrice, Just sharedRoomPrice ) ->
+                                    if
+                                        (campfirePrice.currency == singleRoomPrice.currency)
+                                            && (campfirePrice.currency == sharedRoomPrice.currency)
+                                    then
+                                        LoadedTicketPrices
+                                            campfirePrice.currency
+                                            { campfireTicket = campfirePrice.price
+                                            , singleRoomTicket = singleRoomPrice.price
+                                            , sharedRoomTicket = sharedRoomPrice.price
+                                            }
+
+                                    else
+                                        TicketCurrenciesDoNotMatch
+
+                                _ ->
+                                    FailedToLoadTicketPrices (Http.BadBody "Missing one or more ticket prices")
                       }
                     , Command.none
                     )
 
                 Err error ->
-                    ( model
+                    ( { model | prices = FailedToLoadTicketPrices error }
                     , errorEmail ("GotPrices failed: " ++ HttpHelpers.httpErrorToString error)
-                        |> Command.fromCmd "GotPrices failed email"
                     )
 
         OnConnected _ clientId ->
-            ( model
-            , Lamdera.sendToFrontend
-                clientId
-                (InitData
-                    { prices = model.prices
-                    , slotsRemaining = Inventory.slotsRemaining model
-                    , ticketsEnabled = model.ticketsEnabled
-                    }
-                )
-            )
+            case model.prices of
+                NotLoadingTicketPrices ->
+                    ( { model | prices = LoadingTicketPrices }
+                    , Command.batch
+                        [ Lamdera.sendToFrontend clientId (InitData (Err ()))
+                        , Command.batch
+                            [ Time.now |> Task.perform GotTime
+                            , Effect.Process.sleep Duration.second
+                                |> Task.andThen (\() -> Stripe.getPrices)
+                                |> Task.attempt GotPrices
+                            ]
+                        ]
+                    )
 
-        --( { model | backendInitialized = True }
-        --, Command.batch
-        --    [ Lamdera.sendToFrontend
-        --        clientId
-        --        (InitData
-        --            { prices = model.prices
-        --            , slotsRemaining = Inventory.slotsRemaining model
-        --            , ticketsEnabled = model.ticketsEnabled
-        --            }
-        --        )
-        --    , if model.backendInitialized then
-        --        Command.none
-        --
-        --      else
-        --        Command.batch
-        --            [ Time.now |> Task.perform GotTime
-        --            , Effect.Process.sleep Duration.second
-        --                |> Task.andThen (\() -> Stripe.getPrices)
-        --                |> Task.attempt GotPrices
-        --            ]
-        --    ]
-        --)
+                LoadedTicketPrices stripeCurrency prices ->
+                    ( model
+                    , Lamdera.sendToFrontend
+                        clientId
+                        ({ prices = prices
+                         , ticketsAlreadyPurchased = totalTicketCount model.pendingOrder model.orders
+                         , ticketsEnabled = model.ticketsEnabled
+                         , stripeCurrency = stripeCurrency
+                         , currentCurrency = { currency = stripeCurrency, conversionRate = Quantity.unsafe 1 }
+                         }
+                            |> Ok
+                            |> InitData
+                        )
+                    )
+
+                _ ->
+                    ( model, Lamdera.sendToFrontend clientId (InitData (Err ())) )
+
         CreatedCheckoutSession sessionId clientId purchaseForm result ->
             case result of
                 Ok ( stripeSessionId, submitTime ) ->
                     let
+                        existingStripeSessions : List (Id StripeSessionId)
                         existingStripeSessions =
                             SeqDict.filter
                                 (\_ data -> data.sessionId == sessionId)
@@ -213,7 +244,7 @@ update msg model =
                     ( model
                     , Command.batch
                         [ SubmitFormResponse (Err err) |> Lamdera.sendToFrontend clientId
-                        , errorEmail err |> Command.fromCmd "Send email"
+                        , errorEmail err
                         ]
                     )
 
@@ -240,7 +271,6 @@ update msg model =
                             ++ " stripeSessionId: "
                             ++ Id.toString stripeSessionId
                         )
-                        |> Command.fromCmd "ExpiredStripeSession email"
                     )
 
         ConfirmationEmailSent stripeSessionId result ->
@@ -266,143 +296,182 @@ update msg model =
                                         { order | emailResult = EmailFailed error }
                                         model.orders
                               }
-                            , errorEmail ("Confirmation email failed: " ++ HttpHelpers.httpErrorToString error)
-                                |> Command.fromCmd "Confirmation email failed"
+                            , errorEmail ("Confirmation email failed: " ++ HttpHelpers.postmarkSendEmailErrorToString error)
                             )
 
                 Nothing ->
                     ( model
                     , errorEmail ("StripeSessionId not found for confirmation email: " ++ Id.toString stripeSessionId)
-                        |> Command.fromCmd "StripeSessionId not found email"
                     )
 
         ErrorEmailSent _ ->
             ( model, Command.none )
+
+        StripeWebhookResponse { endpoint, json } ->
+            case endpoint of
+                "stripe" ->
+                    case model.prices of
+                        Types.LoadedTicketPrices stripeCurrency _ ->
+                            case D.decodeString Stripe.decodeWebhook json of
+                                Ok webhook ->
+                                    case webhook of
+                                        StripeSessionCompleted stripeSessionId paymentId ->
+                                            case SeqDict.get stripeSessionId model.pendingOrder of
+                                                Just order ->
+                                                    let
+                                                        { subject, textBody, htmlBody } =
+                                                            confirmationEmail order.form stripeCurrency
+                                                    in
+                                                    ( { model
+                                                        | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                                        , orders =
+                                                            SeqDict.insert
+                                                                stripeSessionId
+                                                                { submitTime = order.submitTime
+                                                                , form = order.form
+                                                                , emailResult = SendingEmail
+                                                                , paymentId = paymentId
+                                                                }
+                                                                model.orders
+                                                      }
+                                                    , Postmark.sendEmail
+                                                        (ConfirmationEmailSent stripeSessionId)
+                                                        Env.postmarkApiKey
+                                                        { from = { name = "elm-camp", email = elmCampEmailAddress }
+                                                        , to =
+                                                            Nonempty
+                                                                { name =
+                                                                    case order.form.attendees of
+                                                                        head :: _ ->
+                                                                            Name.toString head.name
+
+                                                                        [] ->
+                                                                            "Attendee"
+                                                                , email = order.form.billingEmail
+                                                                }
+                                                                []
+                                                        , subject = subject
+                                                        , body = Postmark.HtmlAndTextBody htmlBody textBody
+                                                        , messageStream = Postmark.TransactionalEmail
+                                                        , attachments = Postmark.noAttachments
+                                                        }
+                                                    )
+
+                                                Nothing ->
+                                                    let
+                                                        error =
+                                                            "Stripe session not found: stripeSessionId: "
+                                                                ++ Id.toString stripeSessionId
+                                                    in
+                                                    ( model, errorEmail error )
+
+                                Err error ->
+                                    ( model
+                                    , "Failed to decode webhook: " ++ D.errorToString error |> errorEmail
+                                    )
+
+                        _ ->
+                            ( model
+                            , errorEmail "Stripe webhook occurred but prices aren't loaded on the backend"
+                            )
+
+                _ ->
+                    ( model, Command.none )
     )
         |> (\( newModel, cmd ) ->
                 let
-                    newSlotsRemaining =
-                        Inventory.slotsRemaining newModel
+                    ticketsAlreadyPurchased : TicketTypes NonNegative
+                    ticketsAlreadyPurchased =
+                        totalTicketCount newModel.pendingOrder newModel.orders
                 in
-                if Inventory.slotsRemaining model == newSlotsRemaining then
+                if totalTicketCount model.pendingOrder model.orders == ticketsAlreadyPurchased then
                     ( newModel, cmd )
 
                 else
-                    ( newModel, Command.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged newSlotsRemaining) ] )
+                    ( newModel, Command.batch [ cmd, Lamdera.broadcast (SlotRemainingChanged ticketsAlreadyPurchased) ] )
            )
+
+
+totalTicketCount :
+    SeqDict (Id StripeSessionId) PendingOrder
+    -> SeqDict (Id StripeSessionId) CompletedOrder
+    -> TicketTypes NonNegative
+totalTicketCount pendingOrders orders =
+    SeqDict.foldl
+        (\_ form count ->
+            { campfireTicket = NonNegative.plus count.campfireTicket form.count.campfireTicket
+            , singleRoomTicket = NonNegative.plus count.singleRoomTicket form.count.singleRoomTicket
+            , sharedRoomTicket = NonNegative.plus count.sharedRoomTicket form.count.sharedRoomTicket
+            }
+        )
+        PurchaseForm.initTicketCount
+        (SeqDict.union
+            (SeqDict.map (\_ order -> order.form) pendingOrders)
+            (SeqDict.map (\_ order -> order.form) orders)
+        )
 
 
 updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest a ->
-            case ( Untrusted.purchaseForm a, model.ticketsEnabled ) of
-                ( Just purchaseForm, TicketsEnabled ) ->
+            case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
+                ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
                     let
-                        availability =
-                            Inventory.slotsRemaining model
+                        ticketsAvailable : Bool
+                        ticketsAvailable =
+                            List.map
+                                (\ticket ->
+                                    ticket.available purchaseForm.count (totalTicketCount model.pendingOrder model.orders)
+                                )
+                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                |> Debug.log "a"
+                                |> List.all identity
 
-                        validProductAndForm =
-                            {-
-                               I'm going to leave this for now, it's supposed to protect from people hand-crafting payloads
-                               from the frontend to skip form validation, but given the Lamdera wire format is opaque and
-                               undocumented, and there isn't really much to gain from someone going to the pains to reverse
-                               engineer it just to avoid filling in their full name or valid email, I don't think this is a
-                               realistic concern for our small event :)
-                            -}
-                            True
-
-                        sponsorshipItems =
-                            case purchaseForm.sponsorship of
-                                Just sponsorshipId ->
-                                    case SeqDict.get (Id.fromString sponsorshipId) model.prices of
-                                        Just price ->
-                                            [ Stripe.Priced
-                                                { name = "Sponsorship"
-                                                , priceId = price.priceId
-                                                , quantity = 1
-                                                }
-                                            ]
-
-                                        Nothing ->
-                                            []
-
-                                Nothing ->
-                                    []
-
-                        ticketItems =
-                            purchaseForm.attendees
-                                |> List.map
-                                    (\attendee ->
-                                        Stripe.Priced
-                                            { name = Tickets.attendanceTicket.name ++ " for " ++ Name.toString attendee.name
-                                            , priceId =
-                                                let
-                                                    productId =
-                                                        Id.fromString Tickets.attendanceTicket.productId
-                                                in
-                                                case SeqDict.get productId model.prices of
-                                                    Just price ->
-                                                        price.priceId
-
-                                                    Nothing ->
-                                                        Id.fromString "price not found"
-                                            , quantity = 1
-                                            }
-                                    )
-
-                        accommodationItems =
-                            purchaseForm.accommodationBookings
-                                |> List.group
-                                |> List.map
-                                    (\( accom, accomCount ) ->
-                                        Stripe.Priced
-                                            { name = Tickets.accomToString accom
-                                            , priceId =
-                                                let
-                                                    productId =
-                                                        Id.fromString (Tickets.accomToTicket accom).productId
-                                                in
-                                                case SeqDict.get productId model.prices of
-                                                    Just price ->
-                                                        price.priceId
-
-                                                    Nothing ->
-                                                        Id.fromString "price not found"
-                                            , quantity = List.length accomCount + 1
-                                            }
-                                    )
-
+                        opportunityGrantItems : List CheckoutItem
                         opportunityGrantItems =
-                            if purchaseForm.grantContribution > 0 then
+                            if Quantity.greaterThanZero purchaseForm.grantContribution then
                                 [ Stripe.Unpriced
                                     { name = "Opportunity Grant"
                                     , quantity = 1
-                                    , currency = "usd"
-                                    , amountDecimal = purchaseForm.grantContribution * 100
+                                    , currency = Money.toString currency |> String.toLower
+                                    , amountDecimal = Quantity.round purchaseForm.grantContribution |> Quantity.unwrap
                                     }
                                 ]
 
                             else
                                 []
-
-                        items =
-                            ticketItems ++ accommodationItems ++ opportunityGrantItems ++ sponsorshipItems
                     in
-                    ( model
-                    , Time.now
-                        |> Task.andThen
-                            (\now ->
-                                Stripe.createCheckoutSession
-                                    { items = items
-                                    , emailAddress = purchaseForm.billingEmail
-                                    , now = now
-                                    , expiresInMinutes = 30
-                                    }
-                                    |> Task.map (\res -> ( res, now ))
-                            )
-                        |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
-                    )
+                    if ticketsAvailable then
+                        ( model
+                        , Time.now
+                            |> Task.andThen
+                                (\now ->
+                                    Stripe.createCheckoutSession
+                                        { items =
+                                            List.map3
+                                                (\ticket price count ->
+                                                    Stripe.Priced
+                                                        { name = ticket.name
+                                                        , priceId = price.priceId
+                                                        , quantity = NonNegative.toInt count
+                                                        }
+                                                )
+                                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                                (PurchaseForm.allTicketTypes prices)
+                                                (PurchaseForm.allTicketTypes purchaseForm.count)
+                                                ++ opportunityGrantItems
+                                        , emailAddress = purchaseForm.billingEmail
+                                        , now = now
+                                        , expiresInMinutes = 30
+                                        }
+                                        |> Task.map (\res -> ( res, now ))
+                                )
+                            |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
+                        )
+
+                    else
+                        ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Sorry, tickets are sold out.")) )
 
                 _ ->
                     ( model, Command.none )
@@ -419,7 +488,11 @@ updateFromFrontend sessionId clientId msg model =
 
         AdminInspect pass ->
             if pass == Env.adminPassword then
-                ( model, Lamdera.sendToFrontend clientId (AdminInspectResponse model) )
+                ( model
+                , Lamdera.sendToFrontend
+                    clientId
+                    (AdminInspectResponse model (Fusion.Generated.Types.toValue_BackendModel model))
+                )
 
             else
                 ( model, Command.none )
@@ -438,20 +511,7 @@ sessionIdToStripeSessionId sessionId model =
             )
 
 
-priceIdToProductId : BackendModel -> Id PriceId -> Maybe (Id ProductId)
-priceIdToProductId model priceId =
-    SeqDict.toList model.prices
-        |> List.findMap
-            (\( productId, prices ) ->
-                if prices.priceId == priceId then
-                    Just productId
-
-                else
-                    Nothing
-            )
-
-
-errorEmail : String -> Cmd BackendMsg
+errorEmail : String -> Command BackendOnly ToFrontend BackendMsg
 errorEmail errorMessage =
     case List.Nonempty.fromList Env.developerEmails of
         Just to ->
@@ -476,9 +536,105 @@ errorEmail errorMessage =
                 }
 
         Nothing ->
-            Cmd.none
+            Command.none
 
 
 elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
     Unsafe.emailAddress "team@elm.camp"
+
+
+confirmationEmailSubject : NonemptyString
+confirmationEmailSubject =
+    NonemptyString 'P' "urchase confirmation"
+
+
+confirmationEmail : PurchaseFormValidated -> Money.Currency -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
+confirmationEmail purchaseForm stripeCurrency =
+    { subject = confirmationEmailSubject
+    , textBody =
+        "This is a confirmation email for your purchase of:\n\n"
+            ++ (List.map2
+                    (\count ticketType ->
+                        if count == NonNegative.zero then
+                            Nothing
+
+                        else
+                            NonNegative.toString count
+                                ++ " x "
+                                ++ ticketType.name
+                                ++ " ("
+                                ++ ticketType.description
+                                ++ ")\n\n"
+                                |> Just
+                    )
+                    (PurchaseForm.allTicketTypes purchaseForm.count)
+                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                    |> List.filterMap identity
+                    |> String.concat
+               )
+            ++ (if Quantity.greaterThanZero purchaseForm.grantContribution then
+                    Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }
+                        ++ " grant contribution\n\n"
+
+                else
+                    ""
+               )
+            ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
+            ++ "You can review the schedule at "
+            ++ (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute)
+            ++ ". If you have any questions, email us at "
+            ++ EmailAddress.toString elmCampEmailAddress
+            ++ " (or just reply to this email)"
+    , htmlBody =
+        Html.div
+            []
+            [ Html.div
+                [ Attributes.paddingBottom "16px" ]
+                [ Html.text "This is a confirmation email for your purchase of:"
+                ]
+            , List.map2
+                (\count ticketType ->
+                    if count == NonNegative.zero then
+                        Nothing
+
+                    else
+                        Html.div
+                            [ Attributes.paddingBottom "16px" ]
+                            [ Html.b [] [ Html.text (NonNegative.toString count ++ " x " ++ ticketType.name) ]
+                            , Html.text (" (" ++ ticketType.description ++ ")")
+                            ]
+                            |> Just
+                )
+                (PurchaseForm.allTicketTypes purchaseForm.count)
+                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                |> List.filterMap identity
+                |> Html.div []
+            , if Quantity.greaterThanZero purchaseForm.grantContribution then
+                Html.div
+                    [ Attributes.paddingBottom "16px" ]
+                    [ Html.b
+                        []
+                        [ Sales.stripePriceText
+                            (Quantity.round purchaseForm.grantContribution)
+                            { stripeCurrency = stripeCurrency }
+                            |> Html.text
+                        ]
+                    , Html.text " grant contribution\n\n"
+                    ]
+
+              else
+                Html.text ""
+            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
+            , Html.div []
+                [ Html.a
+                    [ Attributes.href (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute) ]
+                    [ Html.text "You can review the schedule here" ]
+                , Html.text ". If you have any questions, email us at "
+                , Html.a
+                    [ Attributes.href ("mailto:" ++ EmailAddress.toString elmCampEmailAddress) ]
+                    [ Html.text (EmailAddress.toString elmCampEmailAddress) ]
+                , Html.text " (or just reply to this email)"
+                ]
+            ]
+    }

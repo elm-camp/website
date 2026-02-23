@@ -1,4 +1,4 @@
-module View.Logo exposing
+module Logo exposing
     ( Model
     , Msg(..)
     , PieceConfig

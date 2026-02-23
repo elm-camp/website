@@ -1,9 +1,10 @@
 module UnconferenceFormat exposing (view)
 
-import Formatting exposing (Formatting(..), Inline(..))
+import Helpers
+import RichText exposing (Inline(..), RichText(..))
 
 
-view : List Formatting
+view : List RichText
 view =
     [ Section "Unconference Format"
         [ Section "First and foremost, there are no unchangeable rules, with the exception of the \"rule of two feet\":"
@@ -16,10 +17,14 @@ view =
         , Section "Plan"
             [ BulletList
                 [ Bold "Before Elm Camp" ]
-                [ Paragraph [ Text "People can start proposing presentations before Elm camp in the form of cards on a Trello board which will be a place for conversations and serve as a schedule during the unconference and an archive after." ]
-                , Paragraph [ Text "There are 2 pre-planned sessions (the unkeynotes at the start and end of Elm Camp)" ]
-                , Paragraph [ Text "We'll start with 3 tracks. If needed, more concurrent sessions may be scheduled during the unconference." ]
-                , Paragraph [ Text "Sessions will be offered in 15 and 30 minute blocks." ]
+                [ Paragraph
+                    [ Text "People can start proposing presentations before Elm camp in Elmcraft Discord: "
+                    , ExternalLink "#elm-camp-26" Helpers.discordInviteLink
+                    , Text " which is a place for conversations before, during and after the camp. You can also use this channel to coordinate travel plans."
+                    ]
+                , Paragraph [ Text "There are no pre-planned sessions." ]
+                , Paragraph [ Text "We'll start with 2 tracks. If needed, more concurrent sessions may be scheduled during the unconference." ]
+                , Paragraph [ Text "Sessions will be offered in 30 minute and 1 hour blocks." ]
                 , Paragraph [ Text "We encourage attendees to think about how they might like to document or share our discussions with the community after Elm Camp. e.g. blog posts, graphics, videos" ]
                 ]
             , BulletList
@@ -27,7 +32,7 @@ view =
                 [ Paragraph [ Text "We'll arrange collective scheduling sessions every morning, where together we pitch, vote for and schedule sessions." ]
                 , Paragraph [ Text "All tracks will run in sync to allow for easy switching between sessions." ]
                 , Paragraph [ Text "We'll have reserved time for public announcements. You'll have a couple minutes on stage if needed." ]
-                , Paragraph [ Text "The schedule will be clearly displayed both online and at the venue for easy reference." ]
+                , Paragraph [ Text "The schedule will be clearly displayed at the venue for easy reference." ]
                 , Paragraph [ Text "Session locations will have distinctive names for effortless navigation." ]
                 , Paragraph [ Text "Session endings will be made clear to prevent overruns." ]
                 , Paragraph [ Text "Doors will be kept open to make moving along easy." ]

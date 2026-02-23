@@ -1,7 +1,7 @@
 module Camp23Denmark exposing (view)
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..))
+import RichText exposing (Inline(..), RichText(..))
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -25,7 +25,7 @@ view model =
         [ Ui.column
             -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
             (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
+            [ Theme.rowToColumnWhen
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image
@@ -40,13 +40,13 @@ view model =
                     , Camp.elmCampBottomLine meta
                     ]
                 ]
-            , Formatting.view model content
+            , RichText.view model content
             ]
         , Theme.footer
         ]
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Unconference"
         [ BulletList

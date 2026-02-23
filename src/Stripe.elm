@@ -1,9 +1,14 @@
 module Stripe exposing
     ( CheckoutItem(..)
+    , ConversionRateStatus(..)
+    , CurrentCurrency
+    , LocalCurrency(..)
     , Price
     , PriceData
     , PriceId(..)
     , ProductId(..)
+    , StripeCurrency(..)
+    , StripePaymentId
     , StripeSessionId(..)
     , Webhook(..)
     , cancelPath
@@ -13,10 +18,12 @@ module Stripe exposing
     , expireSession
     , getPrices
     , loadCheckout
+    , localCurrency
     , stripeSessionIdParameter
     , successPath
     )
 
+import Dict exposing (Dict)
 import Effect.Command as Command exposing (Command, FrontendOnly)
 import Effect.Http as Http
 import Effect.Task exposing (Task)
@@ -30,6 +37,8 @@ import Json.Decode.Pipeline
 import Json.Encode as E
 import Money
 import Ports exposing (stripe_to_js)
+import Quantity exposing (Quantity, Rate)
+import SeqDict exposing (SeqDict)
 import Url exposing (percentEncode)
 import Url.Builder
 
@@ -39,7 +48,30 @@ import Url.Builder
 
 
 type alias Price =
-    { currency : Money.Currency, amount : Int }
+    { priceId : Id PriceId, amount : Quantity Int StripeCurrency }
+
+
+type ConversionRateStatus
+    = LoadingConversionRate
+    | LoadedConversionRate (SeqDict Money.Currency (Quantity Float (Rate StripeCurrency LocalCurrency)))
+    | LoadingConversionRateFailed Http.Error
+
+
+type alias CurrentCurrency =
+    { currency : Money.Currency, conversionRate : Quantity Float (Rate StripeCurrency LocalCurrency) }
+
+
+type StripeCurrency
+    = StripeCurrency Never
+
+
+type LocalCurrency
+    = LocalCurrency Never
+
+
+localCurrency : Money.Currency
+localCurrency =
+    Money.EUR
 
 
 type ProductId
@@ -51,7 +83,11 @@ type PriceId
 
 
 type Webhook
-    = StripeSessionCompleted (Id StripeSessionId)
+    = StripeSessionCompleted (Id StripeSessionId) (Id StripePaymentId)
+
+
+type StripePaymentId
+    = StripePaymentId Never
 
 
 decodeWebhook : D.Decoder Webhook
@@ -61,8 +97,13 @@ decodeWebhook =
             (\eventType ->
                 case eventType of
                     "checkout.session.completed" ->
-                        D.succeed StripeSessionCompleted
-                            |> Json.Decode.Pipeline.required "data" (D.field "object" (D.field "id" Id.decoder))
+                        D.at
+                            [ "data", "object" ]
+                            (D.map2
+                                StripeSessionCompleted
+                                (D.field "id" Id.decoder)
+                                (D.field "payment_intent" Id.decoder)
+                            )
 
                     _ ->
                         D.fail ("Unhandled stripe webhook event: " ++ eventType)
@@ -70,7 +111,7 @@ decodeWebhook =
 
 
 type alias PriceData =
-    { priceId : Id PriceId, price : Price, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
+    { price : Price, currency : Money.Currency, productId : Id ProductId, isActive : Bool, createdAt : Time.Posix }
 
 
 getPrices : Task restriction Http.Error (List PriceData)
@@ -94,8 +135,8 @@ decodePrice : D.Decoder PriceData
 decodePrice =
     D.succeed
         (\priceId currency amount productId isActive createdAt ->
-            { priceId = priceId
-            , price = Price currency amount
+            { price = { priceId = priceId, amount = Quantity.unsafe amount }
+            , currency = currency
             , productId = productId
             , isActive = isActive
             , createdAt = createdAt
@@ -175,7 +216,19 @@ createCheckoutSession { items, emailAddress, now, expiresInMinutes } =
             , ( "cancel_url", Url.Builder.crossOrigin Env.domain [ cancelPath ] [] )
             , ( "customer_email", EmailAddress.toString emailAddress )
             ]
-                ++ (items |> List.indexedMap itemToStripeAttrs |> List.concat)
+                ++ (List.filter
+                        (\item ->
+                            case item of
+                                Priced priced ->
+                                    priced.quantity > 0
+
+                                Unpriced unpriced ->
+                                    unpriced.amountDecimal > 0 && unpriced.quantity > 0
+                        )
+                        items
+                        |> List.indexedMap itemToStripeAttrs
+                        |> List.concat
+                   )
                 |> formBody
     in
     Http.task
@@ -254,19 +307,14 @@ headers =
 
 loadCheckout : String -> Id StripeSessionId -> Command FrontendOnly toMsg msg
 loadCheckout publicApiKey sid =
-    toJsMessage "loadCheckout"
-        [ ( "id", Id.encode sid )
-        , ( "publicApiKey", E.string publicApiKey )
-        ]
-
-
-toJsMessage : String -> List ( String, E.Value ) -> Command FrontendOnly toMsg msg
-toJsMessage msg values =
     Command.sendToJs
         "stripe_to_js"
         stripe_to_js
         (E.object
-            (( "msg", E.string msg ) :: values)
+            [ ( "msg", E.string "loadCheckout" )
+            , ( "id", Id.encode sid )
+            , ( "publicApiKey", E.string publicApiKey )
+            ]
         )
 
 

@@ -8,8 +8,6 @@ import Camp23Denmark
 import Camp24Uk
 import Camp25US
 import Camp26Czech
-import Camp26Czech.Inventory as Inventory
-import Camp26Czech.Tickets as Tickets
 import Dict
 import Duration
 import Effect.Browser
@@ -24,18 +22,21 @@ import Effect.Task as Task exposing (Task)
 import Effect.Time as Time
 import EmailAddress exposing (EmailAddress)
 import Env
-import Formatting exposing (Formatting(..), Inline(..))
 import Helpers
 import ICalendar exposing (IcsFile)
 import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
-import List.Extra as List
+import Logo
+import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
+import Quantity exposing (Quantity, Rate)
+import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
+import Sales
 import SeqDict
-import Stripe
+import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, StripeCurrency)
 import Theme
 import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
@@ -48,8 +49,6 @@ import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
-import View.Logo
-import View.Sales
 
 
 app :
@@ -91,8 +90,8 @@ subscriptions model =
         logoSubscription =
             case model of
                 Types.Loaded loadedModel ->
-                    if View.Logo.needsAnimationFrame loadedModel.logoModel then
-                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo.Tick posix |> Types.LogoMsg)
+                    if Logo.needsAnimationFrame loadedModel.logoModel then
+                        Effect.Browser.Events.onAnimationFrame (\posix -> Logo.Tick posix |> Types.LogoMsg)
 
                     else
                         Subscription.none
@@ -181,32 +180,56 @@ update msg model =
 tryLoading : LoadingModel -> ( FrontendModel, Command FrontendOnly toMsg FrontendMsg )
 tryLoading loadingModel =
     Maybe.map4
-        (\window { slotsRemaining, prices, ticketsEnabled } now timeZone ->
+        (\window initData now timeZone ->
             ( Loaded
                 { key = loadingModel.key
                 , now = now
                 , timeZone = timeZone
                 , window = window
                 , showTooltip = False
-                , prices = prices
-                , selectedTicket = Nothing
+                , initData = initData
                 , form = PurchaseForm.init
                 , route = Route.decode loadingModel.url
-                , showCarbonOffsetTooltip = False
-                , slotsRemaining = slotsRemaining
-                , isOrganiser = loadingModel.isOrganiser
-                , ticketsEnabled = ticketsEnabled
                 , backendModel = Nothing
-                , pressedAudioButton = False
-                , logoModel = View.Logo.init
+                , logoModel = Logo.init
                 , elmUiState = loadingModel.elmUiState
+                , conversionRate = LoadingConversionRate
                 }
-            , case loadingModel.url.fragment of
-                Just fragment ->
-                    scrollToFragment (Dom.id fragment)
+            , Command.batch
+                [ case loadingModel.url.fragment of
+                    Just fragment ->
+                        scrollToFragment (Dom.id fragment)
 
-                Nothing ->
-                    Command.none
+                    Nothing ->
+                        Command.none
+                , case initData of
+                    Ok initData2 ->
+                        Http.get
+                            { url = "https://open.er-api.com/v6/latest/" ++ Money.toString initData2.stripeCurrency
+                            , expect =
+                                Http.expectJson
+                                    GotConversionRate
+                                    (D.map
+                                        (\dict ->
+                                            List.filterMap
+                                                (\( key, value ) ->
+                                                    case Money.fromString key of
+                                                        Just key2 ->
+                                                            Just ( key2, Quantity.unsafe (1 / value) )
+
+                                                        Nothing ->
+                                                            Nothing
+                                                )
+                                                (Dict.toList dict)
+                                                |> SeqDict.fromList
+                                        )
+                                        (D.field "rates" (D.dict D.float))
+                                    )
+                            }
+
+                    Err () ->
+                        Command.none
+                ]
             )
         )
         loadingModel.window
@@ -259,44 +282,10 @@ updateLoaded msg model =
             ( { model | showTooltip = True }, Command.none )
 
         MouseDown ->
-            ( { model | showTooltip = False, showCarbonOffsetTooltip = False }, Command.none )
+            ( { model | showTooltip = False }, Command.none )
 
         DownloadTicketSalesReminder ->
             ( model, downloadTicketSalesReminder )
-
-        PressedSelectTicket productId priceId ->
-            case ( SeqDict.get productId Tickets.accommodationOptions, model.ticketsEnabled ) of
-                ( Just ( _, ticket ), TicketsEnabled ) ->
-                    if Inventory.purchaseable ticket.productId model.slotsRemaining then
-                        ( { model | selectedTicket = Just ( productId, priceId ) }
-                        , scrollToTop
-                        )
-
-                    else
-                        ( model, Command.none )
-
-                _ ->
-                    ( model, Command.none )
-
-        AddAccom accom ->
-            let
-                form =
-                    model.form
-
-                newForm =
-                    { form | accommodationBookings = model.form.accommodationBookings ++ [ accom ] }
-            in
-            ( { model | form = newForm }, Command.none )
-
-        RemoveAccom accom ->
-            let
-                form =
-                    model.form
-
-                newForm =
-                    { form | accommodationBookings = List.remove accom model.form.accommodationBookings }
-            in
-            ( { model | form = newForm }, Command.none )
 
         FormChanged form ->
             case model.form.submitStatus of
@@ -310,72 +299,36 @@ updateLoaded msg model =
                     ( { model | form = form }, Command.none )
 
         PressedSubmitForm ->
-            let
-                form =
-                    model.form
-            in
-            case ( form.submitStatus, PurchaseForm.validateForm form ) of
-                ( NotSubmitted _, Just purchaseFormValidated ) ->
-                    ( { model | form = { form | submitStatus = Submitting } }
-                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
-                    )
-
-                ( NotSubmitted _, Nothing ) ->
+            case model.initData of
+                Ok initData ->
                     let
-                        _ =
-                            Debug.log "form invalid" ()
+                        form =
+                            model.form
                     in
-                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                    , jumpToId View.Sales.errorHtmlId 110
-                    )
+                    case form.submitStatus of
+                        Submitting ->
+                            ( model, Command.none )
 
-                _ ->
-                    let
-                        _ =
-                            Debug.log "Form already submitted" "Form already submitted"
-                    in
+                        _ ->
+                            case PurchaseForm.validateForm initData.currentCurrency.conversionRate form of
+                                Ok purchaseFormValidated ->
+                                    ( { model | form = { form | submitStatus = Submitting } }
+                                    , Lamdera.sendToBackend (SubmitFormRequest (Untrusted.untrust purchaseFormValidated))
+                                    )
+
+                                Err _ ->
+                                    ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
+                                    , jumpToId Sales.errorHtmlId 110
+                                    )
+
+                Err () ->
                     ( model, Command.none )
-
-        PressedCancelForm ->
-            ( { model | selectedTicket = Nothing }
-            , Dom.getElement View.Sales.ticketsHtmlId
-                |> Task.andThen (\{ element } -> Dom.setViewport 0 element.y)
-                |> Task.attempt (\_ -> SetViewport)
-            )
-
-        PressedShowCarbonOffsetTooltip ->
-            ( { model | showCarbonOffsetTooltip = True }, Command.none )
 
         SetViewport ->
             ( model, Command.none )
 
-        SetViewPortForElement elmentId ->
-            ( model, jumpToId elmentId 40 )
-
-        AdminPullBackendModel ->
-            ( model
-            , postJsonBytes
-                Types.w3_decode_BackendModel
-                -- (Json.Encode.string Env.adminPassword)
-                (E.string "adjust me when developing locally")
-                "http://localhost:8001/https://elm.camp/_r/backend-model"
-                |> Task.attempt AdminPullBackendModelResponse
-            )
-
-        AdminPullBackendModelResponse res ->
-            case res of
-                Ok backendModel ->
-                    ( { model | backendModel = Just backendModel }, Command.none )
-
-                Err err ->
-                    let
-                        _ =
-                            Debug.log "Failed to pull backend model" err
-                    in
-                    ( model, Command.none )
-
         Types.LogoMsg logoMsg ->
-            ( { model | logoModel = View.Logo.update logoMsg model.logoModel }, Command.none )
+            ( { model | logoModel = Logo.update logoMsg model.logoModel }, Command.none )
 
         Noop ->
             ( model, Command.none )
@@ -385,6 +338,82 @@ updateLoaded msg model =
 
         ScrolledToFragment ->
             ( model, Command.none )
+
+        GotConversionRate result ->
+            ( case result of
+                Ok ok ->
+                    { model
+                        | conversionRate = LoadedConversionRate ok
+                        , initData =
+                            case model.initData of
+                                Ok initData ->
+                                    if initData.stripeCurrency == initData.currentCurrency.currency then
+                                        Ok
+                                            { initData
+                                                | currentCurrency =
+                                                    case SeqDict.get Money.EUR ok of
+                                                        Just euro ->
+                                                            { currency = Money.EUR, conversionRate = euro }
+
+                                                        Nothing ->
+                                                            initData.currentCurrency
+                                            }
+
+                                    else
+                                        model.initData
+
+                                Err () ->
+                                    model.initData
+                    }
+
+                Err error ->
+                    { model | conversionRate = LoadingConversionRateFailed error }
+            , Command.none
+            )
+
+        SelectedCurrency currency ->
+            ( case ( model.initData, model.conversionRate ) of
+                ( Ok initData, LoadedConversionRate dict ) ->
+                    case SeqDict.get currency dict of
+                        Just conversionRate ->
+                            let
+                                form =
+                                    model.form
+                            in
+                            { model
+                                | initData =
+                                    Ok { initData | currentCurrency = { currency = currency, conversionRate = conversionRate } }
+                                , form =
+                                    case PurchaseForm.validateGrantContribution form.grantContribution of
+                                        Ok value ->
+                                            { form
+                                                | grantContribution =
+                                                    -- Convert contribution text to proportionally equal value in new currency
+                                                    Quantity.at
+                                                        initData.currentCurrency.conversionRate
+                                                        (Quantity.toFloatQuantity value)
+                                                        |> Quantity.at_ conversionRate
+                                                        |> Quantity.round
+                                                        |> PurchaseForm.unvalidateGrantContribution
+                                            }
+
+                                        Err _ ->
+                                            form
+                            }
+
+                        Nothing ->
+                            model
+
+                _ ->
+                    model
+            , Command.none
+            )
+
+        FusionPatch patch ->
+            Debug.todo ""
+
+        FusionQuery ->
+            Debug.todo ""
 
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
@@ -458,8 +487,8 @@ updateFromBackend msg model =
 updateFromBackendLoaded : ToFrontend -> LoadedModel -> ( LoadedModel, Command FrontendOnly toMsg msg )
 updateFromBackendLoaded msg model =
     case msg of
-        InitData { prices, slotsRemaining, ticketsEnabled } ->
-            ( { model | prices = prices, slotsRemaining = slotsRemaining, ticketsEnabled = ticketsEnabled }, Command.none )
+        InitData _ ->
+            ( model, Command.none )
 
         SubmitFormResponse result ->
             case result of
@@ -476,13 +505,23 @@ updateFromBackendLoaded msg model =
                     ( { model | form = { form | submitStatus = SubmitBackendError str } }, Command.none )
 
         SlotRemainingChanged slotsRemaining ->
-            ( { model | slotsRemaining = slotsRemaining }, Command.none )
+            case model.initData of
+                Ok initData ->
+                    ( { model | initData = Ok { initData | ticketsAlreadyPurchased = slotsRemaining } }, Command.none )
+
+                Err () ->
+                    ( model, Command.none )
 
         TicketsEnabledChanged ticketsEnabled ->
-            ( { model | ticketsEnabled = ticketsEnabled }, Command.none )
+            case model.initData of
+                Ok initData ->
+                    ( { model | initData = Ok { initData | ticketsEnabled = ticketsEnabled } }, Command.none )
 
-        AdminInspectResponse backendModel ->
-            ( { model | backendModel = Just backendModel }, Command.none )
+                Err () ->
+                    ( model, Command.none )
+
+        AdminInspectResponse backendModel value ->
+            ( { model | backendModel = Just ( backendModel, value ) }, Command.none )
 
 
 view : FrontendModel -> Effect.Browser.Document FrontendMsg
@@ -490,9 +529,6 @@ view model =
     { title = "Elm Camp"
     , body =
         [ Theme.css
-
-        -- , W.Styles.globalStyles
-        -- , W.Styles.baseTheme
         , Ui.layout
             (Ui.withAnimation
                 { toMsg = ElmUiMsg
@@ -510,17 +546,30 @@ view model =
             , Ui.Font.family [ Ui.Font.typeface "Open Sans", Ui.Font.sansSerif ]
             , Ui.Font.size 16
             , Ui.Font.weight 500
+            , Ui.height Ui.fill
             , Ui.background Theme.lightTheme.background
             , (case model of
                 Loading _ ->
                     Ui.none
 
                 Loaded loaded ->
-                    case loaded.ticketsEnabled of
-                        TicketsEnabled ->
-                            Ui.none
+                    case loaded.initData of
+                        Ok initData ->
+                            case initData.ticketsEnabled of
+                                TicketsEnabled ->
+                                    Ui.none
 
-                        TicketsDisabled { adminMessage } ->
+                                TicketsDisabled { adminMessage } ->
+                                    Ui.Prose.paragraph
+                                        [ Ui.Font.color (Ui.rgb 255 255 255)
+                                        , Ui.Font.weight 500
+                                        , Ui.Font.size 20
+                                        , Ui.background (Ui.rgb 128 0 0)
+                                        , Ui.padding 8
+                                        ]
+                                        [ Ui.text adminMessage ]
+
+                        Err () ->
                             Ui.Prose.paragraph
                                 [ Ui.Font.color (Ui.rgb 255 255 255)
                                 , Ui.Font.weight 500
@@ -528,7 +577,7 @@ view model =
                                 , Ui.background (Ui.rgb 128 0 0)
                                 , Ui.padding 8
                                 ]
-                                [ Ui.text adminMessage ]
+                                [ Ui.text "Something went wrong when loading prices. Sorry about the inconvenience!" ]
               )
                 |> Ui.inFront
             ]
@@ -557,7 +606,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model UnconferenceFormat.view
+                    [ RichText.view model UnconferenceFormat.view
                     ]
                 , Theme.footer
                 ]
@@ -568,7 +617,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model codeOfConductContent
+                    [ RichText.view model codeOfConductContent
                     ]
                 , Theme.footer
                 ]
@@ -579,7 +628,7 @@ loadedView model =
                 [ Camp26Czech.header model
                 , Ui.column
                     (Ui.padding 20 :: Theme.contentAttributes)
-                    [ Formatting.view model Archive.content ]
+                    [ RichText.view model Archive.content ]
                 , Theme.footer
                 ]
 
@@ -609,9 +658,9 @@ loadedView model =
         PaymentCancelRoute ->
             Ui.column
                 [ Ui.width Ui.shrink, Ui.centerX, Ui.centerY, Ui.padding 24, Ui.spacing 16 ]
-                [ Ui.Prose.paragraph
-                    [ Ui.width Ui.shrink, Ui.Font.size 20 ]
-                    [ Ui.text "You cancelled your ticket purchase" ]
+                [ Ui.el
+                    [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                    (Ui.text "You cancelled your ticket purchase")
                 , returnToHomepageButton
                 ]
 
@@ -623,6 +672,9 @@ loadedView model =
 
         Camp25US ->
             Camp25US.view model
+
+        TicketPurchaseRoute ->
+            Sales.view Camp26Czech.ticketTypes model
 
 
 returnToHomepageButton : Ui.Element msg
@@ -637,6 +689,7 @@ returnToHomepageButton =
         , Ui.width Ui.shrink
         , Ui.link (Route.encode Nothing HomepageRoute)
         , Ui.contentCenterX
+        , Ui.centerX
         ]
         (Ui.text "Return to homepage")
 
@@ -664,7 +717,7 @@ jumpToId id offset =
             (\_ -> Noop)
 
 
-codeOfConductContent : List Formatting
+codeOfConductContent : List RichText
 codeOfConductContent =
     [ Section "Code of Conduct"
         [ Paragraph [ Text "Elm Camp welcomes people with a wide range of backgrounds, experiences and knowledge. We can learn a lot from each other. It's important for us to make sure the environment where these discussions happen is inclusive and supportive. Everyone should feel comfortable to participate! The following guidelines are meant to codify these intentions." ]

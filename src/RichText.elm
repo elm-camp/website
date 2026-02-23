@@ -1,6 +1,6 @@
-module Formatting exposing
-    ( Formatting(..)
-    , Inline(..)
+module RichText exposing
+    ( Inline(..)
+    , RichText(..)
     , Shared
     , h1
     , h2
@@ -12,19 +12,18 @@ import Html exposing (Html)
 import Html.Attributes
 import Html.Lazy
 import Route exposing (Route)
-import Theme
-import Types exposing (Size)
+import Theme exposing (Size)
 import Ui
 import Url
 
 
-type Formatting
+type RichText
     = Paragraph (List Inline)
-    | BulletList (List Inline) (List Formatting)
-    | NumberList (List Inline) (List Formatting)
-    | LetterList (List Inline) (List Formatting)
-    | Group (List Formatting)
-    | Section String (List Formatting)
+    | BulletList (List Inline) (List RichText)
+    | NumberList (List Inline) (List RichText)
+    | LetterList (List Inline) (List RichText)
+    | Group (List RichText)
+    | Section String (List RichText)
     | Image { source : String, maxWidth : Maybe Int, caption : List Inline }
     | Images (List (List { source : String, maxWidth : Maybe Int, link : Maybe String, description : String }))
     | LegacyMap
@@ -37,6 +36,7 @@ type Inline
     = Bold String
     | Italic String
     | Link String Route
+    | LinkWithFragment String Route String
     | Code String
     | Text String
     | ExternalLink String String
@@ -47,12 +47,16 @@ type alias Shared a =
     { a | window : Size }
 
 
-view : Shared b -> List Formatting -> Ui.Element msg
+view : Shared b -> List RichText -> Ui.Element msg
 view shared list =
+    Html.Lazy.lazy2 viewHelper shared.window list |> Ui.html
+
+
+viewHelper : Size -> List RichText -> Html msg
+viewHelper window list =
     Html.div
         [ Html.Attributes.style "line-height" "1.5", Html.Attributes.style "white-space" "pre-wrap" ]
-        (List.map (viewHelper shared []) list)
-        |> Ui.html
+        (List.map (viewRichText { window = window } []) list)
 
 
 noMargin : Html.Attribute msg
@@ -60,8 +64,8 @@ noMargin =
     Html.Attributes.style "margin" "0"
 
 
-viewHelper : Shared b -> List String -> Formatting -> Html msg
-viewHelper shared depth item =
+viewRichText : Shared b -> List String -> RichText -> Html msg
+viewRichText shared depth item =
     case item of
         Paragraph items ->
             Html.p [ noMargin ] (List.map (inlineView shared) items)
@@ -81,7 +85,7 @@ viewHelper shared depth item =
                 , Html.ul
                     [ Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewRichText shared depth item2 ])
                         formattings
                     )
                 ]
@@ -93,7 +97,7 @@ viewHelper shared depth item =
                 , Html.ol
                     [ Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewRichText shared depth item2 ])
                         formattings
                     )
                 ]
@@ -105,13 +109,13 @@ viewHelper shared depth item =
                 , Html.ul
                     [ Html.Attributes.type_ "A", Html.Attributes.style "padding-left" "20px", noMargin ]
                     (List.map
-                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewHelper shared depth item2 ])
+                        (\item2 -> Html.li [ noMargin ] [ Html.Lazy.lazy3 viewRichText shared depth item2 ])
                         formattings
                     )
                 ]
 
         Group formattings ->
-            Html.div [] (List.map (viewHelper shared depth) formattings)
+            Html.div [] (List.map (viewRichText shared depth) formattings)
 
         Section title formattings ->
             let
@@ -123,8 +127,8 @@ viewHelper shared depth item =
                 content =
                     case formattings of
                         head :: rest ->
-                            viewHelper shared nextDepth head
-                                :: List.map (\item2 -> Html.div [ paddingTop 16 ] [ viewHelper shared nextDepth item2 ]) rest
+                            viewRichText shared nextDepth head
+                                :: List.map (\item2 -> Html.div [ paddingTop 16 ] [ viewRichText shared nextDepth item2 ]) rest
 
                         [] ->
                             []
@@ -137,10 +141,10 @@ viewHelper shared depth item =
                 []
                 ((case depth of
                     [] ->
-                        h1 id shared.window title
+                        h1 shared.window title
 
                     [ _ ] ->
-                        h2 id title
+                        h2 title
 
                     _ ->
                         Html.h3
@@ -298,8 +302,12 @@ paddingTop px =
     Html.Attributes.style "padding-top" (String.fromInt px ++ "px")
 
 
-h1 : String -> Size -> String -> Html msg
-h1 id window title =
+h1 : Size -> String -> Html msg
+h1 window title =
+    let
+        id =
+            Url.percentEncode title
+    in
     Html.h1
         [ Html.Attributes.id id
         , Html.Attributes.style
@@ -324,8 +332,12 @@ h1 id window title =
         ]
 
 
-h2 : String -> String -> Html msg
-h2 id title =
+h2 : String -> Html msg
+h2 title =
+    let
+        id =
+            Url.percentEncode title
+    in
     Html.h2
         [ Html.Attributes.id id
         , Html.Attributes.style "font-size" "24px"
@@ -355,6 +367,13 @@ inlineView shared inline =
         Link text url ->
             Html.a
                 [ Html.Attributes.href (Route.encode Nothing url)
+                , colorAttribute Theme.lightTheme.link
+                ]
+                [ Html.text text ]
+
+        LinkWithFragment text url fragment ->
+            Html.a
+                [ Html.Attributes.href (Route.encode (Just fragment) url)
                 , colorAttribute Theme.lightTheme.link
                 ]
                 [ Html.text text ]

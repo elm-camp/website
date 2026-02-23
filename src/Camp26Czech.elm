@@ -1,32 +1,41 @@
 module Camp26Czech exposing
-    ( Config
+    ( TicketType
+    , campfireTicket
+    , detailedCountdown
     , header
+    , maxAttendees
+    , maxRooms
+    , opportunityGrant
+    , scheduleSection
+    , sharedRoomTicket
+    , singleRoomTicket
     , ticketSalesOpenAt
+    , ticketSalesOpenCountdown
+    , ticketTypes
     , view
     )
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..))
+import Effect.Browser.Dom as Dom
 import Helpers
+import Logo
+import NonNegative exposing (NonNegative)
+import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
+import RichText exposing (Inline(..), RichText(..))
 import Route
-import Theme
+import Theme exposing (Size)
 import Time
-import Types exposing (FrontendMsg, LoadedModel, Size)
+import Types exposing (CompletedOrder, FrontendMsg(..), LoadedModel)
 import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
-import View.Logo
-import View.Sales
-
-
-type alias Config a =
-    { a | window : Size, logoModel : View.Logo.Model, now : Time.Posix, timeZone : Time.Zone }
+import Ui.Shadow
 
 
 meta : Camp.Meta
 meta =
     { logo = { src = "/elm-camp-tangram.webp", description = "The logo of Elm Camp, a tangram in green forest colors" }
-    , tag = "Michigan, US 2026"
+    , tag = "Olomouc, Czech Republic 2026"
     , location = location
     , dates = "Mon 15th - Thur 18th June 2026"
     }
@@ -37,58 +46,176 @@ location =
     "🇨🇿 Olomouc, Czech Republic"
 
 
-view : Config a -> Element FrontendMsg
+view : LoadedModel -> Element FrontendMsg
 view model =
     Ui.column
         [ Ui.spacing 32 ]
         [ Ui.column
-            [ Ui.spacing 32
-            , Ui.paddingXY 16 0
-            ]
+            []
             [ header model
-            , View.Sales.ticketSalesOpenCountdown ticketSalesOpenAt model.now
-            , Ui.column
-                (Ui.spacing 16 :: Theme.contentAttributes)
-                [ Formatting.view model content
-                , organisers model.window
-                ]
-            , Ui.column
-                Theme.contentAttributes
-                [ Formatting.view
-                    model
-                    [ Section
-                        "Our sponsors"
-                        [ Images
-                            [ [ { source = "/sponsors/scrive-logo.svg"
-                                , maxWidth = Just 400
-                                , link = Just "https://www.scrive.com/"
-                                , description = "Scrive's logo"
-                                }
-                              ]
-                            , [ { source = "/sponsors/concentrichealthlogo.svg"
-                                , link = Just "https://concentric.health/"
-                                , maxWidth = Just 250
-                                , description = "Concentric health's logo"
-                                }
-                              ]
-                            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
-                              , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
-                              , { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 180, description = "Lamdera's logo" }
-                              ]
-                            ]
-                        ]
-                    ]
-                ]
-
-            --, View.Sales.view model
+            , ticketSalesOpenCountdown model.now
+            , Ui.el Theme.contentAttributes (RichText.view model content)
+            , Ui.el Theme.contentAttributes (organisers model.window)
+            , Ui.el Theme.contentAttributes (RichText.view model sponsors)
             ]
         , Theme.footer
         ]
 
 
-content : List Formatting
+ticketSalesOpenCountdown : Time.Posix -> Element FrontendMsg
+ticketSalesOpenCountdown now =
+    Ui.column
+        (Ui.spacing 20 :: Theme.contentAttributes)
+        (case detailedCountdown now of
+            Nothing ->
+                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+
+            Just countdownElement ->
+                [ countdownElement
+
+                --, DateFormat.format
+                --    [ DateFormat.yearNumber
+                --    , DateFormat.text "-"
+                --    , DateFormat.monthFixed
+                --    , DateFormat.text "-"
+                --    , DateFormat.dayOfMonthFixed
+                --    , DateFormat.text " "
+                --    , DateFormat.hourMilitaryFixed
+                --    , DateFormat.text ":"
+                --    , DateFormat.minuteFixed
+                --    ]
+                --    timeZone
+                --    ticketSalesOpenAt
+                --    |> (\t ->
+                --            Ui.el
+                --                [ Ui.width Ui.shrink
+                --                , Ui.centerX
+                --                , Ui.paddingWith { bottom = 10, top = 10, left = 0, right = 0 }
+                --                ]
+                --                (Ui.text t)
+                --       )
+                , Ui.el
+                    (Theme.submitButtonAttributes (Dom.id "downloadTicketSalesReminder") DownloadTicketSalesReminder True
+                        ++ [ Ui.width (Ui.px 200)
+                           , Ui.centerX
+                           , Ui.Font.size 20
+                           ]
+                    )
+                    (Ui.el [ Ui.width Ui.shrink, Ui.Font.center, Ui.centerX ] (Ui.text "Add to calendar"))
+                , Ui.text " "
+                ]
+        )
+
+
+detailedCountdown : Time.Posix -> Maybe (Element msg)
+detailedCountdown now =
+    let
+        target2 =
+            Time.posixToMillis ticketSalesOpenAt
+
+        now2 =
+            Time.posixToMillis now
+
+        secondsRemaining =
+            (target2 - now2) // 1000
+
+        days =
+            secondsRemaining // (60 * 60 * 24)
+
+        hours =
+            modBy 24 (secondsRemaining // (60 * 60))
+
+        minutes =
+            modBy 60 (secondsRemaining // 60)
+
+        formatDays =
+            if days > 1 then
+                Just (String.fromInt days ++ " days")
+
+            else if days == 1 then
+                Just "1 day"
+
+            else
+                Nothing
+
+        formatHours =
+            if hours > 0 then
+                Just (String.fromInt hours ++ "h")
+
+            else
+                Nothing
+
+        formatMinutes =
+            if minutes > 0 then
+                Just (String.fromInt minutes ++ "m")
+
+            else
+                Nothing
+
+        output =
+            String.join " "
+                (List.filterMap identity [ formatDays, formatHours, formatMinutes ])
+    in
+    if secondsRemaining < 0 then
+        Nothing
+
+    else
+        Ui.Prose.paragraph
+            (Theme.contentAttributes ++ [ Ui.Font.center ])
+            [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
+            |> Just
+
+
+goToTicketSales : Element FrontendMsg
+goToTicketSales =
+    Ui.el
+        [ Ui.width Ui.fill
+        , Ui.background (Ui.rgb 255 172 98)
+        , Ui.paddingXY 24 16
+        , Ui.rounded 8
+        , Ui.Font.color (Ui.rgb 0 0 0)
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.link (Route.encode Nothing Route.TicketPurchaseRoute)
+        ]
+        (Ui.text "Tickets now on sale!")
+
+
+sponsors : List RichText
+sponsors =
+    [ Section
+        "Our sponsors"
+        [ Images
+            [ [ { source = "/sponsors/scrive-logo.svg"
+                , maxWidth = Just 400
+                , link = Just "https://www.scrive.com/"
+                , description = "Scrive's logo"
+                }
+              ]
+            , [ { source = "/sponsors/concentrichealthlogo.svg"
+                , link = Just "https://concentric.health/"
+                , maxWidth = Just 250
+                , description = "Concentric health's logo"
+                }
+              ]
+            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
+              , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
+              , { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 180, description = "Lamdera's logo" }
+              ]
+            ]
+        ]
+    ]
+
+
+scheduleSection : String
+scheduleSection =
+    "Prospective Schedule"
+
+
+content : List RichText
 content =
-    [ Section "Elm Camp 2026 - Olomouc, Czech Republic"
+    [ Section "Elm Camp 2026 - Olomouc, Czechia"
         [ Paragraph [ Text "Elm Camp returns for its 4th year, this time in Olomouc, Czech Republic!" ]
         , HorizontalLine
         , Paragraph [ Text "Elm Camp brings an opportunity for Elm makers & tool builders to gather, communicate and collaborate. Our goal is to strengthen and sustain the Elm ecosystem and community. Anyone with an interest in Elm is welcome." ]
@@ -114,6 +241,40 @@ content =
             , link = Nothing
             }
           ]
+        ]
+    , Section scheduleSection
+        [ BulletList
+            [ Bold "Mon 15th June" ]
+            [ Paragraph [ Text "3pm arrivals & halls officially open" ]
+            , Paragraph [ Text "Settle into accomodation" ]
+            , Paragraph [ Text "Opening of session board" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Evening stroll" ]
+            ]
+        , BulletList
+            [ Bold "Tue 16th June" ]
+            [ Paragraph [ Text "Breakfast" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Lunch" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Activities and informal chats" ]
+            ]
+        , BulletList
+            [ Bold "Wed 17th June" ]
+            [ Paragraph [ Text "Breakfast" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Lunch" ]
+            , Paragraph [ Text "Unconference sessions" ]
+            , Paragraph [ Text "Dinner" ]
+            , Paragraph [ Text "Unconference wrap-up & party" ]
+            ]
+        , BulletList
+            [ Bold "Thu 18th June" ]
+            [ Paragraph [ Text "Grab and go breakfast" ]
+            , Paragraph [ Text "Depart hotel by 10am" ]
+            , Paragraph [ Text "Activities around Olomouc" ]
+            ]
         ]
     , Section
         "The venue and access"
@@ -148,10 +309,27 @@ content =
                 ]
             ]
         ]
+    , Section opportunityGrant
+        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
+        , Section "🤗 Opportunity grant applications"
+            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the cost, please select an opportunity grant ticket and we'll get in touch to help." ]
+            , Paragraph
+                [ Text "If you have any questions send an email to "
+                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
+                , Text ". Elm Camp grant decisions are made by the Elm Camp organizers."
+                ]
+            , Paragraph [ Text "All grant recipients will remain confidential. Any unused funds are saved for future Elm Camp grants." ]
+            ]
+        ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         ]
     ]
+
+
+opportunityGrant : String
+opportunityGrant =
+    "🫶 Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix
@@ -160,7 +338,7 @@ ticketSalesOpenAt =
     Time.millisToPosix 1772280000000
 
 
-header : Config a -> Element FrontendMsg
+header : LoadedModel -> Element FrontendMsg
 header config =
     let
         elmCampNextTopLine : Element FrontendMsg
@@ -200,12 +378,12 @@ header config =
     in
     if Theme.isMobile config.window then
         Ui.column
-            [ Ui.width Ui.shrink, Ui.paddingXY 8 30, Ui.spacing 20, Ui.centerX ]
+            [ Ui.width Ui.shrink, Ui.paddingXY 24 30, Ui.spacing 20, Ui.centerX ]
             [ Ui.column
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ Ui.column
                     [ Ui.spacing 8 ]
-                    [ Ui.html (View.Logo.view 200 config.logoModel)
+                    [ Ui.html (Logo.view 200 config.logoModel)
                         |> Ui.el [ Ui.centerX, Ui.move { x = -10, y = 0, z = 0 } ]
                         |> Ui.map Types.LogoMsg
                     , Ui.column
@@ -239,7 +417,7 @@ header config =
                 [ Ui.width Ui.shrink, Ui.spacing 24 ]
                 [ Ui.row
                     []
-                    [ Ui.html (View.Logo.view 150 config.logoModel) |> Ui.el [ Ui.move { x = 0, y = -2, z = 0 } ] |> Ui.map Types.LogoMsg
+                    [ Ui.html (Logo.view 150 config.logoModel) |> Ui.el [ Ui.move { x = 0, y = -2, z = 0 } ] |> Ui.map Types.LogoMsg
                     , Ui.column
                         [ Ui.width Ui.shrink
                         , Ui.Font.size 64
@@ -315,3 +493,76 @@ organisers window =
                     |> Ui.column [ Ui.alignTop, Ui.spacing 24 ]
             )
         |> Ui.row [ Ui.width Ui.shrink, Ui.spacing 32 ]
+
+
+maxRooms : number
+maxRooms =
+    40
+
+
+maxAttendees : number
+maxAttendees =
+    80
+
+
+ticketTypes : TicketTypes TicketType
+ticketTypes =
+    { campfireTicket = campfireTicket
+    , singleRoomTicket = singleRoomTicket
+    , sharedRoomTicket = sharedRoomTicket
+    }
+
+
+type alias TicketType =
+    { name : String
+    , description : String
+    , image : String
+    , available : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
+    }
+
+
+campfireTicket : TicketType
+campfireTicket =
+    { name = "Attendance only"
+    , description = "Book a room offsite or bring your own tent or campervan and stay on site. Showers & toilets provided."
+    , image = ""
+    , available = attendeesAreValid
+    }
+
+
+singleRoomTicket : TicketType
+singleRoomTicket =
+    { name = "Single Room with en-suite"
+    , description = "Private room for a single attendee for 3 nights."
+    , image = ""
+    , available =
+        \alreadyPurchased count ->
+            attendeesAreValid alreadyPurchased count && roomsAreValid alreadyPurchased count
+    }
+
+
+attendeesAreValid : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
+attendeesAreValid ticketsAlreadyPurchased count =
+    PurchaseForm.totalTickets ticketsAlreadyPurchased + PurchaseForm.totalTickets count <= maxAttendees
+
+
+roomsAreValid : TicketTypes NonNegative -> TicketTypes NonNegative -> Bool
+roomsAreValid ticketsAlreadyPurchased count =
+    List.sum
+        [ NonNegative.toInt count.singleRoomTicket * 2
+        , NonNegative.toInt count.sharedRoomTicket
+        , NonNegative.toInt ticketsAlreadyPurchased.singleRoomTicket * 2
+        , NonNegative.toInt ticketsAlreadyPurchased.sharedRoomTicket
+        ]
+        <= (maxRooms * 2)
+
+
+sharedRoomTicket : TicketType
+sharedRoomTicket =
+    { name = "Shared Room with en-suite"
+    , description = "Suitable for couples or up to 4 individuals sharing for 3 nights. Both twin and double beds available. If you are booking separately, please let us know who you expect to be sharing with."
+    , image = ""
+    , available =
+        \alreadyPurchased count ->
+            attendeesAreValid alreadyPurchased count && roomsAreValid alreadyPurchased count
+    }

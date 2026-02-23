@@ -1,10 +1,12 @@
 module Theme exposing
-    ( Theme
+    ( Size
+    , Theme
     , attr
     , colorWithAlpha
     , colors
     , contentAttributes
     , css
+    , disabled
     , fontFace
     , footer
     , glow
@@ -13,26 +15,20 @@ module Theme exposing
     , h3
     , isMobile
     , lightTheme
+    , maxWidth
     , normalButtonAttributes
-    , numericField
     , panel
-    , priceAmount
-    , priceText
     , rowToColumnWhen
-    , showyButtonAttributes
     , spinnerWhite
     , submitButtonAttributes
-    , toggleButton
-    , toggleButtonAttributes
     )
 
 import Color
+import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Html exposing (Html)
 import Html.Attributes
-import Money
+import Icons
 import Route exposing (Route(..))
-import Stripe exposing (Price)
-import Types exposing (Size)
 import Ui
 import Ui.Accessibility
 import Ui.Font
@@ -49,6 +45,10 @@ type alias Theme =
     , elmText : Ui.Color
     , background : Ui.Color
     }
+
+
+type alias Size =
+    { width : Int, height : Int }
 
 
 lightTheme : Theme
@@ -77,14 +77,20 @@ greenTheme =
 
 contentAttributes : List (Ui.Attribute msg)
 contentAttributes =
-    [ Ui.widthMax 800
+    [ maxWidth
     , Ui.centerX
+    , Ui.paddingXY 16 0
     ]
+
+
+maxWidth : Ui.Attribute msg
+maxWidth =
+    Ui.widthMax 800
 
 
 isMobile : Size -> Bool
 isMobile a =
-    a.width < 800
+    a.width <= 700
 
 
 css : Html msg
@@ -126,6 +132,11 @@ colors =
     }
 
 
+disabled : Ui.Color
+disabled =
+    Ui.rgb 137 141 137
+
+
 colorWithAlpha : Float -> Ui.Color -> Ui.Color
 colorWithAlpha alpha color =
     let
@@ -149,20 +160,9 @@ fontFace weight name fontFamilyName =
 }"""
 
 
-priceText : Price -> String
-priceText { currency, amount } =
-    Money.toNativeSymbol currency ++ String.fromInt (amount // 100)
-
-
-priceAmount : Price -> Float
-priceAmount { amount } =
-    toFloat amount
-
-
 panel : List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
 panel attrs x =
     Ui.column
-        -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
         ([ Ui.width Ui.fill
          , Ui.alignTop
          , Ui.spacing 16
@@ -177,8 +177,8 @@ panel attrs x =
         x
 
 
-submitButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
-submitButtonAttributes onPress isEnabled =
+submitButtonAttributes : HtmlId -> msg -> Bool -> List (Ui.Attribute msg)
+submitButtonAttributes htmlId onPress isEnabled =
     [ Ui.width Ui.shrink
     , Ui.background
         (if isEnabled then
@@ -194,49 +194,17 @@ submitButtonAttributes onPress isEnabled =
     , Ui.Font.weight 600
     , Ui.Font.color (Ui.rgb 255 255 255)
     , Ui.Input.button onPress
+    , Ui.id (Dom.idToString htmlId)
     ]
 
 
-toggleButton : String -> Bool -> msg -> Ui.Element msg
-toggleButton label isActive onPress =
-    Ui.el
-        (toggleButtonAttributes onPress isActive)
-        (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text label))
-
-
-toggleButtonAttributes : msg -> Bool -> List (Ui.Attribute msg)
-toggleButtonAttributes onPress isActive =
-    [ Ui.background
-        (if isActive then
-            colors.green
-
-         else
-            colors.lightGrey
-        )
-    , Ui.padding 16
-    , Ui.rounded 8
-    , Ui.width Ui.shrink
-    , Ui.alignBottom
-    , Ui.Input.button onPress
-    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-    , Ui.Font.weight 600
-    , Ui.Font.color (Ui.rgb 255 255 255)
-    ]
-
-
-rowToColumnWhen : Int -> Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
-rowToColumnWhen width window attrs children =
-    if window.width > width then
-        Ui.row
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            attrs
-            children
+rowToColumnWhen : Size -> List (Ui.Attribute msg) -> List (Ui.Element msg) -> Ui.Element msg
+rowToColumnWhen window attrs children =
+    if isMobile window then
+        Ui.column attrs children
 
     else
-        Ui.column
-            -- Containers now width fill by default (instead of width shrink). I couldn't update that here so I recommend you review these attributes
-            attrs
-            children
+        Ui.row attrs children
 
 
 spinnerWhite : Ui.Element msg
@@ -279,6 +247,7 @@ footer =
     Ui.el
         [ Ui.paddingXY 24 16
         , Ui.alignBottom
+        , Ui.background (Ui.rgb 29 50 45)
         ]
         (Ui.row
             ([ Ui.spacing 10
@@ -288,43 +257,13 @@ footer =
              ]
                 ++ contentAttributes
             )
-            [ footerButton CodeOfConductRoute "Code of Conduct"
+            [ footerButton HomepageRoute "Homepage"
+            , footerButton CodeOfConductRoute "Code of Conduct"
             , footerButton UnconferenceFormatRoute "Unconference Guidelines"
-            , footerButton ElmCampArchiveRoute "Elm Camp Archives"
+            , footerButton ElmCampArchiveRoute "Archives"
+            , footerButton TicketPurchaseRoute "Tickets"
             ]
         )
-
-
-numericField : String -> Int -> (Int -> msg) -> (Int -> msg) -> Ui.Element msg
-numericField title value downMsg upMsg =
-    Ui.row [ Ui.spacing 5 ]
-        [ Ui.el
-            (normalButtonAttributes (downMsg (value - 1))
-                ++ [ Ui.background colors.green
-                   , Ui.Font.color colors.white
-                   , Ui.width (Ui.px 50)
-                   ]
-            )
-            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "-"))
-        , Ui.el
-            [ Ui.width Ui.fill
-            , Ui.background (Ui.rgb 255 255 255)
-            , Ui.padding 16
-            , Ui.rounded 8
-            , Ui.alignBottom
-            , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-            , Ui.Font.weight 600
-            ]
-            (Ui.text (String.fromInt value))
-        , Ui.el
-            (normalButtonAttributes (upMsg (value + 1))
-                ++ [ Ui.background colors.green
-                   , Ui.Font.color colors.white
-                   , Ui.width (Ui.px 50)
-                   ]
-            )
-            (Ui.el [ Ui.width Ui.shrink, Ui.centerX ] (Ui.text "+"))
-        ]
 
 
 normalButtonAttributes : msg -> List (Ui.Attribute msg)
@@ -337,20 +276,6 @@ normalButtonAttributes onPress =
     , Ui.Font.weight 600
     , Ui.Input.button onPress
     , Ui.width Ui.shrink
-    ]
-
-
-showyButtonAttributes : msg -> List (Ui.Attribute msg)
-showyButtonAttributes onPress =
-    [ Ui.width Ui.fill
-    , Ui.background (Ui.rgb 255 172 98)
-    , Ui.padding 16
-    , Ui.rounded 8
-    , Ui.Font.color (Ui.rgb 0 0 0)
-    , Ui.alignBottom
-    , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
-    , Ui.Font.weight 600
-    , Ui.Input.button onPress
     ]
 
 

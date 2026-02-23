@@ -6,10 +6,12 @@ module HttpHelpers exposing
     , httpErrorToStringEffect
     , jsonResolver
     , jsonResolverEffect
+    , postmarkSendEmailErrorToString
     )
 
 import Effect.Http as Http
 import Json.Decode as D
+import Postmark
 
 
 {-| The default Http.expectJson / Http.expectString don't allow you to see any body
@@ -46,8 +48,23 @@ expectJson_ toMsg decoder =
         )
 
 
+postmarkSendEmailErrorToString : Postmark.SendEmailError -> String
+postmarkSendEmailErrorToString error =
+    case error of
+        Postmark.UnknownError record ->
+            "UnknownError " ++ String.fromInt record.statusCode ++ " " ++ record.body
 
--- From https://github.com/krisajenkins/remotedata/issues/28
+        Postmark.PostmarkError postmarkError_ ->
+            "PostmarkError " ++ String.fromInt postmarkError_.errorCode ++ " " ++ postmarkError_.message
+
+        Postmark.NetworkError ->
+            "NetworkError"
+
+        Postmark.Timeout ->
+            "Timeout"
+
+        Postmark.BadUrl string ->
+            "BadUrl " ++ string
 
 
 httpErrorToString : Http.Error -> String

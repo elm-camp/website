@@ -1,8 +1,8 @@
 module Camp25US exposing (view)
 
 import Camp
-import Formatting exposing (Formatting(..), Inline(..), Shared)
 import Helpers
+import RichText exposing (Inline(..), RichText(..), Shared)
 import Theme
 import Types exposing (FrontendMsg, LoadedModel)
 import Ui
@@ -25,7 +25,7 @@ view model =
         [ Ui.height Ui.fill ]
         [ Ui.column
             (Ui.padding 20 :: Theme.contentAttributes ++ [ Ui.spacing 50 ])
-            [ Theme.rowToColumnWhen 700
+            [ Theme.rowToColumnWhen
                 model.window
                 [ Ui.spacing 30, Ui.centerX, Ui.Font.center ]
                 [ Ui.image [ Ui.width (Ui.px 300) ]
@@ -39,7 +39,7 @@ view model =
                     , elmBottomLine
                     ]
                 ]
-            , Formatting.view model content
+            , RichText.view model content
             ]
         , Theme.footer
         ]
@@ -67,7 +67,7 @@ elmBottomLine =
         ]
 
 
-content : List Formatting
+content : List RichText
 content =
     [ Section "Unconference"
         [ Section "Ronora Lodge and Retreat Center - Watervliet, Michigan"

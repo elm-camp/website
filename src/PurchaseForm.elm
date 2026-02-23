@@ -1,49 +1,41 @@
 module PurchaseForm exposing
-    ( Accommodation(..)
-    , AttendeeForm
+    ( AttendeeForm
     , AttendeeFormValidated
     , PressedSubmit(..)
     , PurchaseForm
     , PurchaseFormValidated
     , SubmitStatus(..)
+    , TicketTypes
+    , allTicketTypes
     , defaultAttendee
     , init
+    , initTicketCount
+    , ticketTypesSetters
+    , totalTickets
+    , unvalidateAttendee
+    , unvalidateGrantContribution
+    , validateAttendees
     , validateEmailAddress
     , validateForm
-    , validateInt
+    , validateGrantContribution
     , validateName
     )
 
-import Camp26Czech.Product as Product
-import Codec exposing (Codec)
 import EmailAddress exposing (EmailAddress)
-import Env
-import Helpers
-import Id exposing (Id)
 import Name exposing (Name)
-import Set exposing (Set)
+import NonNegative exposing (NonNegative)
+import Quantity exposing (Quantity, Rate)
 import String.Nonempty exposing (NonemptyString)
-import Stripe exposing (ProductId(..))
+import Stripe exposing (LocalCurrency, StripeCurrency)
 import Toop exposing (T3(..), T4(..), T5(..), T6(..), T7(..), T8(..))
-import TravelMode exposing (TravelMode)
-
-
-type Accommodation
-    = Offsite
-    | Campsite
-    | Single
-    | Double
-    | Group
 
 
 type alias PurchaseForm =
     { submitStatus : SubmitStatus
     , attendees : List AttendeeForm
-    , accommodationBookings : List Accommodation
+    , count : TicketTypes NonNegative
     , billingEmail : String
     , grantContribution : String
-    , grantApply : Bool
-    , sponsorship : Maybe String
     }
 
 
@@ -51,49 +43,54 @@ init : PurchaseForm
 init =
     { submitStatus = NotSubmitted NotPressedSubmit
     , attendees = []
-    , accommodationBookings = []
+    , count = initTicketCount
     , billingEmail = ""
     , grantContribution = "0"
-    , grantApply = False
-    , sponsorship = Nothing
     }
 
 
 type alias PurchaseFormValidated =
     { attendees : List AttendeeFormValidated
-    , accommodationBookings : List Accommodation
+    , count : TicketTypes NonNegative
     , billingEmail : EmailAddress
-    , grantContribution : Int
-    , grantApply : Bool
-    , sponsorship : Maybe String
+    , grantContribution : Quantity Float StripeCurrency
+    }
+
+
+type alias TicketTypes a =
+    { campfireTicket : a
+    , singleRoomTicket : a
+    , sharedRoomTicket : a
+    }
+
+
+initTicketCount : TicketTypes NonNegative
+initTicketCount =
+    { campfireTicket = NonNegative.zero
+    , singleRoomTicket = NonNegative.zero
+    , sharedRoomTicket = NonNegative.zero
     }
 
 
 type alias AttendeeForm =
     { name : String
-    , email : String
     , country : String
     , originCity : String
-    , primaryModeOfTravel : Maybe TravelMode
     }
 
 
 defaultAttendee : AttendeeForm
 defaultAttendee =
     { name = ""
-    , email = ""
     , country = ""
     , originCity = ""
-    , primaryModeOfTravel = Nothing
     }
 
 
 type alias AttendeeFormValidated =
     { name : Name
-    , email : EmailAddress
     , country : NonemptyString
     , originCity : NonemptyString
-    , primaryModeOfTravel : Maybe TravelMode
     }
 
 
@@ -108,20 +105,27 @@ type PressedSubmit
     | NotPressedSubmit
 
 
+validateGrantContribution : String -> Result String (Quantity Int LocalCurrency)
+validateGrantContribution s =
+    if s == "" then
+        Ok Quantity.zero
 
--- billingEmail : PurchaseFormValidated -> EmailAddress
--- billingEmail paymentForm =
---     paymentForm.billingEmail
+    else
+        case String.toInt s of
+            Nothing ->
+                Err "Invalid number"
+
+            Just x ->
+                if x < 0 then
+                    Err "Can't be negative"
+
+                else
+                    Quantity.unsafe (x * 100) |> Ok
 
 
-validateInt : String -> Result String Int
-validateInt s =
-    case String.toInt s of
-        Nothing ->
-            Err "Invalid number"
-
-        Just x ->
-            Ok x
+unvalidateGrantContribution : Quantity Int LocalCurrency -> String
+unvalidateGrantContribution value =
+    Quantity.unwrap value // 100 |> String.fromInt
 
 
 validateName : String -> Result String Name
@@ -143,51 +147,67 @@ validateEmailAddress text =
                 Err "Invalid email address"
 
 
-validateForm : PurchaseForm -> Maybe PurchaseFormValidated
-validateForm form =
+validateAttendees : TicketTypes NonNegative -> List AttendeeForm -> Result (Maybe String) (List AttendeeFormValidated)
+validateAttendees ticketCount attendees =
     let
-        billingEmail =
-            validateEmailAddress form.billingEmail
+        totalTicketCount : Int
+        totalTicketCount =
+            List.foldl NonNegative.plus NonNegative.zero (allTicketTypes ticketCount) |> NonNegative.toInt
 
-        grantContribution =
-            validateInt form.grantContribution
+        attendeesValidated : List AttendeeFormValidated
+        attendeesValidated =
+            List.filterMap validateAttendee attendees
 
-        sponsorship =
-            case form.sponsorship of
-                Just id ->
-                    Product.sponsorshipItems
-                        |> List.filter (\s -> s.productId == id)
-                        |> List.head
-                        |> Result.fromMaybe "Invalid sponsorship"
-                        |> Result.map (\a -> a.productId |> Just)
+        attendeesValidatedCount =
+            List.length attendeesValidated
+    in
+    if attendeesValidatedCount == List.length attendees then
+        if totalTicketCount > attendeesValidatedCount then
+            Err (Just "Not enough attendees listed. Please include at least one attendee for each ticket.")
 
-                Nothing ->
-                    Ok Nothing
+        else
+            Ok attendeesValidated
 
-        attendees =
-            let
-                attendeesValidated =
-                    form.attendees |> List.map validateAttendee
-            in
-            if attendeesValidated |> List.all Helpers.isJust then
-                attendeesValidated |> Helpers.justs |> Ok
+    else
+        Err Nothing
+
+
+unvalidateAttendee : AttendeeFormValidated -> AttendeeForm
+unvalidateAttendee attendee =
+    { name = Name.toString attendee.name
+    , country = String.Nonempty.toString attendee.country
+    , originCity = String.Nonempty.toString attendee.originCity
+    }
+
+
+totalTickets : TicketTypes NonNegative -> Int
+totalTickets count =
+    List.foldl NonNegative.plus NonNegative.zero (allTicketTypes count)
+        |> NonNegative.toInt
+
+
+validateForm : Quantity Float (Rate StripeCurrency LocalCurrency) -> PurchaseForm -> Result String PurchaseFormValidated
+validateForm conversionRate form =
+    case
+        T3
+            (validateEmailAddress form.billingEmail)
+            (validateGrantContribution form.grantContribution)
+            (validateAttendees form.count form.attendees)
+    of
+        T3 (Ok billingEmail) (Ok grantContribution) (Ok attendeesOk) ->
+            if Quantity.greaterThanZero grantContribution || totalTickets form.count > 0 then
+                { attendees = attendeesOk
+                , count = form.count
+                , billingEmail = billingEmail
+                , grantContribution = Quantity.at conversionRate (Quantity.toFloatQuantity grantContribution)
+                }
+                    |> Ok
 
             else
-                Err "Invalid attendees"
-    in
-    case T4 billingEmail grantContribution sponsorship attendees of
-        T4 (Ok billingEmailOk) (Ok grantContributionOk) (Ok sponsorshipOk) (Ok attendeesOk) ->
-            Just
-                { attendees = attendeesOk
-                , accommodationBookings = form.accommodationBookings
-                , billingEmail = billingEmailOk
-                , grantContribution = grantContributionOk
-                , grantApply = form.grantApply
-                , sponsorship = sponsorshipOk
-                }
+                Err "You haven't selected anything to purchase"
 
         _ ->
-            Nothing
+            Err ""
 
 
 validateAttendee : AttendeeForm -> Maybe AttendeeFormValidated
@@ -196,27 +216,35 @@ validateAttendee form =
         name =
             validateName form.name
 
-        emailAddress =
-            validateEmailAddress form.email
-
         country =
             String.Nonempty.fromString form.country
 
         originCity =
             String.Nonempty.fromString form.originCity
     in
-    case T4 name emailAddress country originCity of
-        T4 (Ok nameOk) (Ok emailAddressOk) (Just countryOk) (Just originCityOk) ->
+    case T3 name country originCity of
+        T3 (Ok nameOk) (Just countryOk) (Just originCityOk) ->
             Just
                 { name = nameOk
-                , email = emailAddressOk
                 , country = countryOk
                 , originCity = originCityOk
-                , primaryModeOfTravel = form.primaryModeOfTravel
                 }
 
         _ ->
             Nothing
+
+
+allTicketTypes : TicketTypes a -> List a
+allTicketTypes a =
+    [ a.campfireTicket, a.singleRoomTicket, a.sharedRoomTicket ]
+
+
+ticketTypesSetters : List (a -> TicketTypes a -> TicketTypes a)
+ticketTypesSetters =
+    [ \value record -> { record | campfireTicket = value }
+    , \value record -> { record | singleRoomTicket = value }
+    , \value record -> { record | sharedRoomTicket = value }
+    ]
 
 
 
