@@ -74,7 +74,7 @@ app_ =
 init : ( BackendModel, Command BackendOnly ToFrontend BackendMsg )
 init =
     ( { orders = SeqDict.empty
-      , pendingOrder = SeqDict.empty
+      , pendingOrders = SeqDict.empty
       , expiredOrders = SeqDict.empty
       , prices = NotLoadingTicketPrices
       , time = Time.millisToPosix 0
@@ -87,7 +87,7 @@ init =
 subscriptions : BackendModel -> Subscription BackendOnly BackendMsg
 subscriptions _ =
     Subscription.batch
-        [ Time.every (Duration.minutes 15) GotTime
+        [ Time.every (Duration.minutes 1) GotTime
         , Lamdera.onConnect OnConnected
         ]
 
@@ -100,11 +100,11 @@ update msg model =
                 ( expiredOrders, remainingOrders ) =
                     SeqDict.partition
                         (\_ order -> Duration.from order.submitTime time |> Quantity.greaterThan (Duration.minutes 30))
-                        model.pendingOrder
+                        model.pendingOrders
             in
             ( { model
                 | time = time
-                , pendingOrder = remainingOrders
+                , pendingOrders = remainingOrders
                 , expiredOrders = SeqDict.union expiredOrders model.expiredOrders
               }
             , Command.batch
@@ -190,7 +190,7 @@ update msg model =
                     , Lamdera.sendToFrontend
                         clientId
                         ({ prices = prices
-                         , ticketsAlreadyPurchased = totalTicketCount model.pendingOrder model.orders
+                         , ticketsAlreadyPurchased = totalTicketCount model.pendingOrders model.orders
                          , ticketsEnabled = model.ticketsEnabled
                          , stripeCurrency = stripeCurrency
                          , currentCurrency = { currency = stripeCurrency, conversionRate = Quantity.unsafe 1 }
@@ -211,18 +211,18 @@ update msg model =
                         existingStripeSessions =
                             SeqDict.filter
                                 (\_ data -> data.sessionId == sessionId)
-                                model.pendingOrder
+                                model.pendingOrders
                                 |> SeqDict.keys
                     in
                     ( { model
-                        | pendingOrder =
+                        | pendingOrders =
                             SeqDict.insert
                                 stripeSessionId
                                 { submitTime = submitTime
                                 , form = purchaseForm
                                 , sessionId = sessionId
                                 }
-                                model.pendingOrder
+                                model.pendingOrders
                       }
                     , Command.batch
                         [ SubmitFormResponse (Ok stripeSessionId) |> Lamdera.sendToFrontend clientId
@@ -251,10 +251,10 @@ update msg model =
         ExpiredStripeSession stripeSessionId result ->
             case result of
                 Ok () ->
-                    case SeqDict.get stripeSessionId model.pendingOrder of
+                    case SeqDict.get stripeSessionId model.pendingOrders of
                         Just expired ->
                             ( { model
-                                | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                | pendingOrders = SeqDict.remove stripeSessionId model.pendingOrders
                                 , expiredOrders = SeqDict.insert stripeSessionId expired model.expiredOrders
                               }
                             , Command.none
@@ -316,14 +316,14 @@ update msg model =
                                 Ok webhook ->
                                     case webhook of
                                         StripeSessionCompleted stripeSessionId paymentId ->
-                                            case SeqDict.get stripeSessionId model.pendingOrder of
+                                            case SeqDict.get stripeSessionId model.pendingOrders of
                                                 Just order ->
                                                     let
                                                         { subject, textBody, htmlBody } =
                                                             confirmationEmail order.form stripeCurrency
                                                     in
                                                     ( { model
-                                                        | pendingOrder = SeqDict.remove stripeSessionId model.pendingOrder
+                                                        | pendingOrders = SeqDict.remove stripeSessionId model.pendingOrders
                                                         , orders =
                                                             SeqDict.insert
                                                                 stripeSessionId
@@ -382,9 +382,9 @@ update msg model =
                 let
                     ticketsAlreadyPurchased : TicketTypes NonNegative
                     ticketsAlreadyPurchased =
-                        totalTicketCount newModel.pendingOrder newModel.orders
+                        totalTicketCount newModel.pendingOrders newModel.orders
                 in
-                if totalTicketCount model.pendingOrder model.orders == ticketsAlreadyPurchased then
+                if totalTicketCount model.pendingOrders model.orders == ticketsAlreadyPurchased then
                     ( newModel, cmd )
 
                 else
@@ -415,66 +415,69 @@ updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( Bac
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest a ->
-            case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
-                ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
-                    let
-                        ticketsAvailable : Bool
-                        ticketsAvailable =
-                            List.map
-                                (\ticket ->
-                                    ticket.available purchaseForm.count (totalTicketCount model.pendingOrder model.orders)
-                                )
-                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
-                                |> Debug.log "a"
-                                |> List.all identity
+            if Duration.from Camp26Czech.ticketSalesOpenAt model.time |> Quantity.lessThanZero then
+                ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Tickets aren't available for sale yet.")) )
 
-                        opportunityGrantItems : List CheckoutItem
-                        opportunityGrantItems =
-                            if Quantity.greaterThanZero purchaseForm.grantContribution then
-                                [ Stripe.Unpriced
-                                    { name = "Opportunity Grant"
-                                    , quantity = 1
-                                    , currency = Money.toString currency |> String.toLower
-                                    , amountDecimal = Quantity.round purchaseForm.grantContribution |> Quantity.unwrap
-                                    }
-                                ]
+            else
+                case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
+                    ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
+                        let
+                            ticketsAvailable : Bool
+                            ticketsAvailable =
+                                List.map
+                                    (\ticket ->
+                                        ticket.available purchaseForm.count (totalTicketCount model.pendingOrders model.orders)
+                                    )
+                                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                    |> List.all identity
 
-                            else
-                                []
-                    in
-                    if ticketsAvailable then
-                        ( model
-                        , Time.now
-                            |> Task.andThen
-                                (\now ->
-                                    Stripe.createCheckoutSession
-                                        { items =
-                                            List.map3
-                                                (\ticket price count ->
-                                                    Stripe.Priced
-                                                        { name = ticket.name
-                                                        , priceId = price.priceId
-                                                        , quantity = NonNegative.toInt count
-                                                        }
-                                                )
-                                                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
-                                                (PurchaseForm.allTicketTypes prices)
-                                                (PurchaseForm.allTicketTypes purchaseForm.count)
-                                                ++ opportunityGrantItems
-                                        , emailAddress = purchaseForm.billingEmail
-                                        , now = now
-                                        , expiresInMinutes = 30
+                            opportunityGrantItems : List CheckoutItem
+                            opportunityGrantItems =
+                                if Quantity.greaterThanZero purchaseForm.grantContribution then
+                                    [ Stripe.Unpriced
+                                        { name = "Opportunity Grant"
+                                        , quantity = 1
+                                        , currency = Money.toString currency |> String.toLower
+                                        , amountDecimal = Quantity.round purchaseForm.grantContribution |> Quantity.unwrap
                                         }
-                                        |> Task.map (\res -> ( res, now ))
-                                )
-                            |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
-                        )
+                                    ]
 
-                    else
-                        ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Sorry, tickets are sold out.")) )
+                                else
+                                    []
+                        in
+                        if ticketsAvailable then
+                            ( model
+                            , Time.now
+                                |> Task.andThen
+                                    (\now ->
+                                        Stripe.createCheckoutSession
+                                            { items =
+                                                List.map3
+                                                    (\ticket price count ->
+                                                        Stripe.Priced
+                                                            { name = ticket.name
+                                                            , priceId = price.priceId
+                                                            , quantity = NonNegative.toInt count
+                                                            }
+                                                    )
+                                                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                                    (PurchaseForm.allTicketTypes prices)
+                                                    (PurchaseForm.allTicketTypes purchaseForm.count)
+                                                    ++ opportunityGrantItems
+                                            , emailAddress = purchaseForm.billingEmail
+                                            , now = now
+                                            , expiresInMinutes = 30
+                                            }
+                                            |> Task.map (\res -> ( res, now ))
+                                    )
+                                |> Task.attempt (CreatedCheckoutSession sessionId clientId purchaseForm)
+                            )
 
-                _ ->
-                    ( model, Command.none )
+                        else
+                            ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Sorry, tickets are sold out.")) )
+
+                    _ ->
+                        ( model, Command.none )
 
         CancelPurchaseRequest ->
             case sessionIdToStripeSessionId sessionId model of
@@ -500,7 +503,7 @@ updateFromFrontend sessionId clientId msg model =
 
 sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)
 sessionIdToStripeSessionId sessionId model =
-    SeqDict.toList model.pendingOrder
+    SeqDict.toList model.pendingOrders
         |> List.findMap
             (\( stripeSessionId, data ) ->
                 if data.sessionId == sessionId then

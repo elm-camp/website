@@ -42,7 +42,7 @@ viewAdmin backendModel value =
             List.length (SeqDict.toList backendModel.orders)
 
         numberOfPendingOrders =
-            List.length (SeqDict.toList backendModel.pendingOrder)
+            List.length (SeqDict.toList backendModel.pendingOrders)
 
         numberOfExpiredOrders =
             List.length (SeqDict.toList backendModel.expiredOrders)

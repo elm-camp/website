@@ -39,7 +39,7 @@ build_BackendModel value =
             Result.Ok
                 (\orders pendingOrder expiredOrders prices time ticketsEnabled ->
                     { orders = orders
-                    , pendingOrder = pendingOrder
+                    , pendingOrders = pendingOrder
                     , expiredOrders = expiredOrders
                     , prices = prices
                     , time = time
@@ -280,7 +280,7 @@ patch_BackendModel options patch value =
 
                 "pendingOrder" ->
                     Result.map
-                        (\pendingOrder -> { acc | pendingOrder = pendingOrder })
+                        (\pendingOrder -> { acc | pendingOrders = pendingOrder })
                         (Fusion.SeqDict.patch_SeqDict
                             (Fusion.Generated.Id.patcher_Id
                                 Fusion.Generated.Stripe.patcher_StripeSessionId
@@ -288,7 +288,7 @@ patch_BackendModel options patch value =
                             patcher_PendingOrder
                             options
                             fieldPatch
-                            acc.pendingOrder
+                            acc.pendingOrders
                         )
 
                 "expiredOrders" ->
@@ -852,7 +852,7 @@ toValue_BackendModel value =
                         Fusion.Generated.Stripe.patcher_StripeSessionId
                     )
                     patcher_PendingOrder
-                    value.pendingOrder
+                    value.pendingOrders
               )
             , ( "expiredOrders"
               , Fusion.SeqDict.toValue_SeqDict

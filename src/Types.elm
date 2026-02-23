@@ -74,7 +74,7 @@ type alias LoadedModel =
 
 type alias BackendModel =
     { orders : SeqDict (Id StripeSessionId) CompletedOrder
-    , pendingOrder : SeqDict (Id StripeSessionId) PendingOrder
+    , pendingOrders : SeqDict (Id StripeSessionId) PendingOrder
     , expiredOrders : SeqDict (Id StripeSessionId) PendingOrder
     , prices : TicketPriceStatus
     , time : Time.Posix
