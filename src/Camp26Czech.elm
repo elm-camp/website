@@ -6,6 +6,7 @@ module Camp26Czech exposing
     , maxAttendees
     , maxRooms
     , opportunityGrant
+    , scheduleSection
     , sharedRoomTicket
     , singleRoomTicket
     , ticketSalesOpenAt
@@ -207,6 +208,11 @@ sponsors =
     ]
 
 
+scheduleSection : String
+scheduleSection =
+    "Prospective Schedule"
+
+
 content : List RichText
 content =
     [ Section "Elm Camp 2026 - Olomouc, Czechia"
@@ -236,7 +242,7 @@ content =
             }
           ]
         ]
-    , Section "Prospective Schedule:"
+    , Section scheduleSection
         [ BulletList
             [ Bold "Mon 15th June" ]
             [ Paragraph [ Text "3pm arrivals & halls officially open" ]
@@ -323,7 +329,7 @@ content =
 
 opportunityGrant : String
 opportunityGrant =
-    "\u{1FAF6} Opportunity grant"
+    "🫶 Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix
