@@ -15,6 +15,7 @@ import Json.Decode as D
 import List.Extra
 import Name exposing (Name)
 import NonNegative
+import OpportunityGrant
 import Quantity
 import Route
 import Sales
@@ -651,6 +652,83 @@ tests fileData =
                                     (Test.Html.Query.findAll [ Test.Html.Selector.exactText "Sold out!" ] html)
                             )
                         ]
+                    )
+                ]
+            )
+        ]
+    , T.start
+        "User applies for an opportunity grant ticket"
+        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\tab1 ->
+                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tab1.clickLink 100 (Route.encode Nothing Route.OpportunityGrantRoute)
+                , tab1.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.text "Opportunity grant application" ])
+                , tab1.input 100 OpportunityGrant.emailHtmlId (EmailAddress.toString svenMail)
+                , tab1.input 100 OpportunityGrant.messageHtmlId "I am a first-time Elm developer from an under-represented background and would love to attend!"
+                , tab1.click 100 OpportunityGrant.submitHtmlId
+                , T.checkState 100
+                    (\data ->
+                        let
+                            grantApplicationEmails : Int
+                            grantApplicationEmails =
+                                List.Extra.count
+                                    (\req ->
+                                        req.url
+                                            == "https://api.postmarkapp.com/email"
+                                            && (case req.body of
+                                                    T.JsonBody value ->
+                                                        case D.decodeValue (D.field "Subject" D.string) value of
+                                                            Ok subject ->
+                                                                subject == String.Nonempty.toString Backend.opportunityGrantEmailSubject
+
+                                                            Err _ ->
+                                                                False
+
+                                                    _ ->
+                                                        False
+                                               )
+                                    )
+                                    data.httpRequests
+                        in
+                        if grantApplicationEmails == 1 then
+                            Ok ()
+
+                        else
+                            Err ("Expected 1 opportunity grant notification email but got " ++ String.fromInt grantApplicationEmails)
+                    )
+                , T.checkState 100
+                    (\data ->
+                        case SeqDict.get tab1.clientId data.frontends of
+                            Just (Types.Loaded loaded) ->
+                                case loaded.opportunityGrantForm.submitStatus of
+                                    Types.OpportunityGrantSubmittedSuccessfully ->
+                                        if loaded.opportunityGrantForm.email == "" && loaded.opportunityGrantForm.message == "" then
+                                            Ok ()
+
+                                        else
+                                            Err "Expected form fields to be cleared after successful submission"
+
+                                    _ ->
+                                        Err "Expected form to be in SubmittedSuccessfully state after successful submission"
+
+                            Just (Types.Loading _) ->
+                                Err "Frontend is not in Loaded state"
+
+                            Nothing ->
+                                Err "Could not find frontend by client ID"
                     )
                 ]
             )

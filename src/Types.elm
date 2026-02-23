@@ -8,6 +8,9 @@ module Types exposing
     , InitData2
     , LoadedModel
     , LoadingModel
+    , OpportunityGrantForm
+    , OpportunityGrantPressedSubmit(..)
+    , OpportunityGrantSubmitStatus(..)
     , PendingOrder
     , TicketPriceStatus(..)
     , TicketsDisabledData
@@ -63,6 +66,7 @@ type alias LoadedModel =
     , window : Size
     , initData : Result () InitData2
     , form : PurchaseForm
+    , opportunityGrantForm : OpportunityGrantForm
     , route : Route
     , showTooltip : Bool
     , backendModel : Maybe ( BackendModel, Fusion.Value )
@@ -70,6 +74,25 @@ type alias LoadedModel =
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
     }
+
+
+type alias OpportunityGrantForm =
+    { email : String
+    , message : String
+    , submitStatus : OpportunityGrantSubmitStatus
+    }
+
+
+type OpportunityGrantSubmitStatus
+    = OpportunityGrantNotSubmitted OpportunityGrantPressedSubmit
+    | OpportunityGrantSubmitting
+    | OpportunityGrantSubmitBackendError String
+    | OpportunityGrantSubmittedSuccessfully
+
+
+type OpportunityGrantPressedSubmit
+    = OpportunityGrantPressedSubmit
+    | OpportunityGrantNotPressedSubmit
 
 
 type alias BackendModel =
@@ -122,6 +145,8 @@ type FrontendMsg
     | DownloadTicketSalesReminder
     | FormChanged PurchaseForm
     | PressedSubmitForm
+    | OpportunityGrantFormChanged OpportunityGrantForm
+    | PressedSubmitOpportunityGrant
     | SetViewport
     | LogoMsg Logo.Msg
     | Noop
@@ -137,6 +162,7 @@ type ToBackend
     = SubmitFormRequest (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
     | AdminInspect String
+    | SubmitOpportunityGrantRequest { email : String, message : String }
 
 
 type BackendMsg
@@ -148,6 +174,7 @@ type BackendMsg
     | ConfirmationEmailSent (Id StripeSessionId) (Result Postmark.SendEmailError ())
     | ErrorEmailSent (Result Postmark.SendEmailError ())
     | StripeWebhookResponse { endpoint : String, json : String }
+    | OpportunityGrantEmailSent ClientId (Result Postmark.SendEmailError ())
 
 
 type alias InitData2 =
@@ -165,6 +192,7 @@ type ToFrontend
     | SlotRemainingChanged (TicketTypes NonNegative)
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel Fusion.Value
+    | OpportunityGrantSubmitResponse (Result String ())
 
 
 type TicketsEnabled

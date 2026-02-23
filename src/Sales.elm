@@ -1,6 +1,7 @@
 module Sales exposing
     ( errorHtmlId
     , numericFieldPlusId
+    , opportunityGrantCtaId
     , selectTicketId
     , stripePriceText
     , view
@@ -333,8 +334,10 @@ accommodationView ticketTypes initData model =
             (PurchaseForm.allTicketTypes initData.prices)
             (PurchaseForm.allTicketTypes model.form.count)
             PurchaseForm.ticketTypesSetters
-            |> Theme.rowToColumnWhen model.window [ Ui.spacing 16 ]
-            |> Ui.el [ Ui.widthMax 1000, Ui.centerX, Ui.paddingXY 16 0 ]
+            |> List.append
+                [ viewOpportunityGrantCta ]
+            |> Theme.rowToColumnWhen model.window [ Ui.spacing 16, Ui.wrap ]
+            |> Ui.el [ Ui.widthMax 1200, Ui.centerX, Ui.paddingXY 16 0 ]
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
@@ -406,6 +409,54 @@ viewAccom count ticketAvailable price ticket2 initData =
                      else
                         Ui.text "Sold out!"
                     )
+            ]
+        ]
+
+
+opportunityGrantCtaId : HtmlId
+opportunityGrantCtaId =
+    Dom.id "opportunityGrantCta"
+
+
+viewOpportunityGrantCta : Element a
+viewOpportunityGrantCta =
+    let
+        description =
+            String.join " "
+                [ "If you are concerned about the cost of attendance or are from"
+                , "an under-represented group in tech, we invite you to apply for"
+                , "an opportunity grant!"
+                ]
+    in
+    Ui.column
+        [ Ui.width Ui.fill
+        , Ui.height Ui.fill
+        , Ui.spacing 16
+        , Ui.background (Ui.rgb 255 255 255)
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
+        , Ui.height Ui.fill
+        , Ui.rounded 16
+        , Ui.padding 16
+        ]
+        [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text "Opportunity grant" ]
+        , Ui.text description
+        , Ui.column
+            [ Ui.alignBottom, Ui.spacing 8 ]
+            [ Ui.el
+                [ Ui.background
+                    (Ui.rgb 92 176 126)
+                , Ui.height (Ui.px 56)
+                , Ui.Font.center
+                , Ui.contentCenterY
+                , Ui.rounded 8
+                , Ui.alignBottom
+                , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+                , Ui.Font.weight 600
+                , Ui.Font.color (Ui.rgb 255 255 255)
+                , Ui.id (Dom.idToString opportunityGrantCtaId)
+                , Ui.link (Route.encode Nothing Route.OpportunityGrantRoute)
+                ]
+                (Ui.text "Apply")
             ]
         ]
 

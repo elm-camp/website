@@ -68,7 +68,13 @@ ticketSalesOpenCountdown now =
         (Ui.spacing 20 :: Theme.contentAttributes)
         (case detailedCountdown now of
             Nothing ->
-                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+                [ Ui.row []
+                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                        goToTicketSales
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                        goToOpportunityGrant
+                    ]
+                ]
 
             Just countdownElement ->
                 [ countdownElement
@@ -180,6 +186,22 @@ goToTicketSales =
         , Ui.link (Route.encode Nothing Route.TicketPurchaseRoute)
         ]
         (Ui.text "Tickets now on sale!")
+
+
+goToOpportunityGrant : Element FrontendMsg
+goToOpportunityGrant =
+    Ui.el
+        [ Ui.width Ui.fill
+        , Ui.background (Ui.rgb 92 176 126)
+        , Ui.paddingXY 24 16
+        , Ui.rounded 8
+        , Ui.Font.color (Ui.rgb 255 255 255)
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.link (Route.encode Nothing Route.OpportunityGrantRoute)
+        ]
+        (Ui.text "Opportunity grants available!")
 
 
 sponsors : List RichText

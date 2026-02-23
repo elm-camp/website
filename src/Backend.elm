@@ -6,6 +6,8 @@ module Backend exposing
     , elmCampEmailAddress
     , errorEmail
     , init
+    , opportunityGrantEmailBody
+    , opportunityGrantEmailSubject
     , sessionIdToStripeSessionId
     , subscriptions
     , update
@@ -308,6 +310,17 @@ update msg model =
         ErrorEmailSent _ ->
             ( model, Command.none )
 
+        OpportunityGrantEmailSent clientId result ->
+            ( model
+            , Lamdera.sendToFrontend clientId
+                (OpportunityGrantSubmitResponse
+                    (Result.mapError
+                        (\err -> "Failed to send application email: " ++ HttpHelpers.postmarkSendEmailErrorToString err)
+                        result
+                    )
+                )
+            )
+
         StripeWebhookResponse { endpoint, json } ->
             case endpoint of
                 "stripe" ->
@@ -490,6 +503,20 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     ( model, Command.none )
 
+        SubmitOpportunityGrantRequest { email, message } ->
+            ( model
+            , Postmark.sendEmail
+                (OpportunityGrantEmailSent clientId)
+                Env.postmarkApiKey
+                { from = { name = "elm-camp", email = elmCampEmailAddress }
+                , to = Nonempty { name = "Elm Camp Team", email = elmCampEmailAddress } []
+                , subject = opportunityGrantEmailSubject
+                , body = Postmark.TextBody (opportunityGrantEmailBody email message)
+                , messageStream = Postmark.TransactionalEmail
+                , attachments = Postmark.noAttachments
+                }
+            )
+
         AdminInspect pass ->
             if pass == Env.adminPassword then
                 ( model
@@ -546,6 +573,25 @@ errorEmail errorMessage =
 elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
     Unsafe.emailAddress "team@elm.camp"
+
+
+opportunityGrantEmailSubject : NonemptyString
+opportunityGrantEmailSubject =
+    NonemptyString 'O' "pportunity grant application"
+
+
+opportunityGrantEmailBody : String -> String -> String
+opportunityGrantEmailBody email message =
+    "New opportunity grant application\n\n"
+        ++ "Applicant email: "
+        ++ email
+        ++ "\n\n"
+        ++ (if String.isEmpty (String.trim message) then
+                "No message provided."
+
+            else
+                "Message:\n\n" ++ message
+           )
 
 
 confirmationEmailSubject : NonemptyString

@@ -30,6 +30,7 @@ import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
 import Logo
 import Money
+import OpportunityGrant
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Quantity exposing (Quantity, Rate)
 import RichText exposing (Inline(..), RichText(..))
@@ -189,6 +190,7 @@ tryLoading loadingModel =
                 , showTooltip = False
                 , initData = initData
                 , form = PurchaseForm.init
+                , opportunityGrantForm = { email = "", message = "", submitStatus = Types.OpportunityGrantNotSubmitted Types.OpportunityGrantNotPressedSubmit }
                 , route = Route.decode loadingModel.url
                 , backendModel = Nothing
                 , logoModel = Logo.init
@@ -323,6 +325,40 @@ updateLoaded msg model =
 
                 Err () ->
                     ( model, Command.none )
+
+        OpportunityGrantFormChanged grantForm ->
+            case grantForm.submitStatus of
+                Types.OpportunityGrantSubmitting ->
+                    ( model, Command.none )
+
+                _ ->
+                    ( { model | opportunityGrantForm = grantForm }, Command.none )
+
+        PressedSubmitOpportunityGrant ->
+            let
+                grantForm =
+                    model.opportunityGrantForm
+            in
+            case grantForm.submitStatus of
+                Types.OpportunityGrantSubmitting ->
+                    ( model, Command.none )
+
+                _ ->
+                    case PurchaseForm.validateEmailAddress grantForm.email of
+                        Ok _ ->
+                            ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantSubmitting } }
+                            , Lamdera.sendToBackend
+                                (SubmitOpportunityGrantRequest
+                                    { email = grantForm.email
+                                    , message = grantForm.message
+                                    }
+                                )
+                            )
+
+                        Err _ ->
+                            ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantNotSubmitted Types.OpportunityGrantPressedSubmit } }
+                            , Command.none
+                            )
 
         SetViewport ->
             ( model, Command.none )
@@ -523,6 +559,22 @@ updateFromBackendLoaded msg model =
         AdminInspectResponse backendModel value ->
             ( { model | backendModel = Just ( backendModel, value ) }, Command.none )
 
+        OpportunityGrantSubmitResponse result ->
+            let
+                grantForm =
+                    model.opportunityGrantForm
+            in
+            case result of
+                Ok () ->
+                    ( { model | opportunityGrantForm = { email = "", message = "", submitStatus = Types.OpportunityGrantSubmittedSuccessfully } }
+                    , Command.none
+                    )
+
+                Err err ->
+                    ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantSubmitBackendError err } }
+                    , Command.none
+                    )
+
 
 view : FrontendModel -> Effect.Browser.Document FrontendMsg
 view model =
@@ -675,6 +727,9 @@ loadedView model =
 
         TicketPurchaseRoute ->
             Sales.view Camp26Czech.ticketTypes model
+
+        OpportunityGrantRoute ->
+            OpportunityGrant.view model
 
 
 returnToHomepageButton : Ui.Element msg

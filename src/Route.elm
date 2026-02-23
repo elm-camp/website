@@ -21,6 +21,7 @@ type Route
     | Camp24Uk
     | Camp25US
     | TicketPurchaseRoute
+    | OpportunityGrantRoute
 
 
 decode : Url -> Route
@@ -37,6 +38,7 @@ decode url =
         , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
         , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
         , Url.Parser.s "tickets" |> Url.Parser.map TicketPurchaseRoute
+        , Url.Parser.s "opportunity-grant" |> Url.Parser.map OpportunityGrantRoute
         ]
         |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
 
@@ -94,6 +96,9 @@ encode fragment route =
 
             TicketPurchaseRoute ->
                 [ "tickets" ]
+
+            OpportunityGrantRoute ->
+                [ "opportunity-grant" ]
         )
         (case route of
             HomepageRoute ->
@@ -132,6 +137,9 @@ encode fragment route =
                 []
 
             TicketPurchaseRoute ->
+                []
+
+            OpportunityGrantRoute ->
                 []
         )
         ++ (case fragment of
