@@ -1,6 +1,7 @@
 module Backend exposing
     ( app
     , app_
+    , confirmationEmail
     , confirmationEmailSubject
     , elmCampEmailAddress
     , errorEmail
@@ -554,9 +555,18 @@ confirmationEmailSubject =
 
 confirmationEmail : PurchaseFormValidated -> Money.Currency -> { subject : NonemptyString, textBody : String, htmlBody : Html.Html }
 confirmationEmail purchaseForm stripeCurrency =
+    let
+        grantOnly =
+            Quantity.greaterThanZero purchaseForm.grantContribution && purchaseForm.count == PurchaseForm.initTicketCount
+    in
     { subject = confirmationEmailSubject
     , textBody =
-        "This is a confirmation email for your purchase of:\n\n"
+        (if grantOnly then
+            "This is a confirmation email for your donation of:\n\n"
+
+         else
+            "This is a confirmation email for your purchase of:\n\n"
+        )
             ++ (List.map2
                     (\count ticketType ->
                         if count == NonNegative.zero then
@@ -583,7 +593,12 @@ confirmationEmail purchaseForm stripeCurrency =
                 else
                     ""
                )
-            ++ "We look forward to seeing you at the elm-camp unconference!\n\n"
+            ++ (if grantOnly then
+                    ""
+
+                else
+                    "We look forward to seeing you at the elm-camp unconference!\n\n"
+               )
             ++ "You can review the schedule at "
             ++ (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute)
             ++ ". If you have any questions, email us at "
@@ -594,7 +609,11 @@ confirmationEmail purchaseForm stripeCurrency =
             []
             [ Html.div
                 [ Attributes.paddingBottom "16px" ]
-                [ Html.text "This is a confirmation email for your purchase of:"
+                [ if grantOnly then
+                    Html.text "This is a confirmation email for your donation of:"
+
+                  else
+                    Html.text "This is a confirmation email for your purchase of:"
                 ]
             , List.map2
                 (\count ticketType ->
@@ -628,7 +647,11 @@ confirmationEmail purchaseForm stripeCurrency =
 
               else
                 Html.text ""
-            , Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
+            , if grantOnly then
+                Html.text ""
+
+              else
+                Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
             , Html.div []
                 [ Html.a
                     [ Attributes.href (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute) ]

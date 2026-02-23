@@ -4,6 +4,7 @@ module EmailViewer exposing (main)
 Start `lamdera live` and go to localhost:8000/src/UiViewer.elm to use it.
 -}
 
+import Backend
 import Email.Html
 import EmailAddress exposing (EmailAddress)
 import Html exposing (Html)
@@ -38,7 +39,7 @@ campfireTicket : Html msg
 campfireTicket =
     let
         email =
-            RPC.confirmationEmail
+            Backend.confirmationEmail
                 { attendees = []
                 , count =
                     { campfireTicket = NonNegative.one
@@ -50,14 +51,14 @@ campfireTicket =
                 }
                 Money.CZK
     in
-    emailView email.subject email.htmlBody
+    emailView email.subject email.htmlBody email.textBody
 
 
 campfireAndSingleRoomTicket : Html msg
 campfireAndSingleRoomTicket =
     let
         email =
-            RPC.confirmationEmail
+            Backend.confirmationEmail
                 { attendees = []
                 , count =
                     { campfireTicket = NonNegative.one
@@ -69,14 +70,14 @@ campfireAndSingleRoomTicket =
                 }
                 Money.CZK
     in
-    emailView email.subject email.htmlBody
+    emailView email.subject email.htmlBody email.textBody
 
 
 allTickets : Html msg
 allTickets =
     let
         email =
-            RPC.confirmationEmail
+            Backend.confirmationEmail
                 { attendees = []
                 , count =
                     { campfireTicket = NonNegative.one
@@ -88,14 +89,14 @@ allTickets =
                 }
                 Money.CZK
     in
-    emailView email.subject email.htmlBody
+    emailView email.subject email.htmlBody email.textBody
 
 
 allTicketsAndGrant : Html msg
 allTicketsAndGrant =
     let
         email =
-            RPC.confirmationEmail
+            Backend.confirmationEmail
                 { attendees = []
                 , count =
                     { campfireTicket = NonNegative.one
@@ -107,14 +108,14 @@ allTicketsAndGrant =
                 }
                 Money.CZK
     in
-    emailView email.subject email.htmlBody
+    emailView email.subject email.htmlBody email.textBody
 
 
 onlyGrant : Html msg
 onlyGrant =
     let
         email =
-            RPC.confirmationEmail
+            Backend.confirmationEmail
                 { attendees = []
                 , count =
                     { campfireTicket = NonNegative.zero
@@ -126,11 +127,11 @@ onlyGrant =
                 }
                 Money.CZK
     in
-    emailView email.subject email.htmlBody
+    emailView email.subject email.htmlBody email.textBody
 
 
-emailView : NonemptyString -> Email.Html.Html -> Html msg
-emailView subject content =
+emailView : NonemptyString -> Email.Html.Html -> String -> Html msg
+emailView subject content textContent =
     Html.div
         [ Html.Attributes.style "background-color" "white" ]
         [ Html.span []
@@ -143,7 +144,10 @@ emailView subject content =
                 ]
                 []
             ]
+        , Html.hr [] []
         , Email.Html.toHtml content
+        , Html.hr [] []
+        , Html.div [ Html.Attributes.style "white-space" "pre-wrap" ] [ Html.text textContent ]
         ]
 
 
