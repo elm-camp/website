@@ -285,7 +285,7 @@ accommodationView ticketTypes initData model =
             [ RichText.h2 "🏕️ Ticket type" |> Ui.html
             , RichText.view
                 model
-                [ Paragraph [ Text "Please select one accommodation option per attendee." ]
+                [ Paragraph [ Bold "Please select one accommodation option per attendee." ]
                 , Paragraph [ Text "There is a mix of room types — singles, doubles and dorm style rooms suitable for up to four people. Attendees will be distributed among the rooms according to your stated sharing preferences and the type of ticket purchased. All rooms have en-suite facilities." ]
                 , Paragraph [ Text "Toilet and shower facilities can be accessed in the building for those who wish to bring a tent or campervan and camp. The surrounding grounds and countryside are beautiful and include woodland and a lake." ]
                 ]
