@@ -18,6 +18,7 @@ module Camp26Czech exposing
 import Camp
 import Effect.Browser.Dom as Dom
 import Helpers
+import Logo
 import NonNegative exposing (NonNegative)
 import PurchaseForm exposing (PurchaseForm, PurchaseFormValidated, TicketTypes)
 import RichText exposing (Inline(..), RichText(..))
@@ -29,7 +30,6 @@ import Ui exposing (Element)
 import Ui.Font
 import Ui.Prose
 import Ui.Shadow
-import View.Logo
 
 
 meta : Camp.Meta
@@ -383,7 +383,7 @@ header config =
                 [ Ui.width Ui.shrink, Ui.spacing 24, Ui.centerX ]
                 [ Ui.column
                     [ Ui.spacing 8 ]
-                    [ Ui.html (View.Logo.view 200 config.logoModel)
+                    [ Ui.html (Logo.view 200 config.logoModel)
                         |> Ui.el [ Ui.centerX, Ui.move { x = -10, y = 0, z = 0 } ]
                         |> Ui.map Types.LogoMsg
                     , Ui.column
@@ -417,7 +417,7 @@ header config =
                 [ Ui.width Ui.shrink, Ui.spacing 24 ]
                 [ Ui.row
                     []
-                    [ Ui.html (View.Logo.view 150 config.logoModel) |> Ui.el [ Ui.move { x = 0, y = -2, z = 0 } ] |> Ui.map Types.LogoMsg
+                    [ Ui.html (Logo.view 150 config.logoModel) |> Ui.el [ Ui.move { x = 0, y = -2, z = 0 } ] |> Ui.map Types.LogoMsg
                     , Ui.column
                         [ Ui.width Ui.shrink
                         , Ui.Font.size 64

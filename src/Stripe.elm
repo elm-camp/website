@@ -8,6 +8,7 @@ module Stripe exposing
     , PriceId(..)
     , ProductId(..)
     , StripeCurrency(..)
+    , StripePaymentId
     , StripeSessionId(..)
     , Webhook(..)
     , cancelPath
@@ -82,7 +83,11 @@ type PriceId
 
 
 type Webhook
-    = StripeSessionCompleted (Id StripeSessionId)
+    = StripeSessionCompleted (Id StripeSessionId) (Id StripePaymentId)
+
+
+type StripePaymentId
+    = StripePaymentId Never
 
 
 decodeWebhook : D.Decoder Webhook
@@ -92,8 +97,13 @@ decodeWebhook =
             (\eventType ->
                 case eventType of
                     "checkout.session.completed" ->
-                        D.succeed StripeSessionCompleted
-                            |> Json.Decode.Pipeline.required "data" (D.field "object" (D.field "id" Id.decoder))
+                        D.at
+                            [ "data", "object" ]
+                            (D.map2
+                                StripeSessionCompleted
+                                (D.field "id" Id.decoder)
+                                (D.field "payment_intent" Id.decoder)
+                            )
 
                     _ ->
                         D.fail ("Unhandled stripe webhook event: " ++ eventType)

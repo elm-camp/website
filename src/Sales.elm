@@ -1,5 +1,7 @@
-module View.Sales exposing
+module Sales exposing
     ( errorHtmlId
+    , numericFieldPlusId
+    , selectTicketId
     , stripePriceText
     , view
     )
@@ -343,11 +345,16 @@ accommodationView ticketTypes initData model =
         ]
 
 
+selectTicketId : TicketType -> HtmlId
+selectTicketId ticket =
+    "selectTicket_" ++ ticket.name |> Dom.id
+
+
 viewAccom : NonNegative -> Bool -> Price -> TicketType -> InitData2 -> Element NonNegative
 viewAccom count ticketAvailable price ticket2 initData =
     let
         htmlIdPrefix =
-            "selectTicket_" ++ ticket2.name
+            selectTicketId ticket2
     in
     Ui.column
         [ Ui.width Ui.fill
@@ -391,7 +398,7 @@ viewAccom count ticketAvailable price ticket2 initData =
                     , Ui.Font.weight 600
                     , Ui.Font.color (Ui.rgb 255 255 255)
                     , Ui.attrIf ticketAvailable (Ui.Input.button NonNegative.one)
-                    , Ui.id htmlIdPrefix
+                    , Ui.id (Dom.idToString htmlIdPrefix)
                     ]
                     (if ticketAvailable then
                         Ui.text "Select"
@@ -403,12 +410,17 @@ viewAccom count ticketAvailable price ticket2 initData =
         ]
 
 
-numericField : String -> Bool -> Int -> (Int -> msg) -> Element msg
+numericFieldPlusId : HtmlId -> HtmlId
+numericFieldPlusId htmlIdPrefix =
+    (Dom.idToString htmlIdPrefix ++ "_plus") |> Dom.id
+
+
+numericField : HtmlId -> Bool -> Int -> (Int -> msg) -> Element msg
 numericField htmlIdPrefix canIncrement value onChange =
     Ui.row [ Ui.spacing 5 ]
         [ Ui.el
             [ Ui.background Theme.colors.green
-            , Ui.id (htmlIdPrefix ++ "_minus")
+            , Ui.id (Dom.idToString htmlIdPrefix ++ "_minus")
             , Ui.padding 16
             , Ui.rounded 8
             , Ui.alignBottom
@@ -436,7 +448,7 @@ numericField htmlIdPrefix canIncrement value onChange =
 
               else
                 Ui.background Theme.disabled
-            , Ui.id (htmlIdPrefix ++ "_plus")
+            , Ui.id (Dom.idToString (numericFieldPlusId htmlIdPrefix))
             , Ui.padding 16
             , Ui.rounded 8
             , Ui.alignBottom
@@ -593,7 +605,7 @@ opportunityGrant form initData model =
         (Ui.spacing 20 :: Theme.contentAttributes)
         [ Ui.column
             []
-            [ RichText.h2 "\u{1FAF6} Opportunity grants" |> Ui.html
+            [ RichText.h2 "🫶 Opportunity grants" |> Ui.html
             , RichText.view
                 model
                 [ Paragraph [ Text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]

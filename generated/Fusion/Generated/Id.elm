@@ -1,9 +1,10 @@
-module Fusion.Generated.Id exposing ( build_Id, patch_Id, patcher_Id, toValue_Id )
+module Fusion.Generated.Id exposing (build_Id, patch_Id, patcher_Id, toValue_Id)
 
 {-|
-@docs build_Id, patch_Id, patcher_Id, toValue_Id
--}
 
+@docs build_Id, patch_Id, patcher_Id, toValue_Id
+
+-}
 
 import Fusion
 import Fusion.Patch
@@ -11,19 +12,19 @@ import Id
 
 
 build_Id :
-    Fusion.Patch.Patcher a
+    b
     -> Fusion.Value
     -> Result Fusion.Patch.Error (Id.Id a)
 build_Id aPatcher value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "Id", [ patch0 ] ) ->
-                     Result.map Id.Id (Fusion.Patch.build_String patch0)
+            case ( name, params ) of
+                ( "Id", [ patch0 ] ) ->
+                    Result.map Id.Id (Fusion.Patch.build_String patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
@@ -40,10 +41,10 @@ patch_Id aPatcher options patch value =
             Result.map
                 Id.Id
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_String
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_String
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "Id" _, _ ) ->

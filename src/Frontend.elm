@@ -28,11 +28,13 @@ import Json.Decode as D
 import Json.Encode as E
 import Lamdera as LamderaCore
 import Lamdera.Wire3 as Wire3
+import Logo
 import Money
 import PurchaseForm exposing (PressedSubmit(..), PurchaseForm, PurchaseFormValidated, SubmitStatus(..))
 import Quantity exposing (Quantity, Rate)
 import RichText exposing (Inline(..), RichText(..))
 import Route exposing (Route(..))
+import Sales
 import SeqDict
 import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, StripeCurrency)
 import Theme
@@ -47,8 +49,6 @@ import Untrusted
 import Url
 import Url.Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
-import View.Logo
-import View.Sales
 
 
 app :
@@ -90,8 +90,8 @@ subscriptions model =
         logoSubscription =
             case model of
                 Types.Loaded loadedModel ->
-                    if View.Logo.needsAnimationFrame loadedModel.logoModel then
-                        Effect.Browser.Events.onAnimationFrame (\posix -> View.Logo.Tick posix |> Types.LogoMsg)
+                    if Logo.needsAnimationFrame loadedModel.logoModel then
+                        Effect.Browser.Events.onAnimationFrame (\posix -> Logo.Tick posix |> Types.LogoMsg)
 
                     else
                         Subscription.none
@@ -191,7 +191,7 @@ tryLoading loadingModel =
                 , form = PurchaseForm.init
                 , route = Route.decode loadingModel.url
                 , backendModel = Nothing
-                , logoModel = View.Logo.init
+                , logoModel = Logo.init
                 , elmUiState = loadingModel.elmUiState
                 , conversionRate = LoadingConversionRate
                 }
@@ -318,7 +318,7 @@ updateLoaded msg model =
 
                                 Err _ ->
                                     ( { model | form = { form | submitStatus = NotSubmitted PressedSubmit } }
-                                    , jumpToId View.Sales.errorHtmlId 110
+                                    , jumpToId Sales.errorHtmlId 110
                                     )
 
                 Err () ->
@@ -328,7 +328,7 @@ updateLoaded msg model =
             ( model, Command.none )
 
         Types.LogoMsg logoMsg ->
-            ( { model | logoModel = View.Logo.update logoMsg model.logoModel }, Command.none )
+            ( { model | logoModel = Logo.update logoMsg model.logoModel }, Command.none )
 
         Noop ->
             ( model, Command.none )
@@ -674,7 +674,7 @@ loadedView model =
             Camp25US.view model
 
         TicketPurchaseRoute ->
-            View.Sales.view Camp26Czech.ticketTypes model
+            Sales.view Camp26Czech.ticketTypes model
 
 
 returnToHomepageButton : Ui.Element msg

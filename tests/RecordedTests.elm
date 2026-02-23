@@ -12,15 +12,12 @@ import EmailAddress exposing (EmailAddress)
 import Expect
 import Frontend
 import Json.Decode as D
-import Json.Encode
-import LamderaRPC
 import List.Extra
 import Name exposing (Name)
 import NonNegative
-import Parser
 import Quantity
-import RPC
 import Route
+import Sales
 import SeqDict
 import String.Nonempty exposing (NonemptyString(..))
 import Test.Html.Query
@@ -272,7 +269,7 @@ tests fileData =
             { width = 881, height = 1312 }
             (\tab1 ->
                 [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , tab1.click 100 (Dom.id "selectTicket_Single Room")
+                , tab1.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
                 , tab1.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tab1.input 100 (Dom.id "attendeeCountry_0") "Sweden"
                 , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
@@ -617,10 +614,10 @@ purchaseSingleRoomTickets count tab1 =
     List.concatMap
         (\index ->
             [ if index == 0 then
-                tab1.click 100 (Dom.id "selectTicket_Single Room")
+                tab1.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
 
               else
-                tab1.click 100 (Dom.id "selectTicket_Single Room_plus")
+                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.singleRoomTicket))
             , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
             , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
             , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
@@ -644,10 +641,10 @@ purchaseSharedRoomTickets offset count tab1 =
                     offset + index
             in
             [ if index == 0 then
-                tab1.click 100 (Dom.id "selectTicket_Shared Room")
+                tab1.click 100 (Sales.selectTicketId Camp26Czech.sharedRoomTicket)
 
               else
-                tab1.click 100 (Dom.id "selectTicket_Shared Room_plus")
+                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.sharedRoomTicket))
             , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
             , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
             , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
@@ -671,10 +668,10 @@ purchasecampfireTickets offset count tab1 =
                     offset + index
             in
             [ if index == 0 then
-                tab1.click 100 (Dom.id "selectTicket_Attendance only")
+                tab1.click 100 (Sales.selectTicketId Camp26Czech.campfireTicket)
 
               else
-                tab1.click 100 (Dom.id "selectTicket_Attendance only_plus")
+                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.campfireTicket))
             , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
             , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
             , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
@@ -687,9 +684,163 @@ purchasecampfireTickets offset count tab1 =
 stripePurchaseWebhookResponse : { json : String, endpoint : String }
 stripePurchaseWebhookResponse =
     { json =
-        "{\n  \"id\": \"evt_1T28zeHHD80VvsjK4Juvu6pm\",\n  \"object\": \"event\",\n  \"api_version\": \"2020-03-02\",\n  \"created\": 1771414354,\n  \"data\": {\n    \"object\": {\n      \"id\": \""
+        """{
+  "id": "evt_1T28zeHHD80VvsjK4Juvu6pm",
+  "object": "event",
+  "api_version": "2020-03-02",
+  "created": 1771414354,
+  "data": {
+    "object": {
+      "id": \""""
             ++ stripeSessionId
-            ++ "\",\n      \"object\": \"checkout.session\",\n      \"adaptive_pricing\": {\n        \"enabled\": true\n      },\n      \"after_expiration\": null,\n      \"allow_promotion_codes\": true,\n      \"amount_subtotal\": 2427,\n      \"amount_total\": 2427,\n      \"automatic_tax\": {\n        \"enabled\": false,\n        \"liability\": null,\n        \"provider\": null,\n        \"status\": null\n      },\n      \"billing_address_collection\": null,\n      \"branding_settings\": {\n        \"background_color\": \"#ffffff\",\n        \"border_style\": \"rounded\",\n        \"button_color\": \"#62b6ce\",\n        \"display_name\": \"Cofoundry Ltd\",\n        \"font_family\": \"default\",\n        \"icon\": {\n          \"file\": \"file_1MjQFxHHD80VvsjK6qqVMCl0\",\n          \"type\": \"file\"\n        },\n        \"logo\": {\n          \"file\": \"file_1MjQFkHHD80VvsjKFF7tUO9t\",\n          \"type\": \"file\"\n        }\n      },\n      \"cancel_url\": \"http://localhost:8000/stripeCancel\",\n      \"client_reference_id\": null,\n      \"client_secret\": null,\n      \"collected_information\": {\n        \"business_name\": null,\n        \"individual_name\": null,\n        \"shipping_details\": null\n      },\n      \"consent\": null,\n      \"consent_collection\": null,\n      \"created\": 1771414277,\n      \"currency\": \"czk\",\n      \"currency_conversion\": null,\n      \"custom_fields\": [],\n      \"custom_text\": {\n        \"after_submit\": null,\n        \"shipping_address\": null,\n        \"submit\": null,\n        \"terms_of_service_acceptance\": null\n      },\n      \"customer\": \"cus_U09IBJBVAmennB\",\n      \"customer_account\": null,\n      \"customer_creation\": \"always\",\n      \"customer_details\": {\n        \"address\": {\n          \"city\": null,\n          \"country\": \"SE\",\n          \"line1\": null,\n          \"line2\": null,\n          \"postal_code\": null,\n          \"state\": null\n        },\n        \"business_name\": null,\n        \"email\": \"martinsstewart@gmail.com\",\n        \"individual_name\": null,\n        \"name\": \"Martin Stewart\",\n        \"phone\": null,\n        \"tax_exempt\": \"none\",\n        \"tax_ids\": []\n      },\n      \"customer_email\": \"martinsstewart@gmail.com\",\n      \"discounts\": [],\n      \"expires_at\": 1771416076,\n      \"invoice\": null,\n      \"invoice_creation\": {\n        \"enabled\": false,\n        \"invoice_data\": {\n          \"account_tax_ids\": null,\n          \"custom_fields\": null,\n          \"description\": null,\n          \"footer\": null,\n          \"issuer\": null,\n          \"metadata\": {},\n          \"rendering_options\": null\n        }\n      },\n      \"livemode\": true,\n      \"locale\": null,\n      \"metadata\": {},\n      \"mode\": \"payment\",\n      \"origin_context\": null,\n      \"payment_intent\": \"pi_3T28yPHHD80VvsjK12neihui\",\n      \"payment_link\": null,\n      \"payment_method_collection\": \"always\",\n      \"payment_method_configuration_details\": {\n        \"id\": \"pmc_1MjOXdHHD80VvsjKu0s7ebsQ\",\n        \"parent\": null\n      },\n      \"payment_method_options\": {\n        \"card\": {\n          \"request_three_d_secure\": \"automatic\"\n        }\n      },\n      \"payment_method_types\": [\n        \"card\",\n        \"link\"\n      ],\n      \"payment_status\": \"paid\",\n      \"permissions\": null,\n      \"phone_number_collection\": {\n        \"enabled\": false\n      },\n      \"recovered_from\": null,\n      \"saved_payment_method_options\": {\n        \"allow_redisplay_filters\": [\n          \"always\"\n        ],\n        \"payment_method_remove\": \"disabled\",\n        \"payment_method_save\": null\n      },\n      \"setup_intent\": null,\n      \"shipping\": null,\n      \"shipping_address_collection\": null,\n      \"shipping_options\": [],\n      \"shipping_rate\": null,\n      \"status\": \"complete\",\n      \"submit_type\": null,\n      \"subscription\": null,\n      \"success_url\": \"http://localhost:8000/stripeSuccess?email-address=martinsstewart%40gmail.com\",\n      \"total_details\": {\n        \"amount_discount\": 0,\n        \"amount_shipping\": 0,\n        \"amount_tax\": 0\n      },\n      \"ui_mode\": \"hosted\",\n      \"url\": null,\n      \"wallet_options\": null\n    }\n  },\n  \"livemode\": true,\n  \"pending_webhooks\": 1,\n  \"request\": {\n    \"id\": null,\n    \"idempotency_key\": null\n  },\n  \"type\": \"checkout.session.completed\"\n}"
+            ++ """",
+      "object": "checkout.session",
+      "adaptive_pricing": {
+        "enabled": true
+      },
+      "after_expiration": null,
+      "allow_promotion_codes": true,
+      "amount_subtotal": 2427,
+      "amount_total": 2427,
+      "automatic_tax": {
+        "enabled": false,
+        "liability": null,
+        "provider": null,
+        "status": null
+      },
+      "billing_address_collection": null,
+      "branding_settings": {
+        "background_color": "#ffffff",
+        "border_style": "rounded",
+        "button_color": "#62b6ce",
+        "display_name": "Cofoundry Ltd",
+        "font_family": "default",
+        "icon": {
+          "file": "file_1MjQFxHHD80VvsjK6qqVMCl0",
+          "type": "file"
+        },
+        "logo": {
+          "file": "file_1MjQFkHHD80VvsjKFF7tUO9t",
+          "type": "file"
+        }
+      },
+      "cancel_url": "http://localhost:8000/stripeCancel",
+      "client_reference_id": null,
+      "client_secret": null,
+      "collected_information": {
+        "business_name": null,
+        "individual_name": null,
+        "shipping_details": null
+      },
+      "consent": null,
+      "consent_collection": null,
+      "created": 1771414277,
+      "currency": "czk",
+      "currency_conversion": null,
+      "custom_fields": [],
+      "custom_text": {
+        "after_submit": null,
+        "shipping_address": null,
+        "submit": null,
+        "terms_of_service_acceptance": null
+      },
+      "customer": "cus_U09IBJBVAmennB",
+      "customer_account": null,
+      "customer_creation": "always",
+      "customer_details": {
+        "address": {
+          "city": null,
+          "country": "SE",
+          "line1": null,
+          "line2": null,
+          "postal_code": null,
+          "state": null
+        },
+        "business_name": null,
+        "email": "martinsstewart@gmail.com",
+        "individual_name": null,
+        "name": "Martin Stewart",
+        "phone": null,
+        "tax_exempt": "none",
+        "tax_ids": []
+      },
+      "customer_email": "martinsstewart@gmail.com",
+      "discounts": [],
+      "expires_at": 1771416076,
+      "invoice": null,
+      "invoice_creation": {
+        "enabled": false,
+        "invoice_data": {
+          "account_tax_ids": null,
+          "custom_fields": null,
+          "description": null,
+          "footer": null,
+          "issuer": null,
+          "metadata": {},
+          "rendering_options": null
+        }
+      },
+      "livemode": true,
+      "locale": null,
+      "metadata": {},
+      "mode": "payment",
+      "origin_context": null,
+      "payment_intent": "pi_3T28yPHHD80VvsjK12neihui",
+      "payment_link": null,
+      "payment_method_collection": "always",
+      "payment_method_configuration_details": {
+        "id": "pmc_1MjOXdHHD80VvsjKu0s7ebsQ",
+        "parent": null
+      },
+      "payment_method_options": {
+        "card": {
+          "request_three_d_secure": "automatic"
+        }
+      },
+      "payment_method_types": [
+        "card",
+        "link"
+      ],
+      "payment_status": "paid",
+      "permissions": null,
+      "phone_number_collection": {
+        "enabled": false
+      },
+      "recovered_from": null,
+      "saved_payment_method_options": {
+        "allow_redisplay_filters": [
+          "always"
+        ],
+        "payment_method_remove": "disabled",
+        "payment_method_save": null
+      },
+      "setup_intent": null,
+      "shipping": null,
+      "shipping_address_collection": null,
+      "shipping_options": [],
+      "shipping_rate": null,
+      "status": "complete",
+      "submit_type": null,
+      "subscription": null,
+      "success_url": "http://localhost:8000/stripeSuccess?email-address=martinsstewart%40gmail.com",
+      "total_details": {
+        "amount_discount": 0,
+        "amount_shipping": 0,
+        "amount_tax": 0
+      },
+      "ui_mode": "hosted",
+      "url": null,
+      "wallet_options": null
+    }
+  },
+  "livemode": true,
+  "pending_webhooks": 1,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "checkout.session.completed"
+}"""
     , endpoint = "stripe"
     }
 

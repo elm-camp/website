@@ -38,13 +38,13 @@ import Postmark
 import PurchaseForm exposing (PurchaseFormValidated, TicketTypes)
 import Quantity
 import Route exposing (Route(..))
+import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
 import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
-import View.Sales
 
 
 app :
@@ -315,7 +315,7 @@ update msg model =
                             case D.decodeString Stripe.decodeWebhook json of
                                 Ok webhook ->
                                     case webhook of
-                                        StripeSessionCompleted stripeSessionId ->
+                                        StripeSessionCompleted stripeSessionId paymentId ->
                                             case SeqDict.get stripeSessionId model.pendingOrder of
                                                 Just order ->
                                                     let
@@ -330,6 +330,7 @@ update msg model =
                                                                 { submitTime = order.submitTime
                                                                 , form = order.form
                                                                 , emailResult = SendingEmail
+                                                                , paymentId = paymentId
                                                                 }
                                                                 model.orders
                                                       }
@@ -573,7 +574,7 @@ confirmationEmail purchaseForm stripeCurrency =
                     |> String.concat
                )
             ++ (if Quantity.greaterThanZero purchaseForm.grantContribution then
-                    View.Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }
+                    Sales.stripePriceText (Quantity.round purchaseForm.grantContribution) { stripeCurrency = stripeCurrency }
                         ++ " grant contribution\n\n"
 
                 else
@@ -614,7 +615,7 @@ confirmationEmail purchaseForm stripeCurrency =
                     [ Attributes.paddingBottom "16px" ]
                     [ Html.b
                         []
-                        [ View.Sales.stripePriceText
+                        [ Sales.stripePriceText
                             (Quantity.round purchaseForm.grantContribution)
                             { stripeCurrency = stripeCurrency }
                             |> Html.text

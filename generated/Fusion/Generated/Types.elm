@@ -1,19 +1,20 @@
 module Fusion.Generated.Types exposing
     ( build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
-    , build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus, patch_TicketsDisabledData
-    , patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder, patcher_TicketPriceStatus, patcher_TicketsDisabledData
-    , patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult, toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData
-    , toValue_TicketsEnabled
+    , build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
+    , patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
+    , patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
+    , toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData, toValue_TicketsEnabled
     )
 
 {-|
+
 @docs build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
 @docs build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
 @docs patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
 @docs patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
 @docs toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData, toValue_TicketsEnabled
--}
 
+-}
 
 import Dict
 import Fusion
@@ -31,98 +32,107 @@ import Result.Extra
 import Types
 
 
-build_BackendModel :
-    Fusion.Value -> Result Fusion.Patch.Error Types.BackendModel
+build_BackendModel : Fusion.Value -> Result Fusion.Patch.Error Types.BackendModel
 build_BackendModel value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
-             Result.Ok
-                 (\orders pendingOrder expiredOrders prices time ticketsEnabled ->
-                      { orders = orders
-                      , pendingOrder = pendingOrder
-                      , expiredOrders = expiredOrders
-                      , prices = prices
-                      , time = time
-                      , ticketsEnabled = ticketsEnabled
-                      }
-                 ) |> Result.Extra.andMap
-                              (Result.andThen
-                                       (Fusion.SeqDict.build_SeqDict
-                                                (Fusion.Generated.Id.patcher_Id
-                                                         Fusion.Generated.Stripe.patcher_StripeSessionId
-                                                )
-                                                patcher_CompletedOrder
-                                       )
-                                       (build_RecordUnpack "orders")
-                              ) |> Result.Extra.andMap
-                                           (Result.andThen
-                                                    (Fusion.SeqDict.build_SeqDict
-                                                             (Fusion.Generated.Id.patcher_Id
-                                                                      Fusion.Generated.Stripe.patcher_StripeSessionId
-                                                             )
-                                                             patcher_PendingOrder
-                                                    )
-                                                    (build_RecordUnpack
-                                                             "pendingOrder"
-                                                    )
-                                           ) |> Result.Extra.andMap
-                                                        (Result.andThen
-                                                                 (Fusion.SeqDict.build_SeqDict
-                                                                          (Fusion.Generated.Id.patcher_Id
-                                                                                   Fusion.Generated.Stripe.patcher_StripeSessionId
-                                                                          )
-                                                                          patcher_PendingOrder
-                                                                 )
-                                                                 (build_RecordUnpack
-                                                                          "expiredOrders"
-                                                                 )
-                                                        ) |> Result.Extra.andMap
-                                                                     (Result.andThen
-                                                                              build_TicketPriceStatus
-                                                                              (build_RecordUnpack
-                                                                                       "prices"
-                                                                              )
-                                                                     ) |> Result.Extra.andMap
-                                                                                  (Result.andThen
-                                                                                           Fusion.Generated.Effect.Time.build_Posix
-                                                                                           (build_RecordUnpack
-                                                                                                    "time"
-                                                                                           )
-                                                                                  ) |> Result.Extra.andMap
-                                                                                               (Result.andThen
-                                                                                                        build_TicketsEnabled
-                                                                                                        (build_RecordUnpack
-                                                                                                                 "ticketsEnabled"
-                                                                                                        )
-                                                                                               )
+            Result.Ok
+                (\orders pendingOrder expiredOrders prices time ticketsEnabled ->
+                    { orders = orders
+                    , pendingOrder = pendingOrder
+                    , expiredOrders = expiredOrders
+                    , prices = prices
+                    , time = time
+                    , ticketsEnabled = ticketsEnabled
+                    }
+                )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        (Fusion.SeqDict.build_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_CompletedOrder
+                        )
+                        (build_RecordUnpack "orders")
+                    )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        (Fusion.SeqDict.build_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_PendingOrder
+                        )
+                        (build_RecordUnpack
+                            "pendingOrder"
+                        )
+                    )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        (Fusion.SeqDict.build_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_PendingOrder
+                        )
+                        (build_RecordUnpack
+                            "expiredOrders"
+                        )
+                    )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        build_TicketPriceStatus
+                        (build_RecordUnpack
+                            "prices"
+                        )
+                    )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        Fusion.Generated.Effect.Time.build_Posix
+                        (build_RecordUnpack
+                            "time"
+                        )
+                    )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        build_TicketsEnabled
+                        (build_RecordUnpack
+                            "ticketsEnabled"
+                        )
+                    )
         )
         value
 
 
-build_CompletedOrder :
-    Fusion.Value -> Result Fusion.Patch.Error Types.CompletedOrder
+build_CompletedOrder : Fusion.Value -> Result Fusion.Patch.Error Types.CompletedOrder
 build_CompletedOrder value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
-             Result.map3
-                 (\submitTime form emailResult ->
-                      { submitTime = submitTime
-                      , form = form
-                      , emailResult = emailResult
-                      }
-                 )
-                 (Result.andThen
-                      Fusion.Generated.Effect.Time.build_Posix
-                      (build_RecordUnpack "submitTime")
-                 )
-                 (Result.andThen
-                      Fusion.Generated.PurchaseForm.build_PurchaseFormValidated
-                      (build_RecordUnpack "form")
-                 )
-                 (Result.andThen
-                      build_EmailResult
-                      (build_RecordUnpack "emailResult")
-                 )
+            Result.map4
+                (\submitTime form emailResult paymentId ->
+                    { submitTime = submitTime
+                    , form = form
+                    , emailResult = emailResult
+                    , paymentId = paymentId
+                    }
+                )
+                (Result.andThen
+                    Fusion.Generated.Effect.Time.build_Posix
+                    (build_RecordUnpack "submitTime")
+                )
+                (Result.andThen
+                    Fusion.Generated.PurchaseForm.build_PurchaseFormValidated
+                    (build_RecordUnpack "form")
+                )
+                (Result.andThen
+                    build_EmailResult
+                    (build_RecordUnpack "emailResult")
+                )
+                (Result.andThen
+                    (Fusion.Generated.Id.build_Id ())
+                    (build_RecordUnpack "paymentId")
+                )
         )
         value
 
@@ -131,122 +141,117 @@ build_EmailResult : Fusion.Value -> Result Fusion.Patch.Error Types.EmailResult
 build_EmailResult value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "SendingEmail", [] ) ->
-                     Result.Ok Types.SendingEmail
+            case ( name, params ) of
+                ( "SendingEmail", [] ) ->
+                    Result.Ok Types.SendingEmail
 
-                 ( "EmailSuccess", [] ) ->
-                     Result.Ok Types.EmailSuccess
+                ( "EmailSuccess", [] ) ->
+                    Result.Ok Types.EmailSuccess
 
-                 ( "EmailFailed", [ patch0 ] ) ->
-                     Result.map
-                         Types.EmailFailed
-                         (Fusion.Generated.Postmark.build_SendEmailError patch0)
+                ( "EmailFailed", [ patch0 ] ) ->
+                    Result.map
+                        Types.EmailFailed
+                        (Fusion.Generated.Postmark.build_SendEmailError patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
 
-build_PendingOrder :
-    Fusion.Value -> Result Fusion.Patch.Error Types.PendingOrder
+build_PendingOrder : Fusion.Value -> Result Fusion.Patch.Error Types.PendingOrder
 build_PendingOrder value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
-             Result.map3
-                 (\submitTime form sessionId ->
-                      { submitTime = submitTime
-                      , form = form
-                      , sessionId = sessionId
-                      }
-                 )
-                 (Result.andThen
-                      Fusion.Generated.Effect.Time.build_Posix
-                      (build_RecordUnpack "submitTime")
-                 )
-                 (Result.andThen
-                      Fusion.Generated.PurchaseForm.build_PurchaseFormValidated
-                      (build_RecordUnpack "form")
-                 )
-                 (Result.andThen
-                      Fusion.Effect.Lamdera.build_SessionId
-                      (build_RecordUnpack "sessionId")
-                 )
+            Result.map3
+                (\submitTime form sessionId ->
+                    { submitTime = submitTime
+                    , form = form
+                    , sessionId = sessionId
+                    }
+                )
+                (Result.andThen
+                    Fusion.Generated.Effect.Time.build_Posix
+                    (build_RecordUnpack "submitTime")
+                )
+                (Result.andThen
+                    Fusion.Generated.PurchaseForm.build_PurchaseFormValidated
+                    (build_RecordUnpack "form")
+                )
+                (Result.andThen
+                    Fusion.Effect.Lamdera.build_SessionId
+                    (build_RecordUnpack "sessionId")
+                )
         )
         value
 
 
-build_TicketPriceStatus :
-    Fusion.Value -> Result Fusion.Patch.Error Types.TicketPriceStatus
+build_TicketPriceStatus : Fusion.Value -> Result Fusion.Patch.Error Types.TicketPriceStatus
 build_TicketPriceStatus value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "NotLoadingTicketPrices", [] ) ->
-                     Result.Ok Types.NotLoadingTicketPrices
+            case ( name, params ) of
+                ( "NotLoadingTicketPrices", [] ) ->
+                    Result.Ok Types.NotLoadingTicketPrices
 
-                 ( "LoadingTicketPrices", [] ) ->
-                     Result.Ok Types.LoadingTicketPrices
+                ( "LoadingTicketPrices", [] ) ->
+                    Result.Ok Types.LoadingTicketPrices
 
-                 ( "LoadedTicketPrices", [ patch0, patch1 ] ) ->
-                     Result.map2
-                         Types.LoadedTicketPrices
-                         (Fusion.Generated.Money.build_Currency patch0)
-                         ((Fusion.Generated.PurchaseForm.build_TicketTypes
-                               Fusion.Generated.Stripe.patcher_Price
-                          )
-                              patch1
-                         )
+                ( "LoadedTicketPrices", [ patch0, patch1 ] ) ->
+                    Result.map2
+                        Types.LoadedTicketPrices
+                        (Fusion.Generated.Money.build_Currency patch0)
+                        (Fusion.Generated.PurchaseForm.build_TicketTypes
+                            Fusion.Generated.Stripe.patcher_Price
+                            patch1
+                        )
 
-                 ( "FailedToLoadTicketPrices", [ patch0 ] ) ->
-                     Result.map
-                         Types.FailedToLoadTicketPrices
-                         (Fusion.Generated.Effect.Http.build_Error patch0)
+                ( "FailedToLoadTicketPrices", [ patch0 ] ) ->
+                    Result.map
+                        Types.FailedToLoadTicketPrices
+                        (Fusion.Generated.Effect.Http.build_Error patch0)
 
-                 ( "TicketCurrenciesDoNotMatch", [] ) ->
-                     Result.Ok Types.TicketCurrenciesDoNotMatch
+                ( "TicketCurrenciesDoNotMatch", [] ) ->
+                    Result.Ok Types.TicketCurrenciesDoNotMatch
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
 
-build_TicketsDisabledData :
-    Fusion.Value -> Result Fusion.Patch.Error Types.TicketsDisabledData
+build_TicketsDisabledData : Fusion.Value -> Result Fusion.Patch.Error Types.TicketsDisabledData
 build_TicketsDisabledData value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
-             Result.map
-                 (\adminMessage -> { adminMessage = adminMessage })
-                 (Result.andThen
-                      Fusion.Patch.build_String
-                      (build_RecordUnpack "adminMessage")
-                 )
+            Result.map
+                (\adminMessage -> { adminMessage = adminMessage })
+                (Result.andThen
+                    Fusion.Patch.build_String
+                    (build_RecordUnpack "adminMessage")
+                )
         )
         value
 
 
-build_TicketsEnabled :
-    Fusion.Value -> Result Fusion.Patch.Error Types.TicketsEnabled
+build_TicketsEnabled : Fusion.Value -> Result Fusion.Patch.Error Types.TicketsEnabled
 build_TicketsEnabled value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "TicketsEnabled", [] ) ->
-                     Result.Ok Types.TicketsEnabled
+            case ( name, params ) of
+                ( "TicketsEnabled", [] ) ->
+                    Result.Ok Types.TicketsEnabled
 
-                 ( "TicketsDisabled", [ patch0 ] ) ->
-                     Result.map
-                         Types.TicketsDisabled
-                         (build_TicketsDisabledData patch0)
+                ( "TicketsDisabled", [ patch0 ] ) ->
+                    Result.map
+                        Types.TicketsDisabled
+                        (build_TicketsDisabledData patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
@@ -259,79 +264,75 @@ patch_BackendModel :
 patch_BackendModel options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "orders" ->
-                     Result.map
-                         (\orders -> { acc | orders = orders })
-                         ((Fusion.SeqDict.patch_SeqDict
-                               (Fusion.Generated.Id.patcher_Id
-                                    Fusion.Generated.Stripe.patcher_StripeSessionId
-                               )
-                               patcher_CompletedOrder
-                          )
-                              options
-                              fieldPatch
-                              acc.orders
-                         )
+            case fieldName of
+                "orders" ->
+                    Result.map
+                        (\orders -> { acc | orders = orders })
+                        (Fusion.SeqDict.patch_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_CompletedOrder
+                            options
+                            fieldPatch
+                            acc.orders
+                        )
 
-                 "pendingOrder" ->
-                     Result.map
-                         (\pendingOrder -> { acc | pendingOrder = pendingOrder }
-                         )
-                         ((Fusion.SeqDict.patch_SeqDict
-                               (Fusion.Generated.Id.patcher_Id
-                                    Fusion.Generated.Stripe.patcher_StripeSessionId
-                               )
-                               patcher_PendingOrder
-                          )
-                              options
-                              fieldPatch
-                              acc.pendingOrder
-                         )
+                "pendingOrder" ->
+                    Result.map
+                        (\pendingOrder -> { acc | pendingOrder = pendingOrder })
+                        (Fusion.SeqDict.patch_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_PendingOrder
+                            options
+                            fieldPatch
+                            acc.pendingOrder
+                        )
 
-                 "expiredOrders" ->
-                     Result.map
-                         (\expiredOrders ->
-                              { acc | expiredOrders = expiredOrders }
-                         )
-                         ((Fusion.SeqDict.patch_SeqDict
-                               (Fusion.Generated.Id.patcher_Id
-                                    Fusion.Generated.Stripe.patcher_StripeSessionId
-                               )
-                               patcher_PendingOrder
-                          )
-                              options
-                              fieldPatch
-                              acc.expiredOrders
-                         )
+                "expiredOrders" ->
+                    Result.map
+                        (\expiredOrders ->
+                            { acc | expiredOrders = expiredOrders }
+                        )
+                        (Fusion.SeqDict.patch_SeqDict
+                            (Fusion.Generated.Id.patcher_Id
+                                Fusion.Generated.Stripe.patcher_StripeSessionId
+                            )
+                            patcher_PendingOrder
+                            options
+                            fieldPatch
+                            acc.expiredOrders
+                        )
 
-                 "prices" ->
-                     Result.map
-                         (\prices -> { acc | prices = prices })
-                         (patch_TicketPriceStatus options fieldPatch acc.prices)
+                "prices" ->
+                    Result.map
+                        (\prices -> { acc | prices = prices })
+                        (patch_TicketPriceStatus options fieldPatch acc.prices)
 
-                 "time" ->
-                     Result.map
-                         (\time -> { acc | time = time })
-                         (Fusion.Generated.Effect.Time.patch_Posix
-                              options
-                              fieldPatch
-                              acc.time
-                         )
+                "time" ->
+                    Result.map
+                        (\time -> { acc | time = time })
+                        (Fusion.Generated.Effect.Time.patch_Posix
+                            options
+                            fieldPatch
+                            acc.time
+                        )
 
-                 "ticketsEnabled" ->
-                     Result.map
-                         (\ticketsEnabled ->
-                              { acc | ticketsEnabled = ticketsEnabled }
-                         )
-                         (patch_TicketsEnabled
-                              options
-                              fieldPatch
-                              acc.ticketsEnabled
-                         )
+                "ticketsEnabled" ->
+                    Result.map
+                        (\ticketsEnabled ->
+                            { acc | ticketsEnabled = ticketsEnabled }
+                        )
+                        (patch_TicketsEnabled
+                            options
+                            fieldPatch
+                            acc.ticketsEnabled
+                        )
 
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
         patch
         value
@@ -345,32 +346,32 @@ patch_CompletedOrder :
 patch_CompletedOrder options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "submitTime" ->
-                     Result.map
-                         (\submitTime -> { acc | submitTime = submitTime })
-                         (Fusion.Generated.Effect.Time.patch_Posix
-                              options
-                              fieldPatch
-                              acc.submitTime
-                         )
+            case fieldName of
+                "submitTime" ->
+                    Result.map
+                        (\submitTime -> { acc | submitTime = submitTime })
+                        (Fusion.Generated.Effect.Time.patch_Posix
+                            options
+                            fieldPatch
+                            acc.submitTime
+                        )
 
-                 "form" ->
-                     Result.map
-                         (\form -> { acc | form = form })
-                         (Fusion.Generated.PurchaseForm.patch_PurchaseFormValidated
-                              options
-                              fieldPatch
-                              acc.form
-                         )
+                "form" ->
+                    Result.map
+                        (\form -> { acc | form = form })
+                        (Fusion.Generated.PurchaseForm.patch_PurchaseFormValidated
+                            options
+                            fieldPatch
+                            acc.form
+                        )
 
-                 "emailResult" ->
-                     Result.map
-                         (\emailResult -> { acc | emailResult = emailResult })
-                         (patch_EmailResult options fieldPatch acc.emailResult)
+                "emailResult" ->
+                    Result.map
+                        (\emailResult -> { acc | emailResult = emailResult })
+                        (patch_EmailResult options fieldPatch acc.emailResult)
 
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
         patch
         value
@@ -420,21 +421,21 @@ patch_EmailResult options patch value =
             Result.map
                 Types.EmailFailed
                 (Fusion.Patch.maybeApply
-                     Fusion.Generated.Postmark.patcher_SendEmailError
-                     options
-                     patch0
-                     arg0
+                    Fusion.Generated.Postmark.patcher_SendEmailError
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "EmailFailed" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "EmailFailed" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "EmailFailed" [ Just patch0 ], _ ) ->
             Result.map
                 Types.EmailFailed
                 (Fusion.Patch.buildFromPatch
-                     Fusion.Generated.Postmark.build_SendEmailError
-                     patch0
+                    Fusion.Generated.Postmark.build_SendEmailError
+                    patch0
                 )
 
         ( _, Fusion.Patch.PCustomSame "EmailFailed" _, _ ) ->
@@ -478,36 +479,36 @@ patch_PendingOrder :
 patch_PendingOrder options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "submitTime" ->
-                     Result.map
-                         (\submitTime -> { acc | submitTime = submitTime })
-                         (Fusion.Generated.Effect.Time.patch_Posix
-                              options
-                              fieldPatch
-                              acc.submitTime
-                         )
+            case fieldName of
+                "submitTime" ->
+                    Result.map
+                        (\submitTime -> { acc | submitTime = submitTime })
+                        (Fusion.Generated.Effect.Time.patch_Posix
+                            options
+                            fieldPatch
+                            acc.submitTime
+                        )
 
-                 "form" ->
-                     Result.map
-                         (\form -> { acc | form = form })
-                         (Fusion.Generated.PurchaseForm.patch_PurchaseFormValidated
-                              options
-                              fieldPatch
-                              acc.form
-                         )
+                "form" ->
+                    Result.map
+                        (\form -> { acc | form = form })
+                        (Fusion.Generated.PurchaseForm.patch_PurchaseFormValidated
+                            options
+                            fieldPatch
+                            acc.form
+                        )
 
-                 "sessionId" ->
-                     Result.map
-                         (\sessionId -> { acc | sessionId = sessionId })
-                         (Fusion.Effect.Lamdera.patch_SessionId
-                              options
-                              fieldPatch
-                              acc.sessionId
-                         )
+                "sessionId" ->
+                    Result.map
+                        (\sessionId -> { acc | sessionId = sessionId })
+                        (Fusion.Effect.Lamdera.patch_SessionId
+                            options
+                            fieldPatch
+                            acc.sessionId
+                        )
 
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
         patch
         value
@@ -563,35 +564,35 @@ patch_TicketPriceStatus options patch value =
             Result.map2
                 Types.LoadedTicketPrices
                 (Fusion.Patch.maybeApply
-                     Fusion.Generated.Money.patcher_Currency
-                     options
-                     patch0
-                     arg0
+                    Fusion.Generated.Money.patcher_Currency
+                    options
+                    patch0
+                    arg0
                 )
                 (Fusion.Patch.maybeApply
-                     (Fusion.Generated.PurchaseForm.patcher_TicketTypes
-                          Fusion.Generated.Stripe.patcher_Price
-                     )
-                     options
-                     patch1
-                     arg1
+                    (Fusion.Generated.PurchaseForm.patcher_TicketTypes
+                        Fusion.Generated.Stripe.patcher_Price
+                    )
+                    options
+                    patch1
+                    arg1
                 )
 
         ( _, Fusion.Patch.PCustomSame "LoadedTicketPrices" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "LoadedTicketPrices" [ (Just patch0), (Just patch1) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "LoadedTicketPrices" [ Just patch0, Just patch1 ], _ ) ->
             Result.map2
                 Types.LoadedTicketPrices
                 (Fusion.Patch.buildFromPatch
-                     Fusion.Generated.Money.build_Currency
-                     patch0
+                    Fusion.Generated.Money.build_Currency
+                    patch0
                 )
                 (Fusion.Patch.buildFromPatch
-                     (Fusion.Generated.PurchaseForm.build_TicketTypes
-                          Fusion.Generated.Stripe.patcher_Price
-                     )
-                     patch1
+                    (Fusion.Generated.PurchaseForm.build_TicketTypes
+                        Fusion.Generated.Stripe.patcher_Price
+                    )
+                    patch1
                 )
 
         ( _, Fusion.Patch.PCustomSame "LoadedTicketPrices" _, _ ) ->
@@ -601,21 +602,21 @@ patch_TicketPriceStatus options patch value =
             Result.map
                 Types.FailedToLoadTicketPrices
                 (Fusion.Patch.maybeApply
-                     Fusion.Generated.Effect.Http.patcher_Error
-                     options
-                     patch0
-                     arg0
+                    Fusion.Generated.Effect.Http.patcher_Error
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "FailedToLoadTicketPrices" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "FailedToLoadTicketPrices" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "FailedToLoadTicketPrices" [ Just patch0 ], _ ) ->
             Result.map
                 Types.FailedToLoadTicketPrices
                 (Fusion.Patch.buildFromPatch
-                     Fusion.Generated.Effect.Http.build_Error
-                     patch0
+                    Fusion.Generated.Effect.Http.build_Error
+                    patch0
                 )
 
         ( _, Fusion.Patch.PCustomSame "FailedToLoadTicketPrices" _, _ ) ->
@@ -652,10 +653,9 @@ patch_TicketPriceStatus options patch value =
                 Result.map2
                     Types.LoadedTicketPrices
                     (Fusion.Generated.Money.build_Currency arg0)
-                    ((Fusion.Generated.PurchaseForm.build_TicketTypes
-                          Fusion.Generated.Stripe.patcher_Price
-                     )
-                         arg1
+                    (Fusion.Generated.PurchaseForm.build_TicketTypes
+                        Fusion.Generated.Stripe.patcher_Price
+                        arg1
                     )
 
             else
@@ -689,19 +689,18 @@ patch_TicketsDisabledData :
 patch_TicketsDisabledData options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "adminMessage" ->
-                     Result.map
-                         (\adminMessage -> { acc | adminMessage = adminMessage }
-                         )
-                         (Fusion.Patch.patch_String
-                              options
-                              fieldPatch
-                              acc.adminMessage
-                         )
+            case fieldName of
+                "adminMessage" ->
+                    Result.map
+                        (\adminMessage -> { acc | adminMessage = adminMessage })
+                        (Fusion.Patch.patch_String
+                            options
+                            fieldPatch
+                            acc.adminMessage
+                        )
 
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
         patch
         value
@@ -739,16 +738,16 @@ patch_TicketsEnabled options patch value =
             Result.map
                 Types.TicketsDisabled
                 (Fusion.Patch.maybeApply
-                     patcher_TicketsDisabledData
-                     options
-                     patch0
-                     arg0
+                    patcher_TicketsDisabledData
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "TicketsDisabled" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "TicketsDisabled" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "TicketsDisabled" [ Just patch0 ], _ ) ->
             Result.map
                 Types.TicketsDisabled
                 (Fusion.Patch.buildFromPatch build_TicketsDisabledData patch0)
@@ -839,37 +838,34 @@ toValue_BackendModel : Types.BackendModel -> Fusion.Value
 toValue_BackendModel value =
     Fusion.VRecord
         (Dict.fromList
-             [ ( "orders"
-               , (Fusion.SeqDict.toValue_SeqDict
-                      (Fusion.Generated.Id.patcher_Id
-                           Fusion.Generated.Stripe.patcher_StripeSessionId
-                      )
-                      patcher_CompletedOrder
-                 )
-                     value.orders
-               )
-             , ( "pendingOrder"
-               , (Fusion.SeqDict.toValue_SeqDict
-                      (Fusion.Generated.Id.patcher_Id
-                           Fusion.Generated.Stripe.patcher_StripeSessionId
-                      )
-                      patcher_PendingOrder
-                 )
-                     value.pendingOrder
-               )
-             , ( "expiredOrders"
-               , (Fusion.SeqDict.toValue_SeqDict
-                      (Fusion.Generated.Id.patcher_Id
-                           Fusion.Generated.Stripe.patcher_StripeSessionId
-                      )
-                      patcher_PendingOrder
-                 )
-                     value.expiredOrders
-               )
-             , ( "prices", toValue_TicketPriceStatus value.prices )
-             , ( "time", Fusion.Generated.Effect.Time.toValue_Posix value.time )
-             , ( "ticketsEnabled", toValue_TicketsEnabled value.ticketsEnabled )
-             ]
+            [ ( "orders"
+              , Fusion.SeqDict.toValue_SeqDict
+                    (Fusion.Generated.Id.patcher_Id
+                        Fusion.Generated.Stripe.patcher_StripeSessionId
+                    )
+                    patcher_CompletedOrder
+                    value.orders
+              )
+            , ( "pendingOrder"
+              , Fusion.SeqDict.toValue_SeqDict
+                    (Fusion.Generated.Id.patcher_Id
+                        Fusion.Generated.Stripe.patcher_StripeSessionId
+                    )
+                    patcher_PendingOrder
+                    value.pendingOrder
+              )
+            , ( "expiredOrders"
+              , Fusion.SeqDict.toValue_SeqDict
+                    (Fusion.Generated.Id.patcher_Id
+                        Fusion.Generated.Stripe.patcher_StripeSessionId
+                    )
+                    patcher_PendingOrder
+                    value.expiredOrders
+              )
+            , ( "prices", toValue_TicketPriceStatus value.prices )
+            , ( "time", Fusion.Generated.Effect.Time.toValue_Posix value.time )
+            , ( "ticketsEnabled", toValue_TicketsEnabled value.ticketsEnabled )
+            ]
         )
 
 
@@ -877,15 +873,15 @@ toValue_CompletedOrder : Types.CompletedOrder -> Fusion.Value
 toValue_CompletedOrder value =
     Fusion.VRecord
         (Dict.fromList
-             [ ( "submitTime"
-               , Fusion.Generated.Effect.Time.toValue_Posix value.submitTime
-               )
-             , ( "form"
-               , Fusion.Generated.PurchaseForm.toValue_PurchaseFormValidated
-                     value.form
-               )
-             , ( "emailResult", toValue_EmailResult value.emailResult )
-             ]
+            [ ( "submitTime"
+              , Fusion.Generated.Effect.Time.toValue_Posix value.submitTime
+              )
+            , ( "form"
+              , Fusion.Generated.PurchaseForm.toValue_PurchaseFormValidated
+                    value.form
+              )
+            , ( "emailResult", toValue_EmailResult value.emailResult )
+            ]
         )
 
 
@@ -908,17 +904,17 @@ toValue_PendingOrder : Types.PendingOrder -> Fusion.Value
 toValue_PendingOrder value =
     Fusion.VRecord
         (Dict.fromList
-             [ ( "submitTime"
-               , Fusion.Generated.Effect.Time.toValue_Posix value.submitTime
-               )
-             , ( "form"
-               , Fusion.Generated.PurchaseForm.toValue_PurchaseFormValidated
-                     value.form
-               )
-             , ( "sessionId"
-               , Fusion.Effect.Lamdera.toValue_SessionId value.sessionId
-               )
-             ]
+            [ ( "submitTime"
+              , Fusion.Generated.Effect.Time.toValue_Posix value.submitTime
+              )
+            , ( "form"
+              , Fusion.Generated.PurchaseForm.toValue_PurchaseFormValidated
+                    value.form
+              )
+            , ( "sessionId"
+              , Fusion.Effect.Lamdera.toValue_SessionId value.sessionId
+              )
+            ]
         )
 
 
@@ -935,9 +931,8 @@ toValue_TicketPriceStatus value =
             Fusion.VCustom
                 "LoadedTicketPrices"
                 [ Fusion.Generated.Money.toValue_Currency arg0
-                , (Fusion.Generated.PurchaseForm.toValue_TicketTypes
-                     Fusion.Generated.Stripe.patcher_Price
-                  )
+                , Fusion.Generated.PurchaseForm.toValue_TicketTypes
+                    Fusion.Generated.Stripe.patcher_Price
                     arg1
                 ]
 
@@ -953,8 +948,7 @@ toValue_TicketPriceStatus value =
 toValue_TicketsDisabledData : Types.TicketsDisabledData -> Fusion.Value
 toValue_TicketsDisabledData value =
     Fusion.VRecord
-        (Dict.fromList [ ( "adminMessage", Fusion.VString value.adminMessage ) ]
-        )
+        (Dict.fromList [ ( "adminMessage", Fusion.VString value.adminMessage ) ])
 
 
 toValue_TicketsEnabled : Types.TicketsEnabled -> Fusion.Value
