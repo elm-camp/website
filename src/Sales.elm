@@ -278,6 +278,56 @@ accommodationView ticketTypes initData model =
     let
         form =
             model.form
+
+        cards : List (Element FrontendMsg)
+        cards =
+            -- The opportunity grant cta is presented as and alongside the other
+            -- tickets to try and encourage more folks to actually apply. It's
+            -- not a ticket though: it's a link to the application form!
+            viewOpportunityGrantCta
+                :: List.map4
+                    (\ticket price count setter ->
+                        Ui.map
+                            (\count2 ->
+                                let
+                                    formCount2 : TicketTypes NonNegative
+                                    formCount2 =
+                                        setter count2 model.form.count
+
+                                    totalTickets : Int
+                                    totalTickets =
+                                        PurchaseForm.totalTickets formCount2
+                                in
+                                FormChanged
+                                    { form
+                                        | count = formCount2
+                                        , attendees =
+                                            if PurchaseForm.totalTickets model.form.count < totalTickets then
+                                                if List.length form.attendees < totalTickets then
+                                                    form.attendees ++ [ PurchaseForm.defaultAttendee ]
+
+                                                else
+                                                    form.attendees
+
+                                            else
+                                                List.Extra.remove PurchaseForm.defaultAttendee form.attendees
+                                    }
+                            )
+                            (viewAccom
+                                count
+                                (ticket.available
+                                    initData.ticketsAlreadyPurchased
+                                    (setter (NonNegative.increment count) model.form.count)
+                                )
+                                price
+                                ticket
+                                initData
+                            )
+                    )
+                    (PurchaseForm.allTicketTypes ticketTypes)
+                    (PurchaseForm.allTicketTypes initData.prices)
+                    (PurchaseForm.allTicketTypes model.form.count)
+                    PurchaseForm.ticketTypesSetters
     in
     Ui.column
         [ Ui.spacing 20 ]
@@ -291,55 +341,15 @@ accommodationView ticketTypes initData model =
                 , Paragraph [ Text "Toilet and shower facilities can be accessed in the building for those who wish to bring a tent or campervan and camp. The surrounding grounds and countryside are beautiful and include woodland and a lake." ]
                 ]
             ]
-        , List.map4
-            (\ticket price count setter ->
-                Ui.map
-                    (\count2 ->
-                        let
-                            formCount2 : TicketTypes NonNegative
-                            formCount2 =
-                                setter count2 model.form.count
+        , if Theme.isMobile model.window then
+            Ui.column [ Ui.spacing 16 ] cards
 
-                            totalTickets : Int
-                            totalTickets =
-                                PurchaseForm.totalTickets formCount2
-                        in
-                        FormChanged
-                            { form
-                                | count = formCount2
-                                , attendees =
-                                    if PurchaseForm.totalTickets model.form.count < totalTickets then
-                                        if List.length form.attendees < totalTickets then
-                                            form.attendees ++ [ PurchaseForm.defaultAttendee ]
-
-                                        else
-                                            form.attendees
-
-                                    else
-                                        List.Extra.remove PurchaseForm.defaultAttendee form.attendees
-                            }
-                    )
-                    (viewAccom
-                        count
-                        (ticket.available
-                            initData.ticketsAlreadyPurchased
-                            (setter (NonNegative.increment count) model.form.count)
-                        )
-                        price
-                        ticket
-                        initData
-                    )
-            )
-            (PurchaseForm.allTicketTypes ticketTypes)
-            (PurchaseForm.allTicketTypes initData.prices)
-            (PurchaseForm.allTicketTypes model.form.count)
-            PurchaseForm.ticketTypesSetters
-            -- The opportunity grant cta is presented as and alongside the other
-            -- tickets to try and encourage more folks to actually apply. It's
-            -- not a ticket though: it's a link to the application form!
-            |> List.append [ viewOpportunityGrantCta ]
-            |> Theme.rowToColumnWhen model.window [ Ui.spacing 16, Ui.wrap ]
-            |> Ui.el [ Ui.widthMax 1200, Ui.centerX, Ui.paddingXY 16 0 ]
+          else
+            Ui.column
+                [ Ui.spacing 16, Ui.widthMax (800 + 32), Ui.centerX, Ui.paddingXY 16 0 ]
+                [ Ui.row [ Ui.spacing 16 ] (List.take 2 cards)
+                , Ui.row [ Ui.spacing 16 ] (List.drop 2 cards)
+                ]
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
