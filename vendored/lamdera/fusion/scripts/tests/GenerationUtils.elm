@@ -16,16 +16,17 @@ import Test exposing (Test, test)
 
 testGenerationForType : String -> String -> List String -> Test
 testGenerationForType label input outputs =
-    test label <| \_ ->
-    case
-        Codegen.Parser.parseFile { package = False, fullPath = "<test>" }
-            ("module " ++ fakeModule ++ " exposing (..)\n" ++ String.Multiline.here input)
-    of
-        Err e ->
-            Expect.fail e.description
+    test label <|
+        \_ ->
+            case
+                Codegen.Parser.parseFile { package = False, fullPath = "<test>" }
+                    ("module " ++ fakeModule ++ " exposing (..)\n" ++ String.Multiline.here input)
+            of
+                Err e ->
+                    Expect.fail e.description
 
-        Ok parsedFile ->
-            testGenerationForFile parsedFile outputs
+                Ok parsedFile ->
+                    testGenerationForFile parsedFile outputs
 
 
 testGenerationForFile : Dict String Codegen.Parser.TypeDeclaration -> List String -> Expect.Expectation

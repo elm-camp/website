@@ -1,9 +1,10 @@
-module Fusion.Generated.Quantity exposing ( build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity )
+module Fusion.Generated.Quantity exposing (build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity)
 
 {-|
-@docs build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity
--}
 
+@docs build_Quantity, patch_Quantity, patcher_Quantity, toValue_Quantity
+
+-}
 
 import Fusion
 import Fusion.Patch
@@ -18,13 +19,13 @@ build_Quantity :
 build_Quantity numberPatcher unitsPatcher value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "Quantity", [ patch0 ] ) ->
-                     Result.map Quantity.Quantity (numberPatcher.build patch0)
+            case ( name, params ) of
+                ( "Quantity", [ patch0 ] ) ->
+                    Result.map Quantity.Quantity (numberPatcher.build patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 

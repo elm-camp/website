@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Effect.Http exposing ( typeDict, type_Error )
+module Fusion.Generated.TypeDict.Effect.Http exposing (typeDict, type_Error)
 
 {-|
-@docs typeDict, type_Error
--}
 
+@docs typeDict, type_Error
+
+-}
 
 import Dict
 import Fusion

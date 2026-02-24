@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Id exposing ( typeDict, type_Id )
+module Fusion.Generated.TypeDict.Id exposing (typeDict, type_Id)
 
 {-|
-@docs typeDict, type_Id
--}
 
+@docs typeDict, type_Id
+
+-}
 
 import Dict
 import Fusion

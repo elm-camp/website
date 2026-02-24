@@ -1,11 +1,10 @@
-module Fusion.Generated.TypeDict.Stripe exposing
-    ( typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId
-    )
+module Fusion.Generated.TypeDict.Stripe exposing (typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId)
 
 {-|
-@docs typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId
--}
 
+@docs typeDict, type_Price, type_PriceId, type_StripeCurrency, type_StripeSessionId
+
+-}
 
 import Dict
 import Fusion

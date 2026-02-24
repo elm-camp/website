@@ -1,9 +1,10 @@
-module Fusion.Generated.Effect.Time exposing ( build_Posix, patch_Posix, patcher_Posix, toValue_Posix )
+module Fusion.Generated.Effect.Time exposing (build_Posix, patch_Posix, patcher_Posix, toValue_Posix)
 
 {-|
-@docs build_Posix, patch_Posix, patcher_Posix, toValue_Posix
--}
 
+@docs build_Posix, patch_Posix, patcher_Posix, toValue_Posix
+
+-}
 
 import Effect.Time
 import Fusion

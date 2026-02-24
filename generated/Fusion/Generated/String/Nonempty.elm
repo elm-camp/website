@@ -1,30 +1,30 @@
-module Fusion.Generated.String.Nonempty exposing ( build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString )
+module Fusion.Generated.String.Nonempty exposing (build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString)
 
 {-|
-@docs build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString
--}
 
+@docs build_NonemptyString, patch_NonemptyString, patcher_NonemptyString, toValue_NonemptyString
+
+-}
 
 import Fusion
 import Fusion.Patch
 import String.Nonempty
 
 
-build_NonemptyString :
-    Fusion.Value -> Result Fusion.Patch.Error String.Nonempty.NonemptyString
+build_NonemptyString : Fusion.Value -> Result Fusion.Patch.Error String.Nonempty.NonemptyString
 build_NonemptyString value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "NonemptyString", [ patch0, patch1 ] ) ->
-                     Result.map2
-                         String.Nonempty.NonemptyString
-                         (Fusion.Patch.build_Char patch0)
-                         (Fusion.Patch.build_String patch1)
+            case ( name, params ) of
+                ( "NonemptyString", [ patch0, patch1 ] ) ->
+                    Result.map2
+                        String.Nonempty.NonemptyString
+                        (Fusion.Patch.build_Char patch0)
+                        (Fusion.Patch.build_String patch1)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
@@ -40,16 +40,16 @@ patch_NonemptyString options patch value =
             Result.map2
                 String.Nonempty.NonemptyString
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_Char
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_Char
+                    options
+                    patch0
+                    arg0
                 )
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_String
-                     options
-                     patch1
-                     arg1
+                    Fusion.Patch.patcher_String
+                    options
+                    patch1
+                    arg1
                 )
 
         ( _, Fusion.Patch.PCustomSame "NonemptyString" _, _ ) ->

@@ -1,15 +1,16 @@
 module Fusion.Generated.Stripe exposing
     ( build_Price, build_PriceId, build_StripeCurrency, build_StripeSessionId, patch_Price, patch_PriceId
-    , patch_StripeCurrency, patch_StripeSessionId, patcher_Price, patcher_PriceId, patcher_StripeCurrency, patcher_StripeSessionId, toValue_Price
-    , toValue_PriceId, toValue_StripeCurrency, toValue_StripeSessionId
+    , patch_StripeCurrency, patch_StripeSessionId, patcher_Price, patcher_PriceId, patcher_StripeCurrency, patcher_StripeSessionId
+    , toValue_Price, toValue_PriceId, toValue_StripeCurrency, toValue_StripeSessionId
     )
 
 {-|
+
 @docs build_Price, build_PriceId, build_StripeCurrency, build_StripeSessionId, patch_Price, patch_PriceId
 @docs patch_StripeCurrency, patch_StripeSessionId, patcher_Price, patcher_PriceId, patcher_StripeCurrency, patcher_StripeSessionId
 @docs toValue_Price, toValue_PriceId, toValue_StripeCurrency, toValue_StripeSessionId
--}
 
+-}
 
 import Dict
 import Fusion
@@ -23,19 +24,19 @@ build_Price : Fusion.Value -> Result Fusion.Patch.Error Stripe.Price
 build_Price value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
-             Result.map2
-                 (\priceId amount -> { priceId = priceId, amount = amount })
-                 (Result.andThen
-                      (Fusion.Generated.Id.build_Id patcher_PriceId)
-                      (build_RecordUnpack "priceId")
-                 )
-                 (Result.andThen
-                      (Fusion.Generated.Quantity.build_Quantity
-                           Fusion.Patch.patcher_Int
-                           patcher_StripeCurrency
-                      )
-                      (build_RecordUnpack "amount")
-                 )
+            Result.map2
+                (\priceId amount -> { priceId = priceId, amount = amount })
+                (Result.andThen
+                    (Fusion.Generated.Id.build_Id patcher_PriceId)
+                    (build_RecordUnpack "priceId")
+                )
+                (Result.andThen
+                    (Fusion.Generated.Quantity.build_Quantity
+                        Fusion.Patch.patcher_Int
+                        patcher_StripeCurrency
+                    )
+                    (build_RecordUnpack "amount")
+                )
         )
         value
 
@@ -44,49 +45,47 @@ build_PriceId : Fusion.Value -> Result Fusion.Patch.Error Stripe.PriceId
 build_PriceId value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "PriceId", [ patch0 ] ) ->
-                     Result.map Stripe.PriceId (Fusion.Patch.build_Never patch0)
+            case ( name, params ) of
+                ( "PriceId", [ patch0 ] ) ->
+                    Result.map Stripe.PriceId (Fusion.Patch.build_Never patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
 
-build_StripeCurrency :
-    Fusion.Value -> Result Fusion.Patch.Error Stripe.StripeCurrency
+build_StripeCurrency : Fusion.Value -> Result Fusion.Patch.Error Stripe.StripeCurrency
 build_StripeCurrency value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "StripeCurrency", [ patch0 ] ) ->
-                     Result.map
-                         Stripe.StripeCurrency
-                         (Fusion.Patch.build_Never patch0)
+            case ( name, params ) of
+                ( "StripeCurrency", [ patch0 ] ) ->
+                    Result.map
+                        Stripe.StripeCurrency
+                        (Fusion.Patch.build_Never patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
 
-build_StripeSessionId :
-    Fusion.Value -> Result Fusion.Patch.Error Stripe.StripeSessionId
+build_StripeSessionId : Fusion.Value -> Result Fusion.Patch.Error Stripe.StripeSessionId
 build_StripeSessionId value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "StripeSessionId", [ patch0 ] ) ->
-                     Result.map
-                         Stripe.StripeSessionId
-                         (Fusion.Patch.build_Never patch0)
+            case ( name, params ) of
+                ( "StripeSessionId", [ patch0 ] ) ->
+                    Result.map
+                        Stripe.StripeSessionId
+                        (Fusion.Patch.build_Never patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
@@ -99,30 +98,29 @@ patch_Price :
 patch_Price options patch value =
     Fusion.Patch.patch_Record
         (\fieldName fieldPatch acc ->
-             case fieldName of
-                 "priceId" ->
-                     Result.map
-                         (\priceId -> { acc | priceId = priceId })
-                         ((Fusion.Generated.Id.patch_Id patcher_PriceId)
-                              options
-                              fieldPatch
-                              acc.priceId
-                         )
+            case fieldName of
+                "priceId" ->
+                    Result.map
+                        (\priceId -> { acc | priceId = priceId })
+                        (Fusion.Generated.Id.patch_Id patcher_PriceId
+                            options
+                            fieldPatch
+                            acc.priceId
+                        )
 
-                 "amount" ->
-                     Result.map
-                         (\amount -> { acc | amount = amount })
-                         ((Fusion.Generated.Quantity.patch_Quantity
-                               Fusion.Patch.patcher_Int
-                               patcher_StripeCurrency
-                          )
-                              options
-                              fieldPatch
-                              acc.amount
-                         )
+                "amount" ->
+                    Result.map
+                        (\amount -> { acc | amount = amount })
+                        (Fusion.Generated.Quantity.patch_Quantity
+                            Fusion.Patch.patcher_Int
+                            patcher_StripeCurrency
+                            options
+                            fieldPatch
+                            acc.amount
+                        )
 
-                 _ ->
-                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
         patch
         value
@@ -139,10 +137,10 @@ patch_PriceId options patch value =
             Result.map
                 Stripe.PriceId
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_Never
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_Never
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "PriceId" _, _ ) ->
@@ -166,10 +164,10 @@ patch_StripeCurrency options patch value =
             Result.map
                 Stripe.StripeCurrency
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_Never
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_Never
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "StripeCurrency" _, _ ) ->
@@ -193,10 +191,10 @@ patch_StripeSessionId options patch value =
             Result.map
                 Stripe.StripeSessionId
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_Never
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_Never
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "StripeSessionId" _, _ ) ->
@@ -239,17 +237,16 @@ toValue_Price : Stripe.Price -> Fusion.Value
 toValue_Price value =
     Fusion.VRecord
         (Dict.fromList
-             [ ( "priceId"
-               , (Fusion.Generated.Id.toValue_Id patcher_PriceId) value.priceId
-               )
-             , ( "amount"
-               , (Fusion.Generated.Quantity.toValue_Quantity
-                      Fusion.Patch.patcher_Int
-                      patcher_StripeCurrency
-                 )
-                     value.amount
-               )
-             ]
+            [ ( "priceId"
+              , Fusion.Generated.Id.toValue_Id patcher_PriceId value.priceId
+              )
+            , ( "amount"
+              , Fusion.Generated.Quantity.toValue_Quantity
+                    Fusion.Patch.patcher_Int
+                    patcher_StripeCurrency
+                    value.amount
+              )
+            ]
         )
 
 

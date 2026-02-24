@@ -4,10 +4,11 @@ module Fusion.Generated.TypeDict.Types exposing
     )
 
 {-|
+
 @docs typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_PendingOrder, type_TicketPriceStatus
 @docs type_TicketsDisabledData, type_TicketsEnabled
--}
 
+-}
 
 import Dict
 import Fusion

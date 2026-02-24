@@ -1,9 +1,10 @@
-module Fusion.Generated.Effect.Http exposing ( build_Error, patch_Error, patcher_Error, toValue_Error )
+module Fusion.Generated.Effect.Http exposing (build_Error, patch_Error, patcher_Error, toValue_Error)
 
 {-|
-@docs build_Error, patch_Error, patcher_Error, toValue_Error
--}
 
+@docs build_Error, patch_Error, patcher_Error, toValue_Error
+
+-}
 
 import Effect.Http
 import Fusion
@@ -14,31 +15,31 @@ build_Error : Fusion.Value -> Result Fusion.Patch.Error Effect.Http.Error
 build_Error value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "BadUrl", [ patch0 ] ) ->
-                     Result.map
-                         Effect.Http.BadUrl
-                         (Fusion.Patch.build_String patch0)
+            case ( name, params ) of
+                ( "BadUrl", [ patch0 ] ) ->
+                    Result.map
+                        Effect.Http.BadUrl
+                        (Fusion.Patch.build_String patch0)
 
-                 ( "Timeout", [] ) ->
-                     Result.Ok Effect.Http.Timeout
+                ( "Timeout", [] ) ->
+                    Result.Ok Effect.Http.Timeout
 
-                 ( "NetworkError", [] ) ->
-                     Result.Ok Effect.Http.NetworkError
+                ( "NetworkError", [] ) ->
+                    Result.Ok Effect.Http.NetworkError
 
-                 ( "BadStatus", [ patch0 ] ) ->
-                     Result.map
-                         Effect.Http.BadStatus
-                         (Fusion.Patch.build_Int patch0)
+                ( "BadStatus", [ patch0 ] ) ->
+                    Result.map
+                        Effect.Http.BadStatus
+                        (Fusion.Patch.build_Int patch0)
 
-                 ( "BadBody", [ patch0 ] ) ->
-                     Result.map
-                         Effect.Http.BadBody
-                         (Fusion.Patch.build_String patch0)
+                ( "BadBody", [ patch0 ] ) ->
+                    Result.map
+                        Effect.Http.BadBody
+                        (Fusion.Patch.build_String patch0)
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
@@ -75,16 +76,16 @@ patch_Error options patch value =
             Result.map
                 Effect.Http.BadUrl
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_String
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_String
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "BadUrl" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "BadUrl" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "BadUrl" [ Just patch0 ], _ ) ->
             Result.map
                 Effect.Http.BadUrl
                 (Fusion.Patch.buildFromPatch Fusion.Patch.build_String patch0)
@@ -114,16 +115,16 @@ patch_Error options patch value =
             Result.map
                 Effect.Http.BadStatus
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_Int
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_Int
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "BadStatus" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "BadStatus" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "BadStatus" [ Just patch0 ], _ ) ->
             Result.map
                 Effect.Http.BadStatus
                 (Fusion.Patch.buildFromPatch Fusion.Patch.build_Int patch0)
@@ -135,16 +136,16 @@ patch_Error options patch value =
             Result.map
                 Effect.Http.BadBody
                 (Fusion.Patch.maybeApply
-                     Fusion.Patch.patcher_String
-                     options
-                     patch0
-                     arg0
+                    Fusion.Patch.patcher_String
+                    options
+                    patch0
+                    arg0
                 )
 
         ( _, Fusion.Patch.PCustomSame "BadBody" _, False ) ->
             Result.Err Fusion.Patch.Conflict
 
-        ( _, Fusion.Patch.PCustomSame "BadBody" [ (Just patch0) ], _ ) ->
+        ( _, Fusion.Patch.PCustomSame "BadBody" [ Just patch0 ], _ ) ->
             Result.map
                 Effect.Http.BadBody
                 (Fusion.Patch.buildFromPatch Fusion.Patch.build_String patch0)
