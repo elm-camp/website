@@ -662,11 +662,6 @@ opportunityGrant form initData model =
             , RichText.view
                 model
                 [ Paragraph [ Text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
-                , Paragraph
-                    [ Text "If you are looking to apply for an opportunity grant "
-                    , LinkWithFragment "click here" Route.HomepageRoute Camp26Czech.opportunityGrant
-                    , Text "."
-                    ]
                 ]
             ]
         , Theme.panel

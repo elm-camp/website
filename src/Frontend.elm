@@ -654,33 +654,42 @@ loadedView model =
 
         UnconferenceFormatRoute ->
             Ui.column
-                [ Ui.height Ui.fill ]
-                [ Camp26Czech.header model
-                , Ui.column
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ RichText.view model UnconferenceFormat.view
+                [ Ui.height Ui.fill, Ui.spacing 48 ]
+                [ Ui.column
+                    []
+                    [ Camp26Czech.header model
+                    , Ui.column
+                        (Ui.padding 20 :: Theme.contentAttributes)
+                        [ RichText.view model UnconferenceFormat.view
+                        ]
                     ]
                 , Theme.footer
                 ]
 
         CodeOfConductRoute ->
             Ui.column
-                [ Ui.height Ui.fill ]
-                [ Camp26Czech.header model
-                , Ui.column
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ RichText.view model codeOfConductContent
+                [ Ui.height Ui.fill, Ui.spacing 48 ]
+                [ Ui.column
+                    []
+                    [ Camp26Czech.header model
+                    , Ui.column
+                        (Ui.padding 20 :: Theme.contentAttributes)
+                        [ RichText.view model codeOfConductContent
+                        ]
                     ]
                 , Theme.footer
                 ]
 
         ElmCampArchiveRoute ->
             Ui.column
-                [ Ui.height Ui.fill ]
-                [ Camp26Czech.header model
-                , Ui.column
-                    (Ui.padding 20 :: Theme.contentAttributes)
-                    [ RichText.view model Archive.content ]
+                [ Ui.height Ui.fill, Ui.spacing 48 ]
+                [ Ui.column
+                    []
+                    [ Camp26Czech.header model
+                    , Ui.column
+                        (Ui.padding 20 :: Theme.contentAttributes)
+                        [ RichText.view model Archive.content ]
+                    ]
                 , Theme.footer
                 ]
 

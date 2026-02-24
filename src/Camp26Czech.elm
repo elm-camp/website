@@ -5,7 +5,6 @@ module Camp26Czech exposing
     , header
     , maxAttendees
     , maxRooms
-    , opportunityGrant
     , scheduleSection
     , sharedRoomTicket
     , singleRoomTicket
@@ -331,27 +330,10 @@ content =
                 ]
             ]
         ]
-    , Section opportunityGrant
-        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
-        , Section "🤗 Opportunity grant applications"
-            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the cost, please select an opportunity grant ticket and we'll get in touch to help." ]
-            , Paragraph
-                [ Text "If you have any questions send an email to "
-                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                , Text ". Elm Camp grant decisions are made by the Elm Camp organizers."
-                ]
-            , Paragraph [ Text "All grant recipients will remain confidential. Any unused funds are saved for future Elm Camp grants." ]
-            ]
-        ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         ]
     ]
-
-
-opportunityGrant : String
-opportunityGrant =
-    "🫶 Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix
