@@ -345,18 +345,27 @@ updateLoaded msg model =
 
                 _ ->
                     case PurchaseForm.validateEmailAddress grantForm.email of
-                        Ok _ ->
-                            ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantSubmitting } }
+                        Ok emailAddress ->
+                            ( { model
+                                | opportunityGrantForm =
+                                    { grantForm | submitStatus = Types.OpportunityGrantSubmitting }
+                              }
                             , Lamdera.sendToBackend
                                 (SubmitOpportunityGrantRequest
-                                    { email = grantForm.email
+                                    { email = emailAddress
                                     , message = grantForm.message
                                     }
                                 )
                             )
 
                         Err _ ->
-                            ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantNotSubmitted Types.OpportunityGrantPressedSubmit } }
+                            ( { model
+                                | opportunityGrantForm =
+                                    { grantForm
+                                        | submitStatus =
+                                            Types.OpportunityGrantNotSubmitted Types.OpportunityGrantPressedSubmit
+                                    }
+                              }
                             , Command.none
                             )
 

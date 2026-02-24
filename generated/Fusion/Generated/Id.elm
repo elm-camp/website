@@ -12,7 +12,7 @@ import Id
 
 
 build_Id :
-    b
+    Fusion.Patch.Patcher a
     -> Fusion.Value
     -> Result Fusion.Patch.Error (Id.Id a)
 build_Id aPatcher value =
@@ -30,7 +30,7 @@ build_Id aPatcher value =
 
 
 patch_Id :
-    Fusion.Patch.Patcher a
+    b
     -> { force : Bool }
     -> Fusion.Patch.Patch
     -> Id.Id a
@@ -65,7 +65,7 @@ patcher_Id aPatcher =
     }
 
 
-toValue_Id : Fusion.Patch.Patcher a -> Id.Id a -> Fusion.Value
+toValue_Id : b -> Id.Id a -> Fusion.Value
 toValue_Id aPatcher value =
     case value of
         Id.Id arg0 ->

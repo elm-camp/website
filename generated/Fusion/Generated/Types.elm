@@ -1,24 +1,27 @@
 module Fusion.Generated.Types exposing
-    ( build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
-    , build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
-    , patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
-    , patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
-    , toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData, toValue_TicketsEnabled
+    ( build_BackendModel, build_CompletedOrder, build_EmailResult, build_GrantApplication, build_PendingOrder, build_TicketPriceStatus
+    , build_TicketsDisabledData, build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_GrantApplication
+    , patch_PendingOrder, patch_TicketPriceStatus, patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder
+    , patcher_EmailResult, patcher_GrantApplication, patcher_PendingOrder, patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled
+    , toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult, toValue_GrantApplication, toValue_PendingOrder, toValue_TicketPriceStatus
+    , toValue_TicketsDisabledData, toValue_TicketsEnabled
     )
 
 {-|
 
-@docs build_BackendModel, build_CompletedOrder, build_EmailResult, build_PendingOrder, build_TicketPriceStatus, build_TicketsDisabledData
-@docs build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_PendingOrder, patch_TicketPriceStatus
-@docs patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder, patcher_EmailResult, patcher_PendingOrder
-@docs patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled, toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult
-@docs toValue_PendingOrder, toValue_TicketPriceStatus, toValue_TicketsDisabledData, toValue_TicketsEnabled
+@docs build_BackendModel, build_CompletedOrder, build_EmailResult, build_GrantApplication, build_PendingOrder, build_TicketPriceStatus
+@docs build_TicketsDisabledData, build_TicketsEnabled, patch_BackendModel, patch_CompletedOrder, patch_EmailResult, patch_GrantApplication
+@docs patch_PendingOrder, patch_TicketPriceStatus, patch_TicketsDisabledData, patch_TicketsEnabled, patcher_BackendModel, patcher_CompletedOrder
+@docs patcher_EmailResult, patcher_GrantApplication, patcher_PendingOrder, patcher_TicketPriceStatus, patcher_TicketsDisabledData, patcher_TicketsEnabled
+@docs toValue_BackendModel, toValue_CompletedOrder, toValue_EmailResult, toValue_GrantApplication, toValue_PendingOrder, toValue_TicketPriceStatus
+@docs toValue_TicketsDisabledData, toValue_TicketsEnabled
 
 -}
 
 import Dict
 import Fusion
 import Fusion.Effect.Lamdera
+import Fusion.EmailAddress
 import Fusion.Generated.Effect.Http
 import Fusion.Generated.Effect.Time
 import Fusion.Generated.Id
@@ -28,6 +31,7 @@ import Fusion.Generated.PurchaseForm
 import Fusion.Generated.Stripe
 import Fusion.Patch
 import Fusion.SeqDict
+import Fusion.Stripe
 import Result.Extra
 import Types
 
@@ -37,13 +41,14 @@ build_BackendModel value =
     Fusion.Patch.build_Record
         (\build_RecordUnpack ->
             Result.Ok
-                (\orders pendingOrder expiredOrders prices time ticketsEnabled ->
+                (\orders pendingOrders expiredOrders prices time ticketsEnabled grantApplications ->
                     { orders = orders
-                    , pendingOrders = pendingOrder
+                    , pendingOrders = pendingOrders
                     , expiredOrders = expiredOrders
                     , prices = prices
                     , time = time
                     , ticketsEnabled = ticketsEnabled
+                    , grantApplications = grantApplications
                     }
                 )
                 |> Result.Extra.andMap
@@ -65,7 +70,7 @@ build_BackendModel value =
                             patcher_PendingOrder
                         )
                         (build_RecordUnpack
-                            "pendingOrder"
+                            "pendingOrders"
                         )
                     )
                 |> Result.Extra.andMap
@@ -101,6 +106,15 @@ build_BackendModel value =
                             "ticketsEnabled"
                         )
                     )
+                |> Result.Extra.andMap
+                    (Result.andThen
+                        (Fusion.Patch.build_List
+                            patcher_GrantApplication
+                        )
+                        (build_RecordUnpack
+                            "grantApplications"
+                        )
+                    )
         )
         value
 
@@ -130,7 +144,9 @@ build_CompletedOrder value =
                     (build_RecordUnpack "emailResult")
                 )
                 (Result.andThen
-                    (Fusion.Generated.Id.build_Id ())
+                    (Fusion.Generated.Id.build_Id
+                        Fusion.Stripe.patcher_StripePaymentId
+                    )
                     (build_RecordUnpack "paymentId")
                 )
         )
@@ -156,6 +172,24 @@ build_EmailResult value =
                 _ ->
                     Result.Err
                         (Fusion.Patch.WrongType "buildCustom last branch")
+        )
+        value
+
+
+build_GrantApplication : Fusion.Value -> Result Fusion.Patch.Error Types.GrantApplication
+build_GrantApplication value =
+    Fusion.Patch.build_Record
+        (\build_RecordUnpack ->
+            Result.map2
+                (\email message -> { email = email, message = message })
+                (Result.andThen
+                    Fusion.EmailAddress.build_EmailAddress
+                    (build_RecordUnpack "email")
+                )
+                (Result.andThen
+                    Fusion.Patch.build_String
+                    (build_RecordUnpack "message")
+                )
         )
         value
 
@@ -278,9 +312,11 @@ patch_BackendModel options patch value =
                             acc.orders
                         )
 
-                "pendingOrder" ->
+                "pendingOrders" ->
                     Result.map
-                        (\pendingOrder -> { acc | pendingOrders = pendingOrder })
+                        (\pendingOrders ->
+                            { acc | pendingOrders = pendingOrders }
+                        )
                         (Fusion.SeqDict.patch_SeqDict
                             (Fusion.Generated.Id.patcher_Id
                                 Fusion.Generated.Stripe.patcher_StripeSessionId
@@ -331,6 +367,18 @@ patch_BackendModel options patch value =
                             acc.ticketsEnabled
                         )
 
+                "grantApplications" ->
+                    Result.map
+                        (\grantApplications ->
+                            { acc | grantApplications = grantApplications }
+                        )
+                        (Fusion.Patch.patch_List
+                            patcher_GrantApplication
+                            options
+                            fieldPatch
+                            acc.grantApplications
+                        )
+
                 _ ->
                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
         )
@@ -369,6 +417,15 @@ patch_CompletedOrder options patch value =
                     Result.map
                         (\emailResult -> { acc | emailResult = emailResult })
                         (patch_EmailResult options fieldPatch acc.emailResult)
+
+                "paymentId" ->
+                    Result.map
+                        (\paymentId -> { acc | paymentId = paymentId })
+                        (Fusion.Generated.Id.patch_Id ()
+                            options
+                            fieldPatch
+                            acc.paymentId
+                        )
 
                 _ ->
                     Result.Err (Fusion.Patch.UnexpectedField fieldName)
@@ -469,6 +526,40 @@ patch_EmailResult options patch value =
 
         _ ->
             Result.Err (Fusion.Patch.WrongType "patchCustom.lastBranch")
+
+
+patch_GrantApplication :
+    { force : Bool }
+    -> Fusion.Patch.Patch
+    -> Types.GrantApplication
+    -> Result Fusion.Patch.Error Types.GrantApplication
+patch_GrantApplication options patch value =
+    Fusion.Patch.patch_Record
+        (\fieldName fieldPatch acc ->
+            case fieldName of
+                "email" ->
+                    Result.map
+                        (\email -> { acc | email = email })
+                        (Fusion.EmailAddress.patch_EmailAddress
+                            options
+                            fieldPatch
+                            acc.email
+                        )
+
+                "message" ->
+                    Result.map
+                        (\message -> { acc | message = message })
+                        (Fusion.Patch.patch_String
+                            options
+                            fieldPatch
+                            acc.message
+                        )
+
+                _ ->
+                    Result.Err (Fusion.Patch.UnexpectedField fieldName)
+        )
+        patch
+        value
 
 
 patch_PendingOrder :
@@ -802,6 +893,14 @@ patcher_EmailResult =
     }
 
 
+patcher_GrantApplication : Fusion.Patch.Patcher Types.GrantApplication
+patcher_GrantApplication =
+    { patch = patch_GrantApplication
+    , build = build_GrantApplication
+    , toValue = toValue_GrantApplication
+    }
+
+
 patcher_PendingOrder : Fusion.Patch.Patcher Types.PendingOrder
 patcher_PendingOrder =
     { patch = patch_PendingOrder
@@ -846,7 +945,7 @@ toValue_BackendModel value =
                     patcher_CompletedOrder
                     value.orders
               )
-            , ( "pendingOrder"
+            , ( "pendingOrders"
               , Fusion.SeqDict.toValue_SeqDict
                     (Fusion.Generated.Id.patcher_Id
                         Fusion.Generated.Stripe.patcher_StripeSessionId
@@ -865,6 +964,11 @@ toValue_BackendModel value =
             , ( "prices", toValue_TicketPriceStatus value.prices )
             , ( "time", Fusion.Generated.Effect.Time.toValue_Posix value.time )
             , ( "ticketsEnabled", toValue_TicketsEnabled value.ticketsEnabled )
+            , ( "grantApplications"
+              , Fusion.Patch.toValue_List
+                    patcher_GrantApplication
+                    value.grantApplications
+              )
             ]
         )
 
@@ -881,6 +985,11 @@ toValue_CompletedOrder value =
                     value.form
               )
             , ( "emailResult", toValue_EmailResult value.emailResult )
+            , ( "paymentId"
+              , Fusion.Generated.Id.toValue_Id
+                    ()
+                    value.paymentId
+              )
             ]
         )
 
@@ -898,6 +1007,16 @@ toValue_EmailResult value =
             Fusion.VCustom
                 "EmailFailed"
                 [ Fusion.Generated.Postmark.toValue_SendEmailError arg0 ]
+
+
+toValue_GrantApplication : Types.GrantApplication -> Fusion.Value
+toValue_GrantApplication value =
+    Fusion.VRecord
+        (Dict.fromList
+            [ ( "email", Fusion.EmailAddress.toValue_EmailAddress value.email )
+            , ( "message", Fusion.VString value.message )
+            ]
+        )
 
 
 toValue_PendingOrder : Types.PendingOrder -> Fusion.Value

@@ -5,6 +5,7 @@ module Types exposing
     , EmailResult(..)
     , FrontendModel(..)
     , FrontendMsg(..)
+    , GrantApplication
     , InitData2
     , LoadedModel
     , LoadingModel
@@ -24,6 +25,7 @@ import Effect.Browser.Navigation exposing (Key)
 import Effect.Http as Http
 import Effect.Lamdera exposing (ClientId, SessionId)
 import Effect.Time as Time
+import EmailAddress exposing (EmailAddress)
 import Fusion
 import Fusion.Patch
 import Id exposing (Id)
@@ -102,7 +104,12 @@ type alias BackendModel =
     , prices : TicketPriceStatus
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
+    , grantApplications : List GrantApplication
     }
+
+
+type alias GrantApplication =
+    { email : EmailAddress, message : String }
 
 
 type TicketPriceStatus
@@ -162,7 +169,7 @@ type ToBackend
     = SubmitFormRequest (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
     | AdminInspect String
-    | SubmitOpportunityGrantRequest { email : String, message : String }
+    | SubmitOpportunityGrantRequest GrantApplication
 
 
 type BackendMsg

@@ -45,7 +45,7 @@ import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 
@@ -82,6 +82,7 @@ init =
       , prices = NotLoadingTicketPrices
       , time = Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
+      , grantApplications = []
       }
     , Command.none
     )
@@ -503,15 +504,15 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     ( model, Command.none )
 
-        SubmitOpportunityGrantRequest { email, message } ->
-            ( model
+        SubmitOpportunityGrantRequest grantApplication ->
+            ( { model | grantApplications = grantApplication :: model.grantApplications }
             , Postmark.sendEmail
                 (OpportunityGrantEmailSent clientId)
                 Env.postmarkApiKey
                 { from = { name = "elm-camp", email = elmCampEmailAddress }
                 , to = Nonempty { name = "Elm Camp Team", email = elmCampEmailAddress } []
                 , subject = opportunityGrantEmailSubject
-                , body = Postmark.TextBody (opportunityGrantEmailBody email message)
+                , body = Postmark.TextBody (opportunityGrantEmailBody grantApplication)
                 , messageStream = Postmark.TransactionalEmail
                 , attachments = Postmark.noAttachments
                 }
@@ -580,11 +581,11 @@ opportunityGrantEmailSubject =
     NonemptyString 'O' "pportunity grant application"
 
 
-opportunityGrantEmailBody : String -> String -> String
-opportunityGrantEmailBody email message =
+opportunityGrantEmailBody : GrantApplication -> String
+opportunityGrantEmailBody { email, message } =
     "New opportunity grant application\n\n"
         ++ "Applicant email: "
-        ++ email
+        ++ EmailAddress.toString email
         ++ "\n\n"
         ++ (if String.isEmpty (String.trim message) then
                 "No message provided."
