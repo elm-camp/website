@@ -703,7 +703,13 @@ tests fileData =
                                     data.httpRequests
                         in
                         if grantApplicationEmails == 1 then
-                            Ok ()
+                            if List.length data.backend.grantApplications == 1 then
+                                Ok ()
+
+                            else
+                                "Expected 1 opportunity grant in BackendModel but got "
+                                    ++ String.fromInt (List.length data.backend.grantApplications)
+                                    |> Err
 
                         else
                             Err ("Expected 1 opportunity grant notification email but got " ++ String.fromInt grantApplicationEmails)

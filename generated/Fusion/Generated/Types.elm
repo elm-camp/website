@@ -31,7 +31,6 @@ import Fusion.Generated.PurchaseForm
 import Fusion.Generated.Stripe
 import Fusion.Patch
 import Fusion.SeqDict
-import Fusion.Stripe
 import Result.Extra
 import Types
 
@@ -145,7 +144,7 @@ build_CompletedOrder value =
                 )
                 (Result.andThen
                     (Fusion.Generated.Id.build_Id
-                        Fusion.Stripe.patcher_StripePaymentId
+                        ()
                     )
                     (build_RecordUnpack "paymentId")
                 )

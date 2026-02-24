@@ -12,7 +12,7 @@ import Id
 
 
 build_Id :
-    Fusion.Patch.Patcher a
+    b
     -> Fusion.Value
     -> Result Fusion.Patch.Error (Id.Id a)
 build_Id aPatcher value =
