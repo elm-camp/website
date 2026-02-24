@@ -1,6 +1,7 @@
 module Sales exposing
     ( errorHtmlId
     , numericFieldPlusId
+    , opportunityGrantCtaId
     , selectTicketId
     , stripePriceText
     , view
@@ -277,6 +278,56 @@ accommodationView ticketTypes initData model =
     let
         form =
             model.form
+
+        cards : List (Element FrontendMsg)
+        cards =
+            -- The opportunity grant cta is presented as and alongside the other
+            -- tickets to try and encourage more folks to actually apply. It's
+            -- not a ticket though: it's a link to the application form!
+            viewOpportunityGrantCta
+                :: List.map4
+                    (\ticket price count setter ->
+                        Ui.map
+                            (\count2 ->
+                                let
+                                    formCount2 : TicketTypes NonNegative
+                                    formCount2 =
+                                        setter count2 model.form.count
+
+                                    totalTickets : Int
+                                    totalTickets =
+                                        PurchaseForm.totalTickets formCount2
+                                in
+                                FormChanged
+                                    { form
+                                        | count = formCount2
+                                        , attendees =
+                                            if PurchaseForm.totalTickets model.form.count < totalTickets then
+                                                if List.length form.attendees < totalTickets then
+                                                    form.attendees ++ [ PurchaseForm.defaultAttendee ]
+
+                                                else
+                                                    form.attendees
+
+                                            else
+                                                List.Extra.remove PurchaseForm.defaultAttendee form.attendees
+                                    }
+                            )
+                            (viewAccom
+                                count
+                                (ticket.available
+                                    initData.ticketsAlreadyPurchased
+                                    (setter (NonNegative.increment count) model.form.count)
+                                )
+                                price
+                                ticket
+                                initData
+                            )
+                    )
+                    (PurchaseForm.allTicketTypes ticketTypes)
+                    (PurchaseForm.allTicketTypes initData.prices)
+                    (PurchaseForm.allTicketTypes model.form.count)
+                    PurchaseForm.ticketTypesSetters
     in
     Ui.column
         [ Ui.spacing 20 ]
@@ -290,51 +341,15 @@ accommodationView ticketTypes initData model =
                 , Paragraph [ Text "Toilet and shower facilities can be accessed in the building for those who wish to bring a tent or campervan and camp. The surrounding grounds and countryside are beautiful and include woodland and a lake." ]
                 ]
             ]
-        , List.map4
-            (\ticket price count setter ->
-                Ui.map
-                    (\count2 ->
-                        let
-                            formCount2 : TicketTypes NonNegative
-                            formCount2 =
-                                setter count2 model.form.count
+        , if Theme.isMobile model.window then
+            Ui.column [ Ui.spacing 16 ] cards
 
-                            totalTickets : Int
-                            totalTickets =
-                                PurchaseForm.totalTickets formCount2
-                        in
-                        FormChanged
-                            { form
-                                | count = formCount2
-                                , attendees =
-                                    if PurchaseForm.totalTickets model.form.count < totalTickets then
-                                        if List.length form.attendees < totalTickets then
-                                            form.attendees ++ [ PurchaseForm.defaultAttendee ]
-
-                                        else
-                                            form.attendees
-
-                                    else
-                                        List.Extra.remove PurchaseForm.defaultAttendee form.attendees
-                            }
-                    )
-                    (viewAccom
-                        count
-                        (ticket.available
-                            initData.ticketsAlreadyPurchased
-                            (setter (NonNegative.increment count) model.form.count)
-                        )
-                        price
-                        ticket
-                        initData
-                    )
-            )
-            (PurchaseForm.allTicketTypes ticketTypes)
-            (PurchaseForm.allTicketTypes initData.prices)
-            (PurchaseForm.allTicketTypes model.form.count)
-            PurchaseForm.ticketTypesSetters
-            |> Theme.rowToColumnWhen model.window [ Ui.spacing 16 ]
-            |> Ui.el [ Ui.widthMax 1000, Ui.centerX, Ui.paddingXY 16 0 ]
+          else
+            Ui.column
+                [ Ui.spacing 16, Ui.widthMax (800 + 32), Ui.centerX, Ui.paddingXY 16 0 ]
+                [ Ui.row [ Ui.spacing 16 ] (List.take 2 cards)
+                , Ui.row [ Ui.spacing 16 ] (List.drop 2 cards)
+                ]
         , Ui.Lazy.lazy3
             currencyDropdown
             initData.stripeCurrency
@@ -406,6 +421,54 @@ viewAccom count ticketAvailable price ticket2 initData =
                      else
                         Ui.text "Sold out!"
                     )
+            ]
+        ]
+
+
+opportunityGrantCtaId : HtmlId
+opportunityGrantCtaId =
+    Dom.id "opportunityGrantCta"
+
+
+viewOpportunityGrantCta : Element a
+viewOpportunityGrantCta =
+    let
+        description =
+            String.join " "
+                [ "If you are concerned about the cost of attendance or are from"
+                , "an under-represented group in tech, we invite you to apply for"
+                , "an opportunity grant!"
+                ]
+    in
+    Ui.column
+        [ Ui.width Ui.fill
+        , Ui.height Ui.fill
+        , Ui.spacing 16
+        , Ui.background (Ui.rgb 255 255 255)
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 4, color = Ui.rgba 0 0 0 0.25 } ]
+        , Ui.height Ui.fill
+        , Ui.rounded 16
+        , Ui.padding 16
+        ]
+        [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.weight 600, Ui.Font.size 20 ] [ Ui.text "Opportunity grant" ]
+        , Ui.text description
+        , Ui.column
+            [ Ui.alignBottom, Ui.spacing 8 ]
+            [ Ui.el
+                [ Ui.background
+                    (Ui.rgb 92 176 126)
+                , Ui.height (Ui.px 56)
+                , Ui.Font.center
+                , Ui.contentCenterY
+                , Ui.rounded 8
+                , Ui.alignBottom
+                , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+                , Ui.Font.weight 600
+                , Ui.Font.color (Ui.rgb 255 255 255)
+                , Ui.id (Dom.idToString opportunityGrantCtaId)
+                , Ui.link (Route.encode Nothing Route.OpportunityGrantRoute)
+                ]
+                (Ui.text "Apply")
             ]
         ]
 
@@ -609,11 +672,6 @@ opportunityGrant form initData model =
             , RichText.view
                 model
                 [ Paragraph [ Text "We want Elm Camp to reflect the diverse community of Elm users and benefit from the contribution of anyone, irrespective of financial background. We therefore rely on the support of sponsors and individual participants to lessen the financial impact on those who may otherwise have to abstain from attending." ]
-                , Paragraph
-                    [ Text "If you are looking to apply for an opportunity grant "
-                    , LinkWithFragment "click here" Route.HomepageRoute Camp26Czech.opportunityGrant
-                    , Text "."
-                    ]
                 ]
             ]
         , Theme.panel

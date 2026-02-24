@@ -1,13 +1,14 @@
 module Fusion.Generated.TypeDict.Types exposing
-    ( typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_PendingOrder, type_TicketPriceStatus
-    , type_TicketsDisabledData, type_TicketsEnabled
+    ( typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_GrantApplication, type_PendingOrder
+    , type_TicketPriceStatus, type_TicketsDisabledData, type_TicketsEnabled
     )
 
 {-|
-@docs typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_PendingOrder, type_TicketPriceStatus
-@docs type_TicketsDisabledData, type_TicketsEnabled
--}
 
+@docs typeDict, type_BackendModel, type_CompletedOrder, type_EmailResult, type_GrantApplication, type_PendingOrder
+@docs type_TicketPriceStatus, type_TicketsDisabledData, type_TicketsEnabled
+
+-}
 
 import Dict
 import Fusion
@@ -16,7 +17,8 @@ import Fusion
 typeDict : Dict.Dict String ( Fusion.Type, List a )
 typeDict =
     Dict.fromList
-        [ ( "TicketsDisabledData", ( type_TicketsDisabledData, [] ) )
+        [ ( "GrantApplication", ( type_GrantApplication, [] ) )
+        , ( "TicketsDisabledData", ( type_TicketsDisabledData, [] ) )
         , ( "TicketsEnabled", ( type_TicketsEnabled, [] ) )
         , ( "TicketPriceStatus", ( type_TicketPriceStatus, [] ) )
         , ( "PendingOrder", ( type_PendingOrder, [] ) )
@@ -42,7 +44,7 @@ type_BackendModel =
                 ]
                 Nothing
           )
-        , ( "pendingOrder"
+        , ( "pendingOrders"
           , Fusion.TNamed
                 [ "SeqDict" ]
                 "SeqDict"
@@ -73,6 +75,22 @@ type_BackendModel =
         , ( "ticketsEnabled"
           , Fusion.TNamed [ "Types" ] "TicketsEnabled" [] Nothing
           )
+        , ( "grantApplications"
+          , Fusion.TNamed
+                [ "List" ]
+                "List"
+                [ Fusion.TNamed [ "Types" ] "GrantApplication" [] Nothing ]
+                (Just
+                    (Fusion.TList
+                        (Fusion.TNamed
+                            [ "Types" ]
+                            "GrantApplication"
+                            []
+                            Nothing
+                        )
+                    )
+                )
+          )
         ]
 
 
@@ -86,6 +104,13 @@ type_CompletedOrder =
           , Fusion.TNamed [ "PurchaseForm" ] "PurchaseFormValidated" [] Nothing
           )
         , ( "emailResult", Fusion.TNamed [ "Types" ] "EmailResult" [] Nothing )
+        , ( "paymentId"
+          , Fusion.TNamed
+                [ "Id" ]
+                "Id"
+                [ Fusion.TNamed [ "Stripe" ] "StripePaymentId" [] Nothing ]
+                Nothing
+          )
         ]
 
 
@@ -98,6 +123,18 @@ type_EmailResult =
         , ( "EmailSuccess", [] )
         , ( "EmailFailed"
           , [ Fusion.TNamed [ "Postmark" ] "SendEmailError" [] Nothing ]
+          )
+        ]
+
+
+type_GrantApplication : Fusion.Type
+type_GrantApplication =
+    Fusion.TRecord
+        [ ( "email"
+          , Fusion.TNamed [ "EmailAddress" ] "EmailAddress" [] Nothing
+          )
+        , ( "message"
+          , Fusion.TNamed [ "String" ] "String" [] (Just Fusion.TString)
           )
         ]
 

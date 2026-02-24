@@ -127,4 +127,4 @@ defaultIgnore rule =
     Review.Rule.ignoreErrorsForFiles
         [ "src/LamderaRPC.elm" ]
         rule
-        |> Review.Rule.ignoreErrorsForDirectories [ "vendored", "src/Evergreen" ]
+        |> Review.Rule.ignoreErrorsForDirectories [ "vendored", "src/Evergreen", "generated" ]

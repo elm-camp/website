@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.PurchaseForm exposing ( typeDict, type_AttendeeFormValidated, type_PurchaseFormValidated, type_TicketTypes )
+module Fusion.Generated.TypeDict.PurchaseForm exposing (typeDict, type_AttendeeFormValidated, type_PurchaseFormValidated, type_TicketTypes)
 
 {-|
-@docs typeDict, type_AttendeeFormValidated, type_PurchaseFormValidated, type_TicketTypes
--}
 
+@docs typeDict, type_AttendeeFormValidated, type_PurchaseFormValidated, type_TicketTypes
+
+-}
 
 import Dict
 import Fusion
@@ -45,14 +46,14 @@ type_PurchaseFormValidated =
                     Nothing
                 ]
                 (Just
-                     (Fusion.TList
-                          (Fusion.TNamed
-                               [ "PurchaseForm" ]
-                               "AttendeeFormValidated"
-                               []
-                               Nothing
-                          )
-                     )
+                    (Fusion.TList
+                        (Fusion.TNamed
+                            [ "PurchaseForm" ]
+                            "AttendeeFormValidated"
+                            []
+                            Nothing
+                        )
+                    )
                 )
           )
         , ( "count"

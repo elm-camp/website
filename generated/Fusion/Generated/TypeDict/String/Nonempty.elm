@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.String.Nonempty exposing ( typeDict, type_NonemptyString )
+module Fusion.Generated.TypeDict.String.Nonempty exposing (typeDict, type_NonemptyString)
 
 {-|
-@docs typeDict, type_NonemptyString
--}
 
+@docs typeDict, type_NonemptyString
+
+-}
 
 import Dict
 import Fusion

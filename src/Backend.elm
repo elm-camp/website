@@ -6,6 +6,8 @@ module Backend exposing
     , elmCampEmailAddress
     , errorEmail
     , init
+    , opportunityGrantEmailBody
+    , opportunityGrantEmailSubject
     , sessionIdToStripeSessionId
     , subscriptions
     , update
@@ -43,7 +45,7 @@ import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 
@@ -80,6 +82,7 @@ init =
       , prices = NotLoadingTicketPrices
       , time = Time.millisToPosix 0
       , ticketsEnabled = TicketsEnabled
+      , grantApplications = []
       }
     , Command.none
     )
@@ -308,6 +311,17 @@ update msg model =
         ErrorEmailSent _ ->
             ( model, Command.none )
 
+        OpportunityGrantEmailSent clientId result ->
+            ( model
+            , Lamdera.sendToFrontend clientId
+                (OpportunityGrantSubmitResponse
+                    (Result.mapError
+                        (\err -> "Failed to send application email: " ++ HttpHelpers.postmarkSendEmailErrorToString err)
+                        result
+                    )
+                )
+            )
+
         StripeWebhookResponse { endpoint, json } ->
             case endpoint of
                 "stripe" ->
@@ -490,6 +504,20 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     ( model, Command.none )
 
+        SubmitOpportunityGrantRequest grantApplication ->
+            ( { model | grantApplications = grantApplication :: model.grantApplications }
+            , Postmark.sendEmail
+                (OpportunityGrantEmailSent clientId)
+                Env.postmarkApiKey
+                { from = { name = "elm-camp", email = elmCampEmailAddress }
+                , to = Nonempty { name = "Elm Camp Team", email = elmCampEmailAddress } []
+                , subject = opportunityGrantEmailSubject
+                , body = Postmark.TextBody (opportunityGrantEmailBody grantApplication)
+                , messageStream = Postmark.TransactionalEmail
+                , attachments = Postmark.noAttachments
+                }
+            )
+
         AdminInspect pass ->
             if pass == Env.adminPassword then
                 ( model
@@ -546,6 +574,25 @@ errorEmail errorMessage =
 elmCampEmailAddress : EmailAddress
 elmCampEmailAddress =
     Unsafe.emailAddress "team@elm.camp"
+
+
+opportunityGrantEmailSubject : NonemptyString
+opportunityGrantEmailSubject =
+    NonemptyString 'O' "pportunity grant application"
+
+
+opportunityGrantEmailBody : GrantApplication -> String
+opportunityGrantEmailBody { email, message } =
+    "New opportunity grant application\n\n"
+        ++ "Applicant email: "
+        ++ EmailAddress.toString email
+        ++ "\n\n"
+        ++ (if String.isEmpty (String.trim message) then
+                "No message provided."
+
+            else
+                "Message:\n\n" ++ message
+           )
 
 
 confirmationEmailSubject : NonemptyString

@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Postmark exposing ( typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData )
+module Fusion.Generated.TypeDict.Postmark exposing (typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData)
 
 {-|
-@docs typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData
--}
 
+@docs typeDict, type_PostmarkError_, type_SendEmailError, type_UnknownErrorData
+
+-}
 
 import Dict
 import Fusion
@@ -33,14 +34,14 @@ type_PostmarkError_ =
                 "List"
                 [ Fusion.TNamed [ "EmailAddress" ] "EmailAddress" [] Nothing ]
                 (Just
-                     (Fusion.TList
-                          (Fusion.TNamed
-                               [ "EmailAddress" ]
-                               "EmailAddress"
-                               []
-                               Nothing
-                          )
-                     )
+                    (Fusion.TList
+                        (Fusion.TNamed
+                            [ "EmailAddress" ]
+                            "EmailAddress"
+                            []
+                            Nothing
+                        )
+                    )
                 )
           )
         ]

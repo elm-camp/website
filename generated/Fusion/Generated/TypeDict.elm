@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict exposing ( typeDict )
+module Fusion.Generated.TypeDict exposing (typeDict)
 
 {-|
-@docs typeDict
--}
 
+@docs typeDict
+
+-}
 
 import Dict
 import Fusion
@@ -20,8 +21,7 @@ import Fusion.Generated.TypeDict.Stripe
 import Fusion.Generated.TypeDict.Types
 
 
-typeDict :
-    Dict.Dict (List String) (Dict.Dict String ( Fusion.Type, List String ))
+typeDict : Dict.Dict (List String) (Dict.Dict String ( Fusion.Type, List String ))
 typeDict =
     Dict.fromList
         [ ( [ "TypeDict", "Effect", "Http" ]

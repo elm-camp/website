@@ -5,9 +5,13 @@ module Types exposing
     , EmailResult(..)
     , FrontendModel(..)
     , FrontendMsg(..)
+    , GrantApplication
     , InitData2
     , LoadedModel
     , LoadingModel
+    , OpportunityGrantForm
+    , OpportunityGrantPressedSubmit(..)
+    , OpportunityGrantSubmitStatus(..)
     , PendingOrder
     , TicketPriceStatus(..)
     , TicketsDisabledData
@@ -21,6 +25,7 @@ import Effect.Browser.Navigation exposing (Key)
 import Effect.Http as Http
 import Effect.Lamdera exposing (ClientId, SessionId)
 import Effect.Time as Time
+import EmailAddress exposing (EmailAddress)
 import Fusion
 import Fusion.Patch
 import Id exposing (Id)
@@ -63,6 +68,7 @@ type alias LoadedModel =
     , window : Size
     , initData : Result () InitData2
     , form : PurchaseForm
+    , opportunityGrantForm : OpportunityGrantForm
     , route : Route
     , showTooltip : Bool
     , backendModel : Maybe ( BackendModel, Fusion.Value )
@@ -72,6 +78,25 @@ type alias LoadedModel =
     }
 
 
+type alias OpportunityGrantForm =
+    { email : String
+    , message : String
+    , submitStatus : OpportunityGrantSubmitStatus
+    }
+
+
+type OpportunityGrantSubmitStatus
+    = OpportunityGrantNotSubmitted OpportunityGrantPressedSubmit
+    | OpportunityGrantSubmitting
+    | OpportunityGrantSubmitBackendError String
+    | OpportunityGrantSubmittedSuccessfully
+
+
+type OpportunityGrantPressedSubmit
+    = OpportunityGrantPressedSubmit
+    | OpportunityGrantNotPressedSubmit
+
+
 type alias BackendModel =
     { orders : SeqDict (Id StripeSessionId) CompletedOrder
     , pendingOrders : SeqDict (Id StripeSessionId) PendingOrder
@@ -79,7 +104,12 @@ type alias BackendModel =
     , prices : TicketPriceStatus
     , time : Time.Posix
     , ticketsEnabled : TicketsEnabled
+    , grantApplications : List GrantApplication
     }
+
+
+type alias GrantApplication =
+    { email : EmailAddress, message : String }
 
 
 type TicketPriceStatus
@@ -122,6 +152,8 @@ type FrontendMsg
     | DownloadTicketSalesReminder
     | FormChanged PurchaseForm
     | PressedSubmitForm
+    | OpportunityGrantFormChanged OpportunityGrantForm
+    | PressedSubmitOpportunityGrant
     | SetViewport
     | LogoMsg Logo.Msg
     | Noop
@@ -137,6 +169,7 @@ type ToBackend
     = SubmitFormRequest (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
     | AdminInspect String
+    | SubmitOpportunityGrantRequest GrantApplication
 
 
 type BackendMsg
@@ -148,6 +181,7 @@ type BackendMsg
     | ConfirmationEmailSent (Id StripeSessionId) (Result Postmark.SendEmailError ())
     | ErrorEmailSent (Result Postmark.SendEmailError ())
     | StripeWebhookResponse { endpoint : String, json : String }
+    | OpportunityGrantEmailSent ClientId (Result Postmark.SendEmailError ())
 
 
 type alias InitData2 =
@@ -165,6 +199,7 @@ type ToFrontend
     | SlotRemainingChanged (TicketTypes NonNegative)
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel Fusion.Value
+    | OpportunityGrantSubmitResponse (Result String ())
 
 
 type TicketsEnabled

@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Effect.Time exposing ( typeDict, type_Posix )
+module Fusion.Generated.TypeDict.Effect.Time exposing (typeDict, type_Posix)
 
 {-|
-@docs typeDict, type_Posix
--}
 
+@docs typeDict, type_Posix
+
+-}
 
 import Dict
 import Fusion

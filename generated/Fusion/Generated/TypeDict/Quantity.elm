@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Quantity exposing ( typeDict, type_Quantity )
+module Fusion.Generated.TypeDict.Quantity exposing (typeDict, type_Quantity)
 
 {-|
-@docs typeDict, type_Quantity
--}
 
+@docs typeDict, type_Quantity
+
+-}
 
 import Dict
 import Fusion

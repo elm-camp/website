@@ -1,9 +1,10 @@
-module Fusion.Generated.TypeDict.Money exposing ( typeDict, type_Currency )
+module Fusion.Generated.TypeDict.Money exposing (typeDict, type_Currency)
 
 {-|
-@docs typeDict, type_Currency
--}
 
+@docs typeDict, type_Currency
+
+-}
 
 import Dict
 import Fusion

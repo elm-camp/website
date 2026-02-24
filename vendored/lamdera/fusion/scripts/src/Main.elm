@@ -106,20 +106,25 @@ config =
 
 mainLoop : Flags -> BackendTask FatalError ()
 mainLoop flags =
-    Do.do (logInfo "Starting fusion codegen") <| \_ ->
-    Do.do getElmHomePath <| \elmHome ->
-    Spinner.steps
-        |> Spinner.withStep "Parsing main elm.json" (\_ -> parseMainElmJson flags)
-        |> Spinner.withStep "Getting module list"
-            (\elmJson ->
-                Do.do (getAllModules flags elmJson elmHome) <| \modulesList ->
-                Do.do (foldModules modulesList) <| \modules ->
-                Do.do (logDebug { flags = flags } (modulesListDebugString modules)) <| \_ ->
-                BackendTask.succeed modules
-            )
-        |> Spinner.withStep "Generating files" (generateFiles flags elmHome)
-        |> Spinner.withStep "Writing files" (writeFiles flags)
-        |> Spinner.runSteps
+    Do.do (logInfo "Starting fusion codegen") <|
+        \_ ->
+            Do.do getElmHomePath <|
+                \elmHome ->
+                    Spinner.steps
+                        |> Spinner.withStep "Parsing main elm.json" (\_ -> parseMainElmJson flags)
+                        |> Spinner.withStep "Getting module list"
+                            (\elmJson ->
+                                Do.do (getAllModules flags elmJson elmHome) <|
+                                    \modulesList ->
+                                        Do.do (foldModules modulesList) <|
+                                            \modules ->
+                                                Do.do (logDebug { flags = flags } (modulesListDebugString modules)) <|
+                                                    \_ ->
+                                                        BackendTask.succeed modules
+                            )
+                        |> Spinner.withStep "Generating files" (generateFiles flags elmHome)
+                        |> Spinner.withStep "Writing files" (writeFiles flags)
+                        |> Spinner.runSteps
 
 
 writeFiles : Flags -> ( List Elm.File, Set (List String) ) -> BackendTask FatalError ()
@@ -259,77 +264,81 @@ getModulesFromElmJson flags elmJsonPath =
                         |> List.reverse
                         |> String.join "/"
     in
-    Do.do (logDebug model_ <| "Parsing " ++ elmJsonPath) <| \_ ->
-    Do.do (File.jsonFile Elm.Project.decoder elmJsonPath |> BackendTask.allowFatal) <| \elmJson ->
-    case elmJson of
-        Elm.Project.Application application ->
-            Do.do (logDebug model_ "It's an application's elm.json") <| \_ ->
-            application.dirs
-                |> List.map
-                    (\dir ->
-                        let
-                            glob : Glob.Glob ( List String, { fullPath : String, package : Bool } )
-                            glob =
-                                Glob.succeed
-                                    (\partialPath lastPiece fullPath ->
-                                        ( partialPath ++ [ lastPiece ]
-                                        , { fullPath = fullPath, package = False }
-                                        )
-                                    )
-                                    |> Glob.match (Glob.literal (baseDir ++ dir ++ "/"))
-                                    |> Glob.capture Glob.recursiveWildcard
-                                    |> Glob.match (Glob.literal "/")
-                                    |> Glob.capture Glob.wildcard
-                                    |> Glob.match (Glob.literal ".elm")
-                                    |> Glob.captureFilePath
-                        in
-                        Do.do (logDebug model_ <| "Globbing " ++ dir) <| \_ ->
-                        glob |> Glob.toBackendTask
-                    )
-                |> BackendTask.combine
-                |> BackendTask.map
-                    (\files ->
-                        files
-                            |> List.concat
-                            |> List.filter
-                                (\( moduleName, _ ) ->
-                                    case moduleName of
-                                        "Fusion" :: "Generated" :: _ ->
-                                            False
+    Do.do (logDebug model_ <| "Parsing " ++ elmJsonPath) <|
+        \_ ->
+            Do.do (File.jsonFile Elm.Project.decoder elmJsonPath |> BackendTask.allowFatal) <|
+                \elmJson ->
+                    case elmJson of
+                        Elm.Project.Application application ->
+                            Do.do (logDebug model_ "It's an application's elm.json") <|
+                                \_ ->
+                                    application.dirs
+                                        |> List.map
+                                            (\dir ->
+                                                let
+                                                    glob : Glob.Glob ( List String, { fullPath : String, package : Bool } )
+                                                    glob =
+                                                        Glob.succeed
+                                                            (\partialPath lastPiece fullPath ->
+                                                                ( partialPath ++ [ lastPiece ]
+                                                                , { fullPath = fullPath, package = False }
+                                                                )
+                                                            )
+                                                            |> Glob.match (Glob.literal (baseDir ++ dir ++ "/"))
+                                                            |> Glob.capture Glob.recursiveWildcard
+                                                            |> Glob.match (Glob.literal "/")
+                                                            |> Glob.capture Glob.wildcard
+                                                            |> Glob.match (Glob.literal ".elm")
+                                                            |> Glob.captureFilePath
+                                                in
+                                                Do.do (logDebug model_ <| "Globbing " ++ dir) <|
+                                                    \_ ->
+                                                        glob |> Glob.toBackendTask
+                                            )
+                                        |> BackendTask.combine
+                                        |> BackendTask.map
+                                            (\files ->
+                                                files
+                                                    |> List.concat
+                                                    |> List.filter
+                                                        (\( moduleName, _ ) ->
+                                                            case moduleName of
+                                                                "Fusion" :: "Generated" :: _ ->
+                                                                    False
 
-                                        "Evergreen" :: _ ->
-                                            False
+                                                                "Evergreen" :: _ ->
+                                                                    False
 
-                                        _ ->
-                                            True
-                                )
-                            |> Dict.fromList
-                    )
+                                                                _ ->
+                                                                    True
+                                                        )
+                                                    |> Dict.fromList
+                                            )
 
-        Elm.Project.Package package ->
-            let
-                fromList :
-                    List Elm.Module.Name
-                    -> BackendTask error (Dict ModuleName ModuleInfo)
-                fromList list =
-                    list
-                        |> List.map
-                            (\moduleName ->
-                                ( String.split "." <| Elm.Module.toString moduleName
-                                , { fullPath = baseDir ++ "src/" ++ String.replace "." "/" (Elm.Module.toString moduleName) ++ ".elm", package = True }
-                                )
-                            )
-                        |> Dict.fromList
-                        |> BackendTask.succeed
-            in
-            case package.exposed of
-                Elm.Project.ExposedList moduleNames ->
-                    fromList moduleNames
+                        Elm.Project.Package package ->
+                            let
+                                fromList :
+                                    List Elm.Module.Name
+                                    -> BackendTask error (Dict ModuleName ModuleInfo)
+                                fromList list =
+                                    list
+                                        |> List.map
+                                            (\moduleName ->
+                                                ( String.split "." <| Elm.Module.toString moduleName
+                                                , { fullPath = baseDir ++ "src/" ++ String.replace "." "/" (Elm.Module.toString moduleName) ++ ".elm", package = True }
+                                                )
+                                            )
+                                        |> Dict.fromList
+                                        |> BackendTask.succeed
+                            in
+                            case package.exposed of
+                                Elm.Project.ExposedList moduleNames ->
+                                    fromList moduleNames
 
-                Elm.Project.ExposedDict dict ->
-                    dict
-                        |> List.concatMap Tuple.second
-                        |> fromList
+                                Elm.Project.ExposedDict dict ->
+                                    dict
+                                        |> List.concatMap Tuple.second
+                                        |> fromList
 
 
 foldModules : List (Dict ModuleName ModuleInfo) -> BackendTask FatalError (Dict ModuleName ModuleInfo)
@@ -410,12 +419,13 @@ writeFile model file =
         fullPath =
             model.flags.outDir ++ "/" ++ file.path
     in
-    Do.do (logDebug model ("Writing " ++ fullPath)) <| \_ ->
-    Script.writeFile
-        { path = fullPath
-        , body = file.contents
-        }
-        |> BackendTask.allowFatal
+    Do.do (logDebug model ("Writing " ++ fullPath)) <|
+        \_ ->
+            Script.writeFile
+                { path = fullPath
+                , body = file.contents
+                }
+                |> BackendTask.allowFatal
 
 
 upsert : comparable -> v -> (v -> v) -> Dict comparable v -> Dict comparable v
@@ -476,92 +486,96 @@ step model =
                         Nothing ->
                             case Generate.generate model.flags model.files head of
                                 CodegenResult.CodegenOk result ->
-                                    Do.do (logDebug model ("Generated " ++ Generate.fqTypeNameToString ( moduleName, typeNameString ))) <| \_ ->
-                                    BackendTask.succeed
-                                        { model
-                                            | declarations =
-                                                result.declarations
-                                                    |> Dict.toList
-                                                    |> List.foldl
-                                                        (\( modName, declarations ) ->
-                                                            upsert
-                                                                modName
-                                                                ( Dict.empty, [] )
-                                                                (\( oldDecls, oldTypes ) ->
-                                                                    ( Dict.union declarations oldDecls
-                                                                    , result.typeName :: oldTypes
-                                                                    )
+                                    Do.do (logDebug model ("Generated " ++ Generate.fqTypeNameToString ( moduleName, typeNameString ))) <|
+                                        \_ ->
+                                            BackendTask.succeed
+                                                { model
+                                                    | declarations =
+                                                        result.declarations
+                                                            |> Dict.toList
+                                                            |> List.foldl
+                                                                (\( modName, declarations ) ->
+                                                                    upsert
+                                                                        modName
+                                                                        ( Dict.empty, [] )
+                                                                        (\( oldDecls, oldTypes ) ->
+                                                                            ( Dict.union declarations oldDecls
+                                                                            , result.typeName :: oldTypes
+                                                                            )
+                                                                        )
                                                                 )
-                                                        )
-                                                        model.declarations
-                                            , typeQueue = result.typeQueue ++ tail
-                                        }
+                                                                model.declarations
+                                                    , typeQueue = result.typeQueue ++ tail
+                                                }
 
                                 CodegenResult.CodegenErr e ->
                                     BackendTask.fail <| FatalError.build e
 
                                 CodegenResult.CodegenLoadFile missingModuleName ->
-                                    Do.do (readFile model missingModuleName |> BackendTask.toResult) <| \result ->
-                                    case result of
-                                        Ok { package, fullPath, content } ->
-                                            parseModule { package = package, fullPath = fullPath } missingModuleName content model
+                                    Do.do (readFile model missingModuleName |> BackendTask.toResult) <|
+                                        \result ->
+                                            case result of
+                                                Ok { package, fullPath, content } ->
+                                                    parseModule { package = package, fullPath = fullPath } missingModuleName content model
 
-                                        Err { recoverable, fatal } ->
-                                            case recoverable of
-                                                File.FileDoesntExist ->
-                                                    { model
-                                                        | typeQueue = tail
-                                                        , missing = Set.insert missingModuleName model.missing
-                                                    }
-                                                        |> BackendTask.succeed
+                                                Err { recoverable, fatal } ->
+                                                    case recoverable of
+                                                        File.FileDoesntExist ->
+                                                            { model
+                                                                | typeQueue = tail
+                                                                , missing = Set.insert missingModuleName model.missing
+                                                            }
+                                                                |> BackendTask.succeed
 
-                                                File.DecodingError ever ->
-                                                    never ever
+                                                        File.DecodingError ever ->
+                                                            never ever
 
-                                                File.FileReadError _ ->
-                                                    BackendTask.fail fatal
+                                                        File.FileReadError _ ->
+                                                            BackendTask.fail fatal
             )
                 |> Running
 
 
 parseModule : { package : Bool, fullPath : String } -> ModuleName -> String -> Model -> BackendTask FatalError Model
 parseModule package moduleName moduleSource model =
-    Do.do (logDebug model <| "Parsing " ++ package.fullPath) <| \_ ->
-    Do.do (timed_ <| \_ -> Codegen.Parser.parseFile package moduleSource) <| \( result, duration ) ->
-    case result of
-        Ok module_ ->
-            let
-                ms : Float
-                ms =
-                    Duration.inMilliseconds duration
+    Do.do (logDebug model <| "Parsing " ++ package.fullPath) <|
+        \_ ->
+            Do.do (timed_ <| \_ -> Codegen.Parser.parseFile package moduleSource) <|
+                \( result, duration ) ->
+                    case result of
+                        Ok module_ ->
+                            let
+                                ms : Float
+                                ms =
+                                    Duration.inMilliseconds duration
 
-                relativePath : String
-                relativePath =
-                    package.fullPath
-                        |> relativeTo (dirname model.flags.elmJson)
-                        |> relativeTo (model.elmHome ++ "/0.19.1")
+                                relativePath : String
+                                relativePath =
+                                    package.fullPath
+                                        |> relativeTo (dirname model.flags.elmJson)
+                                        |> relativeTo (model.elmHome ++ "/0.19.1")
 
-                msg : String
-                msg =
-                    "Parsed " ++ relativePath ++ " in " ++ String.fromInt (round ms) ++ "ms"
-            in
-            (if ms > 500 then
-                logError msg
+                                msg : String
+                                msg =
+                                    "Parsed " ++ relativePath ++ " in " ++ String.fromInt (round ms) ++ "ms"
+                            in
+                            (if ms > 500 then
+                                logError msg
 
-             else if ms > 100 then
-                logWarning msg
+                             else if ms > 100 then
+                                logWarning msg
 
-             else
-                logDebug model msg
-            )
-                |> BackendTask.map
-                    (\_ ->
-                        { model | files = Dict.insert moduleName module_ model.files }
-                    )
+                             else
+                                logDebug model msg
+                            )
+                                |> BackendTask.map
+                                    (\_ ->
+                                        { model | files = Dict.insert moduleName module_ model.files }
+                                    )
 
-        Err e ->
-            ErrorWithLocation.toError e
-                |> BackendTask.fail
+                        Err e ->
+                            ErrorWithLocation.toError e
+                                |> BackendTask.fail
 
 
 relativeTo : String -> String -> String
@@ -585,14 +599,16 @@ dirname path =
 
 timed_ : (() -> value) -> BackendTask error ( value, Duration )
 timed_ task =
-    Do.do BackendTask.Time.now <| \begin ->
-    let
-        result : value
-        result =
-            task ()
-    in
-    Do.do BackendTask.Time.now <| \end ->
-    BackendTask.succeed ( result, Duration.from begin end )
+    Do.do BackendTask.Time.now <|
+        \begin ->
+            let
+                result : value
+                result =
+                    task ()
+            in
+            Do.do BackendTask.Time.now <|
+                \end ->
+                    BackendTask.succeed ( result, Duration.from begin end )
 
 
 readFile :

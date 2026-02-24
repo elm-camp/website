@@ -5,7 +5,6 @@ module Camp26Czech exposing
     , header
     , maxAttendees
     , maxRooms
-    , opportunityGrant
     , scheduleSection
     , sharedRoomTicket
     , singleRoomTicket
@@ -68,7 +67,13 @@ ticketSalesOpenCountdown now =
         (Ui.spacing 20 :: Theme.contentAttributes)
         (case detailedCountdown now of
             Nothing ->
-                [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales ]
+                [ Ui.row []
+                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                        goToTicketSales
+                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
+                        goToOpportunityGrant
+                    ]
+                ]
 
             Just countdownElement ->
                 [ countdownElement
@@ -180,6 +185,22 @@ goToTicketSales =
         , Ui.link (Route.encode Nothing Route.TicketPurchaseRoute)
         ]
         (Ui.text "Tickets now on sale!")
+
+
+goToOpportunityGrant : Element FrontendMsg
+goToOpportunityGrant =
+    Ui.el
+        [ Ui.width Ui.fill
+        , Ui.background (Ui.rgb 92 176 126)
+        , Ui.paddingXY 24 16
+        , Ui.rounded 8
+        , Ui.Font.color (Ui.rgb 255 255 255)
+        , Ui.alignBottom
+        , Ui.Shadow.shadows [ { x = 0, y = 1, size = 0, blur = 2, color = Ui.rgba 0 0 0 0.1 } ]
+        , Ui.Font.weight 600
+        , Ui.link (Route.encode Nothing Route.OpportunityGrantRoute)
+        ]
+        (Ui.text "Opportunity grants available!")
 
 
 sponsors : List RichText
@@ -309,27 +330,10 @@ content =
                 ]
             ]
         ]
-    , Section opportunityGrant
-        [ Paragraph [ Text "Last year, we were able to offer opportunity grants to cover both ticket and travel costs for a number of attendees who would otherwise not have been able to attend. This year we will be offering the same opportunity again." ]
-        , Section "🤗 Opportunity grant applications"
-            [ Paragraph [ Text "If you would like to attend but are unsure about how to cover the cost, please select an opportunity grant ticket and we'll get in touch to help." ]
-            , Paragraph
-                [ Text "If you have any questions send an email to "
-                , ExternalLink "team@elm.camp" "mailto:team@elm.camp"
-                , Text ". Elm Camp grant decisions are made by the Elm Camp organizers."
-                ]
-            , Paragraph [ Text "All grant recipients will remain confidential. Any unused funds are saved for future Elm Camp grants." ]
-            ]
-        ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         ]
     ]
-
-
-opportunityGrant : String
-opportunityGrant =
-    "🫶 Opportunity grant"
 
 
 ticketSalesOpenAt : Time.Posix

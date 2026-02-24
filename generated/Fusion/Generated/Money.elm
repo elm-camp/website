@@ -1,9 +1,10 @@
-module Fusion.Generated.Money exposing ( build_Currency, patch_Currency, patcher_Currency, toValue_Currency )
+module Fusion.Generated.Money exposing (build_Currency, patch_Currency, patcher_Currency, toValue_Currency)
 
 {-|
-@docs build_Currency, patch_Currency, patcher_Currency, toValue_Currency
--}
 
+@docs build_Currency, patch_Currency, patcher_Currency, toValue_Currency
+
+-}
 
 import Fusion
 import Fusion.Patch
@@ -14,493 +15,493 @@ build_Currency : Fusion.Value -> Result Fusion.Patch.Error Money.Currency
 build_Currency value =
     Fusion.Patch.build_Custom
         (\name params ->
-             case ( name, params ) of
-                 ( "USD", [] ) ->
-                     Result.Ok Money.USD
+            case ( name, params ) of
+                ( "USD", [] ) ->
+                    Result.Ok Money.USD
 
-                 ( "CAD", [] ) ->
-                     Result.Ok Money.CAD
+                ( "CAD", [] ) ->
+                    Result.Ok Money.CAD
 
-                 ( "EUR", [] ) ->
-                     Result.Ok Money.EUR
+                ( "EUR", [] ) ->
+                    Result.Ok Money.EUR
 
-                 ( "BTC", [] ) ->
-                     Result.Ok Money.BTC
+                ( "BTC", [] ) ->
+                    Result.Ok Money.BTC
 
-                 ( "AED", [] ) ->
-                     Result.Ok Money.AED
+                ( "AED", [] ) ->
+                    Result.Ok Money.AED
 
-                 ( "AFN", [] ) ->
-                     Result.Ok Money.AFN
+                ( "AFN", [] ) ->
+                    Result.Ok Money.AFN
 
-                 ( "ALL", [] ) ->
-                     Result.Ok Money.ALL
+                ( "ALL", [] ) ->
+                    Result.Ok Money.ALL
 
-                 ( "AMD", [] ) ->
-                     Result.Ok Money.AMD
+                ( "AMD", [] ) ->
+                    Result.Ok Money.AMD
 
-                 ( "ARS", [] ) ->
-                     Result.Ok Money.ARS
+                ( "ARS", [] ) ->
+                    Result.Ok Money.ARS
 
-                 ( "AUD", [] ) ->
-                     Result.Ok Money.AUD
+                ( "AUD", [] ) ->
+                    Result.Ok Money.AUD
 
-                 ( "AZN", [] ) ->
-                     Result.Ok Money.AZN
+                ( "AZN", [] ) ->
+                    Result.Ok Money.AZN
 
-                 ( "BAM", [] ) ->
-                     Result.Ok Money.BAM
+                ( "BAM", [] ) ->
+                    Result.Ok Money.BAM
 
-                 ( "BDT", [] ) ->
-                     Result.Ok Money.BDT
+                ( "BDT", [] ) ->
+                    Result.Ok Money.BDT
 
-                 ( "BGN", [] ) ->
-                     Result.Ok Money.BGN
+                ( "BGN", [] ) ->
+                    Result.Ok Money.BGN
 
-                 ( "BHD", [] ) ->
-                     Result.Ok Money.BHD
+                ( "BHD", [] ) ->
+                    Result.Ok Money.BHD
 
-                 ( "BIF", [] ) ->
-                     Result.Ok Money.BIF
+                ( "BIF", [] ) ->
+                    Result.Ok Money.BIF
 
-                 ( "BND", [] ) ->
-                     Result.Ok Money.BND
+                ( "BND", [] ) ->
+                    Result.Ok Money.BND
 
-                 ( "BOB", [] ) ->
-                     Result.Ok Money.BOB
+                ( "BOB", [] ) ->
+                    Result.Ok Money.BOB
 
-                 ( "BRL", [] ) ->
-                     Result.Ok Money.BRL
+                ( "BRL", [] ) ->
+                    Result.Ok Money.BRL
 
-                 ( "BWP", [] ) ->
-                     Result.Ok Money.BWP
+                ( "BWP", [] ) ->
+                    Result.Ok Money.BWP
 
-                 ( "BYN", [] ) ->
-                     Result.Ok Money.BYN
+                ( "BYN", [] ) ->
+                    Result.Ok Money.BYN
 
-                 ( "BZD", [] ) ->
-                     Result.Ok Money.BZD
+                ( "BZD", [] ) ->
+                    Result.Ok Money.BZD
 
-                 ( "CDF", [] ) ->
-                     Result.Ok Money.CDF
+                ( "CDF", [] ) ->
+                    Result.Ok Money.CDF
 
-                 ( "CHF", [] ) ->
-                     Result.Ok Money.CHF
+                ( "CHF", [] ) ->
+                    Result.Ok Money.CHF
 
-                 ( "CLP", [] ) ->
-                     Result.Ok Money.CLP
+                ( "CLP", [] ) ->
+                    Result.Ok Money.CLP
 
-                 ( "CNY", [] ) ->
-                     Result.Ok Money.CNY
+                ( "CNY", [] ) ->
+                    Result.Ok Money.CNY
 
-                 ( "COP", [] ) ->
-                     Result.Ok Money.COP
+                ( "COP", [] ) ->
+                    Result.Ok Money.COP
 
-                 ( "CRC", [] ) ->
-                     Result.Ok Money.CRC
+                ( "CRC", [] ) ->
+                    Result.Ok Money.CRC
 
-                 ( "CVE", [] ) ->
-                     Result.Ok Money.CVE
+                ( "CVE", [] ) ->
+                    Result.Ok Money.CVE
 
-                 ( "CZK", [] ) ->
-                     Result.Ok Money.CZK
+                ( "CZK", [] ) ->
+                    Result.Ok Money.CZK
 
-                 ( "DJF", [] ) ->
-                     Result.Ok Money.DJF
+                ( "DJF", [] ) ->
+                    Result.Ok Money.DJF
 
-                 ( "DKK", [] ) ->
-                     Result.Ok Money.DKK
+                ( "DKK", [] ) ->
+                    Result.Ok Money.DKK
 
-                 ( "DOP", [] ) ->
-                     Result.Ok Money.DOP
+                ( "DOP", [] ) ->
+                    Result.Ok Money.DOP
 
-                 ( "DZD", [] ) ->
-                     Result.Ok Money.DZD
+                ( "DZD", [] ) ->
+                    Result.Ok Money.DZD
 
-                 ( "EEK", [] ) ->
-                     Result.Ok Money.EEK
+                ( "EEK", [] ) ->
+                    Result.Ok Money.EEK
 
-                 ( "EGP", [] ) ->
-                     Result.Ok Money.EGP
+                ( "EGP", [] ) ->
+                    Result.Ok Money.EGP
 
-                 ( "ERN", [] ) ->
-                     Result.Ok Money.ERN
+                ( "ERN", [] ) ->
+                    Result.Ok Money.ERN
 
-                 ( "ETB", [] ) ->
-                     Result.Ok Money.ETB
+                ( "ETB", [] ) ->
+                    Result.Ok Money.ETB
 
-                 ( "GBP", [] ) ->
-                     Result.Ok Money.GBP
+                ( "GBP", [] ) ->
+                    Result.Ok Money.GBP
 
-                 ( "GEL", [] ) ->
-                     Result.Ok Money.GEL
+                ( "GEL", [] ) ->
+                    Result.Ok Money.GEL
 
-                 ( "GHS", [] ) ->
-                     Result.Ok Money.GHS
+                ( "GHS", [] ) ->
+                    Result.Ok Money.GHS
 
-                 ( "GNF", [] ) ->
-                     Result.Ok Money.GNF
+                ( "GNF", [] ) ->
+                    Result.Ok Money.GNF
 
-                 ( "GTQ", [] ) ->
-                     Result.Ok Money.GTQ
+                ( "GTQ", [] ) ->
+                    Result.Ok Money.GTQ
 
-                 ( "HKD", [] ) ->
-                     Result.Ok Money.HKD
+                ( "HKD", [] ) ->
+                    Result.Ok Money.HKD
 
-                 ( "HNL", [] ) ->
-                     Result.Ok Money.HNL
+                ( "HNL", [] ) ->
+                    Result.Ok Money.HNL
 
-                 ( "HRK", [] ) ->
-                     Result.Ok Money.HRK
+                ( "HRK", [] ) ->
+                    Result.Ok Money.HRK
 
-                 ( "HUF", [] ) ->
-                     Result.Ok Money.HUF
+                ( "HUF", [] ) ->
+                    Result.Ok Money.HUF
 
-                 ( "IDR", [] ) ->
-                     Result.Ok Money.IDR
+                ( "IDR", [] ) ->
+                    Result.Ok Money.IDR
 
-                 ( "ILS", [] ) ->
-                     Result.Ok Money.ILS
+                ( "ILS", [] ) ->
+                    Result.Ok Money.ILS
 
-                 ( "INR", [] ) ->
-                     Result.Ok Money.INR
+                ( "INR", [] ) ->
+                    Result.Ok Money.INR
 
-                 ( "IQD", [] ) ->
-                     Result.Ok Money.IQD
+                ( "IQD", [] ) ->
+                    Result.Ok Money.IQD
 
-                 ( "IRR", [] ) ->
-                     Result.Ok Money.IRR
+                ( "IRR", [] ) ->
+                    Result.Ok Money.IRR
 
-                 ( "ISK", [] ) ->
-                     Result.Ok Money.ISK
+                ( "ISK", [] ) ->
+                    Result.Ok Money.ISK
 
-                 ( "JMD", [] ) ->
-                     Result.Ok Money.JMD
+                ( "JMD", [] ) ->
+                    Result.Ok Money.JMD
 
-                 ( "JOD", [] ) ->
-                     Result.Ok Money.JOD
+                ( "JOD", [] ) ->
+                    Result.Ok Money.JOD
 
-                 ( "JPY", [] ) ->
-                     Result.Ok Money.JPY
+                ( "JPY", [] ) ->
+                    Result.Ok Money.JPY
 
-                 ( "KES", [] ) ->
-                     Result.Ok Money.KES
+                ( "KES", [] ) ->
+                    Result.Ok Money.KES
 
-                 ( "KHR", [] ) ->
-                     Result.Ok Money.KHR
+                ( "KHR", [] ) ->
+                    Result.Ok Money.KHR
 
-                 ( "KMF", [] ) ->
-                     Result.Ok Money.KMF
+                ( "KMF", [] ) ->
+                    Result.Ok Money.KMF
 
-                 ( "KRW", [] ) ->
-                     Result.Ok Money.KRW
+                ( "KRW", [] ) ->
+                    Result.Ok Money.KRW
 
-                 ( "KWD", [] ) ->
-                     Result.Ok Money.KWD
+                ( "KWD", [] ) ->
+                    Result.Ok Money.KWD
 
-                 ( "KZT", [] ) ->
-                     Result.Ok Money.KZT
+                ( "KZT", [] ) ->
+                    Result.Ok Money.KZT
 
-                 ( "LAK", [] ) ->
-                     Result.Ok Money.LAK
+                ( "LAK", [] ) ->
+                    Result.Ok Money.LAK
 
-                 ( "LBP", [] ) ->
-                     Result.Ok Money.LBP
+                ( "LBP", [] ) ->
+                    Result.Ok Money.LBP
 
-                 ( "LKR", [] ) ->
-                     Result.Ok Money.LKR
+                ( "LKR", [] ) ->
+                    Result.Ok Money.LKR
 
-                 ( "LTL", [] ) ->
-                     Result.Ok Money.LTL
+                ( "LTL", [] ) ->
+                    Result.Ok Money.LTL
 
-                 ( "LVL", [] ) ->
-                     Result.Ok Money.LVL
+                ( "LVL", [] ) ->
+                    Result.Ok Money.LVL
 
-                 ( "LYD", [] ) ->
-                     Result.Ok Money.LYD
+                ( "LYD", [] ) ->
+                    Result.Ok Money.LYD
 
-                 ( "MAD", [] ) ->
-                     Result.Ok Money.MAD
+                ( "MAD", [] ) ->
+                    Result.Ok Money.MAD
 
-                 ( "MDL", [] ) ->
-                     Result.Ok Money.MDL
+                ( "MDL", [] ) ->
+                    Result.Ok Money.MDL
 
-                 ( "MGA", [] ) ->
-                     Result.Ok Money.MGA
+                ( "MGA", [] ) ->
+                    Result.Ok Money.MGA
 
-                 ( "MKD", [] ) ->
-                     Result.Ok Money.MKD
+                ( "MKD", [] ) ->
+                    Result.Ok Money.MKD
 
-                 ( "MMK", [] ) ->
-                     Result.Ok Money.MMK
+                ( "MMK", [] ) ->
+                    Result.Ok Money.MMK
 
-                 ( "MOP", [] ) ->
-                     Result.Ok Money.MOP
+                ( "MOP", [] ) ->
+                    Result.Ok Money.MOP
 
-                 ( "MUR", [] ) ->
-                     Result.Ok Money.MUR
+                ( "MUR", [] ) ->
+                    Result.Ok Money.MUR
 
-                 ( "MXN", [] ) ->
-                     Result.Ok Money.MXN
+                ( "MXN", [] ) ->
+                    Result.Ok Money.MXN
 
-                 ( "MYR", [] ) ->
-                     Result.Ok Money.MYR
+                ( "MYR", [] ) ->
+                    Result.Ok Money.MYR
 
-                 ( "MZN", [] ) ->
-                     Result.Ok Money.MZN
+                ( "MZN", [] ) ->
+                    Result.Ok Money.MZN
 
-                 ( "NAD", [] ) ->
-                     Result.Ok Money.NAD
+                ( "NAD", [] ) ->
+                    Result.Ok Money.NAD
 
-                 ( "NGN", [] ) ->
-                     Result.Ok Money.NGN
+                ( "NGN", [] ) ->
+                    Result.Ok Money.NGN
 
-                 ( "NIO", [] ) ->
-                     Result.Ok Money.NIO
+                ( "NIO", [] ) ->
+                    Result.Ok Money.NIO
 
-                 ( "NOK", [] ) ->
-                     Result.Ok Money.NOK
+                ( "NOK", [] ) ->
+                    Result.Ok Money.NOK
 
-                 ( "NPR", [] ) ->
-                     Result.Ok Money.NPR
+                ( "NPR", [] ) ->
+                    Result.Ok Money.NPR
 
-                 ( "NZD", [] ) ->
-                     Result.Ok Money.NZD
+                ( "NZD", [] ) ->
+                    Result.Ok Money.NZD
 
-                 ( "OMR", [] ) ->
-                     Result.Ok Money.OMR
+                ( "OMR", [] ) ->
+                    Result.Ok Money.OMR
 
-                 ( "PAB", [] ) ->
-                     Result.Ok Money.PAB
+                ( "PAB", [] ) ->
+                    Result.Ok Money.PAB
 
-                 ( "PEN", [] ) ->
-                     Result.Ok Money.PEN
+                ( "PEN", [] ) ->
+                    Result.Ok Money.PEN
 
-                 ( "PHP", [] ) ->
-                     Result.Ok Money.PHP
+                ( "PHP", [] ) ->
+                    Result.Ok Money.PHP
 
-                 ( "PKR", [] ) ->
-                     Result.Ok Money.PKR
+                ( "PKR", [] ) ->
+                    Result.Ok Money.PKR
 
-                 ( "PLN", [] ) ->
-                     Result.Ok Money.PLN
+                ( "PLN", [] ) ->
+                    Result.Ok Money.PLN
 
-                 ( "PYG", [] ) ->
-                     Result.Ok Money.PYG
+                ( "PYG", [] ) ->
+                    Result.Ok Money.PYG
 
-                 ( "QAR", [] ) ->
-                     Result.Ok Money.QAR
+                ( "QAR", [] ) ->
+                    Result.Ok Money.QAR
 
-                 ( "RON", [] ) ->
-                     Result.Ok Money.RON
+                ( "RON", [] ) ->
+                    Result.Ok Money.RON
 
-                 ( "RSD", [] ) ->
-                     Result.Ok Money.RSD
+                ( "RSD", [] ) ->
+                    Result.Ok Money.RSD
 
-                 ( "RUB", [] ) ->
-                     Result.Ok Money.RUB
+                ( "RUB", [] ) ->
+                    Result.Ok Money.RUB
 
-                 ( "RWF", [] ) ->
-                     Result.Ok Money.RWF
+                ( "RWF", [] ) ->
+                    Result.Ok Money.RWF
 
-                 ( "SAR", [] ) ->
-                     Result.Ok Money.SAR
+                ( "SAR", [] ) ->
+                    Result.Ok Money.SAR
 
-                 ( "SDG", [] ) ->
-                     Result.Ok Money.SDG
+                ( "SDG", [] ) ->
+                    Result.Ok Money.SDG
 
-                 ( "SEK", [] ) ->
-                     Result.Ok Money.SEK
+                ( "SEK", [] ) ->
+                    Result.Ok Money.SEK
 
-                 ( "SGD", [] ) ->
-                     Result.Ok Money.SGD
+                ( "SGD", [] ) ->
+                    Result.Ok Money.SGD
 
-                 ( "SOS", [] ) ->
-                     Result.Ok Money.SOS
+                ( "SOS", [] ) ->
+                    Result.Ok Money.SOS
 
-                 ( "SYP", [] ) ->
-                     Result.Ok Money.SYP
+                ( "SYP", [] ) ->
+                    Result.Ok Money.SYP
 
-                 ( "THB", [] ) ->
-                     Result.Ok Money.THB
+                ( "THB", [] ) ->
+                    Result.Ok Money.THB
 
-                 ( "TND", [] ) ->
-                     Result.Ok Money.TND
+                ( "TND", [] ) ->
+                    Result.Ok Money.TND
 
-                 ( "TOP", [] ) ->
-                     Result.Ok Money.TOP
+                ( "TOP", [] ) ->
+                    Result.Ok Money.TOP
 
-                 ( "TRY", [] ) ->
-                     Result.Ok Money.TRY
+                ( "TRY", [] ) ->
+                    Result.Ok Money.TRY
 
-                 ( "TTD", [] ) ->
-                     Result.Ok Money.TTD
+                ( "TTD", [] ) ->
+                    Result.Ok Money.TTD
 
-                 ( "TWD", [] ) ->
-                     Result.Ok Money.TWD
+                ( "TWD", [] ) ->
+                    Result.Ok Money.TWD
 
-                 ( "TZS", [] ) ->
-                     Result.Ok Money.TZS
+                ( "TZS", [] ) ->
+                    Result.Ok Money.TZS
 
-                 ( "UAH", [] ) ->
-                     Result.Ok Money.UAH
+                ( "UAH", [] ) ->
+                    Result.Ok Money.UAH
 
-                 ( "UGX", [] ) ->
-                     Result.Ok Money.UGX
+                ( "UGX", [] ) ->
+                    Result.Ok Money.UGX
 
-                 ( "UYU", [] ) ->
-                     Result.Ok Money.UYU
+                ( "UYU", [] ) ->
+                    Result.Ok Money.UYU
 
-                 ( "UZS", [] ) ->
-                     Result.Ok Money.UZS
+                ( "UZS", [] ) ->
+                    Result.Ok Money.UZS
 
-                 ( "VED", [] ) ->
-                     Result.Ok Money.VED
+                ( "VED", [] ) ->
+                    Result.Ok Money.VED
 
-                 ( "VND", [] ) ->
-                     Result.Ok Money.VND
+                ( "VND", [] ) ->
+                    Result.Ok Money.VND
 
-                 ( "XAF", [] ) ->
-                     Result.Ok Money.XAF
+                ( "XAF", [] ) ->
+                    Result.Ok Money.XAF
 
-                 ( "XOF", [] ) ->
-                     Result.Ok Money.XOF
+                ( "XOF", [] ) ->
+                    Result.Ok Money.XOF
 
-                 ( "YER", [] ) ->
-                     Result.Ok Money.YER
+                ( "YER", [] ) ->
+                    Result.Ok Money.YER
 
-                 ( "ZAR", [] ) ->
-                     Result.Ok Money.ZAR
+                ( "ZAR", [] ) ->
+                    Result.Ok Money.ZAR
 
-                 ( "ZMK", [] ) ->
-                     Result.Ok Money.ZMK
+                ( "ZMK", [] ) ->
+                    Result.Ok Money.ZMK
 
-                 ( "AOA", [] ) ->
-                     Result.Ok Money.AOA
+                ( "AOA", [] ) ->
+                    Result.Ok Money.AOA
 
-                 ( "XCD", [] ) ->
-                     Result.Ok Money.XCD
+                ( "XCD", [] ) ->
+                    Result.Ok Money.XCD
 
-                 ( "AWG", [] ) ->
-                     Result.Ok Money.AWG
+                ( "AWG", [] ) ->
+                    Result.Ok Money.AWG
 
-                 ( "BSD", [] ) ->
-                     Result.Ok Money.BSD
+                ( "BSD", [] ) ->
+                    Result.Ok Money.BSD
 
-                 ( "BBD", [] ) ->
-                     Result.Ok Money.BBD
+                ( "BBD", [] ) ->
+                    Result.Ok Money.BBD
 
-                 ( "BMD", [] ) ->
-                     Result.Ok Money.BMD
+                ( "BMD", [] ) ->
+                    Result.Ok Money.BMD
 
-                 ( "BTN", [] ) ->
-                     Result.Ok Money.BTN
+                ( "BTN", [] ) ->
+                    Result.Ok Money.BTN
 
-                 ( "KYD", [] ) ->
-                     Result.Ok Money.KYD
+                ( "KYD", [] ) ->
+                    Result.Ok Money.KYD
 
-                 ( "CUP", [] ) ->
-                     Result.Ok Money.CUP
+                ( "CUP", [] ) ->
+                    Result.Ok Money.CUP
 
-                 ( "ANG", [] ) ->
-                     Result.Ok Money.ANG
+                ( "ANG", [] ) ->
+                    Result.Ok Money.ANG
 
-                 ( "SZL", [] ) ->
-                     Result.Ok Money.SZL
+                ( "SZL", [] ) ->
+                    Result.Ok Money.SZL
 
-                 ( "FKP", [] ) ->
-                     Result.Ok Money.FKP
+                ( "FKP", [] ) ->
+                    Result.Ok Money.FKP
 
-                 ( "FJD", [] ) ->
-                     Result.Ok Money.FJD
+                ( "FJD", [] ) ->
+                    Result.Ok Money.FJD
 
-                 ( "XPF", [] ) ->
-                     Result.Ok Money.XPF
+                ( "XPF", [] ) ->
+                    Result.Ok Money.XPF
 
-                 ( "GMD", [] ) ->
-                     Result.Ok Money.GMD
+                ( "GMD", [] ) ->
+                    Result.Ok Money.GMD
 
-                 ( "GIP", [] ) ->
-                     Result.Ok Money.GIP
+                ( "GIP", [] ) ->
+                    Result.Ok Money.GIP
 
-                 ( "GYD", [] ) ->
-                     Result.Ok Money.GYD
+                ( "GYD", [] ) ->
+                    Result.Ok Money.GYD
 
-                 ( "HTG", [] ) ->
-                     Result.Ok Money.HTG
+                ( "HTG", [] ) ->
+                    Result.Ok Money.HTG
 
-                 ( "KPW", [] ) ->
-                     Result.Ok Money.KPW
+                ( "KPW", [] ) ->
+                    Result.Ok Money.KPW
 
-                 ( "KGS", [] ) ->
-                     Result.Ok Money.KGS
+                ( "KGS", [] ) ->
+                    Result.Ok Money.KGS
 
-                 ( "LSL", [] ) ->
-                     Result.Ok Money.LSL
+                ( "LSL", [] ) ->
+                    Result.Ok Money.LSL
 
-                 ( "LRD", [] ) ->
-                     Result.Ok Money.LRD
+                ( "LRD", [] ) ->
+                    Result.Ok Money.LRD
 
-                 ( "MWK", [] ) ->
-                     Result.Ok Money.MWK
+                ( "MWK", [] ) ->
+                    Result.Ok Money.MWK
 
-                 ( "MVR", [] ) ->
-                     Result.Ok Money.MVR
+                ( "MVR", [] ) ->
+                    Result.Ok Money.MVR
 
-                 ( "MRU", [] ) ->
-                     Result.Ok Money.MRU
+                ( "MRU", [] ) ->
+                    Result.Ok Money.MRU
 
-                 ( "MNT", [] ) ->
-                     Result.Ok Money.MNT
+                ( "MNT", [] ) ->
+                    Result.Ok Money.MNT
 
-                 ( "PGK", [] ) ->
-                     Result.Ok Money.PGK
+                ( "PGK", [] ) ->
+                    Result.Ok Money.PGK
 
-                 ( "SHP", [] ) ->
-                     Result.Ok Money.SHP
+                ( "SHP", [] ) ->
+                    Result.Ok Money.SHP
 
-                 ( "WST", [] ) ->
-                     Result.Ok Money.WST
+                ( "WST", [] ) ->
+                    Result.Ok Money.WST
 
-                 ( "STN", [] ) ->
-                     Result.Ok Money.STN
+                ( "STN", [] ) ->
+                    Result.Ok Money.STN
 
-                 ( "SCR", [] ) ->
-                     Result.Ok Money.SCR
+                ( "SCR", [] ) ->
+                    Result.Ok Money.SCR
 
-                 ( "SLE", [] ) ->
-                     Result.Ok Money.SLE
+                ( "SLE", [] ) ->
+                    Result.Ok Money.SLE
 
-                 ( "SBD", [] ) ->
-                     Result.Ok Money.SBD
+                ( "SBD", [] ) ->
+                    Result.Ok Money.SBD
 
-                 ( "SSP", [] ) ->
-                     Result.Ok Money.SSP
+                ( "SSP", [] ) ->
+                    Result.Ok Money.SSP
 
-                 ( "SRD", [] ) ->
-                     Result.Ok Money.SRD
+                ( "SRD", [] ) ->
+                    Result.Ok Money.SRD
 
-                 ( "TJS", [] ) ->
-                     Result.Ok Money.TJS
+                ( "TJS", [] ) ->
+                    Result.Ok Money.TJS
 
-                 ( "TMT", [] ) ->
-                     Result.Ok Money.TMT
+                ( "TMT", [] ) ->
+                    Result.Ok Money.TMT
 
-                 ( "VUV", [] ) ->
-                     Result.Ok Money.VUV
+                ( "VUV", [] ) ->
+                    Result.Ok Money.VUV
 
-                 ( "VES", [] ) ->
-                     Result.Ok Money.VES
+                ( "VES", [] ) ->
+                    Result.Ok Money.VES
 
-                 ( "ZMW", [] ) ->
-                     Result.Ok Money.ZMW
+                ( "ZMW", [] ) ->
+                    Result.Ok Money.ZMW
 
-                 ( "ZWL", [] ) ->
-                     Result.Ok Money.ZWL
+                ( "ZWL", [] ) ->
+                    Result.Ok Money.ZWL
 
-                 _ ->
-                     Result.Err
-                         (Fusion.Patch.WrongType "buildCustom last branch")
+                _ ->
+                    Result.Err
+                        (Fusion.Patch.WrongType "buildCustom last branch")
         )
         value
 
