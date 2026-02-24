@@ -219,20 +219,20 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 "/code-of-conduct"
-                , tab1.checkView 100
+            (\tabA ->
+                [ tabA.clickLink 100 "/code-of-conduct"
+                , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Code of Conduct" ])
-                , tab1.clickLink 100 "/unconference-format"
-                , tab1.checkView 100
+                , tabA.clickLink 100 "/unconference-format"
+                , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Unconference Format" ])
-                , tab1.clickLink 100 "/elm-camp-archive"
-                , tab1.checkView 100
+                , tabA.clickLink 100 "/elm-camp-archive"
+                , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.text "Here we keep track of what has come out of past Elm Camp events." ])
-                , tab1.clickLink 100 "/24-uk"
-                , tab1.navigateBack 100
-                , tab1.clickLink 100 "/23-denmark"
-                , tab1.checkView 100
+                , tabA.clickLink 100 "/24-uk"
+                , tabA.navigateBack 100
+                , tabA.clickLink 100 "/23-denmark"
+                , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Dallund Castle, Denmark" ])
                 ]
             )
@@ -252,10 +252,10 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
-                , tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , tab1.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
+            (\tabA ->
+                [ tabA.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
+                , tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
                 ]
             )
         ]
@@ -269,8 +269,8 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.sendToBackend
+            (\tabA ->
+                [ tabA.sendToBackend
                     100
                     ({ attendees =
                         [ { name = sven
@@ -320,19 +320,19 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , tab1.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
-                , tab1.input 100 (Dom.id "attendeeName_0") "Sven"
-                , tab1.input 100 (Dom.id "attendeeCountry_0") "Sweden"
-                , tab1.input 100 (Dom.id "attendeeCity_0") "Malmö"
-                , tab1.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                , tabA.input 100 (Dom.id "attendeeName_0") "Sven"
+                , tabA.input 100 (Dom.id "attendeeCountry_0") "Sweden"
+                , tabA.input 100 (Dom.id "attendeeCity_0") "Malmö"
+                , tabA.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.checkState 100
                     (\data ->
                         case data.portRequests of
                             head :: _ ->
-                                if head.portName == "stripe_to_js" && head.clientId == tab1.clientId then
+                                if head.portName == "stripe_to_js" && head.clientId == tabA.clientId then
                                     Ok ()
 
                                 else
@@ -392,18 +392,18 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets Camp26Czech.maxRooms tab1
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets Camp26Czech.maxRooms tabA
+                , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab2.checkView
+                    (\tabB ->
+                        [ tabB.checkView
                             100
                             (\html ->
                                 Test.Html.Query.count
@@ -430,20 +430,20 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab2.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
-                        , purchaseSingleRoomTickets 1 tab2
-                        , tab2.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
+                    (\tabB ->
+                        [ tabB.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
+                        , purchaseSingleRoomTickets 1 tabB
+                        , tabB.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
                         ]
                     )
                 ]
@@ -464,20 +464,20 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
+            (\tabA ->
                 [ T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
-                        , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                        , tab1.click 100 (Dom.id "submitForm")
-                        , tab2.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
-                        , purchaseSingleRoomTickets 1 tab2
-                        , tab2.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
+                    (\tabB ->
+                        [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                        , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                        , tabA.click 100 (Dom.id "submitForm")
+                        , tabB.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
+                        , purchaseSingleRoomTickets 1 tabB
+                        , tabB.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.exactText "Sold out!" ])
                         ]
                     )
                 ]
@@ -498,18 +498,18 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
+            (\tabA ->
                 [ T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
-                        , tab1.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
-                        , tab1.click 100 (Dom.id "submitForm")
-                        , tab2.sendToBackend
+                    (\tabB ->
+                        [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                        , tabA.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
+                        , tabA.click 100 (Dom.id "submitForm")
+                        , tabB.sendToBackend
                             100
                             ({ attendees =
                                 [ { name = sven
@@ -532,7 +532,7 @@ tests fileData =
                                 |> Untrusted.untrust
                                 |> SubmitFormRequest
                             )
-                        , tab2.checkView
+                        , tabB.checkView
                             100
                             (Test.Html.Query.has [ Test.Html.Selector.exactText "Sorry, tickets are sold out." ])
                         ]
@@ -555,18 +555,18 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchasecampfireTickets 0 Camp26Czech.maxAttendees tab1
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchasecampfireTickets 0 Camp26Czech.maxAttendees tabA
+                , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab2.checkView
+                    (\tabB ->
+                        [ tabB.checkView
                             100
                             (\html ->
                                 Test.Html.Query.count
@@ -593,19 +593,19 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets Camp26Czech.maxRooms tab1
-                , purchasecampfireTickets Camp26Czech.maxRooms (Camp26Czech.maxAttendees - Camp26Czech.maxRooms) tab1
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets Camp26Czech.maxRooms tabA
+                , purchasecampfireTickets Camp26Czech.maxRooms (Camp26Czech.maxAttendees - Camp26Czech.maxRooms) tabA
+                , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab2.checkView
+                    (\tabB ->
+                        [ tabB.checkView
                             100
                             (\html ->
                                 Test.Html.Query.count
@@ -632,19 +632,19 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tab1
-                , purchaseSharedRoomTickets (Camp26Czech.maxRooms - 1) 2 tab1
-                , tab1.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
-                , tab1.click 100 (Dom.id "submitForm")
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                , purchaseSharedRoomTickets (Camp26Czech.maxRooms - 1) 2 tabA
+                , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
+                , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
                     100
                     (Lamdera.sessionIdFromString "session ID 2")
                     (Route.encode Nothing Route.TicketPurchaseRoute)
                     windowSize
-                    (\tab2 ->
-                        [ tab2.checkView
+                    (\tabB ->
+                        [ tabB.checkView
                             100
                             (\html ->
                                 Test.Html.Query.count
@@ -671,14 +671,14 @@ tests fileData =
             (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
             "/"
             windowSize
-            (\tab1 ->
-                [ tab1.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , tab1.clickLink 100 (Route.encode Nothing Route.OpportunityGrantRoute)
-                , tab1.checkView 100
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.clickLink 100 (Route.encode Nothing Route.OpportunityGrantRoute)
+                , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.text "Opportunity grant application" ])
-                , tab1.input 100 OpportunityGrant.emailHtmlId (EmailAddress.toString svenMail)
-                , tab1.input 100 OpportunityGrant.messageHtmlId "I am a first-time Elm developer from an under-represented background and would love to attend!"
-                , tab1.click 100 OpportunityGrant.submitHtmlId
+                , tabA.input 100 OpportunityGrant.emailHtmlId (EmailAddress.toString svenMail)
+                , tabA.input 100 OpportunityGrant.messageHtmlId "I am a first-time Elm developer from an under-represented background and would love to attend!"
+                , tabA.click 100 OpportunityGrant.submitHtmlId
                 , T.checkState 100
                     (\data ->
                         let
@@ -686,8 +686,7 @@ tests fileData =
                             grantApplicationEmails =
                                 List.Extra.count
                                     (\req ->
-                                        req.url
-                                            == "https://api.postmarkapp.com/email"
+                                        (req.url == "https://api.postmarkapp.com/email")
                                             && (case req.body of
                                                     T.JsonBody value ->
                                                         case D.decodeValue (D.field "Subject" D.string) value of
@@ -709,10 +708,10 @@ tests fileData =
                         else
                             Err ("Expected 1 opportunity grant notification email but got " ++ String.fromInt grantApplicationEmails)
                     )
-                , T.checkState 100
+                , tabA.checkModel 100
                     (\data ->
-                        case SeqDict.get tab1.clientId data.frontends of
-                            Just (Types.Loaded loaded) ->
+                        case data of
+                            Types.Loaded loaded ->
                                 case loaded.opportunityGrantForm.submitStatus of
                                     Types.OpportunityGrantSubmittedSuccessfully ->
                                         if loaded.opportunityGrantForm.email == "" && loaded.opportunityGrantForm.message == "" then
@@ -724,11 +723,8 @@ tests fileData =
                                     _ ->
                                         Err "Expected form to be in SubmittedSuccessfully state after successful submission"
 
-                            Just (Types.Loading _) ->
+                            Types.Loading _ ->
                                 Err "Frontend is not in Loaded state"
-
-                            Nothing ->
-                                Err "Could not find frontend by client ID"
                     )
                 ]
             )
@@ -740,17 +736,17 @@ purchaseSingleRoomTickets :
     Int
     -> T.FrontendActions toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
     -> T.Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-purchaseSingleRoomTickets count tab1 =
+purchaseSingleRoomTickets count tabA =
     List.concatMap
         (\index ->
             [ if index == 0 then
-                tab1.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
 
               else
-                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.singleRoomTicket))
-            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
-            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
-            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.singleRoomTicket))
+            , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
+            , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
+            , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
             ]
         )
         (List.range 0 (count - 1))
@@ -762,7 +758,7 @@ purchaseSharedRoomTickets :
     -> Int
     -> T.FrontendActions toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
     -> T.Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-purchaseSharedRoomTickets offset count tab1 =
+purchaseSharedRoomTickets offset count tabA =
     List.concatMap
         (\index ->
             let
@@ -771,13 +767,13 @@ purchaseSharedRoomTickets offset count tab1 =
                     offset + index
             in
             [ if index == 0 then
-                tab1.click 100 (Sales.selectTicketId Camp26Czech.sharedRoomTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Czech.sharedRoomTicket)
 
               else
-                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.sharedRoomTicket))
-            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
-            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
-            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.sharedRoomTicket))
+            , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+            , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+            , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
             ]
         )
         (List.range 0 (count - 1))
@@ -789,7 +785,7 @@ purchasecampfireTickets :
     -> Int
     -> T.FrontendActions toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
     -> T.Action toBackend frontendMsg frontendModel toFrontend backendMsg backendModel
-purchasecampfireTickets offset count tab1 =
+purchasecampfireTickets offset count tabA =
     List.concatMap
         (\index ->
             let
@@ -798,13 +794,13 @@ purchasecampfireTickets offset count tab1 =
                     offset + index
             in
             [ if index == 0 then
-                tab1.click 100 (Sales.selectTicketId Camp26Czech.campfireTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Czech.campfireTicket)
 
               else
-                tab1.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.campfireTicket))
-            , tab1.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
-            , tab1.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
-            , tab1.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.campfireTicket))
+            , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
+            , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
+            , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
             ]
         )
         (List.range 0 (count - 1))

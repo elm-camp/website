@@ -445,7 +445,7 @@ updateLoaded msg model =
             , Command.none
             )
 
-        FusionPatch patch ->
+        FusionPatch _ ->
             ( model, Command.none )
 
         FusionQuery ->
