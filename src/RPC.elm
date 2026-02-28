@@ -8,6 +8,7 @@ module RPC exposing
 import Env
 import Http as HttpCore
 import Json.Decode as D
+import Json.Encode
 import Lamdera as LamderaCore exposing (SessionId)
 import Lamdera.Json as Json
 import Lamdera.Wire3 as Wire3
@@ -82,6 +83,18 @@ lamdera_handleEndpoints reqRaw req model =
                     , model
                     , TaskCore.perform
                         (\() -> StripeWebhookResponse { endpoint = req.endpoint, json = string })
+                        (TaskCore.succeed ())
+                    )
+
+                BodyJson json ->
+                    ( if Env.isProduction then
+                        LamderaRPC.ResultString "prod"
+
+                      else
+                        LamderaRPC.ResultString "dev"
+                    , model
+                    , TaskCore.perform
+                        (\() -> StripeWebhookResponse { endpoint = req.endpoint, json = Json.Encode.encode 0 json })
                         (TaskCore.succeed ())
                     )
 

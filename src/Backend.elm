@@ -15,6 +15,7 @@ module Backend exposing
     )
 
 import Camp26Czech
+import Codec exposing (Codec)
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
 import Effect.Http as Http
@@ -711,3 +712,943 @@ confirmationEmail purchaseForm stripeCurrency =
                 ]
             ]
     }
+
+
+codec : Codec BackendModel
+codec =
+    Codec.object BackendModel
+        |> Codec.field "orders" .orders (seqDictCodec Id.codec completedOrderCodec)
+        |> Codec.field "pendingOrders" .pendingOrders (seqDictCodec Id.codec pendingOrderCodec)
+        |> Codec.field "expiredOrders" .expiredOrders (seqDictCodec Id.codec pendingOrderCodec)
+        |> Codec.field "prices" .prices ticketPriceStatusCodec
+        |> Codec.field "time" .time timeCodec
+        |> Codec.field "ticketsEnabled" .ticketsEnabled ticketsEnabledCodec
+        |> Codec.field "grantApplications" .grantApplications (Codec.list grantApplicationCodec)
+        |> Codec.buildObject
+
+
+seqDictCodec : Codec a -> Codec b -> Codec (SeqDict a b)
+seqDictCodec keyCodec valueCodec =
+    Codec.map
+        SeqDict.fromList
+        SeqDict.toList
+        (Codec.list (Codec.tuple keyCodec valueCodec))
+
+
+completedOrderCodec : Codec CompletedOrder
+completedOrderCodec =
+    Codec.object CompletedOrder
+        |> Codec.field "submitTime" .submitTime timeCodec
+        |> Codec.field "form" .form purchaseFormValidatedCodec
+        |> Codec.field "emailResult" .emailResult emailResultCodec
+        |> Codec.field "paymentId" .paymentId Id.codec
+        |> Codec.buildObject
+
+
+purchaseFormValidatedCodec : Codec PurchaseFormValidated
+purchaseFormValidatedCodec =
+    Codec.object PurchaseFormValidated
+        |> Codec.field "attendees" .attendees (Codec.list attendeeFormValidatedCodec)
+        |> Codec.field "count" .count (ticketTypesCodec nonNegativeCodec)
+        |> Codec.field "billingEmail" .billingEmail emailAddressCodec
+        |> Codec.field "grantContribution" .grantContribution quantityCodecFloat
+        |> Codec.buildObject
+
+
+attendeeFormValidatedCodec : Codec PurchaseForm.AttendeeFormValidated
+attendeeFormValidatedCodec =
+    Codec.object PurchaseForm.AttendeeFormValidated
+        |> Codec.field "name" .name Name.codec
+        |> Codec.field "country" .country nonemptyStringCodec
+        |> Codec.field "originCity" .originCity nonemptyStringCodec
+        |> Codec.buildObject
+
+
+nonemptyStringCodec : Codec NonemptyString
+nonemptyStringCodec =
+    Codec.custom
+        (\nonemptyStringEncoder value ->
+            case value of
+                String.Nonempty.NonemptyString argA argB ->
+                    nonemptyStringEncoder argA argB
+        )
+        |> Codec.variant2 "NonemptyString" NonemptyString Codec.char Codec.string
+        |> Codec.buildCustom
+
+
+nonNegativeCodec : Codec NonNegative
+nonNegativeCodec =
+    Codec.andThen
+        (\text ->
+            case NonNegative.fromInt text of
+                Ok uint ->
+                    Codec.succeed uint
+
+                Err _ ->
+                    Codec.fail "Value can't be negative"
+        )
+        NonNegative.toInt
+        Codec.int
+
+
+quantityCodecFloat : Codec (Quantity.Quantity Float units)
+quantityCodecFloat =
+    Codec.map Quantity.unsafe Quantity.unwrap Codec.float
+
+
+quantityCodecInt : Codec (Quantity.Quantity Int units)
+quantityCodecInt =
+    Codec.map Quantity.unsafe Quantity.unwrap Codec.int
+
+
+emailResultCodec : Codec EmailResult
+emailResultCodec =
+    Codec.custom
+        (\sendingEmailEncoder emailSuccessEncoder emailFailedEncoder value ->
+            case value of
+                Types.SendingEmail ->
+                    sendingEmailEncoder
+
+                Types.EmailSuccess ->
+                    emailSuccessEncoder
+
+                Types.EmailFailed argA ->
+                    emailFailedEncoder argA
+        )
+        |> Codec.variant0 "SendingEmail" Types.SendingEmail
+        |> Codec.variant0 "EmailSuccess" Types.EmailSuccess
+        |> Codec.variant1 "EmailFailed" Types.EmailFailed sendEmailErrorCodec
+        |> Codec.buildCustom
+
+
+sendEmailErrorCodec : Codec Postmark.SendEmailError
+sendEmailErrorCodec =
+    Codec.custom
+        (\unknownErrorEncoder postmarkErrorEncoder networkErrorEncoder timeoutEncoder badUrlEncoder value ->
+            case value of
+                Postmark.UnknownError argA ->
+                    unknownErrorEncoder argA
+
+                Postmark.PostmarkError argA ->
+                    postmarkErrorEncoder argA
+
+                Postmark.NetworkError ->
+                    networkErrorEncoder
+
+                Postmark.Timeout ->
+                    timeoutEncoder
+
+                Postmark.BadUrl argA ->
+                    badUrlEncoder argA
+        )
+        |> Codec.variant1 "UnknownError" Postmark.UnknownError unknownErrorDataCodec
+        |> Codec.variant1 "PostmarkError" Postmark.PostmarkError postmarkError_Codec
+        |> Codec.variant0 "NetworkError" Postmark.NetworkError
+        |> Codec.variant0 "Timeout" Postmark.Timeout
+        |> Codec.variant1 "BadUrl" Postmark.BadUrl Codec.string
+        |> Codec.buildCustom
+
+
+unknownErrorDataCodec : Codec Postmark.UnknownErrorData
+unknownErrorDataCodec =
+    Codec.object Postmark.UnknownErrorData
+        |> Codec.field "statusCode" .statusCode Codec.int
+        |> Codec.field "body" .body Codec.string
+        |> Codec.buildObject
+
+
+postmarkError_Codec : Codec Postmark.PostmarkError_
+postmarkError_Codec =
+    Codec.object Postmark.PostmarkError_
+        |> Codec.field "errorCode" .errorCode Codec.int
+        |> Codec.field "message" .message Codec.string
+        |> Codec.field "to" .to (Codec.list emailAddressCodec)
+        |> Codec.buildObject
+
+
+pendingOrderCodec : Codec PendingOrder
+pendingOrderCodec =
+    Codec.object PendingOrder
+        |> Codec.field "submitTime" .submitTime timeCodec
+        |> Codec.field "form" .form purchaseFormValidatedCodec
+        |> Codec.field "sessionId" .sessionId sessionIdCodec
+        |> Codec.buildObject
+
+
+sessionIdCodec : Codec SessionId
+sessionIdCodec =
+    Codec.map Lamdera.sessionIdFromString Lamdera.sessionIdToString Codec.string
+
+
+ticketPriceStatusCodec : Codec TicketPriceStatus
+ticketPriceStatusCodec =
+    Codec.custom
+        (\notLoadingTicketPricesEncoder loadingTicketPricesEncoder loadedTicketPricesEncoder failedToLoadTicketPricesEncoder ticketCurrenciesDoNotMatchEncoder value ->
+            case value of
+                Types.NotLoadingTicketPrices ->
+                    notLoadingTicketPricesEncoder
+
+                Types.LoadingTicketPrices ->
+                    loadingTicketPricesEncoder
+
+                Types.LoadedTicketPrices argA argB ->
+                    loadedTicketPricesEncoder argA argB
+
+                Types.FailedToLoadTicketPrices argA ->
+                    failedToLoadTicketPricesEncoder argA
+
+                Types.TicketCurrenciesDoNotMatch ->
+                    ticketCurrenciesDoNotMatchEncoder
+        )
+        |> Codec.variant0 "NotLoadingTicketPrices" Types.NotLoadingTicketPrices
+        |> Codec.variant0 "LoadingTicketPrices" Types.LoadingTicketPrices
+        |> Codec.variant2 "LoadedTicketPrices" Types.LoadedTicketPrices currencyCodec (ticketTypesCodec priceCodec)
+        |> Codec.variant1 "FailedToLoadTicketPrices" Types.FailedToLoadTicketPrices errorCodec
+        |> Codec.variant0 "TicketCurrenciesDoNotMatch" Types.TicketCurrenciesDoNotMatch
+        |> Codec.buildCustom
+
+
+priceCodec : Codec Price
+priceCodec =
+    Codec.object Price
+        |> Codec.field "priceId" .priceId Id.codec
+        |> Codec.field "amount" .amount quantityCodecInt
+        |> Codec.buildObject
+
+
+currencyCodec : Codec Money.Currency
+currencyCodec =
+    Codec.custom
+        (\uSDEncoder cADEncoder eUREncoder bTCEncoder aEDEncoder aFNEncoder aLLEncoder aMDEncoder aRSEncoder aUDEncoder aZNEncoder bAMEncoder bDTEncoder bGNEncoder bHDEncoder bIFEncoder bNDEncoder bOBEncoder bRLEncoder bWPEncoder bYNEncoder bZDEncoder cDFEncoder cHFEncoder cLPEncoder cNYEncoder cOPEncoder cRCEncoder cVEEncoder cZKEncoder dJFEncoder dKKEncoder dOPEncoder dZDEncoder eEKEncoder eGPEncoder eRNEncoder eTBEncoder gBPEncoder gELEncoder gHSEncoder gNFEncoder gTQEncoder hKDEncoder hNLEncoder hRKEncoder hUFEncoder iDREncoder iLSEncoder iNREncoder iQDEncoder iRREncoder iSKEncoder jMDEncoder jODEncoder jPYEncoder kESEncoder kHREncoder kMFEncoder kRWEncoder kWDEncoder kZTEncoder lAKEncoder lBPEncoder lKREncoder lTLEncoder lVLEncoder lYDEncoder mADEncoder mDLEncoder mGAEncoder mKDEncoder mMKEncoder mOPEncoder mUREncoder mXNEncoder mYREncoder mZNEncoder nADEncoder nGNEncoder nIOEncoder nOKEncoder nPREncoder nZDEncoder oMREncoder pABEncoder pENEncoder pHPEncoder pKREncoder pLNEncoder pYGEncoder qAREncoder rONEncoder rSDEncoder rUBEncoder rWFEncoder sAREncoder sDGEncoder sEKEncoder sGDEncoder sOSEncoder sYPEncoder tHBEncoder tNDEncoder tOPEncoder tRYEncoder tTDEncoder tWDEncoder tZSEncoder uAHEncoder uGXEncoder uYUEncoder uZSEncoder vEDEncoder vNDEncoder xAFEncoder xOFEncoder yEREncoder zAREncoder zMKEncoder aOAEncoder xCDEncoder aWGEncoder bSDEncoder bBDEncoder bMDEncoder bTNEncoder kYDEncoder cUPEncoder aNGEncoder sZLEncoder fKPEncoder fJDEncoder xPFEncoder gMDEncoder gIPEncoder gYDEncoder hTGEncoder kPWEncoder kGSEncoder lSLEncoder lRDEncoder mWKEncoder mVREncoder mRUEncoder mNTEncoder pGKEncoder sHPEncoder wSTEncoder sTNEncoder sCREncoder sLEEncoder sBDEncoder sSPEncoder sRDEncoder tJSEncoder tMTEncoder vUVEncoder vESEncoder zMWEncoder zWLEncoder value ->
+            case value of
+                Money.USD ->
+                    uSDEncoder
+
+                Money.CAD ->
+                    cADEncoder
+
+                Money.EUR ->
+                    eUREncoder
+
+                Money.BTC ->
+                    bTCEncoder
+
+                Money.AED ->
+                    aEDEncoder
+
+                Money.AFN ->
+                    aFNEncoder
+
+                Money.ALL ->
+                    aLLEncoder
+
+                Money.AMD ->
+                    aMDEncoder
+
+                Money.ARS ->
+                    aRSEncoder
+
+                Money.AUD ->
+                    aUDEncoder
+
+                Money.AZN ->
+                    aZNEncoder
+
+                Money.BAM ->
+                    bAMEncoder
+
+                Money.BDT ->
+                    bDTEncoder
+
+                Money.BGN ->
+                    bGNEncoder
+
+                Money.BHD ->
+                    bHDEncoder
+
+                Money.BIF ->
+                    bIFEncoder
+
+                Money.BND ->
+                    bNDEncoder
+
+                Money.BOB ->
+                    bOBEncoder
+
+                Money.BRL ->
+                    bRLEncoder
+
+                Money.BWP ->
+                    bWPEncoder
+
+                Money.BYN ->
+                    bYNEncoder
+
+                Money.BZD ->
+                    bZDEncoder
+
+                Money.CDF ->
+                    cDFEncoder
+
+                Money.CHF ->
+                    cHFEncoder
+
+                Money.CLP ->
+                    cLPEncoder
+
+                Money.CNY ->
+                    cNYEncoder
+
+                Money.COP ->
+                    cOPEncoder
+
+                Money.CRC ->
+                    cRCEncoder
+
+                Money.CVE ->
+                    cVEEncoder
+
+                Money.CZK ->
+                    cZKEncoder
+
+                Money.DJF ->
+                    dJFEncoder
+
+                Money.DKK ->
+                    dKKEncoder
+
+                Money.DOP ->
+                    dOPEncoder
+
+                Money.DZD ->
+                    dZDEncoder
+
+                Money.EEK ->
+                    eEKEncoder
+
+                Money.EGP ->
+                    eGPEncoder
+
+                Money.ERN ->
+                    eRNEncoder
+
+                Money.ETB ->
+                    eTBEncoder
+
+                Money.GBP ->
+                    gBPEncoder
+
+                Money.GEL ->
+                    gELEncoder
+
+                Money.GHS ->
+                    gHSEncoder
+
+                Money.GNF ->
+                    gNFEncoder
+
+                Money.GTQ ->
+                    gTQEncoder
+
+                Money.HKD ->
+                    hKDEncoder
+
+                Money.HNL ->
+                    hNLEncoder
+
+                Money.HRK ->
+                    hRKEncoder
+
+                Money.HUF ->
+                    hUFEncoder
+
+                Money.IDR ->
+                    iDREncoder
+
+                Money.ILS ->
+                    iLSEncoder
+
+                Money.INR ->
+                    iNREncoder
+
+                Money.IQD ->
+                    iQDEncoder
+
+                Money.IRR ->
+                    iRREncoder
+
+                Money.ISK ->
+                    iSKEncoder
+
+                Money.JMD ->
+                    jMDEncoder
+
+                Money.JOD ->
+                    jODEncoder
+
+                Money.JPY ->
+                    jPYEncoder
+
+                Money.KES ->
+                    kESEncoder
+
+                Money.KHR ->
+                    kHREncoder
+
+                Money.KMF ->
+                    kMFEncoder
+
+                Money.KRW ->
+                    kRWEncoder
+
+                Money.KWD ->
+                    kWDEncoder
+
+                Money.KZT ->
+                    kZTEncoder
+
+                Money.LAK ->
+                    lAKEncoder
+
+                Money.LBP ->
+                    lBPEncoder
+
+                Money.LKR ->
+                    lKREncoder
+
+                Money.LTL ->
+                    lTLEncoder
+
+                Money.LVL ->
+                    lVLEncoder
+
+                Money.LYD ->
+                    lYDEncoder
+
+                Money.MAD ->
+                    mADEncoder
+
+                Money.MDL ->
+                    mDLEncoder
+
+                Money.MGA ->
+                    mGAEncoder
+
+                Money.MKD ->
+                    mKDEncoder
+
+                Money.MMK ->
+                    mMKEncoder
+
+                Money.MOP ->
+                    mOPEncoder
+
+                Money.MUR ->
+                    mUREncoder
+
+                Money.MXN ->
+                    mXNEncoder
+
+                Money.MYR ->
+                    mYREncoder
+
+                Money.MZN ->
+                    mZNEncoder
+
+                Money.NAD ->
+                    nADEncoder
+
+                Money.NGN ->
+                    nGNEncoder
+
+                Money.NIO ->
+                    nIOEncoder
+
+                Money.NOK ->
+                    nOKEncoder
+
+                Money.NPR ->
+                    nPREncoder
+
+                Money.NZD ->
+                    nZDEncoder
+
+                Money.OMR ->
+                    oMREncoder
+
+                Money.PAB ->
+                    pABEncoder
+
+                Money.PEN ->
+                    pENEncoder
+
+                Money.PHP ->
+                    pHPEncoder
+
+                Money.PKR ->
+                    pKREncoder
+
+                Money.PLN ->
+                    pLNEncoder
+
+                Money.PYG ->
+                    pYGEncoder
+
+                Money.QAR ->
+                    qAREncoder
+
+                Money.RON ->
+                    rONEncoder
+
+                Money.RSD ->
+                    rSDEncoder
+
+                Money.RUB ->
+                    rUBEncoder
+
+                Money.RWF ->
+                    rWFEncoder
+
+                Money.SAR ->
+                    sAREncoder
+
+                Money.SDG ->
+                    sDGEncoder
+
+                Money.SEK ->
+                    sEKEncoder
+
+                Money.SGD ->
+                    sGDEncoder
+
+                Money.SOS ->
+                    sOSEncoder
+
+                Money.SYP ->
+                    sYPEncoder
+
+                Money.THB ->
+                    tHBEncoder
+
+                Money.TND ->
+                    tNDEncoder
+
+                Money.TOP ->
+                    tOPEncoder
+
+                Money.TRY ->
+                    tRYEncoder
+
+                Money.TTD ->
+                    tTDEncoder
+
+                Money.TWD ->
+                    tWDEncoder
+
+                Money.TZS ->
+                    tZSEncoder
+
+                Money.UAH ->
+                    uAHEncoder
+
+                Money.UGX ->
+                    uGXEncoder
+
+                Money.UYU ->
+                    uYUEncoder
+
+                Money.UZS ->
+                    uZSEncoder
+
+                Money.VED ->
+                    vEDEncoder
+
+                Money.VND ->
+                    vNDEncoder
+
+                Money.XAF ->
+                    xAFEncoder
+
+                Money.XOF ->
+                    xOFEncoder
+
+                Money.YER ->
+                    yEREncoder
+
+                Money.ZAR ->
+                    zAREncoder
+
+                Money.ZMK ->
+                    zMKEncoder
+
+                Money.AOA ->
+                    aOAEncoder
+
+                Money.XCD ->
+                    xCDEncoder
+
+                Money.AWG ->
+                    aWGEncoder
+
+                Money.BSD ->
+                    bSDEncoder
+
+                Money.BBD ->
+                    bBDEncoder
+
+                Money.BMD ->
+                    bMDEncoder
+
+                Money.BTN ->
+                    bTNEncoder
+
+                Money.KYD ->
+                    kYDEncoder
+
+                Money.CUP ->
+                    cUPEncoder
+
+                Money.ANG ->
+                    aNGEncoder
+
+                Money.SZL ->
+                    sZLEncoder
+
+                Money.FKP ->
+                    fKPEncoder
+
+                Money.FJD ->
+                    fJDEncoder
+
+                Money.XPF ->
+                    xPFEncoder
+
+                Money.GMD ->
+                    gMDEncoder
+
+                Money.GIP ->
+                    gIPEncoder
+
+                Money.GYD ->
+                    gYDEncoder
+
+                Money.HTG ->
+                    hTGEncoder
+
+                Money.KPW ->
+                    kPWEncoder
+
+                Money.KGS ->
+                    kGSEncoder
+
+                Money.LSL ->
+                    lSLEncoder
+
+                Money.LRD ->
+                    lRDEncoder
+
+                Money.MWK ->
+                    mWKEncoder
+
+                Money.MVR ->
+                    mVREncoder
+
+                Money.MRU ->
+                    mRUEncoder
+
+                Money.MNT ->
+                    mNTEncoder
+
+                Money.PGK ->
+                    pGKEncoder
+
+                Money.SHP ->
+                    sHPEncoder
+
+                Money.WST ->
+                    wSTEncoder
+
+                Money.STN ->
+                    sTNEncoder
+
+                Money.SCR ->
+                    sCREncoder
+
+                Money.SLE ->
+                    sLEEncoder
+
+                Money.SBD ->
+                    sBDEncoder
+
+                Money.SSP ->
+                    sSPEncoder
+
+                Money.SRD ->
+                    sRDEncoder
+
+                Money.TJS ->
+                    tJSEncoder
+
+                Money.TMT ->
+                    tMTEncoder
+
+                Money.VUV ->
+                    vUVEncoder
+
+                Money.VES ->
+                    vESEncoder
+
+                Money.ZMW ->
+                    zMWEncoder
+
+                Money.ZWL ->
+                    zWLEncoder
+        )
+        |> Codec.variant0 "USD" Money.USD
+        |> Codec.variant0 "CAD" Money.CAD
+        |> Codec.variant0 "EUR" Money.EUR
+        |> Codec.variant0 "BTC" Money.BTC
+        |> Codec.variant0 "AED" Money.AED
+        |> Codec.variant0 "AFN" Money.AFN
+        |> Codec.variant0 "ALL" Money.ALL
+        |> Codec.variant0 "AMD" Money.AMD
+        |> Codec.variant0 "ARS" Money.ARS
+        |> Codec.variant0 "AUD" Money.AUD
+        |> Codec.variant0 "AZN" Money.AZN
+        |> Codec.variant0 "BAM" Money.BAM
+        |> Codec.variant0 "BDT" Money.BDT
+        |> Codec.variant0 "BGN" Money.BGN
+        |> Codec.variant0 "BHD" Money.BHD
+        |> Codec.variant0 "BIF" Money.BIF
+        |> Codec.variant0 "BND" Money.BND
+        |> Codec.variant0 "BOB" Money.BOB
+        |> Codec.variant0 "BRL" Money.BRL
+        |> Codec.variant0 "BWP" Money.BWP
+        |> Codec.variant0 "BYN" Money.BYN
+        |> Codec.variant0 "BZD" Money.BZD
+        |> Codec.variant0 "CDF" Money.CDF
+        |> Codec.variant0 "CHF" Money.CHF
+        |> Codec.variant0 "CLP" Money.CLP
+        |> Codec.variant0 "CNY" Money.CNY
+        |> Codec.variant0 "COP" Money.COP
+        |> Codec.variant0 "CRC" Money.CRC
+        |> Codec.variant0 "CVE" Money.CVE
+        |> Codec.variant0 "CZK" Money.CZK
+        |> Codec.variant0 "DJF" Money.DJF
+        |> Codec.variant0 "DKK" Money.DKK
+        |> Codec.variant0 "DOP" Money.DOP
+        |> Codec.variant0 "DZD" Money.DZD
+        |> Codec.variant0 "EEK" Money.EEK
+        |> Codec.variant0 "EGP" Money.EGP
+        |> Codec.variant0 "ERN" Money.ERN
+        |> Codec.variant0 "ETB" Money.ETB
+        |> Codec.variant0 "GBP" Money.GBP
+        |> Codec.variant0 "GEL" Money.GEL
+        |> Codec.variant0 "GHS" Money.GHS
+        |> Codec.variant0 "GNF" Money.GNF
+        |> Codec.variant0 "GTQ" Money.GTQ
+        |> Codec.variant0 "HKD" Money.HKD
+        |> Codec.variant0 "HNL" Money.HNL
+        |> Codec.variant0 "HRK" Money.HRK
+        |> Codec.variant0 "HUF" Money.HUF
+        |> Codec.variant0 "IDR" Money.IDR
+        |> Codec.variant0 "ILS" Money.ILS
+        |> Codec.variant0 "INR" Money.INR
+        |> Codec.variant0 "IQD" Money.IQD
+        |> Codec.variant0 "IRR" Money.IRR
+        |> Codec.variant0 "ISK" Money.ISK
+        |> Codec.variant0 "JMD" Money.JMD
+        |> Codec.variant0 "JOD" Money.JOD
+        |> Codec.variant0 "JPY" Money.JPY
+        |> Codec.variant0 "KES" Money.KES
+        |> Codec.variant0 "KHR" Money.KHR
+        |> Codec.variant0 "KMF" Money.KMF
+        |> Codec.variant0 "KRW" Money.KRW
+        |> Codec.variant0 "KWD" Money.KWD
+        |> Codec.variant0 "KZT" Money.KZT
+        |> Codec.variant0 "LAK" Money.LAK
+        |> Codec.variant0 "LBP" Money.LBP
+        |> Codec.variant0 "LKR" Money.LKR
+        |> Codec.variant0 "LTL" Money.LTL
+        |> Codec.variant0 "LVL" Money.LVL
+        |> Codec.variant0 "LYD" Money.LYD
+        |> Codec.variant0 "MAD" Money.MAD
+        |> Codec.variant0 "MDL" Money.MDL
+        |> Codec.variant0 "MGA" Money.MGA
+        |> Codec.variant0 "MKD" Money.MKD
+        |> Codec.variant0 "MMK" Money.MMK
+        |> Codec.variant0 "MOP" Money.MOP
+        |> Codec.variant0 "MUR" Money.MUR
+        |> Codec.variant0 "MXN" Money.MXN
+        |> Codec.variant0 "MYR" Money.MYR
+        |> Codec.variant0 "MZN" Money.MZN
+        |> Codec.variant0 "NAD" Money.NAD
+        |> Codec.variant0 "NGN" Money.NGN
+        |> Codec.variant0 "NIO" Money.NIO
+        |> Codec.variant0 "NOK" Money.NOK
+        |> Codec.variant0 "NPR" Money.NPR
+        |> Codec.variant0 "NZD" Money.NZD
+        |> Codec.variant0 "OMR" Money.OMR
+        |> Codec.variant0 "PAB" Money.PAB
+        |> Codec.variant0 "PEN" Money.PEN
+        |> Codec.variant0 "PHP" Money.PHP
+        |> Codec.variant0 "PKR" Money.PKR
+        |> Codec.variant0 "PLN" Money.PLN
+        |> Codec.variant0 "PYG" Money.PYG
+        |> Codec.variant0 "QAR" Money.QAR
+        |> Codec.variant0 "RON" Money.RON
+        |> Codec.variant0 "RSD" Money.RSD
+        |> Codec.variant0 "RUB" Money.RUB
+        |> Codec.variant0 "RWF" Money.RWF
+        |> Codec.variant0 "SAR" Money.SAR
+        |> Codec.variant0 "SDG" Money.SDG
+        |> Codec.variant0 "SEK" Money.SEK
+        |> Codec.variant0 "SGD" Money.SGD
+        |> Codec.variant0 "SOS" Money.SOS
+        |> Codec.variant0 "SYP" Money.SYP
+        |> Codec.variant0 "THB" Money.THB
+        |> Codec.variant0 "TND" Money.TND
+        |> Codec.variant0 "TOP" Money.TOP
+        |> Codec.variant0 "TRY" Money.TRY
+        |> Codec.variant0 "TTD" Money.TTD
+        |> Codec.variant0 "TWD" Money.TWD
+        |> Codec.variant0 "TZS" Money.TZS
+        |> Codec.variant0 "UAH" Money.UAH
+        |> Codec.variant0 "UGX" Money.UGX
+        |> Codec.variant0 "UYU" Money.UYU
+        |> Codec.variant0 "UZS" Money.UZS
+        |> Codec.variant0 "VED" Money.VED
+        |> Codec.variant0 "VND" Money.VND
+        |> Codec.variant0 "XAF" Money.XAF
+        |> Codec.variant0 "XOF" Money.XOF
+        |> Codec.variant0 "YER" Money.YER
+        |> Codec.variant0 "ZAR" Money.ZAR
+        |> Codec.variant0 "ZMK" Money.ZMK
+        |> Codec.variant0 "AOA" Money.AOA
+        |> Codec.variant0 "XCD" Money.XCD
+        |> Codec.variant0 "AWG" Money.AWG
+        |> Codec.variant0 "BSD" Money.BSD
+        |> Codec.variant0 "BBD" Money.BBD
+        |> Codec.variant0 "BMD" Money.BMD
+        |> Codec.variant0 "BTN" Money.BTN
+        |> Codec.variant0 "KYD" Money.KYD
+        |> Codec.variant0 "CUP" Money.CUP
+        |> Codec.variant0 "ANG" Money.ANG
+        |> Codec.variant0 "SZL" Money.SZL
+        |> Codec.variant0 "FKP" Money.FKP
+        |> Codec.variant0 "FJD" Money.FJD
+        |> Codec.variant0 "XPF" Money.XPF
+        |> Codec.variant0 "GMD" Money.GMD
+        |> Codec.variant0 "GIP" Money.GIP
+        |> Codec.variant0 "GYD" Money.GYD
+        |> Codec.variant0 "HTG" Money.HTG
+        |> Codec.variant0 "KPW" Money.KPW
+        |> Codec.variant0 "KGS" Money.KGS
+        |> Codec.variant0 "LSL" Money.LSL
+        |> Codec.variant0 "LRD" Money.LRD
+        |> Codec.variant0 "MWK" Money.MWK
+        |> Codec.variant0 "MVR" Money.MVR
+        |> Codec.variant0 "MRU" Money.MRU
+        |> Codec.variant0 "MNT" Money.MNT
+        |> Codec.variant0 "PGK" Money.PGK
+        |> Codec.variant0 "SHP" Money.SHP
+        |> Codec.variant0 "WST" Money.WST
+        |> Codec.variant0 "STN" Money.STN
+        |> Codec.variant0 "SCR" Money.SCR
+        |> Codec.variant0 "SLE" Money.SLE
+        |> Codec.variant0 "SBD" Money.SBD
+        |> Codec.variant0 "SSP" Money.SSP
+        |> Codec.variant0 "SRD" Money.SRD
+        |> Codec.variant0 "TJS" Money.TJS
+        |> Codec.variant0 "TMT" Money.TMT
+        |> Codec.variant0 "VUV" Money.VUV
+        |> Codec.variant0 "VES" Money.VES
+        |> Codec.variant0 "ZMW" Money.ZMW
+        |> Codec.variant0 "ZWL" Money.ZWL
+        |> Codec.buildCustom
+
+
+ticketTypesCodec : Codec a -> Codec (TicketTypes a)
+ticketTypesCodec a =
+    Codec.object TicketTypes
+        |> Codec.field "campfireTicket" .campfireTicket a
+        |> Codec.field "singleRoomTicket" .singleRoomTicket a
+        |> Codec.field "sharedRoomTicket" .sharedRoomTicket a
+        |> Codec.buildObject
+
+
+errorCodec : Codec Http.Error
+errorCodec =
+    Codec.custom
+        (\badUrlEncoder timeoutEncoder networkErrorEncoder badStatusEncoder badBodyEncoder value ->
+            case value of
+                Http.BadUrl argA ->
+                    badUrlEncoder argA
+
+                Http.Timeout ->
+                    timeoutEncoder
+
+                Http.NetworkError ->
+                    networkErrorEncoder
+
+                Http.BadStatus argA ->
+                    badStatusEncoder argA
+
+                Http.BadBody argA ->
+                    badBodyEncoder argA
+        )
+        |> Codec.variant1 "BadUrl" Http.BadUrl Codec.string
+        |> Codec.variant0 "Timeout" Http.Timeout
+        |> Codec.variant0 "NetworkError" Http.NetworkError
+        |> Codec.variant1 "BadStatus" Http.BadStatus Codec.int
+        |> Codec.variant1 "BadBody" Http.BadBody Codec.string
+        |> Codec.buildCustom
+
+
+timeCodec : Codec Time.Posix
+timeCodec =
+    Codec.map Time.millisToPosix Time.posixToMillis Codec.int
+
+
+ticketsEnabledCodec : Codec TicketsEnabled
+ticketsEnabledCodec =
+    Codec.custom
+        (\ticketsEnabledEncoder ticketsDisabledEncoder value ->
+            case value of
+                Types.TicketsEnabled ->
+                    ticketsEnabledEncoder
+
+                Types.TicketsDisabled argA ->
+                    ticketsDisabledEncoder argA
+        )
+        |> Codec.variant0 "TicketsEnabled" TicketsEnabled
+        |> Codec.variant1 "TicketsDisabled" Types.TicketsDisabled ticketsDisabledDataCodec
+        |> Codec.buildCustom
+
+
+ticketsDisabledDataCodec : Codec Types.TicketsDisabledData
+ticketsDisabledDataCodec =
+    Codec.object Types.TicketsDisabledData |> Codec.field "adminMessage" .adminMessage Codec.string |> Codec.buildObject
+
+
+grantApplicationCodec : Codec GrantApplication
+grantApplicationCodec =
+    Codec.object GrantApplication
+        |> Codec.field "email" .email emailAddressCodec
+        |> Codec.field "message" .message Codec.string
+        |> Codec.buildObject
+
+
+emailAddressCodec : Codec EmailAddress
+emailAddressCodec =
+    Codec.andThen
+        (\text ->
+            case EmailAddress.fromString text of
+                Just email ->
+                    Codec.succeed email
+
+                Nothing ->
+                    Codec.fail ("Invalid email: " ++ text)
+        )
+        EmailAddress.toString
+        Codec.string
