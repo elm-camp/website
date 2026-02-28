@@ -170,6 +170,8 @@ type ToBackend
     | CancelPurchaseRequest
     | AdminInspect String
     | SubmitOpportunityGrantRequest GrantApplication
+    | BackendModelRequest String
+    | ReplaceBackendModelRequest String String
 
 
 type BackendMsg
@@ -200,6 +202,8 @@ type ToFrontend
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel Fusion.Value
     | OpportunityGrantSubmitResponse (Result String ())
+    | BackendModelResponse (Result () String)
+    | ReplaceBackendModelResponse (Result String ())
 
 
 type TicketsEnabled

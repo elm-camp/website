@@ -1,9 +1,13 @@
-module Internal exposing (Attribute(..), Html(..), ImageType(..), cid, imageExtension, inlineImageName, mimeType, toHtml, toString)
+module Internal exposing (Attribute(..), Html(..), ImageType(..), cid, decodeEmails, imageExtension, inlineImageName, mimeType, toHtml, toString)
 
 import Base64
 import Bytes exposing (Bytes)
+import EmailAddress exposing (EmailAddress)
 import Html
 import Html.Attributes
+import Http
+import Json.Decode as D
+import List.Nonempty exposing (Nonempty)
 
 
 type Html
@@ -305,3 +309,70 @@ closingTag tagName =
 indent : Int -> Int -> String -> String
 indent perLevel level x =
     String.repeat (perLevel * level) " " ++ x
+
+
+decodeEmails : D.Decoder (Nonempty EmailAddress)
+decodeEmails =
+    D.andThen
+        (\text ->
+            let
+                emails : List ( String, Maybe EmailAddress )
+                emails =
+                    String.split "," text
+                        |> List.filterMap
+                            (\subtext ->
+                                let
+                                    trimmed =
+                                        String.trim subtext
+                                in
+                                if trimmed == "" then
+                                    Nothing
+
+                                else if String.endsWith ">" trimmed then
+                                    case String.split "<" (String.dropRight 1 trimmed) |> List.reverse |> List.head of
+                                        Just email ->
+                                            Just ( trimmed, EmailAddress.fromString email )
+
+                                        Nothing ->
+                                            Nothing
+
+                                else
+                                    Just ( trimmed, EmailAddress.fromString trimmed )
+                            )
+
+                invalidEmails : List String
+                invalidEmails =
+                    List.filterMap
+                        (\( subtext, maybeValid ) ->
+                            if maybeValid == Nothing then
+                                Just subtext
+
+                            else
+                                Nothing
+                        )
+                        emails
+            in
+            case invalidEmails of
+                [] ->
+                    let
+                        validEmails : List EmailAddress
+                        validEmails =
+                            List.filterMap Tuple.second emails
+                    in
+                    case List.Nonempty.fromList validEmails of
+                        Just nonempty ->
+                            D.succeed nonempty
+
+                        Nothing ->
+                            D.fail "Expected at least one email"
+
+                [ invalidEmail ] ->
+                    invalidEmail ++ " is not a valid email" |> D.fail
+
+                _ ->
+                    invalidEmails
+                        |> String.join ", "
+                        |> (\a -> a ++ " are not valid emails")
+                        |> D.fail
+        )
+        D.string
