@@ -52,7 +52,7 @@ view model =
         [ Ui.column
             []
             [ header model
-            , ticketSalesOpenCountdown model.now
+            , ticketSalesOpenCountdown model
             , Ui.el Theme.contentAttributes (RichText.view model content)
             , Ui.el Theme.contentAttributes (organisers model.window)
             , Ui.el Theme.contentAttributes (RichText.view model sponsors)
@@ -61,19 +61,27 @@ view model =
         ]
 
 
-ticketSalesOpenCountdown : Time.Posix -> Element FrontendMsg
-ticketSalesOpenCountdown now =
+ticketSalesOpenCountdown : LoadedModel -> Element FrontendMsg
+ticketSalesOpenCountdown model =
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
-        (case detailedCountdown now of
+        (case detailedCountdown model.now of
             Nothing ->
-                [ Ui.row []
-                    [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
-                        goToTicketSales
-                    , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ]
-                        goToOpportunityGrant
+                if Theme.isMobile model.window then
+                    [ Ui.column
+                        [ Ui.spacing 16 ]
+                        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales
+                        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToOpportunityGrant
+                        ]
                     ]
-                ]
+
+                else
+                    [ Ui.row
+                        []
+                        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales
+                        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToOpportunityGrant
+                        ]
+                    ]
 
             Just countdownElement ->
                 [ countdownElement

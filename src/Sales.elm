@@ -61,7 +61,7 @@ view ticketTypes model =
                     ]
 
                 _ ->
-                    [ Camp26Czech.ticketSalesOpenCountdown model.now ]
+                    [ Camp26Czech.ticketSalesOpenCountdown model ]
             )
         , Theme.footer
         ]
