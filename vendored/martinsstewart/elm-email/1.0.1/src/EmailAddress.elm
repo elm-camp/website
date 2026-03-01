@@ -1,4 +1,4 @@
-module EmailAddress exposing (EmailAddress, fromString, toString)
+module EmailAddress exposing (EmailAddress(..), fromString, toString)
 
 {-|
 
@@ -11,7 +11,7 @@ module EmailAddress exposing (EmailAddress, fromString, toString)
 import Parser exposing ((|.), (|=), Parser, Step(..), andThen, chompWhile, end, getChompedString, loop, map, oneOf, problem, run, succeed, symbol)
 
 
-{-| The type of an email address
+{-| OpaqueVariants. The type of an email address
 -}
 type EmailAddress
     = EmailAddress

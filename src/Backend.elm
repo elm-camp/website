@@ -549,7 +549,7 @@ updateFromFrontend sessionId clientId msg model =
                     Ok newModel ->
                         if
                             (SeqDict.size newModel.orders + SeqDict.size newModel.pendingOrders + SeqDict.size newModel.expiredOrders)
-                                == (SeqDict.size newModel.orders + SeqDict.size newModel.pendingOrders + SeqDict.size newModel.expiredOrders)
+                                == (SeqDict.size model.orders + SeqDict.size model.pendingOrders + SeqDict.size model.expiredOrders)
                         then
                             ( { newModel | time = model.time }
                             , ReplaceBackendModelResponse (Ok ()) |> Lamdera.sendToFrontend clientId

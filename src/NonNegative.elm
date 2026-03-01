@@ -1,6 +1,11 @@
-module NonNegative exposing (NonNegative, fromInt, increment, one, plus, sum, toInt, toString, zero)
+module NonNegative exposing (NonNegative(..), fromInt, increment, one, plus, sum, toInt, toString, zero)
+
+{-| An integer value that can't be negative
+-}
 
 
+{-| OpaqueVariants
+-}
 type NonNegative
     = NonNegative Int
 
