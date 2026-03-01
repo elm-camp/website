@@ -556,7 +556,7 @@ updateFromFrontend sessionId clientId msg model =
 
                         else
                             ( model
-                            , Err "orders + pendingOrders + expiredOrders can't change"
+                            , Err "orders + pendingOrders + expiredOrders can't change. Maybe someone added an order while you were editing?"
                                 |> ReplaceBackendModelResponse
                                 |> Lamdera.sendToFrontend clientId
                             )
