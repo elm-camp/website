@@ -156,7 +156,10 @@ init url key =
             AdminRoute passM ->
                 case passM of
                     Just pass ->
-                        Lamdera.sendToBackend (AdminInspect (AdminPassword pass))
+                        Command.batch
+                            [ Lamdera.sendToBackend (AdminInspect (AdminPassword pass))
+                            , Navigation.replaceUrl key (Route.encode Nothing (AdminRoute Nothing))
+                            ]
 
                     Nothing ->
                         Command.none

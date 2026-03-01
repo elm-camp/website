@@ -3,12 +3,14 @@ module RecordedTests exposing (main, setup, stripePurchaseWebhookResponse, tests
 import Backend
 import Bytes exposing (Bytes)
 import Camp26Czech
+import Codec
 import Dict exposing (Dict)
 import Duration
 import Effect.Browser.Dom as Dom
 import Effect.Lamdera as Lamdera
 import Effect.Test as T exposing (FileUpload(..), HttpRequest, HttpResponse(..), MultipleFilesUpload(..), PointerOptions(..))
 import EmailAddress exposing (EmailAddress)
+import Env
 import Expect
 import Frontend
 import Json.Decode as D
@@ -234,6 +236,67 @@ tests fileData =
                 , tabA.clickLink 100 "/23-denmark"
                 , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Dallund Castle, Denmark" ])
+                ]
+            )
+        ]
+    , T.start
+        "Admin loads backend model"
+        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\tabA ->
+                [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                , tabA.input 100 (Dom.id "attendeeName_0") "Sven"
+                , tabA.input 100 (Dom.id "attendeeCountry_0") "Sweden"
+                , tabA.input 100 (Dom.id "attendeeCity_0") "Malmö"
+                , tabA.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
+                , tabA.click 100 (Dom.id "submitForm")
+                , T.andThen
+                    100
+                    (\data ->
+                        [ T.connectFrontend
+                            100
+                            sessionId0
+                            ("/admin?pass=" ++ Env.adminPassword)
+                            windowSize
+                            (\adminTab ->
+                                [ adminTab.click 100 (Dom.id "admin_downloadBackendModel")
+                                , T.checkState
+                                    100
+                                    (\dataAfterDownload ->
+                                        case SeqDict.get adminTab.clientId dataAfterDownload.frontends of
+                                            Just (Types.Loaded loaded) ->
+                                                if
+                                                    loaded.backendModelJson
+                                                        == Ok (Codec.encodeToString 0 Backend.codec dataAfterDownload.backend)
+                                                then
+                                                    if data.backend == dataAfterDownload.backend then
+                                                        Ok ()
+
+                                                    else
+                                                        Err "Backend was modified by download"
+
+                                                else
+                                                    Err "Backend model json didn't load"
+
+                                            _ ->
+                                                Err "Frontend isn't loaded"
+                                    )
+                                ]
+                            )
+                        ]
+                    )
                 ]
             )
         ]

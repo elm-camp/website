@@ -8,6 +8,7 @@ module Admin exposing
     , viewOrders
     )
 
+import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Env
 import Fusion
 import Fusion.Editor
@@ -78,13 +79,13 @@ viewAdmin backendModel value model =
                 ]
             , Ui.row
                 [ Ui.spacing 8 ]
-                [ button PressedDownloadBackendModelJson "Load backend model json"
+                [ button (Dom.id "admin_downloadBackendModel") PressedDownloadBackendModelJson "Load backend model json"
                 , case model.backendModelJson of
                     Ok "" ->
                         Ui.none
 
                     Ok _ ->
-                        button PressedUploadBackendModelJson "Upload backend model"
+                        button (Dom.id "admin_uploadBackendModel") PressedUploadBackendModelJson "Upload backend model"
 
                     Err () ->
                         Ui.none
@@ -116,7 +117,8 @@ viewAdmin backendModel value model =
         ]
 
 
-button onPress text =
+button : HtmlId -> msg -> String -> Ui.Element msg
+button htmlId onPress text =
     Ui.el
         [ Ui.Input.button onPress
         , Ui.background (Ui.rgb 190 255 200)
@@ -124,6 +126,7 @@ button onPress text =
         , Ui.width Ui.shrink
         , Ui.height (Ui.px 40)
         , Ui.paddingXY 8 0
+        , Ui.id (Dom.idToString htmlId)
         ]
         (Ui.text text)
 

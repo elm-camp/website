@@ -1,6 +1,7 @@
 module Backend exposing
     ( app
     , app_
+    , codec
     , confirmationEmail
     , confirmationEmailSubject
     , elmCampEmailAddress
