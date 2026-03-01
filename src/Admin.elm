@@ -20,23 +20,24 @@ import SeqDict exposing (SeqDict)
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
-import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, TicketsEnabled(..))
+import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, ReplaceBackendModelStatus(..), TicketsEnabled(..))
 import Ui
 import Ui.Font
+import Ui.Input
 
 
 view : LoadedModel -> Ui.Element FrontendMsg
 view model =
     case model.backendModel of
         Just ( backendModel, value ) ->
-            viewAdmin backendModel value
+            viewAdmin backendModel value model
 
         Nothing ->
             Ui.text "loading"
 
 
-viewAdmin : BackendModel -> Fusion.Value -> Ui.Element FrontendMsg
-viewAdmin backendModel value =
+viewAdmin : BackendModel -> Fusion.Value -> LoadedModel -> Ui.Element FrontendMsg
+viewAdmin backendModel value model =
     let
         numberOfOrders =
             List.length (SeqDict.toList backendModel.orders)
@@ -47,9 +48,14 @@ viewAdmin backendModel value =
         numberOfExpiredOrders =
             List.length (SeqDict.toList backendModel.expiredOrders)
 
+        info : String
         info =
             "Orders (completed, pending, expired): "
                 ++ (List.map String.fromInt [ numberOfOrders, numberOfPendingOrders, numberOfExpiredOrders ] |> String.join ", ")
+
+        backendModelJsonLabel : { element : Ui.Element msg, id : Ui.Input.Label }
+        backendModelJsonLabel =
+            Ui.Input.label "backendModelJsonInput" [] (Ui.text "Backend model json")
     in
     Ui.column
         [ Ui.padding 24
@@ -57,6 +63,45 @@ viewAdmin backendModel value =
         , Ui.background (Ui.rgb 200 200 200)
         ]
         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text "Admin")
+        , Ui.column
+            [ Ui.contentBottom, Ui.spacing 8 ]
+            [ Ui.column
+                []
+                [ backendModelJsonLabel.element
+                , Ui.Input.text
+                    [ Ui.height (Ui.px 40) ]
+                    { onChange = TypedBackendModelJson
+                    , text = Result.withDefault "" model.backendModelJson
+                    , placeholder = Nothing
+                    , label = backendModelJsonLabel.id
+                    }
+                ]
+            , Ui.row
+                [ Ui.spacing 8 ]
+                [ button PressedDownloadBackendModelJson "Load backend model json"
+                , case model.backendModelJson of
+                    Ok "" ->
+                        Ui.none
+
+                    Ok _ ->
+                        button PressedUploadBackendModelJson "Upload backend model"
+
+                    Err () ->
+                        Ui.none
+                , case model.replaceBackendModelStatus of
+                    NotReplacingBackendModel ->
+                        Ui.none
+
+                    ReplacingBackendModel ->
+                        Ui.text "Uploading..."
+
+                    ReplacedBackendModel ->
+                        Ui.text "Uploaded!"
+
+                    FailedToReplaceBackendModel string ->
+                        Ui.el [ Ui.Font.color Theme.colors.red ] (Ui.text string)
+                ]
+            ]
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
         , viewOrders backendModel.orders
         , viewExpiredOrders backendModel.expiredOrders
@@ -69,6 +114,18 @@ viewAdmin backendModel value =
             value
             |> Ui.html
         ]
+
+
+button onPress text =
+    Ui.el
+        [ Ui.Input.button onPress
+        , Ui.background (Ui.rgb 190 255 200)
+        , Ui.contentCenterY
+        , Ui.width Ui.shrink
+        , Ui.height (Ui.px 40)
+        , Ui.paddingXY 8 0
+        ]
+        (Ui.text text)
 
 
 viewOrders : SeqDict (Id StripeSessionId) Types.CompletedOrder -> Ui.Element msg

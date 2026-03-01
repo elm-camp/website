@@ -46,7 +46,7 @@ import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (AdminPassword(..), BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 
@@ -519,7 +519,7 @@ updateFromFrontend sessionId clientId msg model =
                 }
             )
 
-        AdminInspect pass ->
+        AdminInspect (AdminPassword pass) ->
             if pass == Env.adminPassword then
                 ( model
                 , Lamdera.sendToFrontend
@@ -530,10 +530,10 @@ updateFromFrontend sessionId clientId msg model =
             else
                 ( model, Command.none )
 
-        BackendModelRequest password ->
+        BackendModelRequest (AdminPassword password) ->
             if password == Env.adminPassword then
                 ( model
-                , Codec.encodeToString 2 codec model
+                , Codec.encodeToString 0 codec model
                     |> Ok
                     |> BackendModelResponse
                     |> Lamdera.sendToFrontend clientId
@@ -542,7 +542,7 @@ updateFromFrontend sessionId clientId msg model =
             else
                 ( model, Err () |> BackendModelResponse |> Lamdera.sendToFrontend clientId )
 
-        ReplaceBackendModelRequest password jsonText ->
+        ReplaceBackendModelRequest (AdminPassword password) jsonText ->
             if password == Env.adminPassword then
                 case Codec.decodeString codec jsonText of
                     Ok newModel ->

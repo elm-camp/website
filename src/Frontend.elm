@@ -39,7 +39,7 @@ import Sales
 import SeqDict
 import Stripe exposing (ConversionRateStatus(..), CurrentCurrency, LocalCurrency, StripeCurrency)
 import Theme
-import Types exposing (FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (AdminPassword(..), FrontendModel(..), FrontendMsg(..), LoadedModel, LoadingModel, ReplaceBackendModelStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Ui
 import Ui.Anim
 import Ui.Font
@@ -123,6 +123,9 @@ init url key =
 
                 _ ->
                     False
+
+        route =
+            Route.decode url
     in
     ( Loading
         { key = key
@@ -133,20 +136,27 @@ init url key =
         , url = url
         , isOrganiser = isOrganiser
         , elmUiState = Ui.Anim.init
+        , adminPassword =
+            case route of
+                AdminRoute password ->
+                    Maybe.map AdminPassword password
+
+                _ ->
+                    Nothing
         }
     , Command.batch
         [ Dom.getViewport
             |> Task.perform (\{ viewport } -> GotWindowSize (round viewport.width) (round viewport.height))
         , Time.now |> Task.perform Tick
         , Time.here |> Task.perform GotZone
-        , case Route.decode url of
+        , case route of
             PaymentCancelRoute ->
                 Lamdera.sendToBackend CancelPurchaseRequest
 
             AdminRoute passM ->
                 case passM of
                     Just pass ->
-                        Lamdera.sendToBackend (AdminInspect pass)
+                        Lamdera.sendToBackend (AdminInspect (AdminPassword pass))
 
                     Nothing ->
                         Command.none
@@ -196,6 +206,9 @@ tryLoading loadingModel =
                 , logoModel = Logo.init
                 , elmUiState = loadingModel.elmUiState
                 , conversionRate = LoadingConversionRate
+                , backendModelJson = Ok ""
+                , replaceBackendModelStatus = NotReplacingBackendModel
+                , adminPassword = loadingModel.adminPassword
                 }
             , Command.batch
                 [ case loadingModel.url.fragment of
@@ -460,6 +473,27 @@ updateLoaded msg model =
         FusionQuery ->
             ( model, Command.none )
 
+        TypedBackendModelJson json ->
+            ( { model | backendModelJson = Ok json }, Command.none )
+
+        PressedDownloadBackendModelJson ->
+            case model.adminPassword of
+                Just adminPassword ->
+                    ( model, Lamdera.sendToBackend (BackendModelRequest adminPassword) )
+
+                Nothing ->
+                    ( model, Command.none )
+
+        PressedUploadBackendModelJson ->
+            case ( model.adminPassword, model.backendModelJson ) of
+                ( Just adminPassword, Ok backendModelJson ) ->
+                    ( { model | replaceBackendModelStatus = ReplacingBackendModel }
+                    , Lamdera.sendToBackend (ReplaceBackendModelRequest adminPassword backendModelJson)
+                    )
+
+                _ ->
+                    ( model, Command.none )
+
 
 {-| Copied from LamderaRPC.elm and made program-test compatible
 -}
@@ -583,6 +617,22 @@ updateFromBackendLoaded msg model =
                     ( { model | opportunityGrantForm = { grantForm | submitStatus = Types.OpportunityGrantSubmitBackendError err } }
                     , Command.none
                     )
+
+        BackendModelResponse result ->
+            ( { model | backendModelJson = result }, Command.none )
+
+        ReplaceBackendModelResponse result ->
+            ( { model
+                | replaceBackendModelStatus =
+                    case result of
+                        Ok () ->
+                            ReplacedBackendModel
+
+                        Err error ->
+                            FailedToReplaceBackendModel error
+              }
+            , Command.none
+            )
 
 
 view : FrontendModel -> Effect.Browser.Document FrontendMsg
