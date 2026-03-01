@@ -351,7 +351,7 @@ decodePostmarkSendResponse =
     D.map3 PostmarkError_
         (D.field "ErrorCode" D.int)
         (D.field "Message" D.string)
-        (optionalField "To" decodeEmails
+        (optionalField "To" Internal.decodeEmails
             |> D.map
                 (\a ->
                     case a of
@@ -383,65 +383,6 @@ optionalField fieldName decoder =
         |> D.andThen finishDecoding
 
 
-decodeEmails : D.Decoder (Nonempty EmailAddress)
-decodeEmails =
-    D.andThen
-        (\text ->
-            let
-                emails : List ( String, Maybe EmailAddress )
-                emails =
-                    String.split "," text
-                        |> List.filterMap
-                            (\subtext ->
-                                let
-                                    trimmed =
-                                        String.trim subtext
-                                in
-                                if trimmed == "" then
-                                    Nothing
-
-                                else
-                                    Just ( trimmed, EmailAddress.fromString trimmed )
-                            )
-
-                invalidEmails : List String
-                invalidEmails =
-                    List.filterMap
-                        (\( subtext, maybeValid ) ->
-                            if maybeValid == Nothing then
-                                Just subtext
-
-                            else
-                                Nothing
-                        )
-                        emails
-            in
-            case invalidEmails of
-                [] ->
-                    let
-                        validEmails : List EmailAddress
-                        validEmails =
-                            List.filterMap Tuple.second emails
-                    in
-                    case List.Nonempty.fromList validEmails of
-                        Just nonempty ->
-                            D.succeed nonempty
-
-                        Nothing ->
-                            D.fail "Expected at least one email"
-
-                [ invalidEmail ] ->
-                    invalidEmail ++ " is not a valid email" |> D.fail
-
-                _ ->
-                    invalidEmails
-                        |> String.join ", "
-                        |> (\a -> a ++ " are not valid emails")
-                        |> D.fail
-        )
-        D.string
-
-
 
 -- Helpers
 
@@ -449,6 +390,7 @@ decodeEmails =
 jsonResolver : Http.Resolver BackendOnly SendEmailError ()
 jsonResolver =
     let
+        decodeBody : Http.Metadata -> String -> Result SendEmailError ()
         decodeBody metadata body =
             case D.decodeString decodePostmarkSendResponse body of
                 Ok json ->

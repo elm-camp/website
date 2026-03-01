@@ -1,6 +1,7 @@
 module Backend exposing
     ( app
     , app_
+    , codec
     , confirmationEmail
     , confirmationEmailSubject
     , elmCampEmailAddress
@@ -46,7 +47,7 @@ import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty exposing (NonemptyString(..))
 import Stripe exposing (CheckoutItem, Price, PriceData, PriceId, ProductId(..), StripeSessionId, Webhook(..))
-import Types exposing (BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
+import Types exposing (AdminPassword(..), BackendModel, BackendMsg(..), CompletedOrder, EmailResult(..), GrantApplication, PendingOrder, TicketPriceStatus(..), TicketsEnabled(..), ToBackend(..), ToFrontend(..))
 import Unsafe
 import Untrusted
 
@@ -519,7 +520,7 @@ updateFromFrontend sessionId clientId msg model =
                 }
             )
 
-        AdminInspect pass ->
+        AdminInspect (AdminPassword pass) ->
             if pass == Env.adminPassword then
                 ( model
                 , Lamdera.sendToFrontend
@@ -529,6 +530,47 @@ updateFromFrontend sessionId clientId msg model =
 
             else
                 ( model, Command.none )
+
+        BackendModelRequest (AdminPassword password) ->
+            if password == Env.adminPassword then
+                ( model
+                , Codec.encodeToString 0 codec model
+                    |> Ok
+                    |> BackendModelResponse
+                    |> Lamdera.sendToFrontend clientId
+                )
+
+            else
+                ( model, Err () |> BackendModelResponse |> Lamdera.sendToFrontend clientId )
+
+        ReplaceBackendModelRequest (AdminPassword password) jsonText ->
+            if password == Env.adminPassword then
+                case Codec.decodeString codec jsonText of
+                    Ok newModel ->
+                        if
+                            (SeqDict.size newModel.orders + SeqDict.size newModel.pendingOrders + SeqDict.size newModel.expiredOrders)
+                                == (SeqDict.size newModel.orders + SeqDict.size newModel.pendingOrders + SeqDict.size newModel.expiredOrders)
+                        then
+                            ( { newModel | time = model.time }
+                            , ReplaceBackendModelResponse (Ok ()) |> Lamdera.sendToFrontend clientId
+                            )
+
+                        else
+                            ( model
+                            , Err "orders + pendingOrders + expiredOrders can't change. Maybe someone added an order while you were editing?"
+                                |> ReplaceBackendModelResponse
+                                |> Lamdera.sendToFrontend clientId
+                            )
+
+                    Err error ->
+                        ( model
+                        , Err (D.errorToString error)
+                            |> ReplaceBackendModelResponse
+                            |> Lamdera.sendToFrontend clientId
+                        )
+
+            else
+                ( model, Err "Invalid password" |> ReplaceBackendModelResponse |> Lamdera.sendToFrontend clientId )
 
 
 sessionIdToStripeSessionId : SessionId -> BackendModel -> Maybe (Id StripeSessionId)

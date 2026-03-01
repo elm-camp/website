@@ -1,5 +1,6 @@
 module Types exposing
-    ( BackendModel
+    ( AdminPassword(..)
+    , BackendModel
     , BackendMsg(..)
     , CompletedOrder
     , EmailResult(..)
@@ -13,6 +14,7 @@ module Types exposing
     , OpportunityGrantPressedSubmit(..)
     , OpportunityGrantSubmitStatus(..)
     , PendingOrder
+    , ReplaceBackendModelStatus(..)
     , TicketPriceStatus(..)
     , TicketsDisabledData
     , TicketsEnabled(..)
@@ -58,6 +60,7 @@ type alias LoadingModel =
     , isOrganiser : Bool
     , initData : Maybe (Result () InitData2)
     , elmUiState : Ui.State
+    , adminPassword : Maybe AdminPassword
     }
 
 
@@ -75,7 +78,17 @@ type alias LoadedModel =
     , logoModel : Logo.Model
     , elmUiState : Ui.State
     , conversionRate : ConversionRateStatus
+    , backendModelJson : Result () String
+    , replaceBackendModelStatus : ReplaceBackendModelStatus
+    , adminPassword : Maybe AdminPassword
     }
+
+
+type ReplaceBackendModelStatus
+    = NotReplacingBackendModel
+    | ReplacingBackendModel
+    | ReplacedBackendModel
+    | FailedToReplaceBackendModel String
 
 
 type alias OpportunityGrantForm =
@@ -163,13 +176,22 @@ type FrontendMsg
     | SelectedCurrency Money.Currency
     | FusionPatch Fusion.Patch.Patch
     | FusionQuery
+    | TypedBackendModelJson String
+    | PressedDownloadBackendModelJson
+    | PressedUploadBackendModelJson
 
 
 type ToBackend
     = SubmitFormRequest (Untrusted PurchaseFormValidated)
     | CancelPurchaseRequest
-    | AdminInspect String
+    | AdminInspect AdminPassword
     | SubmitOpportunityGrantRequest GrantApplication
+    | BackendModelRequest AdminPassword
+    | ReplaceBackendModelRequest AdminPassword String
+
+
+type AdminPassword
+    = AdminPassword String
 
 
 type BackendMsg
@@ -200,6 +222,8 @@ type ToFrontend
     | TicketsEnabledChanged TicketsEnabled
     | AdminInspectResponse BackendModel Fusion.Value
     | OpportunityGrantSubmitResponse (Result String ())
+    | BackendModelResponse (Result () String)
+    | ReplaceBackendModelResponse (Result String ())
 
 
 type TicketsEnabled
