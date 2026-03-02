@@ -148,7 +148,7 @@ viewExpiredOrders orders =
     Ui.column
         [ Ui.spacing 12
         ]
-        ([ Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Expired orders (incorrectly marked expired due to postback issues): " ++ String.fromInt n))
+        ([ Ui.el [ Ui.width Ui.shrink ] (Ui.text ("Expired orders: " ++ String.fromInt n))
          , quickTable (orders |> SeqDict.values)
             [ \order -> List.map (\a -> Name.toString a.name) order.form.attendees |> String.join ", "
 
