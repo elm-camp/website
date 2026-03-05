@@ -190,23 +190,26 @@ viewOrder backendModel idx ( id, order ) =
         [ Ui.Font.size 14, Ui.spacing 12 ]
         [ Ui.text (String.fromInt idx)
         , Ui.text (String.join ", " (attendees order))
-        , List.map2
-            (\ticketType count ->
-                ticketType.name ++ ": " ++ NonNegative.toString count
-            )
-            (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
-            (PurchaseForm.allTicketTypes order.form.count)
-            |> String.join ", "
-            |> Ui.text
-        , case backendModel.prices of
-            LoadedTicketPrices currency _ ->
-                Ui.text
-                    (", grant contribution: "
-                        ++ Sales.stripePriceText (Quantity.round order.form.grantContribution) { stripeCurrency = currency }
-                    )
+        , Ui.row
+            [ Ui.width Ui.shrink, Ui.alignRight ]
+            [ List.map2
+                (\ticketType count ->
+                    ticketType.name ++ ": " ++ NonNegative.toString count
+                )
+                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                (PurchaseForm.allTicketTypes order.form.count)
+                |> String.join ", "
+                |> Ui.text
+            , case backendModel.prices of
+                LoadedTicketPrices currency _ ->
+                    Ui.text
+                        (", grant contribution: "
+                            ++ Sales.stripePriceText (Quantity.round order.form.grantContribution) { stripeCurrency = currency }
+                        )
 
-            _ ->
-                Ui.none
+                _ ->
+                    Ui.none
+            ]
         ]
 
 
