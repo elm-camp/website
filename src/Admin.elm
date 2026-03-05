@@ -8,6 +8,7 @@ module Admin exposing
     , viewOrders
     )
 
+import Camp26Czech
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Env
 import Fusion
@@ -17,11 +18,15 @@ import Fusion.Generated.TypeDict.Types
 import Html
 import Id exposing (Id)
 import Name
+import NonNegative
+import PurchaseForm
+import Quantity
+import Sales
 import SeqDict exposing (SeqDict)
 import String.Nonempty
 import Stripe exposing (Price, PriceData, PriceId, ProductId, StripeSessionId)
 import Theme
-import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, ReplaceBackendModelStatus(..), TicketsEnabled(..))
+import Types exposing (BackendModel, FrontendMsg(..), LoadedModel, ReplaceBackendModelStatus(..), TicketPriceStatus(..), TicketsEnabled(..))
 import Ui
 import Ui.Font
 import Ui.Input
@@ -104,7 +109,7 @@ viewAdmin backendModel value model =
                 ]
             ]
         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 18 ] (Ui.text info)
-        , viewOrders backendModel.orders
+        , viewOrders backendModel
         , viewExpiredOrders backendModel.expiredOrders
         , Fusion.Editor.value
             { typeDict = Fusion.Generated.TypeDict.typeDict
@@ -131,12 +136,12 @@ button htmlId onPress text =
         (Ui.text text)
 
 
-viewOrders : SeqDict (Id StripeSessionId) Types.CompletedOrder -> Ui.Element msg
-viewOrders orders =
+viewOrders : BackendModel -> Ui.Element msg
+viewOrders backendModel =
     Ui.column
         [ Ui.spacing 12
         ]
-        (orders |> SeqDict.toList |> List.indexedMap viewOrder)
+        (backendModel.orders |> SeqDict.toList |> List.indexedMap (viewOrder backendModel))
 
 
 viewExpiredOrders : SeqDict (Id StripeSessionId) Types.PendingOrder -> Ui.Element msg
@@ -179,12 +184,29 @@ quickTable collection fns =
         |> Ui.html
 
 
-viewOrder : Int -> ( Id StripeSessionId, Types.CompletedOrder ) -> Ui.Element msg
-viewOrder idx ( id, order ) =
+viewOrder : BackendModel -> Int -> ( Id StripeSessionId, Types.CompletedOrder ) -> Ui.Element msg
+viewOrder backendModel idx ( id, order ) =
     Ui.row
         [ Ui.Font.size 14, Ui.spacing 12 ]
-        [ Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.fromInt idx))
-        , Ui.el [ Ui.width Ui.shrink ] (Ui.text (String.join ", " (attendees order)))
+        [ Ui.text (String.fromInt idx)
+        , Ui.text (String.join ", " (attendees order))
+        , List.map2
+            (\ticketType count ->
+                ticketType.name ++ ": " ++ NonNegative.toString count
+            )
+            (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+            (PurchaseForm.allTicketTypes order.form.count)
+            |> String.join ", "
+            |> Ui.text
+        , case backendModel.prices of
+            LoadedTicketPrices currency _ ->
+                Ui.text
+                    (", grant contribution: "
+                        ++ Sales.stripePriceText (Quantity.round order.form.grantContribution) { stripeCurrency = currency }
+                    )
+
+            _ ->
+                Ui.none
         ]
 
 
