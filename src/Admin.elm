@@ -39,7 +39,7 @@ view model =
             viewAdmin backendModel value model
 
         Nothing ->
-            Ui.text "loading"
+            Ui.text "loading..."
 
 
 viewAdmin : BackendModel -> Fusion.Value -> LoadedModel -> Ui.Element FrontendMsg
