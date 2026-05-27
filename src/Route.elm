@@ -20,6 +20,7 @@ type Route
     | Camp23Denmark
     | Camp24Uk
     | Camp25US
+    | TravelRoute
     | TicketPurchaseRoute
     | OpportunityGrantRoute
 
@@ -37,6 +38,7 @@ decode url =
         , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Denmark
         , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
         , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
+        , Url.Parser.s "travel" |> Url.Parser.map TravelRoute
         , Url.Parser.s "tickets" |> Url.Parser.map TicketPurchaseRoute
         , Url.Parser.s "opportunity-grant" |> Url.Parser.map OpportunityGrantRoute
         ]
@@ -94,6 +96,9 @@ encode fragment route =
             Camp25US ->
                 [ "25-us" ]
 
+            TravelRoute ->
+                [ "travel" ]
+
             TicketPurchaseRoute ->
                 [ "tickets" ]
 
@@ -134,6 +139,9 @@ encode fragment route =
                 []
 
             Camp25US ->
+                []
+
+            TravelRoute ->
                 []
 
             TicketPurchaseRoute ->

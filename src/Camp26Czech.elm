@@ -12,6 +12,7 @@ module Camp26Czech exposing
     , ticketSalesOpenCountdown
     , ticketTypes
     , view
+    , viewTravel
     )
 
 import Camp
@@ -55,6 +56,20 @@ view model =
             , ticketSalesOpenCountdown model
             , Ui.el Theme.contentAttributes (RichText.view model content)
             , Ui.el Theme.contentAttributes (organisers model.window)
+            , Ui.el Theme.contentAttributes (RichText.view model sponsors)
+            ]
+        , Theme.footer
+        ]
+
+
+viewTravel : LoadedModel -> Element FrontendMsg
+viewTravel model =
+    Ui.column
+        [ Ui.spacing 32 ]
+        [ Ui.column
+            []
+            [ header model
+            , Ui.el Theme.contentAttributes (RichText.view model [ travel ])
             , Ui.el Theme.contentAttributes (RichText.view model sponsors)
             ]
         , Theme.footer
@@ -337,11 +352,284 @@ content =
                 , Paragraph [ Text "Elm Slack: @katjam" ]
                 ]
             ]
+        , Section
+            "Travel guide"
+            [ Paragraph
+                [ Text "See our "
+                , Link "travel guide" Route.TravelRoute
+                , Text " for travel options and information about the location."
+                ]
+            ]
         ]
     , Section "Organisers"
         [ Paragraph [ Text "Elm Camp is a community-driven non-profit initiative, organised by enthusiastic members of the Elm community." ]
         ]
     ]
+
+
+travel : RichText
+travel =
+    Section "How to get there"
+        [ Paragraph
+            [ Text "Elm Camp 2026 is happening at "
+            , Bold "Park Hotel Prachárna"
+            , Text " on the leafy north-western edge of Olomouc, Czechia, "
+            , Bold "15–18 June 2026"
+            , Text ". Most of you will arrive on "
+            , Bold "Monday, 15 June"
+            , Text ". This page should help you plan the last leg of your journey."
+            ]
+        , Paragraph
+            [ Text "Olomouc sits right on the main rail corridor between Prague, Vienna, Bratislava and Krakow. Using your preferred mode of transport for "
+            , Bold "arriving to one of those four cities and continuing by train is by far the most pleasant option"
+            , Text " — fast, scenic, no airport queues, and you arrive in the middle of town."
+            ]
+        , HorizontalLine
+        , Section "1. Pick your gateway airport"
+            [ Paragraph
+                [ Text "Any of these work well; pick whichever has the best/cheapest flight for you."
+                ]
+            , Section "From Prague (PRG) — easiest, most frequent"
+                [ BulletList []
+                    [ Paragraph
+                        [ Bold "Prague Airport → Praha hlavní nádraží (Prague main station)"
+                        , Text ": the cheapest way is "
+                        , Bold "city bus 119"
+                        , Text " to "
+                        , Italic "Nádraží Veleslavín"
+                        , Text ", then "
+                        , Bold "Metro line A (green)"
+                        , Text " to "
+                        , Italic "Hlavní nádraží"
+                        , Text ". The whole ride takes ~45 min and a single 90-min PID public-transport ticket (~40 CZK / "
+                        , Bold "€1.60"
+                        , Text ") covers it all. There's also the Airport Express bus (AE) straight to the main station for ~100 CZK / €4 if you prefer fewer transfers."
+                        ]
+                    , Paragraph
+                        [ Bold "Praha hl.n. → Olomouc hl.n."
+                        , Text ": 2h ~20m on a direct train, "
+                        , Bold "multiple departures per hour"
+                        , Text " from morning until late evening, run by "
+                        , Bold "České dráhy (ČD)"
+                        , Text ", "
+                        , Bold "RegioJet"
+                        , Text " and "
+                        , Bold "Leo Express"
+                        , Text ". Tickets typically "
+                        , Bold "€8–25"
+                        , Text " depending on how far ahead you book."
+                        ]
+                    ]
+                ]
+            , Section "From Vienna (VIE)"
+                [ BulletList []
+                    [ Paragraph
+                        [ Bold "VIE Airport → Wien Hauptbahnhof"
+                        , Text ": take the S7 S-Bahn (~25 min, ~€4) or the CAT/Railjet (faster, ~€12)."
+                        ]
+                    , Paragraph
+                        [ Bold "Wien Hbf → Olomouc hl.n."
+                        , Text ": roughly "
+                        , Bold "2h 30m–3h"
+                        , Text ", with departures roughly hourly. "
+                        , Bold "Most connections involve one change"
+                        , Text " — usually at "
+                        , Bold "Břeclav"
+                        , Text " or "
+                        , Bold "Přerov"
+                        , Text " — and are run by ČD or ÖBB. There are also a few direct services (e.g. RegioJet). Tickets typically "
+                        , Bold "€12–30"
+                        , Text "."
+                        ]
+                    ]
+                ]
+            , Section "From Bratislava (BTS)"
+                [ BulletList []
+                    [ Paragraph
+                        [ Bold "BTS Airport → Bratislava hl. st."
+                        , Text ": city bus 61 to the main station (~25 min, ~€1)."
+                        ]
+                    , Paragraph
+                        [ Bold "Bratislava hl. st. → Olomouc hl.n."
+                        , Text ": ~2h 50m–3h 30m. "
+                        , Bold "Leo Express"
+                        , Text " runs a direct service; ČD and RegioJet options usually involve a single change at Břeclav or Přerov. Tickets typically "
+                        , Bold "€10–25"
+                        , Text "."
+                        ]
+                    ]
+                ]
+            , Section "From Krakow (KRK)"
+                [ BulletList []
+                    [ Paragraph
+                        [ Bold "KRK Airport → Kraków Główny"
+                        , Text ": there's a direct train running every ~30 min, ~20 min journey (~€4)."
+                        ]
+                    , Paragraph
+                        [ Bold "Kraków Główny → Olomouc hl.n."
+                        , Text ": ~3h 30m. "
+                        , Bold "České dráhy (ČD)"
+                        , Text ", "
+                        , Bold "Leo Express"
+                        , Text " and "
+                        , Bold "RegioJet"
+                        , Text " all run direct services on this route. There's also a more frequent option with one change at Bohumín or Ostrava. Tickets typically "
+                        , Bold "€10–25"
+                        , Text "."
+                        ]
+                    ]
+                ]
+            ]
+        , Section "2. Buying train tickets"
+            [ Paragraph
+                [ Text "You don't need to book months in advance — Czech domestic trains are usually fine to buy on the day — but for international legs and for the cheaper fare buckets, "
+                , Bold "booking a few days ahead is worth it"
+                , Text "."
+                ]
+            , Paragraph
+                [ Text "The three operators on the routes above are all good. Pick whichever has the time/price you prefer:"
+                ]
+            , BulletList []
+                [ Paragraph
+                    [ ExternalLink "cd.cz" "https://www.cd.cz/en/"
+                    , Text " — Czech Railways (ČD). The widest network and the only operator you can rely on for everything. Tickets are flexible and refundable for a small fee. Good English site."
+                    ]
+                , Paragraph
+                    [ ExternalLink "regiojet.com" "https://regiojet.com"
+                    , Text " — comfortable seats, free water/coffee on board, on-board WiFi. Tickets are tied to a specific train."
+                    ]
+                , Paragraph
+                    [ ExternalLink "leoexpress.com" "https://www.leoexpress.com/en/"
+                    , Text " — also comfortable, good for the Krakow and Bratislava direct routes, but on the pricey side."
+                    ]
+                ]
+            , Paragraph
+                [ Text "You can also compare/book via "
+                , ExternalLink "Omio" "https://www.omio.com"
+                , Text " or "
+                , ExternalLink "Trainline" "https://www.thetrainline.com"
+                , Text " if you prefer a single interface."
+                ]
+            , Paragraph
+                [ Text "The Olomouc station name is "
+                , Bold "Olomouc hlavní nádraží"
+                , Text " (\"hl.n.\" for short)."
+                ]
+            ]
+        , Section "3. Buses (a fine plan B)"
+            [ Paragraph
+                [ Text "If a train doesn't suit you, long-distance coaches into Olomouc are cheap, comfortable and have WiFi. Two operators serve Olomouc directly from all four gateway cities:"
+                ]
+            , BulletList []
+                [ Paragraph
+                    [ ExternalLink "RegioJet" "https://regiojet.com"
+                    , Text " (formerly known as Student Agency)"
+                    ]
+                , Paragraph
+                    [ ExternalLink "FlixBus" "https://www.flixbus.com"
+                    ]
+                ]
+            , Paragraph
+                [ Text "Both stop at the "
+                , Bold "Olomouc central bus station (autobusové nádraží)"
+                , Text ", which is a short ~5 min walk from the main train station — not the same building, but very close."
+                ]
+            ]
+        , Section "4. Arriving in Olomouc — meeting point"
+            [ Paragraph
+                [ Text "Once you reach "
+                , Bold "Olomouc hlavní nádraží"
+                , Text " on Monday 15 June, head to:"
+                ]
+            , QuoteBlock
+                [ Bold "Love Coffee"
+                , Text " — Masarykova třída 56, ~3 min walk from the station along Masarykova třída.\nopening hours on Monday: 7:00 - 18:00"
+                ]
+            , Paragraph
+                [ Text "It's a small, friendly café on the way from the station to the city centre. We'll be there for a good chunk of the day and we'll be running a "
+                , Bold "taxi shuttle from Love Coffee to Park Hotel Prachárna"
+                , Text " throughout the afternoon. Just turn up, grab a coffee, and we'll get you to the venue.\nPersonel would know about you, so just say that you are an Elm Camp attendee."
+                ]
+            , Paragraph
+                [ Text "We'll try to be at the cafe around the times of your arrivals that you specify in the survey, so please fill them in."
+                ]
+            ]
+        , Section "5. Getting yourself to the venue"
+            [ Paragraph
+                [ Text "If you arrive outside the shuttle hours, miss us, or just prefer to make your own way, the venue is at:"
+                ]
+            , QuoteBlock
+                [ Bold "Park Hotel Prachárna"
+                , Text "\nKřelovská 91, 779 00 Olomouc\n"
+                , ExternalLink "hotel-pracharna.cz" "https://hotel-pracharna.cz/"
+                ]
+            , Paragraph
+                [ Text "It's about "
+                , Bold "5 km north-west of the centre"
+                , Text ". You have three options:"
+                ]
+            , Paragraph
+                [ Bold "Option A — Bolt or taxi (easiest)."
+                , Text " Both "
+                , ExternalLink "Bolt" "https://bolt.eu"
+                , Text " and local taxis work fine in Olomouc. Bolt is usually cheaper; expect "
+                , Bold "~150–250 CZK / €6–10"
+                , Text " from the train station to the hotel. There's also a taxi rank right outside the station on the right side."
+                ]
+            , Paragraph
+                [ Bold "Option B — DPMO city bus 302 or 392 to "
+                , Italic "Motel Prachárna"
+                , Text " (cheapest, direct). Both lines stop right outside the hotel at the "
+                , Bold "Motel Prachárna"
+                , Text " stop. The journey is ~15 min and a single ticket is just "
+                , Bold "25 CZK / ~€1"
+                , Text " (zone 71 tariff). Buy tickets at the yellow vending machines at major stops, in the "
+                , ExternalLink "DPMO app" "https://www.dpmo.cz/"
+                , Text ", or contactless on board. Check live departures on "
+                , ExternalLink "idos.cz" "https://idos.cz"
+                , Text "."
+                ]
+            , Paragraph
+                [ Bold "Option C — Tram or city bus to "
+                , Italic "Hřbitovy"
+                , Text ", then walk. Take a DPMO tram or bus toward the "
+                , Bold "Hřbitovy"
+                , Text " stop (north-west of the centre), then walk ~10–15 min to the hotel. Same fare as Option B (~€1). You can also Bolt the last stretch if you prefer."
+                ]
+            ]
+        , Section "A few practical notes"
+            [ BulletList []
+                [ Paragraph
+                    [ Bold "Currency"
+                    , Text ": Czechia uses the "
+                    , Bold "Czech koruna (CZK)"
+                    , Text ", not the euro. ATMs are everywhere; cards are accepted nearly everywhere too. Avoid the Euronet ATMs at the station — their rates are bad. Use a bank-branded ATM (KB, ČSOB, Česká spořitelna, Raiffeisenbank)."
+                    ]
+                , Paragraph
+                    [ Bold "Language"
+                    , Text ": Czech, but English will get you by easily in cafés, taxis, and at the hotel. A \"dobrý den\" (hello) and \"děkuju\" (thanks) will earn you smiles."
+                    ]
+                , Paragraph
+                    [ Bold "Phone & data"
+                    , Text ": Czechia is in the EU roaming zone, so EU SIMs work without surcharges."
+                    ]
+                , Paragraph
+                    [ Bold "Power"
+                    , Text ": "
+                    , ExternalLink "Type E sockets" "https://www.worldstandards.eu/electricity/plugs-and-sockets/e/"
+                    , Text " (same as most of continental Europe), 230V."
+                    ]
+                ]
+            , Paragraph
+                [ Text "If anything is unclear or your route isn't covered above, "
+                , Bold "drop us a line"
+                , Text " — we're happy to help you figure out the best way in."
+                ]
+            , Paragraph
+                [ Text "See you at Camp! 🌲"
+                ]
+            ]
+        ]
 
 
 ticketSalesOpenAt : Time.Posix

@@ -796,6 +796,9 @@ loadedView model =
         Camp25US ->
             Camp25US.view model
 
+        TravelRoute ->
+            Camp26Czech.viewTravel model
+
         TicketPurchaseRoute ->
             Sales.view Camp26Czech.ticketTypes model
 
