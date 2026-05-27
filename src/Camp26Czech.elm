@@ -242,6 +242,11 @@ sponsors =
                 , maxWidth = Just 250
                 , description = "Concentric health's logo"
                 }
+              , { source = "/sponsors/logo-dividat.svg"
+                , link = Just "https://dividat.com/"
+                , maxWidth = Just 250
+                , description = "Dividat's logo"
+                }
               ]
             , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
               , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
