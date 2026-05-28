@@ -56,7 +56,7 @@ view model =
             , ticketSalesOpenCountdown model
             , Ui.el Theme.contentAttributes (RichText.view model content)
             , Ui.el Theme.contentAttributes (organisers model.window)
-            , Ui.el Theme.contentAttributes (RichText.view model sponsors)
+            , sponsors model.window
             ]
         , Theme.footer
         ]
@@ -70,7 +70,7 @@ viewTravel model =
             []
             [ header model
             , Ui.el Theme.contentAttributes (RichText.view model [ travel ])
-            , Ui.el Theme.contentAttributes (RichText.view model sponsors)
+            , sponsors model.window
             ]
         , Theme.footer
         ]
@@ -226,35 +226,68 @@ goToOpportunityGrant =
         (Ui.text "Opportunity grants available!")
 
 
-sponsors : List RichText
-sponsors =
-    [ Section
-        "Our sponsors"
-        [ Images
-            [ [ { source = "/sponsors/scrive-logo.svg"
-                , maxWidth = Just 400
-                , link = Just "https://www.scrive.com/"
+sponsors : Size -> Element FrontendMsg
+sponsors windowSize =
+    Ui.column
+        ([ Ui.spacing 16 ] ++ Theme.contentAttributes)
+        [ Ui.html (RichText.h1 windowSize "Our sponsors")
+        , Ui.column
+            [ Ui.spacing 24 ]
+            [ sponsorImage
+                { source = "/sponsors/scrive-logo.svg"
+                , maxWidth = 400
+                , link = "https://www.scrive.com/"
                 , description = "Scrive's logo"
                 }
-              ]
-            , [ { source = "/sponsors/concentrichealthlogo.svg"
-                , link = Just "https://concentric.health/"
-                , maxWidth = Just 250
-                , description = "Concentric health's logo"
-                }
-              , { source = "/sponsors/logo-dividat.svg"
-                , link = Just "https://dividat.com/"
-                , maxWidth = Just 250
-                , description = "Dividat's logo"
-                }
-              ]
-            , [ { source = "/sponsors/scripta.io.svg", link = Just "https://scripta.io", maxWidth = Just 120, description = "Scripta IO's logo" }
-              , { source = "/sponsors/elm-weekly-new.svg", link = Just "https://www.elmweekly.nl", maxWidth = Just 120, description = "Elm weekly's logo" }
-              , { source = "/sponsors/lamdera-logo-black.svg", link = Just "https://lamdera.com/", maxWidth = Just 180, description = "Lamdera's logo" }
-              ]
+            , Ui.row
+                [ Ui.spacing 16 ]
+                [ sponsorImage
+                    { source = "/sponsors/concentrichealthlogo.svg"
+                    , link = "https://concentric.health/"
+                    , maxWidth = 250
+                    , description = "Concentric health's logo"
+                    }
+                , sponsorImage
+                    { source = "/sponsors/logo-dividat.svg"
+                    , link = "https://dividat.com/"
+                    , maxWidth = 250
+                    , description = "Dividat's logo"
+                    }
+                ]
+            , Ui.row
+                [ Ui.spacing 8 ]
+                [ sponsorImage
+                    { source = "/sponsors/scripta.io.svg"
+                    , link = "https://scripta.io"
+                    , maxWidth = 120
+                    , description = "Scripta IO's logo"
+                    }
+                , sponsorImage
+                    { source = "/sponsors/elm-weekly-new.svg"
+                    , link = "https://www.elmweekly.nl"
+                    , maxWidth = 120
+                    , description = "Elm weekly's logo"
+                    }
+                , sponsorImage
+                    { source = "/sponsors/lamdera-logo-black.svg"
+                    , link = "https://lamdera.com/"
+                    , maxWidth = 180
+                    , description = "Lamdera's logo"
+                    }
+                ]
             ]
         ]
-    ]
+
+
+sponsorImage : { source : String, maxWidth : Int, link : String, description : String } -> Element b
+sponsorImage { source, maxWidth, link, description } =
+    Ui.image
+        [ Ui.linkNewTab link, Ui.widthMax maxWidth ]
+        { source = source
+        , description = description
+        , onLoad = Nothing
+        }
+        |> Ui.el []
 
 
 scheduleSection : String
