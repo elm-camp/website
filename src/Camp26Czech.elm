@@ -229,7 +229,7 @@ goToOpportunityGrant =
 sponsors : Size -> Element FrontendMsg
 sponsors windowSize =
     Ui.column
-        ([ Ui.spacing 16 ] ++ Theme.contentAttributes)
+        (Ui.spacing 16 :: Theme.contentAttributes)
         [ Ui.html (RichText.h1 windowSize "Our sponsors")
         , Ui.column
             [ Ui.spacing 24 ]
