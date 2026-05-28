@@ -245,7 +245,7 @@ footerButton route label =
 footer : Ui.Element msg
 footer =
     Ui.el
-        [ Ui.paddingXY 24 16
+        [ Ui.paddingXY 0 16
         , Ui.alignBottom
         , Ui.background (Ui.rgb 29 50 45)
         ]
@@ -259,9 +259,10 @@ footer =
             )
             [ footerButton HomepageRoute "Homepage"
             , footerButton CodeOfConductRoute "Code of Conduct"
-            , footerButton UnconferenceFormatRoute "Unconference Guidelines"
+            , footerButton UnconferenceFormatRoute "Unconference Format"
             , footerButton ElmCampArchiveRoute "Archives"
             , footerButton TicketPurchaseRoute "Tickets"
+            , footerButton TravelRoute "Travel"
             ]
         )
 
