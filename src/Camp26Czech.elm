@@ -1,5 +1,6 @@
 module Camp26Czech exposing
-    ( TicketType
+    ( TicketSalesCountdown(..)
+    , TicketType
     , campfireTicket
     , detailedCountdown
     , header
@@ -8,6 +9,7 @@ module Camp26Czech exposing
     , scheduleSection
     , sharedRoomTicket
     , singleRoomTicket
+    , ticketSalesCloseAt
     , ticketSalesOpenAt
     , ticketSalesOpenCountdown
     , ticketTypes
@@ -81,24 +83,29 @@ ticketSalesOpenCountdown model =
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
         (case detailedCountdown model.now of
-            Nothing ->
+            TicketSaleIsClosed ->
+                [ Ui.Prose.paragraph (Theme.contentAttributes ++ [ Ui.Font.center ]) [ Theme.h2 "Ticket sales have now closed!" ] ]
+
+            CountdownUntilTicketsAreClosed countdownElement ->
                 if Theme.isMobile model.window then
                     [ Ui.column
                         [ Ui.spacing 16 ]
-                        [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales
+                        [ countdownElement
+                        , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales
                         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToOpportunityGrant
                         ]
                     ]
 
                 else
-                    [ Ui.row
+                    [ countdownElement
+                    , Ui.row
                         []
                         [ Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToTicketSales
                         , Ui.el [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.centerX ] goToOpportunityGrant
                         ]
                     ]
 
-            Just countdownElement ->
+            CountdownUntilTicketsAreOpen countdownElement ->
                 [ countdownElement
 
                 --, DateFormat.format
@@ -135,11 +142,32 @@ ticketSalesOpenCountdown model =
         )
 
 
-detailedCountdown : Time.Posix -> Maybe (Element msg)
+type TicketSalesCountdown
+    = CountdownUntilTicketsAreOpen (Element FrontendMsg)
+    | CountdownUntilTicketsAreClosed (Element FrontendMsg)
+    | TicketSaleIsClosed
+
+
+detailedCountdown : Time.Posix -> TicketSalesCountdown
 detailedCountdown now =
+    case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}open" now ticketSalesOpenAt of
+        Just countdown ->
+            CountdownUntilTicketsAreOpen countdown
+
+        Nothing ->
+            case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}end" now ticketSalesCloseAt of
+                Just countdown ->
+                    CountdownUntilTicketsAreClosed countdown
+
+                Nothing ->
+                    TicketSaleIsClosed
+
+
+detailedCountdownHelper : String -> Time.Posix -> Time.Posix -> Maybe (Element msg)
+detailedCountdownHelper text now target =
     let
         target2 =
-            Time.posixToMillis ticketSalesOpenAt
+            Time.posixToMillis target
 
         now2 =
             Time.posixToMillis now
@@ -188,10 +216,7 @@ detailedCountdown now =
         Nothing
 
     else
-        Ui.Prose.paragraph
-            (Theme.contentAttributes ++ [ Ui.Font.center ])
-            [ Theme.h2 (output ++ " until\u{00A0}ticket\u{00A0}sales\u{00A0}open") ]
-            |> Just
+        Ui.Prose.paragraph (Theme.contentAttributes ++ [ Ui.Font.center ]) [ Theme.h2 (output ++ text) ] |> Just
 
 
 goToTicketSales : Element FrontendMsg
@@ -674,6 +699,12 @@ ticketSalesOpenAt : Time.Posix
 ticketSalesOpenAt =
     -- 2025 Feb 28 12:00 GMT
     Time.millisToPosix 1772280000000
+
+
+ticketSalesCloseAt : Time.Posix
+ticketSalesCloseAt =
+    -- 2025 Feb 28 12:00 GMT
+    Time.millisToPosix 1781092800000
 
 
 header : LoadedModel -> Element FrontendMsg

@@ -240,6 +240,33 @@ tests fileData =
             )
         ]
     , T.start
+        "Ticket sales have ended"
+        (Duration.addTo Camp26Czech.ticketSalesCloseAt Duration.minute)
+        config
+        [ T.connectFrontend
+            0
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\_ -> [])
+        , T.connectFrontend
+            100
+            (Lamdera.sessionIdFromString "113298c04b8f7b594cdeedebc2a8029b82943b0a")
+            "/"
+            windowSize
+            (\tabA ->
+                [ tabA.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
+                , tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
+                , tabA.clickLink 100 (Route.encode Nothing Route.TravelRoute)
+                , tabA.checkView 100
+                    (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
+                ]
+            )
+        ]
+    , T.start
         "Admin loads backend model"
         (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
         config
@@ -317,6 +344,8 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
+                , tabA.checkView 100
+                    (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
                 , tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , tabA.checkView 100 (Test.Html.Query.has [ Test.Html.Selector.text "1 day 59m" ])
                 ]
@@ -385,6 +414,10 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
+                , tabA.checkView 100
+                    (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
+                , tabA.checkView 100
+                    (Test.Html.Query.has [ Test.Html.Selector.text " until\u{00A0}ticket\u{00A0}sales\u{00A0}end" ])
                 , tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
                 , tabA.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tabA.input 100 (Dom.id "attendeeCountry_0") "Sweden"

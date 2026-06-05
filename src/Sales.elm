@@ -7,7 +7,7 @@ module Sales exposing
     , view
     )
 
-import Camp26Czech exposing (TicketType)
+import Camp26Czech exposing (TicketSalesCountdown(..), TicketType)
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html exposing (Html)
@@ -46,8 +46,9 @@ view ticketTypes model =
         , Ui.column
             [ Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId) ]
             (case ( Camp26Czech.detailedCountdown model.now, model.initData ) of
-                ( Nothing, Ok initData ) ->
-                    [ Ui.el
+                ( CountdownUntilTicketsAreClosed countdown, Ok initData ) ->
+                    [ countdown
+                    , Ui.el
                         Theme.contentAttributes
                         (RichText.h1 model.window "Attend Elm Camp" |> Ui.html)
                     , Ui.column
