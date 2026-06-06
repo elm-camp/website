@@ -260,6 +260,38 @@ tests fileData =
                 , tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
                 , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
+                , tabA.sendToBackend
+                    100
+                    ({ attendees =
+                        [ { name = sven
+                          , country = NonemptyString 'S' "weden"
+                          , originCity = NonemptyString 'S' "tockholm"
+                          }
+                        , { name = sven
+                          , country = NonemptyString 'S' "weden"
+                          , originCity = NonemptyString 'S' "tockholm"
+                          }
+                        ]
+                     , count =
+                        { campfireTicket = NonNegative.zero
+                        , singleRoomTicket = NonNegative.increment NonNegative.one
+                        , sharedRoomTicket = NonNegative.zero
+                        }
+                     , billingEmail = aliceMail
+                     , grantContribution = Quantity.zero
+                     }
+                        |> Untrusted.untrust
+                        |> SubmitFormRequest
+                    )
+                , T.checkBackend
+                    100
+                    (\backend ->
+                        if SeqDict.isEmpty backend.pendingOrders && SeqDict.isEmpty backend.orders then
+                            Ok ()
+
+                        else
+                            Err "User was allowed to buy a ticket too late"
+                    )
                 , tabA.clickLink 100 (Route.encode Nothing Route.TravelRoute)
                 , tabA.checkView 100
                     (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
@@ -352,7 +384,7 @@ tests fileData =
             )
         ]
     , T.start
-        "Cant buy tickets before countdown is finished"
+        "Can't buy tickets before countdown is finished"
         (Duration.subtractFrom Camp26Czech.ticketSalesOpenAt (Duration.hours 25))
         config
         [ T.connectFrontend 0 sessionId0 "/" windowSize (\_ -> [])

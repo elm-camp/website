@@ -435,6 +435,9 @@ updateFromFrontend sessionId clientId msg model =
             if Duration.from Camp26Czech.ticketSalesOpenAt model.time |> Quantity.lessThanZero then
                 ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Tickets aren't available for sale yet.")) )
 
+            else if Duration.from Camp26Czech.ticketSalesCloseAt model.time |> Quantity.greaterThanZero then
+                ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Tickets sales have closed.")) )
+
             else
                 case ( Untrusted.purchaseForm a, model.ticketsEnabled, model.prices ) of
                     ( Just purchaseForm, TicketsEnabled, LoadedTicketPrices currency prices ) ->
