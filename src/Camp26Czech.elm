@@ -703,8 +703,8 @@ ticketSalesOpenAt =
 
 ticketSalesCloseAt : Time.Posix
 ticketSalesCloseAt =
-    -- 2025 Feb 28 12:00 GMT
-    Time.millisToPosix 1781092800000
+    -- Friday, June 12, 2026 at 12:00:00
+    Time.millisToPosix 1781265600000
 
 
 header : LoadedModel -> Element FrontendMsg
