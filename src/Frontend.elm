@@ -885,6 +885,7 @@ codeOfConductContent =
             [ BulletList
                 [ Text "If you experience any behaviours or atmosphere at Elm Camp that feels contrary to these values, please let us know. We want everyone to feel safe, equal and welcome." ]
                 [ Paragraph [ Text "Email the organiser team: ", ExternalLink "team@elm.camp" "mailto:team@elm.camp" ]
+                , Paragraph [ Text "Use the feedback.one widget on this site." ]
                 , Paragraph
                     [ Text "Contact Katja on "
                     , ExternalLink "Elm Slack" "https://elm-lang.org/community/slack"
