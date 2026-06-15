@@ -24,7 +24,6 @@ view =
                     ]
                 , Paragraph [ Text "There are no pre-planned sessions." ]
                 , Paragraph [ Text "We'll start with 2 tracks. If needed, more concurrent sessions may be scheduled during the unconference." ]
-                , Paragraph [ Text "Sessions will be offered in 30 minute and 1 hour blocks." ]
                 , Paragraph [ Text "We encourage attendees to think about how they might like to document or share our discussions with the community after Elm Camp. e.g. blog posts, graphics, videos" ]
                 ]
             , BulletList
