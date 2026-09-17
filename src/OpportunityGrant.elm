@@ -1,6 +1,6 @@
 module OpportunityGrant exposing (emailHtmlId, messageHtmlId, submitHtmlId, view)
 
-import Camp26Czech
+import Camp26Cz
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Html.Attributes
 import PurchaseForm
@@ -17,7 +17,7 @@ view : LoadedModel -> Element FrontendMsg
 view model =
     Ui.column
         [ Ui.spacing 20, Ui.height Ui.fill ]
-        [ Camp26Czech.header model
+        [ Camp26Cz.header model
         , Ui.column
             (Theme.contentAttributes ++ [ Ui.spacing 32, Ui.paddingXY 16 24 ])
             [ RichText.h1 model.window "Opportunity grant application" |> Ui.html
@@ -215,7 +215,7 @@ messageField form isSubmitting =
             , Ui.Font.color Theme.lightTheme.mutedText
             , Ui.paddingXY 4 0
             ]
-            [ Ui.el [ Ui.Font.underline ] (Ui.text "You do not need to fill this in.")
+            [ Ui.el [ Ui.Font.bold ] (Ui.text "You do not need to fill this in.")
             , Ui.text " An email address alone is enough to apply and we will never"
             , Ui.text " turn someone away for not providing more information."
             ]

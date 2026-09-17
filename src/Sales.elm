@@ -7,7 +7,7 @@ module Sales exposing
     , view
     )
 
-import Camp26Czech exposing (TicketSalesCountdown(..), TicketType)
+import Camp26Cz exposing (TicketSalesCountdown(..), TicketType)
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Effect.Time as Time
 import Html exposing (Html)
@@ -42,10 +42,10 @@ view ticketTypes model =
     in
     Ui.column
         [ Ui.spacing 20, Ui.height Ui.fill ]
-        [ Camp26Czech.header model
+        [ Camp26Cz.header model
         , Ui.column
             [ Ui.htmlAttribute (Dom.idToAttribute ticketsHtmlId) ]
-            (case ( Camp26Czech.detailedCountdown model.now, model.initData ) of
+            (case ( Camp26Cz.detailedCountdown model.now, model.initData ) of
                 ( CountdownUntilTicketsAreClosed countdown, Ok initData ) ->
                     [ countdown
                     , Ui.el
@@ -62,7 +62,7 @@ view ticketTypes model =
                     ]
 
                 _ ->
-                    [ Camp26Czech.ticketSalesOpenCountdown model ]
+                    [ Camp26Cz.ticketSalesOpenCountdown model ]
             )
         , Theme.footer
         ]

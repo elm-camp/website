@@ -17,12 +17,18 @@ type Route
     | AdminRoute (Maybe String)
     | PaymentSuccessRoute (Maybe EmailAddress)
     | PaymentCancelRoute
-    | Camp23Denmark
+    | Camp23Dk
     | Camp24Uk
-    | Camp25US
+    | Camp25Us
+    | Camp26Cz
     | TravelRoute
     | TicketPurchaseRoute
     | OpportunityGrantRoute
+    | NotFound
+
+
+
+--type Camp26CzRoutes =
 
 
 decode : Url -> Route
@@ -35,14 +41,15 @@ decode url =
         , Url.Parser.s "admin" <?> parseAdminPass |> Url.Parser.map AdminRoute
         , Url.Parser.s Stripe.successPath <?> parseEmail |> Url.Parser.map PaymentSuccessRoute
         , Url.Parser.s Stripe.cancelPath |> Url.Parser.map PaymentCancelRoute
-        , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Denmark
+        , Url.Parser.s "23-denmark" |> Url.Parser.map Camp23Dk
         , Url.Parser.s "24-uk" |> Url.Parser.map Camp24Uk
-        , Url.Parser.s "25-us" |> Url.Parser.map Camp25US
+        , Url.Parser.s "25-us" |> Url.Parser.map Camp25Us
+        , Url.Parser.s "26-cz" |> Url.Parser.map Camp26Cz
         , Url.Parser.s "travel" |> Url.Parser.map TravelRoute
         , Url.Parser.s "tickets" |> Url.Parser.map TicketPurchaseRoute
         , Url.Parser.s "opportunity-grant" |> Url.Parser.map OpportunityGrantRoute
         ]
-        |> (\a -> Url.Parser.parse a url |> Maybe.withDefault HomepageRoute)
+        |> (\a -> Url.Parser.parse a url |> Maybe.withDefault NotFound)
 
 
 parseEmail : Url.Parser.Query.Parser (Maybe EmailAddress)
@@ -87,14 +94,17 @@ encode fragment route =
             PaymentCancelRoute ->
                 [ Stripe.cancelPath ]
 
-            Camp23Denmark ->
+            Camp23Dk ->
                 [ "23-denmark" ]
 
             Camp24Uk ->
                 [ "24-uk" ]
 
-            Camp25US ->
+            Camp25Us ->
                 [ "25-us" ]
+
+            Camp26Cz ->
+                [ "26-cz" ]
 
             TravelRoute ->
                 [ "travel" ]
@@ -104,6 +114,9 @@ encode fragment route =
 
             OpportunityGrantRoute ->
                 [ "opportunity-grant" ]
+
+            NotFound ->
+                [ "not-found" ]
         )
         (case route of
             HomepageRoute ->
@@ -132,13 +145,16 @@ encode fragment route =
             PaymentCancelRoute ->
                 []
 
-            Camp23Denmark ->
+            Camp23Dk ->
                 []
 
             Camp24Uk ->
                 []
 
-            Camp25US ->
+            Camp25Us ->
+                []
+
+            Camp26Cz ->
                 []
 
             TravelRoute ->
@@ -148,6 +164,9 @@ encode fragment route =
                 []
 
             OpportunityGrantRoute ->
+                []
+
+            NotFound ->
                 []
         )
         ++ (case fragment of

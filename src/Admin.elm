@@ -8,7 +8,7 @@ module Admin exposing
     , viewOrders
     )
 
-import Camp26Czech
+import Camp26Cz
 import Effect.Browser.Dom as Dom exposing (HtmlId)
 import Env
 import Fusion
@@ -196,7 +196,7 @@ viewOrder backendModel idx ( id, order ) =
                 (\ticketType count ->
                     ticketType.name ++ ": " ++ NonNegative.toString count
                 )
-                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                (PurchaseForm.allTicketTypes Camp26Cz.ticketTypes)
                 (PurchaseForm.allTicketTypes order.form.count)
                 |> String.join ", "
                 |> Ui.text

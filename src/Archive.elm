@@ -11,6 +11,9 @@ content =
             [ Text "Here we keep track of what has come out of past Elm Camp events. Feel free to add stuff, this page is "
             , ExternalLink "open to contributions on Github" "https://github.com/elm-camp/website/edit/main/src/Archive.elm"
             ]
+        , Section "Elm Camp 2026"
+            [ Paragraph [ Link "Click here" Route.Camp26Cz, Text " to view the 2026 website" ]
+            ]
         , Section "Elm Camp 2025"
             [ BulletList
                 [ Bold "Posts" ]
@@ -21,7 +24,7 @@ content =
             , BulletList
                 [ Bold "Media" ]
                 [ Paragraph [ ExternalLink "Photos taken during the event" "https://drive.google.com/drive/folders/1pEXG2UULRSUkYSYA7olhx6iREJ1veJHY" ] ]
-            , Paragraph [ Link "Click here" Route.Camp25US, Text " to view the 2025 website" ]
+            , Paragraph [ Link "Click here" Route.Camp25Us, Text " to view the 2025 website" ]
             ]
         , Section "Elm Camp 2024"
             [ Image { source = "/24-colehayes/elm-camp-24-attendees.jpg", maxWidth = Nothing, caption = [] }
@@ -65,7 +68,7 @@ content =
                     , Text " by @supermario (Discourse/Post)"
                     ]
                 ]
-            , Paragraph [ Link "Click here" Route.Camp23Denmark, Text " to view the 2023 website" ]
+            , Paragraph [ Link "Click here" Route.Camp23Dk, Text " to view the 2023 website" ]
             ]
         ]
     ]

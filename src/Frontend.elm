@@ -4,10 +4,10 @@ import Admin
 import Archive
 import Browser
 import Browser.Navigation exposing (Key)
-import Camp23Denmark
+import Camp23Dk
 import Camp24Uk
-import Camp25US
-import Camp26Czech
+import Camp25Us
+import Camp26Cz
 import Dict
 import Duration
 import Effect.Browser
@@ -712,14 +712,14 @@ loadedView : LoadedModel -> Ui.Element FrontendMsg
 loadedView model =
     case model.route of
         HomepageRoute ->
-            Camp26Czech.view model
+            Camp26Cz.view model
 
         UnconferenceFormatRoute ->
             Ui.column
                 [ Ui.height Ui.fill, Ui.spacing 48 ]
                 [ Ui.column
                     []
-                    [ Camp26Czech.header model
+                    [ Camp26Cz.header model
                     , Ui.column
                         (Ui.padding 20 :: Theme.contentAttributes)
                         [ RichText.view model UnconferenceFormat.view
@@ -733,7 +733,7 @@ loadedView model =
                 [ Ui.height Ui.fill, Ui.spacing 48 ]
                 [ Ui.column
                     []
-                    [ Camp26Czech.header model
+                    [ Camp26Cz.header model
                     , Ui.column
                         (Ui.padding 20 :: Theme.contentAttributes)
                         [ RichText.view model codeOfConductContent
@@ -747,7 +747,7 @@ loadedView model =
                 [ Ui.height Ui.fill, Ui.spacing 48 ]
                 [ Ui.column
                     []
-                    [ Camp26Czech.header model
+                    [ Camp26Cz.header model
                     , Ui.column
                         (Ui.padding 20 :: Theme.contentAttributes)
                         [ RichText.view model Archive.content ]
@@ -787,23 +787,33 @@ loadedView model =
                 , returnToHomepageButton
                 ]
 
-        Camp23Denmark ->
-            Camp23Denmark.view model
+        Camp23Dk ->
+            Camp23Dk.view model
 
         Camp24Uk ->
             Camp24Uk.view model
 
-        Camp25US ->
-            Camp25US.view model
+        Camp25Us ->
+            Camp25Us.view model
+
+        Camp26Cz ->
+            Camp26Cz.view model
 
         TravelRoute ->
-            Camp26Czech.viewTravel model
+            Camp26Cz.viewTravel model
 
         TicketPurchaseRoute ->
-            Sales.view Camp26Czech.ticketTypes model
+            Sales.view Camp26Cz.ticketTypes model
 
         OpportunityGrantRoute ->
             OpportunityGrant.view model
+
+        NotFound ->
+            Ui.column
+                [ Ui.width Ui.shrink, Ui.centerX, Ui.centerY, Ui.padding 24, Ui.spacing 16 ]
+                [ Ui.Prose.paragraph [ Ui.width Ui.shrink, Ui.Font.size 20, Ui.Font.center ] [ Ui.text "Sorry, this page doesn't exist!" ]
+                , returnToHomepageButton
+                ]
 
 
 returnToHomepageButton : Ui.Element msg
@@ -830,7 +840,7 @@ downloadTicketSalesReminder =
         , prodid = { company = "elm-camp", product = "website" }
         , events =
             [ { uid = "elm-camp-26-ticket-sale-starts"
-              , start = Camp26Czech.ticketSalesOpenAt
+              , start = Camp26Cz.ticketSalesOpenAt
               , summary = "Elm Camp Ticket Sale Starts"
               , description = "Can't wait to see you there!"
               }
@@ -922,8 +932,8 @@ codeOfConductContent =
 --Last year we ran a 3-day event in Odense, Denmark. Here are some of the memories folks have shared:
 --
 --"""
---            ++ Camp23Denmark.Artifacts.posts
---            ++ Camp23Denmark.Artifacts.media
+--            ++ Camp23Dk.Artifacts.posts
+--            ++ Camp23Dk.Artifacts.media
 --            ++ """
 --Did you attend Elm Camp 2023? We're [open to contributions on Github](https://github.com/elm-camp/website/edit/main/src/Camp23Denmark/Artifacts.elm)!
 --

@@ -1,4 +1,4 @@
-module Camp26Czech exposing
+module Camp26Cz exposing
     ( TicketSalesCountdown(..)
     , TicketType
     , campfireTicket
@@ -83,6 +83,9 @@ ticketSalesOpenCountdown model =
     Ui.column
         (Ui.spacing 20 :: Theme.contentAttributes)
         (case detailedCountdown model.now of
+            ElmCampHasAlreadyHappened ->
+                [ Ui.Prose.paragraph (Theme.contentAttributes ++ [ Ui.Font.center ]) [ Theme.h2 "This year's Elm Camp has ended!" ] ]
+
             TicketSaleIsClosed ->
                 [ Ui.Prose.paragraph (Theme.contentAttributes ++ [ Ui.Font.center ]) [ Theme.h2 "Ticket sales have now closed!" ] ]
 
@@ -146,21 +149,26 @@ type TicketSalesCountdown
     = CountdownUntilTicketsAreOpen (Element FrontendMsg)
     | CountdownUntilTicketsAreClosed (Element FrontendMsg)
     | TicketSaleIsClosed
+    | ElmCampHasAlreadyHappened
 
 
 detailedCountdown : Time.Posix -> TicketSalesCountdown
 detailedCountdown now =
-    case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}open" now ticketSalesOpenAt of
-        Just countdown ->
-            CountdownUntilTicketsAreOpen countdown
+    if Time.posixToMillis elmCampEndsAt < Time.posixToMillis now then
+        ElmCampHasAlreadyHappened
 
-        Nothing ->
-            case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}end" now ticketSalesCloseAt of
-                Just countdown ->
-                    CountdownUntilTicketsAreClosed countdown
+    else
+        case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}open" now ticketSalesOpenAt of
+            Just countdown ->
+                CountdownUntilTicketsAreOpen countdown
 
-                Nothing ->
-                    TicketSaleIsClosed
+            Nothing ->
+                case detailedCountdownHelper " until\u{00A0}ticket\u{00A0}sales\u{00A0}end" now ticketSalesCloseAt of
+                    Just countdown ->
+                        CountdownUntilTicketsAreClosed countdown
+
+                    Nothing ->
+                        TicketSaleIsClosed
 
 
 detailedCountdownHelper : String -> Time.Posix -> Time.Posix -> Maybe (Element msg)
@@ -422,14 +430,6 @@ content =
                     , ExternalLink "team@elm.camp" "mailto:team@elm.camp)"
                     ]
                 , Paragraph [ Text "Elm Slack: @katjam" ]
-                ]
-            ]
-        , Section
-            "Travel guide"
-            [ Paragraph
-                [ Text "See our "
-                , Link "travel guide" Route.TravelRoute
-                , Text " for travel options and information about the location."
                 ]
             ]
         ]
@@ -702,6 +702,12 @@ travel =
                 ]
             ]
         ]
+
+
+elmCampEndsAt : Time.Posix
+elmCampEndsAt =
+    -- Vague guess when elm-camp ended since it doesn't matter when exact it ended for the purposes of showing that it did end months later
+    Time.millisToPosix 1781682736000
 
 
 ticketSalesOpenAt : Time.Posix

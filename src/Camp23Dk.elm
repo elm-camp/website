@@ -1,4 +1,4 @@
-module Camp23Denmark exposing (view)
+module Camp23Dk exposing (view)
 
 import Camp
 import RichText exposing (Inline(..), RichText(..))

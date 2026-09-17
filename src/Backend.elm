@@ -15,7 +15,7 @@ module Backend exposing
     , updateFromFrontend
     )
 
-import Camp26Czech
+import Camp26Cz
 import Codec exposing (Codec)
 import Duration
 import Effect.Command as Command exposing (BackendOnly, Command)
@@ -432,10 +432,10 @@ updateFromFrontend : SessionId -> ClientId -> ToBackend -> BackendModel -> ( Bac
 updateFromFrontend sessionId clientId msg model =
     case msg of
         SubmitFormRequest a ->
-            if Duration.from Camp26Czech.ticketSalesOpenAt model.time |> Quantity.lessThanZero then
+            if Duration.from Camp26Cz.ticketSalesOpenAt model.time |> Quantity.lessThanZero then
                 ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Tickets aren't available for sale yet.")) )
 
-            else if Duration.from Camp26Czech.ticketSalesCloseAt model.time |> Quantity.greaterThanZero then
+            else if Duration.from Camp26Cz.ticketSalesCloseAt model.time |> Quantity.greaterThanZero then
                 ( model, Lamdera.sendToFrontend clientId (SubmitFormResponse (Err "Tickets sales have closed.")) )
 
             else
@@ -448,7 +448,7 @@ updateFromFrontend sessionId clientId msg model =
                                     (\ticket ->
                                         ticket.available purchaseForm.count (totalTicketCount model.pendingOrders model.orders)
                                     )
-                                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                    (PurchaseForm.allTicketTypes Camp26Cz.ticketTypes)
                                     |> List.all identity
 
                             opportunityGrantItems : List CheckoutItem
@@ -480,7 +480,7 @@ updateFromFrontend sessionId clientId msg model =
                                                             , quantity = NonNegative.toInt count
                                                             }
                                                     )
-                                                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                                                    (PurchaseForm.allTicketTypes Camp26Cz.ticketTypes)
                                                     (PurchaseForm.allTicketTypes prices)
                                                     (PurchaseForm.allTicketTypes purchaseForm.count)
                                                     ++ opportunityGrantItems
@@ -675,7 +675,7 @@ confirmationEmail purchaseForm stripeCurrency =
                                 |> Just
                     )
                     (PurchaseForm.allTicketTypes purchaseForm.count)
-                    (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                    (PurchaseForm.allTicketTypes Camp26Cz.ticketTypes)
                     |> List.filterMap identity
                     |> String.concat
                )
@@ -693,7 +693,7 @@ confirmationEmail purchaseForm stripeCurrency =
                     "We look forward to seeing you at the elm-camp unconference!\n\n"
                )
             ++ "You can review the schedule at "
-            ++ (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute)
+            ++ (Env.domain ++ Route.encode (Just Camp26Cz.scheduleSection) HomepageRoute)
             ++ ". If you have any questions, email us at "
             ++ EmailAddress.toString elmCampEmailAddress
             ++ " (or just reply to this email)"
@@ -722,7 +722,7 @@ confirmationEmail purchaseForm stripeCurrency =
                             |> Just
                 )
                 (PurchaseForm.allTicketTypes purchaseForm.count)
-                (PurchaseForm.allTicketTypes Camp26Czech.ticketTypes)
+                (PurchaseForm.allTicketTypes Camp26Cz.ticketTypes)
                 |> List.filterMap identity
                 |> Html.div []
             , if Quantity.greaterThanZero purchaseForm.grantContribution then
@@ -747,7 +747,7 @@ confirmationEmail purchaseForm stripeCurrency =
                 Html.div [ Attributes.paddingBottom "16px" ] [ Html.text "We look forward to seeing you at the elm-camp unconference!" ]
             , Html.div []
                 [ Html.a
-                    [ Attributes.href (Env.domain ++ Route.encode (Just Camp26Czech.scheduleSection) HomepageRoute) ]
+                    [ Attributes.href (Env.domain ++ Route.encode (Just Camp26Cz.scheduleSection) HomepageRoute) ]
                     [ Html.text "You can review the schedule here" ]
                 , Html.text ". If you have any questions, email us at "
                 , Html.a

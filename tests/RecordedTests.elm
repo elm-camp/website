@@ -2,7 +2,7 @@ module RecordedTests exposing (main, setup, stripePurchaseWebhookResponse, tests
 
 import Backend
 import Bytes exposing (Bytes)
-import Camp26Czech
+import Camp26Cz
 import Codec
 import Dict exposing (Dict)
 import Duration
@@ -241,7 +241,7 @@ tests fileData =
         ]
     , T.start
         "Ticket sales have ended"
-        (Duration.addTo Camp26Czech.ticketSalesCloseAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesCloseAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -300,7 +300,7 @@ tests fileData =
         ]
     , T.start
         "Admin loads backend model"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -315,7 +315,7 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                , tabA.click 100 (Sales.selectTicketId Camp26Cz.singleRoomTicket)
                 , tabA.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tabA.input 100 (Dom.id "attendeeCountry_0") "Sweden"
                 , tabA.input 100 (Dom.id "attendeeCity_0") "Malmö"
@@ -361,7 +361,7 @@ tests fileData =
         ]
     , T.start
         "Show countdown"
-        (Duration.subtractFrom Camp26Czech.ticketSalesOpenAt (Duration.hours 25))
+        (Duration.subtractFrom Camp26Cz.ticketSalesOpenAt (Duration.hours 25))
         config
         [ T.connectFrontend
             0
@@ -385,7 +385,7 @@ tests fileData =
         ]
     , T.start
         "Can't buy tickets before countdown is finished"
-        (Duration.subtractFrom Camp26Czech.ticketSalesOpenAt (Duration.hours 25))
+        (Duration.subtractFrom Camp26Cz.ticketSalesOpenAt (Duration.hours 25))
         config
         [ T.connectFrontend 0 sessionId0 "/" windowSize (\_ -> [])
         , T.connectFrontend
@@ -431,7 +431,7 @@ tests fileData =
         ]
     , T.start
         "Purchase ticket"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -450,7 +450,7 @@ tests fileData =
                     (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Ticket sales have now closed!" ])
                 , tabA.checkView 100
                     (Test.Html.Query.has [ Test.Html.Selector.text " until\u{00A0}ticket\u{00A0}sales\u{00A0}end" ])
-                , tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                , tabA.click 100 (Sales.selectTicketId Camp26Cz.singleRoomTicket)
                 , tabA.input 100 (Dom.id "attendeeName_0") "Sven"
                 , tabA.input 100 (Dom.id "attendeeCountry_0") "Sweden"
                 , tabA.input 100 (Dom.id "attendeeCity_0") "Malmö"
@@ -507,7 +507,7 @@ tests fileData =
         ]
     , T.start
         "All rooms sold out"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -522,7 +522,7 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets Camp26Czech.maxRooms tabA
+                , purchaseSingleRoomTickets Camp26Cz.maxRooms tabA
                 , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
@@ -545,7 +545,7 @@ tests fileData =
         ]
     , T.start
         "All but one room sold out"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -560,7 +560,7 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                , purchaseSingleRoomTickets (Camp26Cz.maxRooms - 1) tabA
                 , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
@@ -579,7 +579,7 @@ tests fileData =
         ]
     , T.start
         "Sold out in the middle of a session"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -600,7 +600,7 @@ tests fileData =
                     windowSize
                     (\tabB ->
                         [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                        , purchaseSingleRoomTickets (Camp26Cz.maxRooms - 1) tabA
                         , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                         , tabA.click 100 (Dom.id "submitForm")
                         , tabB.checkView 100 (Test.Html.Query.hasNot [ Test.Html.Selector.exactText "Sold out!" ])
@@ -613,7 +613,7 @@ tests fileData =
         ]
     , T.start
         "Backend verifies if tickets are available"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -634,7 +634,7 @@ tests fileData =
                     windowSize
                     (\tabB ->
                         [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                        , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
+                        , purchaseSingleRoomTickets (Camp26Cz.maxRooms - 1) tabA
                         , tabA.input 100 (Dom.id "billingEmail") (EmailAddress.toString svenMail)
                         , tabA.click 100 (Dom.id "submitForm")
                         , tabB.sendToBackend
@@ -670,7 +670,7 @@ tests fileData =
         ]
     , T.start
         "All tickets sold out"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -685,7 +685,7 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchasecampfireTickets 0 Camp26Czech.maxAttendees tabA
+                , purchasecampfireTickets 0 Camp26Cz.maxAttendees tabA
                 , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
@@ -708,7 +708,7 @@ tests fileData =
         ]
     , T.start
         "All tickets and rooms sold out"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -723,8 +723,8 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets Camp26Czech.maxRooms tabA
-                , purchasecampfireTickets Camp26Czech.maxRooms (Camp26Czech.maxAttendees - Camp26Czech.maxRooms) tabA
+                , purchaseSingleRoomTickets Camp26Cz.maxRooms tabA
+                , purchasecampfireTickets Camp26Cz.maxRooms (Camp26Cz.maxAttendees - Camp26Cz.maxRooms) tabA
                 , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
@@ -747,7 +747,7 @@ tests fileData =
         ]
     , T.start
         "All but one room sold out (which is then sold out via shared room tickets)"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -762,8 +762,8 @@ tests fileData =
             windowSize
             (\tabA ->
                 [ tabA.clickLink 100 (Route.encode Nothing Route.TicketPurchaseRoute)
-                , purchaseSingleRoomTickets (Camp26Czech.maxRooms - 1) tabA
-                , purchaseSharedRoomTickets (Camp26Czech.maxRooms - 1) 2 tabA
+                , purchaseSingleRoomTickets (Camp26Cz.maxRooms - 1) tabA
+                , purchaseSharedRoomTickets (Camp26Cz.maxRooms - 1) 2 tabA
                 , tabA.input 100 (Dom.id "billingEmail") "sven@svenmail.se"
                 , tabA.click 100 (Dom.id "submitForm")
                 , T.connectFrontend
@@ -786,7 +786,7 @@ tests fileData =
         ]
     , T.start
         "User applies for an opportunity grant ticket"
-        (Duration.addTo Camp26Czech.ticketSalesOpenAt Duration.minute)
+        (Duration.addTo Camp26Cz.ticketSalesOpenAt Duration.minute)
         config
         [ T.connectFrontend
             0
@@ -874,10 +874,10 @@ purchaseSingleRoomTickets count tabA =
     List.concatMap
         (\index ->
             [ if index == 0 then
-                tabA.click 100 (Sales.selectTicketId Camp26Czech.singleRoomTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Cz.singleRoomTicket)
 
               else
-                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.singleRoomTicket))
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Cz.singleRoomTicket))
             , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt index)) "Sven"
             , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt index)) "Sweden"
             , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt index)) "Malmö"
@@ -901,10 +901,10 @@ purchaseSharedRoomTickets offset count tabA =
                     offset + index
             in
             [ if index == 0 then
-                tabA.click 100 (Sales.selectTicketId Camp26Czech.sharedRoomTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Cz.sharedRoomTicket)
 
               else
-                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.sharedRoomTicket))
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Cz.sharedRoomTicket))
             , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
             , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
             , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"
@@ -928,10 +928,10 @@ purchasecampfireTickets offset count tabA =
                     offset + index
             in
             [ if index == 0 then
-                tabA.click 100 (Sales.selectTicketId Camp26Czech.campfireTicket)
+                tabA.click 100 (Sales.selectTicketId Camp26Cz.campfireTicket)
 
               else
-                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Czech.campfireTicket))
+                tabA.click 100 (Sales.numericFieldPlusId (Sales.selectTicketId Camp26Cz.campfireTicket))
             , tabA.input 100 (Dom.id ("attendeeName_" ++ String.fromInt attendanceIndex)) "Sven"
             , tabA.input 100 (Dom.id ("attendeeCountry_" ++ String.fromInt attendanceIndex)) "Sweden"
             , tabA.input 100 (Dom.id ("attendeeCity_" ++ String.fromInt attendanceIndex)) "Malmö"

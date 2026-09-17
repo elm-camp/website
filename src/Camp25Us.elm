@@ -1,4 +1,4 @@
-module Camp25US exposing (view)
+module Camp25Us exposing (view)
 
 import Camp
 import Helpers
